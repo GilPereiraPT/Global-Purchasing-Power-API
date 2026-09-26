@@ -48,6 +48,26 @@ tryCatch({
   write.csv(countries_report, paste0("diagnostics/", id, "_coverage.csv"),
             row.names=FALSE, na="")
   print(countries_report, row.names=FALSE)
+  # Keep the observed classification combinations; never infer currency from a label.
+  detail_columns <- intersect(c("ref_area", "time", "sex", "classif1",
+                                 "classif2", "currency", "indicator", "source",
+                                 "obs_status"), names(dat))
+  if (length(detail_columns)) {
+    detail <- unique(dat[, detail_columns, drop = FALSE])
+    detail[] <- lapply(detail, as.character)
+    write.csv(detail, paste0("diagnostics/", id, "_classification_matrix.csv"),
+              row.names = FALSE, na = "")
+    cat("Distinct classification combinations:", nrow(detail), "\n")
+  }
+  if ("classif1" %in% names(dat)) {
+    codes <- unique(as.character(dat$classif1))
+    codes <- codes[!is.na(codes) & nzchar(codes)]
+    exact <- codes[grepl("(^|_)ISCO08_[0-9]{4}$", codes)]
+    major <- codes[grepl("(^|_)ISCO08_[0-9]$", codes)]
+    cat("ISCO-08 exact four-digit codes:", length(exact), "\n")
+    cat("ISCO-08 major-group codes:", length(major), "\n")
+    cat("Exact codes:", paste(exact, collapse = ", "), "\n")
+  }
   cat("Diagnostic complete: no salaries published or imported.\n")
 }, error=function(e) {
   message("Official salary dataset diagnostic failed: ", conditionMessage(e))
