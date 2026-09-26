@@ -51,12 +51,12 @@ def read_rds_frame(payload, max_bytes=MAX_EXPANDED):
     import pyreadr
     if len(payload) > max_bytes:
         raise ValueError("Official RDS exceeds configured size limit")
-    if payload.startswith(b"\\x1f\\x8b"):
+    if payload.startswith(b"\x1f\x8b"):
         with gzip.GzipFile(fileobj=io.BytesIO(payload)) as stream:
             payload = stream.read(max_bytes + 1)
         if len(payload) > max_bytes:
             raise ValueError("Expanded official RDS exceeds configured size limit")
-    if not payload.startswith((b"X\\n", b"B\\n", b"A\\n")):
+    if not payload.startswith((b"X\n", b"B\n", b"A\n")):
         raise ValueError("Official RDS has unexpected signature: " + repr(payload[:16]))
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "official.rds"
@@ -75,7 +75,7 @@ def catalogue_rows():
     payload = download(TOC, 10_000_000)
     if not payload:
         raise ValueError("Official ILOSTAT catalogue returned an empty body")
-    if payload.startswith(b"\\x1f\\x8b"):
+    if payload.startswith(b"\x1f\x8b"):
         payload = gzip.decompress(payload)
     text = payload.decode("utf-8-sig")
     rows = list(csv.DictReader(io.StringIO(text)))
