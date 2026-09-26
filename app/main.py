@@ -92,7 +92,7 @@ def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$"),
         if term and not any(term in _search_key(value) for value in terms):
             continue
         items.append({"id": item["id"], "isco08": item["isco08"],
-                      "label": item["translations"][base],
+                      "label": (item["translations"].get(base) or item["translations"]["en"]),
                       "translations": item["translations"],
                       "aliases": item.get("aliases", {})})
     return {"language": base, "fallback": "en", "count": len(items), "occupations": items}
@@ -185,7 +185,7 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
     base = lang.split("-")[0].lower()
     if base not in SUPPORTED_LANGUAGES:
         raise HTTPException(422, "Unsupported interface language")
-    labels = {item["id"]: item["translations"][base] for item in OCCUPATIONS}
+    labels = {item["id"]: (item["translations"].get(base) or item["translations"]["en"]) for item in OCCUPATIONS}
     result = availability()
     result["language"] = base
     for cell in result["cells"]:
