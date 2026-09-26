@@ -76,6 +76,8 @@ COUNTRY_NAMES = {
     "CH": ("switzerland",),
     "IT": ("italy",),
     "IE": ("ireland",),
+    "US": ("united states", "usa", "u.s.", "united states of america"),
+    "CA": ("canada",),
 }
 WORLDWIDE = re.compile(r"\b(worldwide|anywhere|global|work from anywhere|any location)\b", re.I)
 

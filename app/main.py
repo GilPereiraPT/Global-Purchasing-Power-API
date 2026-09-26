@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
 
-from app.catalog import COUNTRY_MAP, OCCUPATIONS
+from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import jobs as job_provider
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.3.0",
+    version="0.3.1",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -46,9 +46,17 @@ def country(code: str):
         raise HTTPException(404, "Unknown country")
     return item
 
+@app.get("/v1/languages")
+def languages():
+    return {"languages": [{"code": k, "label": v} for k, v in SUPPORTED_LANGUAGES.items()],
+            "default": "en", "portuguese_locale": "pt",
+            "note": "Occupation labels have pt/en translations; remaining interface translations are planned."}
+
 @app.get("/v1/occupations")
 def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$")):
     base = lang.split("-")[0].lower()
+    if base not in SUPPORTED_LANGUAGES:
+        raise HTTPException(422, "Unsupported interface language")
     return {"language": lang, "fallback": "en", "occupations": [
         {"id": item["id"], "isco08": item["isco08"], "label": item["translations"].get(base, item["translations"]["en"]),
          "translations": item["translations"]} for item in OCCUPATIONS

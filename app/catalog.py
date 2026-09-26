@@ -12,9 +12,25 @@ COUNTRIES = [
     ("CH", "Switzerland", "Bern", "CHF", "eurostat"),
     ("IT", "Italy", "Rome", "EUR", "eurostat"),
     ("IE", "Ireland", "Dublin", "EUR", "eurostat"),
+    ("US", "United States", "Washington, D.C.", "USD", None),
+    ("CA", "Canada", "Ottawa", "CAD", None),
 ]
+# One Portuguese locale shared by Portugal and Brazil; no pt-PT/pt-BR split.
+SUPPORTED_LANGUAGES = {
+    "en": "English", "pt": "Português", "es": "Español",
+    "de": "Deutsch", "fr": "Français", "it": "Italiano",
+    "nl": "Nederlands",
+}
+COUNTRY_INTERFACE_LANGUAGES = {
+    "PT": ["pt"], "BR": ["pt"], "GB": ["en"], "IN": ["en"],
+    "PK": ["en"], "US": ["en"], "CA": ["en", "fr"],
+    "ES": ["es"], "DE": ["de"], "FR": ["fr"],
+    "NL": ["nl"], "IT": ["it"], "CH": ["de", "fr", "it"],
+    "IE": ["en"],
+}
 COUNTRY_MAP = {
     code: {"code": code, "name": name, "capital": capital, "currency": currency,
+           "interface_languages": COUNTRY_INTERFACE_LANGUAGES[code],
            "inflation_provider": provider, "capital_cost_of_living": "unavailable",
            "occupation_salary": "unavailable"}
     for code, name, capital, currency, provider in COUNTRIES

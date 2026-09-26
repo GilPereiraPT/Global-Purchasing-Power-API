@@ -27,6 +27,7 @@ COUNTRY_ISO3 = {
     "PT": "PRT", "ES": "ESP", "DE": "DEU", "FR": "FRA",
     "GB": "GBR", "IN": "IND", "BR": "BRA", "PK": "PAK",
     "NL": "NLD", "CH": "CHE", "IT": "ITA", "IE": "IRL",
+    "US": "USA", "CA": "CAN",
 }
 CODE_TO_JOB = {v: k for k, v in ISCO08_EXACT.items() if v}
 ISCO_RE = re.compile(r"(?:^|_)ISCO08_([0-9]{4})$")
@@ -145,7 +146,7 @@ def salary(country, occupation):
 
 
 def availability():
-    """40 occupations x 12 countries: strictly observed, never estimated."""
+    """All occupations x all countries: strictly observed, never estimated."""
     with connect() as db:
         init_salary_db(db)
         rows = db.execute("""SELECT country,occupation,MAX(period)

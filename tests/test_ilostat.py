@@ -15,6 +15,8 @@ DEU,SRC_A,EAR_TEST,SEX_T,OCU_ISCO08_2221,CUR_LCU,2024,3200
 IND,SRC_A,EAR_TEST,SEX_T,OCU_ISCO08_2411,CUR_LCU,2024,55000
 BRA,SRC_A,EAR_TEST,SEX_T,OCU_ISCO08_2411,CUR_LCU,2024,6000
 PAK,SRC_A,EAR_TEST,SEX_T,OCU_ISCO08_2411,CUR_LCU,2024,45000
+USA,SRC_A,EAR_TEST,SEX_T,OCU_ISCO08_2411,CUR_LCU,2024,4200
+CAN,SRC_A,EAR_TEST,SEX_T,OCU_ISCO08_2411,CUR_LCU,2024,4900
 PRT,SRC_A,EAR_TEST,SEX_M,OCU_ISCO08_2411,CUR_LCU,2024,90000
 PRT,SRC_A,EAR_TEST,SEX_T,OCU_ISCO88_2411,CUR_LCU,2024,90000
 PRT,SRC_A,EAR_TEST,SEX_T,OCU_ISCO08_24,CUR_LCU,2024,90000
@@ -41,18 +43,18 @@ def test_import_strict_and_matrix(tmp_path, monkeypatch):
     with store.connect() as db:
         count = import_csv(db, SAMPLE, "EAR_TEST_A",
                            "Average monthly earnings of employees by sex, occupation and currency")
-    assert count == 5
+    assert count == 7
     assert salary("PT", "accountant")["value"] == 2000.5
     assert salary("PT", "accountant")["geography"] == "national"
     assert salary("IN", "accountant")["currency"] == "INR"
     assert salary("PK", "accountant")["value"] == 45000
     assert salary("PT", "doctor")["status"] == "unavailable"
     matrix = availability()
-    assert len(matrix["cells"]) == 480
-    assert sum(x["status"] == "available" for x in matrix["cells"]) == 5
+    assert len(matrix["cells"]) == 560
+    assert sum(x["status"] == "available" for x in matrix["cells"]) == 7
     with TestClient(app) as client:
         assert client.get("/v1/salaries/PT/accountant").json()["value"] == 2000.5
-        assert client.get("/v1/salaries/availability/matrix").json()["countries"] == 12
+        assert client.get("/v1/salaries/availability/matrix").json()["countries"] == 14
 
 
 def test_nonlocal_annual_currency_never_admitted():

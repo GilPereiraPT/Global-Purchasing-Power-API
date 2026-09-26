@@ -1,10 +1,10 @@
 # Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.3.0 is a first integration, not a completed wage or tax calculator.**
+Free-source international economic data backend for Android and web. **v0.3.1 is a first integration, not a completed wage or tax calculator.**
 
 ## Current scope
 
-- 12 country/capital/currency catalogue entries (including India, Brazil and Pakistan).
+- 14 country/capital/currency catalogue entries (including India, Brazil and Pakistan).
 - 40 curated occupations with English and Portuguese labels; validated exact ISCO-08 mappings for selected occupations. Missing mappings remain null.
 - Live Eurostat monthly national HICP (dataset `prc_hicp_minr`) for supported European geographies.
 - Live ECB daily reference exchange rates where ECB publishes the currency.
@@ -70,7 +70,7 @@ GET /v1/salaries/IN/nurse
 GET /v1/salaries/availability/matrix
 ```
 
-The matrix has 40 × 12 = 480 cells. Before importing data, all cells are unavailable. Salary records are only emitted where official source rows were imported. A single exact occupation row is required for the latest year; multiple competing rows are marked ambiguous rather than silently averaged.
+The matrix has 40 × 14 = 560 cells. Before importing data, all cells are unavailable. Salary records are only emitted where official source rows were imported. A single exact occupation row is required for the latest year; multiple competing rows are marked ambiguous rather than silently averaged.
 
 **Coverage caveat:** the catalogue may contain ILOSTAT earnings data but not a specific country's exact ISCO-08 occupation, year, or currency. No inference from country-wide averages to the capital is allowed. The app should display `status: unavailable` instead of inventing numbers. Check source terms and attribution before commercial release.
 
@@ -89,10 +89,10 @@ snapshot on startup into SQLite; no SQLite database is committed to the reposito
 Only wages with a **validated exact occupation code** are shown. Other job/country
 combinations remain unavailable.
 
-The ILOSTAT table may not provide all 40 professions or all 12 countries;
+The ILOSTAT table may not provide all 40 professions or all 14 countries;
 the availability matrix reports the actual imported coverage, not an estimate.
 
-## Jobs module v0.3.0 — attributed remote vacancies
+## Jobs module v0.3.1 — attributed remote vacancies
 
 The first jobs provider is **Remotive**: https://remotive.com/remote-jobs/api .
 Its public API permits developers to share listings with a visible **Remotive**
@@ -118,7 +118,22 @@ numeric amount, annualization, currency or net salary. Salary-to-purchasing-powe
 comparison requires a verified structured offer or user-entered gross salary and
 a separately validated country tax engine; it is NOT implemented here.
 
-The countries India, Brazil, Pakistan and all nine European countries remain
+All fourteen countries, including India, Brazil, Pakistan, USA and Canada, remain
 available as destination *eligibility filters*, not claims that local in-person
 job coverage exists. The provider is Remote-only. Other sources require explicit
 rights for commercial reuse; no scraping or unlicensed redistribution.
+
+## Version 0.3.1 — North America and interface languages
+
+The initial country catalogue now includes **United States (US, Washington D.C., USD)**
+and **Canada (CA, Ottawa, CAD)**, for fourteen countries and 560 occupation-country cells.
+No US or Canada inflation or wage series are invented: until a compatible free
+importer and real observations exist, their values are returned as unavailable.
+The Remotive remote eligibility search recognizes USA/United States and Canada.
+
+The language catalogue contains exactly seven single interface locales: `en`,
+`pt`, `es`, `de`, `fr`, `it`, `nl`. Portugal and Brazil use the **same**
+`pt` interface, India/Pakistan/USA use `en`, and Canada supports `en`/`fr`.
+Occupation labels are currently translated only into English and Portuguese;
+other selected languages fall back to English pending actual translations.
+`GET /v1/languages` exposes the planned interface locales.

@@ -7,7 +7,7 @@ def test_catalogue_and_health():
     with TestClient(app) as client:
         assert client.get("/v1/health").json()["status"] == "ok"
         countries = client.get("/v1/countries").json()["countries"]
-        assert {"IN", "BR", "PK"} <= {c["code"] for c in countries}
+        assert {"IN", "BR", "PK", "US", "CA"} <= {c["code"] for c in countries}
         jobs = client.get("/v1/occupations?lang=pt").json()["occupations"]
         assert any(j["id"] == "accountant" and j["label"] == "Contabilista" for j in jobs)
 
@@ -33,3 +33,16 @@ def test_sparse_jsonstat_dimension_order():
         {"period": "2026-01", "index": 101.5},
         {"period": "2026-02", "index": 102.0},
     ]
+
+def test_languages_and_north_america():
+    with TestClient(app) as client:
+        assert len(client.get("/v1/countries").json()["countries"]) == 14
+        languages = client.get("/v1/languages").json()
+        assert {x["code"] for x in languages["languages"]} == {"en","pt","es","de","fr","it","nl"}
+        assert languages["portuguese_locale"] == "pt"
+        assert client.get("/v1/countries/US").json()["capital"] == "Washington, D.C."
+        assert client.get("/v1/countries/CA").json()["interface_languages"] == ["en", "fr"]
+        assert client.get("/v1/occupations?lang=pt").json()["occupations"][0]["label"] == "Contabilista"
+        assert client.get("/v1/occupations?lang=pt-BR").json()["occupations"][0]["label"] == "Contabilista"
+        assert client.get("/v1/inflation/US").json()["status"] == "unavailable"
+        assert client.get("/v1/inflation/CA").json()["status"] == "unavailable"
