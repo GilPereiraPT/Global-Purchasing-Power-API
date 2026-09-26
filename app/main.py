@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
-from app.ilostat_import import salary, availability, earnings_datasets, TOC, download
+from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot
 import csv
 import io
 
@@ -15,11 +15,13 @@ import io
 async def lifespan(app: FastAPI):
     with connect():
         pass
+    from pathlib import Path
+    load_snapshot(Path(__file__).resolve().parent.parent / "data" / "salaries_snapshot.json")
     yield
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.2.0",
+    version="0.2.1",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
