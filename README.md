@@ -1,6 +1,6 @@
 # Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.2.0 is a first integration, not a completed wage or tax calculator.**
+Free-source international economic data backend for Android and web. **v0.2.1 is a first integration, not a completed wage or tax calculator.**
 
 ## Current scope
 
@@ -73,3 +73,21 @@ GET /v1/salaries/availability/matrix
 The matrix has 40 × 12 = 480 cells. Before importing data, all cells are unavailable. Salary records are only emitted where official source rows were imported. A single exact occupation row is required for the latest year; multiple competing rows are marked ambiguous rather than silently averaged.
 
 **Coverage caveat:** the catalogue may contain ILOSTAT earnings data but not a specific country's exact ISCO-08 occupation, year, or currency. No inference from country-wide averages to the capital is allowed. The app should display `status: unavailable` instead of inventing numbers. Check source terms and attribution before commercial release.
+
+## Publish actual wages from the free ILOSTAT source
+
+The ILOSTAT import is **opt-in** until a complete source run has been validated.
+Navigate to **Actions → Refresh official ILOSTAT salaries → Run workflow**.
+The default candidate is `EAR_EMTA_SEX_OCU_CUR_NB_A`, but the job checks its existence
+and label against ILOSTAT's live official catalogue before downloading anything.
+If the file, column schema or units do not match, the job fails without publishing a
+salary snapshot.
+
+When successful, it commits `data/salaries_snapshot.json` containing real observations
+with source, year, ISO currency, and exact ISCO-08 classification. The API loads that
+snapshot on startup into SQLite; no SQLite database is committed to the repository.
+Only wages with a **validated exact occupation code** are shown. Other job/country
+combinations remain unavailable.
+
+The ILOSTAT table may not provide all 40 professions or all 12 countries;
+the availability matrix reports the actual imported coverage, not an estimate.
