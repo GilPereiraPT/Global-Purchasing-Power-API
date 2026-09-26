@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="EarnWageTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#F5F8F8</item>
+        <item name="android:statusBarColor">#092733</item>
+        <item name="android:navigationBarColor">#092733</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowSplashScreenBackground">#092733</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/earnwage_logo</item>
+        <item name="android:windowSplashScreenAnimationDuration">300</item>
+    </style>
+</resources>
