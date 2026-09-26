@@ -38,9 +38,11 @@ GET /v1/compare?country_a=PT&country_b=DE&occupation=accountant
 GET /v1/sources
 ```
 
-Use `GPP_CACHE_DB=/absolute/writable/path/cache.sqlite3` on cPanel. The default `/tmp/gpp_api_cache.sqlite3` is suitable for development but may not persist across hosting restarts. Deploy `passenger_wsgi.py` with a cPanel Python environment configured for ASGI compatibility: vanilla Passenger WSGI does **not** directly serve FastAPI ASGI; run Uvicorn behind a proxy or use a tested ASGI-to-WSGI adapter. Do not assume the file alone makes FastAPI work under Passenger.
+Use `GPP_CACHE_DB=/absolute/writable/path/cache.sqlite3` on cPanel. The default `/tmp/gpp_api_cache.sqlite3` is suitable for development but may not persist across hosting restarts.
 
-Run tests: `pytest -q`.
+On a cPanel deployment that supports Python Passenger WSGI applications, point the app at `passenger_wsgi.py`. It uses the included `a2wsgi` adapter to wrap FastAPI's ASGI interface. Verify the host's Python version, startup path and Passenger process configuration before production use.
+
+Run tests: `pytest -q`. GitHub Actions executes the local test suite on push and pull requests.
 
 ## Source attribution
 

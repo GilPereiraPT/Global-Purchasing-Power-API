@@ -1,2 +1,5 @@
-"""cPanel/Passenger entrypoint; install dependencies in the selected Python environment."""
-from app.main import app as application
+"""cPanel/Passenger WSGI entrypoint wrapping the FastAPI ASGI application."""
+from a2wsgi import ASGIMiddleware
+from app.main import app
+
+application = ASGIMiddleware(app)
