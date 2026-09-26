@@ -1,4 +1,4 @@
-"""Reproducible ILOSTAT bulk CSV/GZIP ingestion. Run as admin CLI, never a public HTTP job.
+"""Reproducible ILOSTAT catalogue CSV / dataset RDS ingestion. Admin CLI only.
 
 Only actual reported values and documented periods are saved. Sex-total, ISCO-08
 exact 4-digit, monthly earnings, local-currency observations are admitted.
@@ -6,11 +6,12 @@ Unknown classifications, non-total sex, or ambiguous currency are excluded.
 """
 import argparse
 import csv
-import gzip
 import io
 import json
 import os
 import re
+import tempfile
+from pathlib import Path
 from datetime import datetime, timezone
 
 import httpx
@@ -19,8 +20,8 @@ from app.catalog import COUNTRY_MAP
 from app.occupations import ISCO08_EXACT
 from app.store import connect
 
-BULK = "https://webapps.ilo.org/ilostat-files/WEB_bulk_download/indicator"
-TOC = f"{BULK}/table_of_contents_en.csv"
+BULK = "https://rplumber.ilo.org/files/indicator"
+TOC = "https://rplumber.ilo.org/metadata/toc/indicator/?lang=en"
 MAX_COMPRESSED = 35 * 1024 * 1024
 MAX_EXPANDED = 180 * 1024 * 1024
 COUNTRY_ISO3 = {
@@ -90,7 +91,7 @@ def parse_row(row, dataset, dataset_label):
         country, CODE_TO_JOB[match.group(1)], row["time"],
         row.get("indicator", dataset.removesuffix("_A")),
         row.get("source", "unspecified"), row["classif1"],
-        currency_code, value, dataset, f"{BULK}/{dataset}.csv.gz",
+        currency_code, value, dataset, f"{BULK}/{dataset}.rds",
     )
 
 
@@ -176,6 +177,31 @@ def download(url, max_bytes=MAX_COMPRESSED):
                     raise ValueError("Source download exceeds configured size limit")
                 chunks.append(chunk)
             return b"".join(chunks)
+
+
+def import_rds(db, payload, dataset, label):
+    """Read the official RDS data frame without accepting fabricated CSV fallbacks."""
+    import pyreadr
+
+    if len(payload) > MAX_COMPRESSED:
+        raise ValueError("RDS source exceeds configured size limit")
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "official.rds"
+        path.write_bytes(payload)
+        objects = pyreadr.read_r(str(path))
+    if len(objects) != 1:
+        raise ValueError("Unexpected RDS objects; refusing import")
+    frame = next(iter(objects.values()))
+    if frame is None or frame.empty:
+        raise ValueError("Empty ILOSTAT RDS; refusing import")
+    required = {"ref_area", "sex", "classif1", "time", "obs_value", "source"}
+    if not required <= set(frame.columns):
+        raise ValueError("Unexpected ILOSTAT RDS columns; refusing import")
+    # Preserve the existing strict CSV validation and row-level exclusion rules.
+    text = frame.to_csv(index=False)
+    if len(text.encode("utf-8")) > MAX_EXPANDED:
+        raise ValueError("Expanded source exceeds configured size limit")
+    return import_csv(db, text, dataset, label)
 
 
 def run(dataset, label=None):
