@@ -1,5 +1,6 @@
-"""cPanel/Passenger WSGI entrypoint wrapping the FastAPI ASGI application."""
-from a2wsgi import ASGIMiddleware
-from app.main import app
+"""EarnWage production entry for CloudLinux Passenger/LiteSpeed.
 
-application = ASGIMiddleware(app)
+Native WSGI, like Collexall: avoids the a2wsgi/ASGI blocking observed on
+this host. The FastAPI app remains available for other ASGI deployments.
+"""
+from app.native_wsgi import application
