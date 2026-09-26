@@ -6,6 +6,7 @@ Unknown classifications, non-total sex, or ambiguous currency are excluded.
 """
 import argparse
 import csv
+import gzip
 import io
 import json
 import os
@@ -21,7 +22,7 @@ from app.occupations import ISCO08_EXACT
 from app.store import connect
 
 BULK = "https://rplumber.ilo.org/files/indicator"
-TOC = "https://rplumber.ilo.org/files/indicator/table_of_contents_en.rds"
+TOC = "https://rplumber.ilo.org/metadata/toc/indicator/?lang=en"
 MAX_COMPRESSED = 35 * 1024 * 1024
 MAX_EXPANDED = 180 * 1024 * 1024
 COUNTRY_ISO3 = {
@@ -50,6 +51,13 @@ def read_rds_frame(payload, max_bytes=MAX_EXPANDED):
     import pyreadr
     if len(payload) > max_bytes:
         raise ValueError("Official RDS exceeds configured size limit")
+    if payload.startswith(b"\\x1f\\x8b"):
+        with gzip.GzipFile(fileobj=io.BytesIO(payload)) as stream:
+            payload = stream.read(max_bytes + 1)
+        if len(payload) > max_bytes:
+            raise ValueError("Expanded official RDS exceeds configured size limit")
+    if not payload.startswith((b"X\\n", b"B\\n", b"A\\n")):
+        raise ValueError("Official RDS has unexpected signature: " + repr(payload[:16]))
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "official.rds"
         path.write_bytes(payload)
@@ -63,12 +71,19 @@ def read_rds_frame(payload, max_bytes=MAX_EXPANDED):
 
 
 def catalogue_rows():
-    """Use the official Rilostat bulk TOC transport (.rds), not CSV over an API route."""
-    frame = read_rds_frame(download(TOC, 10_000_000))
+    """Read official ILOSTAT catalogue CSV and fail on empty or wrong responses."""
+    payload = download(TOC, 10_000_000)
+    if not payload:
+        raise ValueError("Official ILOSTAT catalogue returned an empty body")
+    if payload.startswith(b"\\x1f\\x8b"):
+        payload = gzip.decompress(payload)
+    text = payload.decode("utf-8-sig")
+    rows = list(csv.DictReader(io.StringIO(text)))
     required = {"id", "indicator.label"}
-    if not required <= set(frame.columns):
-        raise ValueError("ILOSTAT catalogue schema mismatch: " + repr(list(frame.columns)))
-    return frame.fillna("").to_dict(orient="records")
+    if not rows or not required <= set(rows[0]):
+        raise ValueError("ILOSTAT catalogue missing required columns or rows: "
+                         + repr(list(rows[0]) if rows else text[:120]))
+    return rows
 
 
 def earnings_datasets(rows):
