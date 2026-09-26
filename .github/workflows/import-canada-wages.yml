@@ -1,5 +1,5 @@
 name: Import free Canadian occupational wages
-# Retry after source classification normalization.
+# Expanded official NOC mapping: refresh the versioned snapshot.
 on:
   push:
     paths:

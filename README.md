@@ -1,6 +1,6 @@
 # Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.4.0 is a first integration, not a completed wage or tax calculator.**
+Free-source international economic data backend for Android and web. **v0.4.1 is a first integration, not a completed wage or tax calculator.**
 
 ## Current scope
 
@@ -92,7 +92,7 @@ combinations remain unavailable.
 The ILOSTAT table may not provide all 40 professions or all 14 countries;
 the availability matrix reports the actual imported coverage, not an estimate.
 
-## Jobs module v0.4.0 — attributed remote vacancies
+## Jobs module v0.4.1 — attributed remote vacancies
 
 The first jobs provider is **Remotive**: https://remotive.com/remote-jobs/api .
 Its public API permits developers to share listings with a visible **Remotive**
@@ -174,3 +174,9 @@ implemented. National wages must not be relabeled as Ottawa or Washington wages.
 
 View the committed, attributable observations:
 https://github.com/GilPereiraPT/Global-Purchasing-Power-API/blob/main/data/north_america_wages.json
+
+## v0.4.1 — broader Canada and unified salary coverage
+
+An official GitHub Actions source audit identified **28 NOC 2021 unit group mappings** to the 40 curated professions (up from 4). The importer checks the *original English occupation title* for each NOC code, national area and source wage units. **A NOC group is not always identical to the shorter translated occupation label**: each observation exposes the original NOC group title so users can inspect scope. Some professions still have no defensible NOC equivalence and remain unavailable.
+
+Both `GET /v1/salaries/CA/{occupation}` and `GET /v1/wages/CA/{occupation}` return the same North American observations, and the 560-cell `GET /v1/salaries/availability/matrix` now includes real imported Canadian data as available. USA remains unavailable until real BLS data are imported. This fixes a prior discrepancy where Canadian salaries existed but the general salary matrix incorrectly showed unavailable.

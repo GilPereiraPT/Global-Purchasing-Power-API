@@ -54,3 +54,34 @@ def test_us_national_only(tmp_path):
     assert len(records) == 2
     assert {r[9] for r in records} == {"USD/year"}
     assert {r[10] for r in records} == {101420.0, 98700.0}
+
+def test_expanded_canada_noc_matches_official_titles():
+    from app.north_america import CANADA_NOC
+    assert len(CANADA_NOC) == 28
+    assert len({code for code, _ in CANADA_NOC.values()}) == len(CANADA_NOC)
+    header = HEAD
+    sample = (
+        "NOC_21232,Software developers and programmers,NAT,ER00,48.08,50.12,0,2023-2024\\n"
+        "NOC_31110,Dentists,NAT,ER00,110000,125000,1,2021\\n"
+        "NOC_11101,Financial and investment analysts,NAT,ER00,43.27,44.14,0,2023-2024\\n"
+    )
+    records = list(canada_records(header + sample))
+    assert len(records) == 6
+    actual = {(r[1], r[9], r[10]) for r in records}
+    assert ("software_developer", "CAD/hour", 48.08) in actual
+    assert ("dentist", "CAD/year", 110000.0) in actual
+    assert ("financial_analyst", "CAD/hour", 43.27) in actual
+
+
+def test_unified_availability_includes_imported_canadian_wages(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app
+    monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "unified.sqlite"))
+    with TestClient(app) as client:
+        assert client.get("/v1/salaries/CA/nurse").json()["status"] == "unavailable"
+        persist(list(canada_records(HEAD + ROWS)))
+        a = client.get("/v1/salaries/availability/matrix").json()
+        cell = next(c for c in a["cells"] if c["country"] == "CA" and c["occupation"] == "nurse")
+        assert cell["status"] == "available"
+        assert cell["latest_period"] == "2023-2024"
+        assert client.get("/v1/salaries/CA/nurse").json()["observations"][0]["currency"] == "CAD"

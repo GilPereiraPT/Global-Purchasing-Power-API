@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.4.0",
+    version="0.4.1",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -115,7 +115,7 @@ def sources():
         "canada_job_bank_wages": {
             "url": na_wages.CANADA_URL,
             "role": "Canada national occupational hourly/annual median and mean, as published",
-            "status": "offline importer implemented; real data snapshot required",
+            "status": "official national wages imported for mapped NOC occupations",
         },
         "us_bls_oews": {
             "url": na_wages.BLS_TABLE,
@@ -143,7 +143,15 @@ def sources():
 
 @app.get("/v1/salaries/availability/matrix")
 def salary_availability_matrix():
-    return availability()
+    result = availability()
+    na = na_wages.observed_coverage()
+    for cell in result["cells"]:
+        key = (cell["country"], cell["occupation"])
+        if key in na:
+            cell.update({"status": "available", "latest_period": na[key],
+                         "source_family": "north_america_official_wages"})
+    result["available_cells"] = sum(x["status"] == "available" for x in result["cells"])
+    return result
 
 
 @app.get("/v1/salaries/{code}/{occupation}")
@@ -153,7 +161,7 @@ def occupation_salary(code: str, occupation: str):
         raise HTTPException(404, "Unknown country")
     if occupation not in {x["id"] for x in OCCUPATIONS}:
         raise HTTPException(422, "Unknown occupation")
-    return salary(country, occupation)
+    return na_wages.wages(country, occupation) if country in ("US", "CA") else salary(country, occupation)
 
 
 @app.get("/v1/ilostat/datasets")
