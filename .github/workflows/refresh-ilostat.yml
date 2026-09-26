@@ -26,6 +26,23 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
+      - name: Diagnose official ILOSTAT endpoints
+        run: |
+          python - <<'PY'
+          import httpx
+          urls = [
+            "https://webapps.ilo.org/ilostat-files/WEB_bulk_download/indicator/table_of_contents_en.csv",
+            "https://www.ilo.org/ilostat-files/WEB_bulk_download/indicator/table_of_contents_en.csv",
+            "https://rplumber.ilo.org/data/indicator?id=EAR_EMTA_SEX_OCU_CUR_NB",
+          ]
+          for url in urls:
+              try:
+                  with httpx.Client(timeout=20,follow_redirects=True) as c:
+                      with c.stream("GET", url) as r:
+                          print(r.status_code, r.headers.get("content-type"), str(r.url), flush=True)
+              except Exception as e:
+                  print(type(e).__name__, str(e)[:150], flush=True)
+          PY
       - name: Validate and import source data
         env:
           GPP_CACHE_DB: ${{ runner.temp }}/gpp_import.sqlite3
