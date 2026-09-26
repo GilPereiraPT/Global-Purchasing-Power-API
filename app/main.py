@@ -12,7 +12,7 @@ from app import earnwage_queries as ew_queries
 from app.tax_components import components as tax_components
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
-from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot
+from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot, catalogue_rows
 import csv
 import io
 import unicodedata
@@ -215,11 +215,10 @@ def ilostat_datasets():
     """Read-only official catalogue. Large imports are CLI-only, never HTTP."""
     from app.providers import UpstreamUnavailable
     try:
-        raw = download(TOC, 3_000_000).decode("utf-8-sig")
+        datasets = earnings_datasets(catalogue_rows())
     except Exception as exc:
         raise UpstreamUnavailable("ILOSTAT catalogue unavailable") from exc
-    return {"source_url": TOC, "datasets":
-            earnings_datasets(csv.DictReader(io.StringIO(raw)))}
+    return {"source_url": TOC, "datasets": datasets}
 
 @app.get("/v1/jobs")
 async def job_search(country: str, occupation: str,
