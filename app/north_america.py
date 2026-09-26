@@ -30,6 +30,31 @@ CANADA_NOC = {
     "civil_engineer": ("21300", "Civil engineers"),
     "electrician": ("72200", "Electricians"),
     "physiotherapist": ("31202", "Physiotherapists"),
+    # These NOC 2021 titles were checked against the actual 2025 Job Bank CSV.
+    "financial_analyst": ("11101", "Financial and investment analysts"),
+    "administrative_assistant": ("13110", "Administrative assistants"),
+    "receptionist": ("14101", "Receptionists"),
+    "architect": ("21200", "Architects"),
+    "cybersecurity_specialist": ("21220", "Cybersecurity specialists"),
+    "software_developer": ("21232", "Software developers and programmers"),
+    "mechanical_engineer": ("21301", "Mechanical engineers"),
+    "pharmacist": ("31120", "Pharmacists"),
+    "psychologist": ("31200", "Psychologists"),
+    "dentist": ("31110", "Dentists"),
+    "secondary_teacher": ("41220", "Secondary school teachers"),
+    "cook": ("63200", "Cooks"),
+    "sales_assistant": ("64100", "Retail salespersons and visual merchandisers"),
+    "security_guard": ("64410", "Security guards and related security service occupations"),
+    "cleaner": ("65310", "Light duty cleaners"),
+    "welder": ("72106", "Welders and related machine operators"),
+    "plumber": ("72300", "Plumbers"),
+    "truck_driver": ("73300", "Transport truck drivers"),
+    "bus_driver": ("73301", "Bus drivers, subway operators and other transit operators"),
+    "construction_worker": ("75110", "Construction trades helpers and labourers"),
+    "lawyer": ("41101", "Lawyers and Quebec notaries"),
+    "healthcare_assistant": ("33102", "Nurse aides, orderlies and patient service associates"),
+    "preschool_teacher": ("42202", "Early childhood educators and assistants"),
+    "teacher": ("41221", "Elementary school and kindergarten teachers"),
 }
 # US SOC 2018 detailed units. Avoid conflating related-but-distinct occupations.
 US_SOC = {
@@ -166,6 +191,15 @@ def import_canada():
     if len(response.content) > 25_000_000:
         raise ValueError("Official Canadian CSV unexpectedly large")
     return persist(canada_records(response.content.decode("utf-8-sig")))
+
+
+def observed_coverage():
+    """Compact country/occupation coverage for the full availability matrix."""
+    with connect() as db:
+        init(db)
+        rows = db.execute("""SELECT country,occupation,MAX(reference_period)
+            FROM north_america_wages GROUP BY country,occupation""").fetchall()
+    return {(country, occupation): period for country, occupation, period in rows}
 
 
 def wages(country, occupation):
