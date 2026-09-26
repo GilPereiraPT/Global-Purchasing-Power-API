@@ -156,3 +156,21 @@ GET /v1/wages/US/software_developer
 ```
 
 The US and Canada providers never synthesize annual or monthly salaries from hourly rates. Values are published with their **unit, measure, occupation code, published year, reference period and original source**. No values are shown until successfully imported. The Canadian import job runs on workflow dispatch; successful validated snapshot changes are versioned in GitHub.
+
+## First verified live Canadian import — 2026-09-26
+
+GitHub Actions successfully imported **8 actual official national wage observations**
+for **4 exact NOC occupations** from the Canadian 2025 Job Bank file and committed
+`data/north_america_wages.json`. Both `mean` and `median` were retained, yielding
+4 × 2 observations. Source reference period is **2023–2024**, even though the
+file was published in 2025. This must appear on screen; the API does not
+pretend these are observed 2026 wages.
+
+Covered occupations: nurse (31301), physiotherapist (31202), civil engineer (21300),
+and building electrician (72200). For the other 36 catalogue occupations in Canada,
+`GET /v1/wages/CA/{occupation}` returns `unavailable`. US data remain unavailable
+until a genuine BLS workbook is imported and committed; the US importer is already
+implemented. National wages must not be relabeled as Ottawa or Washington wages.
+
+View the committed, attributable observations:
+https://github.com/GilPereiraPT/Global-Purchasing-Power-API/blob/main/data/north_america_wages.json
