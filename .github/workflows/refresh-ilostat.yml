@@ -2,6 +2,10 @@ name: Refresh official ILOSTAT salaries
 on:
   workflow_dispatch:
     inputs:
+      catalogue_only:
+        description: "Only list official salary datasets; do not import or commit"
+        type: boolean
+        default: true
       dataset:
         description: "Annual monthly-earnings by occupation and currency indicator from the official ILOSTAT catalogue"
         required: true
@@ -23,16 +27,20 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
+      - name: List current official ILOSTAT salary datasets
+        run: python -m app.ilostat_import --list
       - name: Validate and import source data
+        if: ${{ inputs.catalogue_only == false }}
         env:
           GPP_CACHE_DB: ${{ runner.temp }}/gpp_import.sqlite3
           DATASET: ${{ inputs.dataset || 'EAR_EMTA_SEX_OCU_CUR_NB_A' }}
         run: |
-          python -m app.ilostat_import --list
           python -m app.ilostat_import --dataset "$DATASET"
           python -m app.ilostat_import --export
-          python -m pytest -q
+      - name: Run tests
+        run: python -m pytest -q
       - name: Commit sourced snapshot
+        if: ${{ inputs.catalogue_only == false }}
         run: |
           git add data/salaries_snapshot.json
           if git diff --cached --quiet; then
