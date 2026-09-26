@@ -1,6 +1,6 @@
 # Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.2.1 is a first integration, not a completed wage or tax calculator.**
+Free-source international economic data backend for Android and web. **v0.3.0 is a first integration, not a completed wage or tax calculator.**
 
 ## Current scope
 
@@ -91,3 +91,34 @@ combinations remain unavailable.
 
 The ILOSTAT table may not provide all 40 professions or all 12 countries;
 the availability matrix reports the actual imported coverage, not an estimate.
+
+## Jobs module v0.3.0 — attributed remote vacancies
+
+The first jobs provider is **Remotive**: https://remotive.com/remote-jobs/api .
+Its public API permits developers to share listings with a visible **Remotive**
+credit and a direct link back to the listing. Do not gate listings behind sign-up,
+and do not syndicate them to third-party job boards. The feed is cached for six
+hours to respect the provider's recommendation of at most four requests per day.
+
+```text
+GET /v1/jobs?country=DE&occupation=software_developer
+GET /v1/jobs?country=BR&occupation=accountant&salary_published=true
+GET /v1/jobs/remotive/12345
+```
+
+The first route returns only title matches from the Remotive remote feed whose
+candidate eligibility is marked worldwide or mentions the requested country.
+A worldwide-eligible remote job is **not** an employer located in that country.
+A job matching no listings returns `no_results`, NOT a false claim that the
+country has no openings. Broad occupation `manager` returns `unavailable`
+because title matching is too vague. Listings may expire between feed checks.
+
+Published free-text salary is exposed as `salary_text` without inventing a
+numeric amount, annualization, currency or net salary. Salary-to-purchasing-power
+comparison requires a verified structured offer or user-entered gross salary and
+a separately validated country tax engine; it is NOT implemented here.
+
+The countries India, Brazil, Pakistan and all nine European countries remain
+available as destination *eligibility filters*, not claims that local in-person
+job coverage exists. The provider is Remote-only. Other sources require explicit
+rights for commercial reuse; no scraping or unlicensed redistribution.

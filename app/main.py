@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
+from app import jobs as job_provider
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot
@@ -21,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.2.1",
+    version="0.3.0",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -99,6 +100,12 @@ async def compare(country_a: str, country_b: str, occupation: str | None = None)
 @app.get("/v1/sources")
 def sources():
     return {
+        "remotive_jobs": {
+            "url": "https://remotive.com/remote-jobs/api",
+            "role": "Attributed remote job listings only, not national vacancy coverage",
+            "status": "integrated",
+            "terms_url": "https://remotive.com/remote-jobs/api",
+        },
         "ilostat": {"url": "https://webapps.ilo.org/ilostat-files/WEB_bulk_download/indicator/",
                     "role": "ISCO-08 occupation-specific annual employee earnings",
                     "status": "offline importer implemented; import required"},
@@ -137,3 +144,24 @@ def ilostat_datasets():
         raise UpstreamUnavailable("ILOSTAT catalogue unavailable") from exc
     return {"source_url": TOC, "datasets":
             earnings_datasets(csv.DictReader(io.StringIO(raw)))}
+
+@app.get("/v1/jobs")
+async def job_search(country: str, occupation: str,
+                     salary_published: bool = False,
+                     limit: int = Query(default=20, ge=1, le=100)):
+    destination = country.upper()
+    if destination not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    if occupation not in {x["id"] for x in OCCUPATIONS}:
+        raise HTTPException(422, "Unknown occupation")
+    return await job_provider.search(destination, occupation, salary_published, limit)
+
+
+@app.get("/v1/jobs/remotive/{job_id}")
+async def job_detail(job_id: int):
+    if job_id <= 0:
+        raise HTTPException(422, "Invalid provider id")
+    record = await job_provider.detail(job_id)
+    if record is None:
+        raise HTTPException(404, "Job not in latest available Remotive feed")
+    return record
