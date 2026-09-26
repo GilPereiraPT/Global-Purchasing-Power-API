@@ -1,5 +1,8 @@
 name: Refresh official ILOSTAT salaries
 on:
+  push:
+    paths:
+      - '.github/workflows/refresh-ilostat.yml'
   workflow_dispatch:
     inputs:
       dataset:
@@ -26,7 +29,7 @@ jobs:
       - name: Validate and import source data
         env:
           GPP_CACHE_DB: ${{ runner.temp }}/gpp_import.sqlite3
-          DATASET: ${{ inputs.dataset }}
+          DATASET: ${{ inputs.dataset || 'EAR_EMTA_SEX_OCU_CUR_NB_A' }}
         run: |
           python -m app.ilostat_import --list
           python -m app.ilostat_import --dataset "$DATASET"
