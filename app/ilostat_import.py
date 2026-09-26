@@ -21,7 +21,7 @@ from app.occupations import ISCO08_EXACT
 from app.store import connect
 
 BULK = "https://rplumber.ilo.org/files/indicator"
-TOC = "https://rplumber.ilo.org/metadata/toc/indicator/?lang=en"
+TOC = "https://rplumber.ilo.org/files/indicator/table_of_contents_en.rds"
 MAX_COMPRESSED = 35 * 1024 * 1024
 MAX_EXPANDED = 180 * 1024 * 1024
 COUNTRY_ISO3 = {
@@ -43,6 +43,32 @@ def init_salary_db(db):
         value REAL NOT NULL, dataset TEXT NOT NULL, source_url TEXT NOT NULL,
         PRIMARY KEY(country,occupation,period,indicator,source_code,classification,currency)
     )""")
+
+
+def read_rds_frame(payload, max_bytes=MAX_EXPANDED):
+    """Read only an official R data frame; reject unexpected formats."""
+    import pyreadr
+    if len(payload) > max_bytes:
+        raise ValueError("Official RDS exceeds configured size limit")
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "official.rds"
+        path.write_bytes(payload)
+        objects = pyreadr.read_r(str(path))
+    if len(objects) != 1:
+        raise ValueError("Unexpected RDS object count")
+    frame = next(iter(objects.values()))
+    if frame is None or frame.empty:
+        raise ValueError("Empty official RDS data frame")
+    return frame
+
+
+def catalogue_rows():
+    """Use the official Rilostat bulk TOC transport (.rds), not CSV over an API route."""
+    frame = read_rds_frame(download(TOC, 10_000_000))
+    required = {"id", "indicator.label"}
+    if not required <= set(frame.columns):
+        raise ValueError("ILOSTAT catalogue schema mismatch: " + repr(list(frame.columns)))
+    return frame.fillna("").to_dict(orient="records")
 
 
 def earnings_datasets(rows):
@@ -180,19 +206,7 @@ def download(url, max_bytes=MAX_COMPRESSED):
 
 def import_rds(db, payload, dataset, label):
     """Read the official RDS data frame without accepting fabricated CSV fallbacks."""
-    import pyreadr
-
-    if len(payload) > MAX_COMPRESSED:
-        raise ValueError("RDS source exceeds configured size limit")
-    with tempfile.TemporaryDirectory() as directory:
-        path = Path(directory) / "official.rds"
-        path.write_bytes(payload)
-        objects = pyreadr.read_r(str(path))
-    if len(objects) != 1:
-        raise ValueError("Unexpected RDS objects; refusing import")
-    frame = next(iter(objects.values()))
-    if frame is None or frame.empty:
-        raise ValueError("Empty ILOSTAT RDS; refusing import")
+    frame = read_rds_frame(payload, MAX_COMPRESSED)
     required = {"ref_area", "sex", "classif1", "time", "obs_value", "source"}
     if not required <= set(frame.columns):
         raise ValueError("Unexpected ILOSTAT RDS columns; refusing import")
@@ -204,22 +218,18 @@ def import_rds(db, payload, dataset, label):
 
 
 def run(dataset, label=None):
-    toc_rows = list(csv.DictReader(io.StringIO(download(TOC, 3_000_000).decode("utf-8-sig"))))
+    toc_rows = catalogue_rows()
     candidates = {x["id"]: x for x in earnings_datasets(toc_rows)}
     if dataset not in candidates:
         raise ValueError("Dataset is absent from official earnings-by-occupation annual catalogue")
     known = candidates[dataset]
     if label and label != known["label"]:
         raise ValueError("Dataset label does not match official catalogue")
-    compressed = download(f"{BULK}/{dataset}.csv.gz")
-    with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as stream:
-        text_bytes = stream.read(MAX_EXPANDED + 1)
-    if len(text_bytes) > MAX_EXPANDED:
-        raise ValueError("Uncompressed source exceeds configured size limit")
+    payload = download(f"{BULK}/{dataset}.rds")
     with connect() as db:
-        inserted = import_csv(db, text_bytes.decode("utf-8-sig"), dataset, known["label"])
+        inserted = import_rds(db, payload, dataset, known["label"])
     return {"dataset": dataset, "eligible_rows_imported": inserted,
-            "source": f"{BULK}/{dataset}.csv.gz",
+            "source": f"{BULK}/{dataset}.rds",
             "timestamp_utc": datetime.now(timezone.utc).isoformat(),
             "official_last_update": known["last_update"]}
 
@@ -286,30 +296,15 @@ def main():
     parser.add_argument("--export", action="store_true", help="Write source-backed salary JSON snapshot")
     args = parser.parse_args()
     if args.list:
-        raw = download(TOC, 3_000_000).decode("utf-8-sig")
-        import sys
-        print("ILOSTAT catalogue diagnostic:", file=sys.stderr)
-        print("response_prefix=" + repr(raw[:220]), file=sys.stderr)
-        toc = list(csv.DictReader(io.StringIO(raw)))
-        print("csv_columns=" + repr(list(toc[0]) if toc else []), file=sys.stderr)
-        print("csv_rows=" + str(len(toc)), file=sys.stderr)
-        print("first_row=" + repr(toc[0] if toc else None)[:900], file=sys.stderr)
-        print("earnings_sample=" + repr([
-            row for row in toc
-            if "EAR_EMTA" in str(row) or "earnings" in str(row).lower()
-        ][:3])[:2400], file=sys.stderr)
-        try:
-            parsed = json.loads(raw)
-            print("json_type=" + type(parsed).__name__, file=sys.stderr)
-            if isinstance(parsed, dict):
-                print("json_keys=" + repr(list(parsed)[:15]), file=sys.stderr)
-                print("json_first_values=" + repr({key: str(value)[:200] for key, value in list(parsed.items())[:3]})[:900], file=sys.stderr)
-            elif isinstance(parsed, list):
-                print("json_items=" + str(len(parsed)), file=sys.stderr)
-                print("json_first=" + repr(parsed[0] if parsed else None)[:900], file=sys.stderr)
-        except json.JSONDecodeError:
-            pass
-        print(json.dumps(earnings_datasets(toc), indent=2))
+        rows = catalogue_rows()
+        found = earnings_datasets(rows)
+        print(json.dumps({"catalogue_rows": len(rows),
+                          "columns": list(rows[0]) if rows else [],
+                          "earnings_candidates": found,
+                          "earnings_near_matches": [
+                              {"id": row.get("id"), "label": row.get("indicator.label")}
+                              for row in rows if "EAR_EMTA" in str(row.get("id", ""))
+                          ][:15]}, indent=2, default=str))
     elif args.dataset:
         print(json.dumps(run(args.dataset), indent=2))
     elif args.export:
