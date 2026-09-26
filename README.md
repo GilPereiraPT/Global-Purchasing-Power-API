@@ -1,6 +1,6 @@
 # EarnWage — Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.5.1 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
+Free-source international economic data backend for Android and web. **v0.5.2 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
 
 ## Current scope
 
@@ -269,3 +269,44 @@ Québec is flagged as requiring its distinct payroll regime. A partial
 federal/national estimate remains partial after selecting a region. Other
 countries do not show an additional region field by default. This is a client
 configuration contract, ready for the later Android/web interface.
+
+## v0.5.2 — EarnWage app-ready, consolidated read-only queries
+
+Development can continue through GitHub without access to the production
+cPanel server. These endpoints use the committed snapshots and local SQLite
+only; they do not trigger live Remotive/Eurostat/ECB calls as the user changes
+form fields.
+
+```http
+GET /v1/earnwage/coverage
+GET /v1/earnwage/overview?country=US&occupation=nurse
+GET /v1/earnwage/overview?country=US&occupation=nurse&region=NY&annual_gross=101420
+GET /v1/earnwage/overview?country=CA&occupation=nurse&region=ON
+GET /v1/earnwage/compare?country_a=US&country_b=CA&occupation=nurse&region_a=NY&region_b=ON
+```
+
+`/v1/earnwage/coverage` counts actual imported, available wage
+country/occupation pairs. With the current reviewed snapshots the status is
+**37 of 560** pairs: 9 US, 28 CA, none elsewhere. This number changes with
+actual validated imports, never with unsupported projections.
+
+`/v1/earnwage/overview` returns occupation name, national wage with original
+measure, unit and reference period, conditional region-selector metadata,
+optional independently-entered **annual** gross tax scenario, limitations,
+and explicitly unavailable capital expenses and net purchasing power.
+A salary from an official occupation table is **never** treated as a personal
+salary; hourly wages are **never** silently annualized. For US tax scenarios,
+even selecting a state does not claim that state tax is included. For Canada,
+selecting a province is optional for exploring wages but needed for the
+partial CPP/EI scenario; Québec returns unavailable fiscal components rather
+than using inappropriate non-Québec payroll rates.
+
+`/v1/earnwage/compare` returns the two sourced records **side by side**,
+without comparing different currencies, mixing annual/hourly wage units,
+or ranking countries by a fabricated "winner". Each side accepts an optional
+own gross annual salary, so two real-world offers can be examined separately
+once validated tax engines are available.
+
+Existing `/v1/compare`, `/v1/salaries`, `/v1/jobs` and all other v1 API
+routes remain supported. There is no server deployment or DNS action in this
+commit.
