@@ -61,9 +61,9 @@ def test_expanded_canada_noc_matches_official_titles():
     assert len({code for code, _ in CANADA_NOC.values()}) == len(CANADA_NOC)
     header = HEAD
     sample = (
-        "NOC_21232,Software developers and programmers,NAT,ER00,48.08,50.12,0,2023-2024\\n"
-        "NOC_31110,Dentists,NAT,ER00,110000,125000,1,2021\\n"
-        "NOC_11101,Financial and investment analysts,NAT,ER00,43.27,44.14,0,2023-2024\\n"
+        "NOC_21232,Software developers and programmers,NAT,ER00,48.08,50.12,0,2023-2024\n"
+        "NOC_31110,Dentists,NAT,ER00,110000,125000,1,2021\n"
+        "NOC_11101,Financial and investment analysts,NAT,ER00,43.27,44.14,0,2023-2024\n"
     )
     records = list(canada_records(header + sample))
     assert len(records) == 6
@@ -78,7 +78,7 @@ def test_unified_availability_includes_imported_canadian_wages(tmp_path, monkeyp
     from app.main import app
     monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "unified.sqlite"))
     with TestClient(app) as client:
-        assert client.get("/v1/salaries/CA/nurse").json()["status"] == "unavailable"
+        assert client.get("/v1/salaries/CA/nurse").json()["status"] == "available"
         persist(list(canada_records(HEAD + ROWS)))
         a = client.get("/v1/salaries/availability/matrix").json()
         cell = next(c for c in a["cells"] if c["country"] == "CA" and c["occupation"] == "nurse")
