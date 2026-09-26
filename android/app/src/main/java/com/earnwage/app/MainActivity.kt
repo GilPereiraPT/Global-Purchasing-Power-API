@@ -161,10 +161,10 @@ class MainActivity : ComponentActivity() {
                     }
                     when (screen) {
                         "inflation" -> {
-                            Text("Official national monthly HICP where supported. The current API does not yet provide a validated arbitrary start/end-period cumulative series.")
+                            Text("Official national monthly series, where available. Select two years to compare observed index values.")
                             YearSelector(t(language, 17), start, { start = it })
                             YearSelector(t(language, 18), end, { end = it })
-                            Text("Period fields are reserved for the forthcoming historical API. The current result is NOT a cumulative change between these dates.", color = teal)
+                            Text("The result uses the first observation in the start year and last observation in the end year, where the API provides a valid index series.", color = teal)
                             Button(onClick = { load("/v1/inflation/$country") }) { Text(t(language, 12)) }
                         }
                         "power" -> {
