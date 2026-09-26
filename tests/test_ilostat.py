@@ -62,3 +62,18 @@ def test_nonlocal_annual_currency_never_admitted():
            "classif1": "OCU_ISCO08_2411", "classif2": "CUR_PPP", "obs_value": "1000"}
     assert parse_row(row, "EAR_TEST_A",
                      "Average monthly earnings of employees by sex occupation and currency") is None
+
+
+
+def test_catalogue_rds_transport_and_schema(monkeypatch):
+    import pandas as pd
+    import app.ilostat_import as importer
+    monkeypatch.setattr(importer, "download", lambda url, max_bytes=0: b"official-rds")
+    monkeypatch.setattr(importer, "read_rds_frame", lambda payload: pd.DataFrame([
+        {"id": "EAR_EXAMPLE_A", "indicator.label":
+         "Average monthly earnings of employees by sex, occupation and currency",
+         "last.update": "2026-01-01", "data.end": "2024"}
+    ]))
+    rows = importer.catalogue_rows()
+    assert importer.TOC.endswith("/table_of_contents_en.rds")
+    assert earnings_datasets(rows)[0]["id"] == "EAR_EXAMPLE_A"
