@@ -40,3 +40,23 @@ def test_salary_matrix_has_localized_display_without_changing_ids():
         assert cell["occupation_label"] == "Contabilista"
         assert cell["occupation"] == "accountant"
         assert cell["status"] == "unavailable"
+
+
+def test_missing_translation_falls_back_in_wsgi_and_asgi(monkeypatch):
+    import app.native_wsgi as wsgi
+    from app import main as asgi
+    jobs = [dict(job) for job in OCCUPATIONS]
+    jobs[0] = {**jobs[0], "translations": {
+        key: value for key, value in jobs[0]["translations"].items() if key != "pt"
+    }}
+    monkeypatch.setattr(wsgi, "OCCUPATIONS", jobs)
+    monkeypatch.setattr(asgi, "OCCUPATIONS", jobs)
+    assert wsgi.dispatch("/v1/occupations", {"lang": ["pt"]})["occupations"][0]["label"] == "Accountant"
+    assert wsgi.dispatch("/v1/salaries/availability/matrix", {"lang": ["pt"]})["cells"][0]["occupation_label"] == "Accountant"
+    with TestClient(app) as client:
+        result = client.get("/v1/occupations?lang=pt")
+        assert result.status_code == 200
+        assert result.json()["occupations"][0]["label"] == "Accountant"
+        matrix = client.get("/v1/salaries/availability/matrix?lang=pt")
+        assert matrix.status_code == 200
+        assert matrix.json()["cells"][0]["occupation_label"] == "Accountant"
