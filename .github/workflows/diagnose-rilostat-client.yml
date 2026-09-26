@@ -1,0 +1,29 @@
+name: Diagnose ILOSTAT with official Rilostat
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  catalogue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      - name: Install official ILOSTAT R client
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: any::Rilostat
+      - name: Inspect official catalogue without importing salaries
+        run: Rscript scripts/ilostat_rilostat_diagnostic.R
+      - name: Save candidate indicator catalogue
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ilostat-rilostat-candidates
+          path: diagnostics/ilostat_earnings_candidates.csv
+          if-no-files-found: ignore
