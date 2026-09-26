@@ -336,7 +336,7 @@ class MainActivity : ComponentActivity() {
                 if (initialIncome != null && initialIncome > 0) {
                     val required = initialIncome * factor
                     DataCard("Income needed to preserve purchasing power", "%.2f".format(Locale.US, required), "Same currency and income period as entered · official national inflation")
-                    DataCard("Past income in end-period purchasing power", "%.2f".format(Locale.US, initialIncome / factor), "If nominal income remained unchanged")
+                    DataCard("Unchanged nominal income in start-period purchasing power", "%.2f".format(Locale.US, initialIncome / factor), "Value of the same nominal amount after inflation")
                     if (currentIncome != null && currentIncome >= 0) {
                         DataCard("Real income change", "%+.2f%%".format(Locale.US, (currentIncome / required - 1) * 100), "Current income versus inflation-adjusted initial income")
                         DataCard("Difference from required income", "%+.2f".format(Locale.US, currentIncome - required))
