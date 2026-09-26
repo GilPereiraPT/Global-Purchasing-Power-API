@@ -92,7 +92,7 @@ def canada_records(text):
             if value is None:
                 continue
             count += 1
-            yield ("CA", key, "national", f"NOC2021:{code}", row["NOC_Title_eng"],
+            yield ("CA", key, "national", f"NOC2021:{code.removeprefix('NOC_')}", row["NOC_Title_eng"],
                    period, 2025, "CAD", measure, unit, value,
                    CANADA_DATASET, CANADA_URL)
     if count == 0:
