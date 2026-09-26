@@ -11,9 +11,7 @@ import io
 import json
 import os
 import re
-import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 
 import httpx
 
@@ -79,7 +77,7 @@ def parse_row(row, dataset, dataset_label):
     # Annual ILOSTAT datasets can include multiple currencies/PPPs.
     # Only declared local currency can be treated as national-currency salary.
     if "local currency" not in label:
-        if row.get("classif2") not in ("CUR_LCU", "CUR_NCU"):
+        if row.get("classif2") not in ("CUR_LCU", "CUR_NCU", "CUR_TYPE_LCU"):
             return None
     try:
         value = float(row["obs_value"])
@@ -97,12 +95,16 @@ def parse_row(row, dataset, dataset_label):
 
 def import_csv(db, text, dataset, label):
     init_salary_db(db)
-    if "average monthly earnings" not in label.lower():
+    if not ("average monthly earnings" in label.lower() and "occupation" in label.lower() and "employees" in label.lower()):
         raise ValueError("Only average monthly earnings datasets are supported")
     if not re.fullmatch(r"[A-Za-z0-9_]+_A", dataset):
         raise ValueError("Invalid annual dataset id")
     count = 0
-    for row in csv.DictReader(io.StringIO(text)):
+    reader = csv.DictReader(io.StringIO(text))
+    required = {"ref_area", "sex", "classif1", "time", "obs_value", "source"}
+    if not required <= set(reader.fieldnames or []):
+        raise ValueError("Unexpected ILOSTAT data columns; refusing import")
+    for row in reader:
         observation = parse_row(row, dataset, label)
         if observation:
             db.execute("""INSERT OR REPLACE INTO salary_observations
@@ -110,6 +112,8 @@ def import_csv(db, text, dataset, label):
                  currency,value,dataset,source_url)
                 VALUES (?,?,?,?,?,?,?,?,?,?)""", observation)
             count += 1
+    if count == 0:
+        raise ValueError("No eligible observations; inspect official source schema and filters")
     db.commit()
     return count
 
@@ -194,18 +198,76 @@ def run(dataset, label=None):
             "official_last_update": known["last_update"]}
 
 
+def export_snapshot(path="data/salaries_snapshot.json"):
+    """Publish source-backed observations as JSON for GitHub-to-host deployment."""
+    from app.catalog import OCCUPATIONS
+    with connect() as db:
+        init_salary_db(db)
+        rows = db.execute("""SELECT country,occupation,period,indicator,source_code,
+              classification,currency,value,dataset,source_url
+              FROM salary_observations ORDER BY country,occupation,period,source_code""").fetchall()
+    if not rows:
+        raise ValueError("No ILOSTAT observations imported; refusing empty snapshot")
+    columns = ["country","occupation","period","indicator","source_code",
+               "classification","currency","value","dataset","source_url"]
+    payload = {"schema_version": 1, "source": "ILOSTAT", "observations":
+               [dict(zip(columns, r)) for r in rows]}
+    from pathlib import Path
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    return {"path": str(destination), "observations": len(rows)}
+
+
+def load_snapshot(path="data/salaries_snapshot.json"):
+    """Load only vetted snapshot records; no data returned if snapshot absent."""
+    from pathlib import Path
+    p = Path(path)
+    if not p.exists():
+        return 0
+    data = json.loads(p.read_text(encoding="utf-8"))
+    if data.get("schema_version") != 1 or data.get("source") != "ILOSTAT":
+        raise ValueError("Unsupported salary snapshot")
+    records = data.get("observations", [])
+    if not isinstance(records, list):
+        raise ValueError("Invalid salary snapshot")
+    with connect() as db:
+        init_salary_db(db)
+        for row in records:
+            country, occupation = row["country"], row["occupation"]
+            if country not in COUNTRY_MAP or ISCO08_EXACT.get(occupation) is None:
+                raise ValueError("Unknown country or unmapped occupation in snapshot")
+            if row["classification"] != "OCU_ISCO08_" + ISCO08_EXACT[occupation]:
+                raise ValueError("Incorrect ISCO-08 mapping in snapshot")
+            if row["currency"] != COUNTRY_MAP[country]["currency"]:
+                raise ValueError("Incorrect currency in snapshot")
+            if not YEAR_RE.fullmatch(row["period"]) or not (0 < float(row["value"]) < 1e12):
+                raise ValueError("Invalid year or observation")
+            db.execute("""INSERT OR REPLACE INTO salary_observations
+                (country,occupation,period,indicator,source_code,classification,
+                 currency,value,dataset,source_url)
+                VALUES (?,?,?,?,?,?,?,?,?,?)""", tuple(row[k] for k in
+                ("country","occupation","period","indicator","source_code",
+                 "classification","currency","value","dataset","source_url")))
+        db.commit()
+    return len(records)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--list", action="store_true", help="List official eligible annual datasets")
     parser.add_argument("--dataset", help="Validated ILOSTAT annual indicator id")
+    parser.add_argument("--export", action="store_true", help="Write source-backed salary JSON snapshot")
     args = parser.parse_args()
     if args.list:
         toc = list(csv.DictReader(io.StringIO(download(TOC, 3_000_000).decode("utf-8-sig"))))
         print(json.dumps(earnings_datasets(toc), indent=2))
     elif args.dataset:
         print(json.dumps(run(args.dataset), indent=2))
+    elif args.export:
+        print(json.dumps(export_snapshot(), indent=2))
     else:
-        parser.error("Provide --list or --dataset DATASET_ID")
+        parser.error("Provide --list, --dataset DATASET_ID, or --export")
 
 
 if __name__ == "__main__":
