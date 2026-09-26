@@ -215,7 +215,7 @@ def export_snapshot(path="data/salaries_snapshot.json"):
     from pathlib import Path
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"path": str(destination), "observations": len(rows)}
 
 
