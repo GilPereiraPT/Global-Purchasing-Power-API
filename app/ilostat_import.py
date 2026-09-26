@@ -286,7 +286,29 @@ def main():
     parser.add_argument("--export", action="store_true", help="Write source-backed salary JSON snapshot")
     args = parser.parse_args()
     if args.list:
-        toc = list(csv.DictReader(io.StringIO(download(TOC, 3_000_000).decode("utf-8-sig"))))
+        raw = download(TOC, 3_000_000).decode("utf-8-sig")
+        import sys
+        print("ILOSTAT catalogue diagnostic:", file=sys.stderr)
+        print("response_prefix=" + repr(raw[:220]), file=sys.stderr)
+        toc = list(csv.DictReader(io.StringIO(raw)))
+        print("csv_columns=" + repr(list(toc[0]) if toc else []), file=sys.stderr)
+        print("csv_rows=" + str(len(toc)), file=sys.stderr)
+        print("first_row=" + repr(toc[0] if toc else None)[:900], file=sys.stderr)
+        print("earnings_sample=" + repr([
+            row for row in toc
+            if "EAR_EMTA" in str(row) or "earnings" in str(row).lower()
+        ][:3])[:2400], file=sys.stderr)
+        try:
+            parsed = json.loads(raw)
+            print("json_type=" + type(parsed).__name__, file=sys.stderr)
+            if isinstance(parsed, dict):
+                print("json_keys=" + repr(list(parsed)[:15]), file=sys.stderr)
+                print("json_first_values=" + repr({key: str(value)[:200] for key, value in list(parsed.items())[:3]})[:900], file=sys.stderr)
+            elif isinstance(parsed, list):
+                print("json_items=" + str(len(parsed)), file=sys.stderr)
+                print("json_first=" + repr(parsed[0] if parsed else None)[:900], file=sys.stderr)
+        except json.JSONDecodeError:
+            pass
         print(json.dumps(earnings_datasets(toc), indent=2))
     elif args.dataset:
         print(json.dumps(run(args.dataset), indent=2))
