@@ -1,5 +1,8 @@
 name: Import free Canadian occupational wages
 on:
+  push:
+    paths:
+      - '.github/workflows/import-canada-wages.yml'
   workflow_dispatch:
 permissions:
   contents: write
