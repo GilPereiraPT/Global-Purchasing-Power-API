@@ -37,7 +37,7 @@ def probe(name):
                       "content_length": response.headers.get("Content-Length"),
                       "received_bytes": len(data),
                       "truncated": len(data) > MAX_READ,
-                      "gzip_signature": data.startswith(b"\\x1f\\x8b")}
+                      "gzip_signature": data.startswith(b"\x1f\x8b")}
             if name.endswith(".csv") and data:
                 first = data.decode("utf-8-sig", errors="replace").splitlines()
                 result["header"] = next(csv.reader(first[:1]), [])
