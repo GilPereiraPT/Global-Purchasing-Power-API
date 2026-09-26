@@ -13,6 +13,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -118,7 +120,7 @@ class MainActivity : ComponentActivity() {
         Column(Modifier.fillMaxSize().background(Color(0xFFF5F8F8)).verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (screen == "cover") {
                 Spacer(Modifier.height(45.dp))
-                Text("🌍", fontSize = 76.sp)
+                Image(painterResource(R.drawable.earnwage_hero), contentDescription = "EarnWage hero", modifier = Modifier.fillMaxWidth().height(245.dp), contentScale = ContentScale.Fit)
                 Text("EarnWage", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = navy)
                 Text("Salary & Cost of Living", fontSize = 18.sp, color = teal)
                 Text(t(language, 7), fontSize = 22.sp, color = navy)
@@ -128,6 +130,7 @@ class MainActivity : ComponentActivity() {
                 Text(health, fontSize = 12.sp)
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(R.drawable.earnwage_logo), contentDescription = "EarnWage logo", modifier = Modifier.size(48.dp))
                     Text("EarnWage", fontSize = 26.sp, color = navy, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     TextButton(onClick = { screen = "home"; result = ""; request = "" }) { Text(t(language, 20)) }
                 }
