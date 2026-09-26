@@ -1,6 +1,6 @@
 # Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.4.1 is a first integration, not a completed wage or tax calculator.**
+Free-source international economic data backend for Android and web. **v0.4.2 is a first integration, not a completed wage or tax calculator.**
 
 ## Current scope
 
@@ -92,7 +92,7 @@ combinations remain unavailable.
 The ILOSTAT table may not provide all 40 professions or all 14 countries;
 the availability matrix reports the actual imported coverage, not an estimate.
 
-## Jobs module v0.4.1 — attributed remote vacancies
+## Jobs module v0.4.2 — attributed remote vacancies
 
 The first jobs provider is **Remotive**: https://remotive.com/remote-jobs/api .
 Its public API permits developers to share listings with a visible **Remotive**
@@ -167,14 +167,38 @@ dentists use **2021**. The publication is dated **2025**, so do not portray
 these as observed 2026 earnings.
 
 For the other **12** catalogue professions in Canada the response is
-`unavailable`. US data remain unavailable until an actual BLS workbook is
-imported. National wages must not be relabeled as Ottawa or Washington wages.
+`unavailable`. US wages for nine SOC occupations have since been imported from official BLS national Table 1; the other 31 remain unavailable. National wages must not be relabeled as Ottawa or Washington wages.
 
 View the committed, attributable observations:
 https://github.com/GilPereiraPT/Global-Purchasing-Power-API/blob/main/data/north_america_wages.json
 
-## v0.4.1 — broader Canada and unified salary coverage
+## v0.4.2 — broader Canada and unified salary coverage
 
 An official GitHub Actions source audit identified **28 NOC 2021 unit group mappings** to the 40 curated professions (up from 4). The importer checks the *original English occupation title* for each NOC code, national area and source wage units. **A NOC group is not always identical to the shorter translated occupation label**: each observation exposes the original NOC group title so users can inspect scope. Some professions still have no defensible NOC equivalence and remain unavailable.
 
-Both `GET /v1/salaries/CA/{occupation}` and `GET /v1/wages/CA/{occupation}` return the same North American observations, and the 560-cell `GET /v1/salaries/availability/matrix` now includes real imported Canadian data as available. USA remains unavailable until real BLS data are imported. This fixes a prior discrepancy where Canadian salaries existed but the general salary matrix incorrectly showed unavailable.
+Both `GET /v1/salaries/CA/{occupation}` and `GET /v1/wages/CA/{occupation}` return the same North American observations, and the 560-cell `GET /v1/salaries/availability/matrix` now includes real imported Canadian data as available. USA is available for nine reviewed BLS occupation rows; 31 occupations remain unavailable. This fixes a prior discrepancy where Canadian salaries existed but the general salary matrix incorrectly showed unavailable.
+
+## v0.4.2 — official US May 2025 national wages now included
+
+The BLS 2025 OEWS national spreadsheet is blocked to automated GitHub runners
+(HTTP 403), but BLS publishes the same **annual mean wages** in its
+[official national 2025 press release Table 1](https://www.bls.gov/news.release/ocwage.t01.htm).
+Nine occupation rows were verified against that original public federal table
+and checked into `data/bls_2025_release_reviewed.csv`. The import workflow
+preserves the existing Canadian data, adds nine original USD/year national
+**mean** observations, and commits the complete combined snapshot. It does
+not invent medians from BLS Table 1's median **hourly** column, or claim
+that this reviewed subset is the full BLS XLSX. Source data reference
+**May 2025**, and the release was published **15 May 2026**.
+
+```text
+GET /v1/salaries/US/nurse
+GET /v1/wages/US/software_developer
+GET /v1/salaries/availability/matrix
+```
+
+Coverage: **9 of 40** US occupations; **28 of 40** Canadian occupations;
+`560` total potential country/occupation cells. US/Canadian records = **65**,
+covering **37** distinct country/occupation cells. Other combinations
+remain unavailable. A Canadian reimport loads the existing combined
+snapshot first, so its update cannot silently erase American wages.

@@ -24,6 +24,7 @@ jobs:
         env:
           GPP_CACHE_DB: ${{ runner.temp }}/north_america.sqlite3
         run: |
+          python -c "from app.north_america import load_snapshot; load_snapshot('data/north_america_wages.json')"
           python -m app.north_america --canada
           python -m app.north_america --export
           python -m pytest -q

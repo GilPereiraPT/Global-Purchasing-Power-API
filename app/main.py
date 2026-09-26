@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.4.1",
+    version="0.4.2",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -120,7 +120,7 @@ def sources():
         "us_bls_oews": {
             "url": na_wages.BLS_TABLE,
             "role": "US national detailed occupation wages in BLS May 2025 workbook",
-            "status": "local official XLSX importer implemented; workbook needed",
+            "status": "May 2025 official national Table 1 nine mean wages imported; full XLSX importer available",
         },
         "remotive_jobs": {
             "url": "https://remotive.com/remote-jobs/api",
