@@ -1,0 +1,45 @@
+name: Refresh official ILOSTAT salaries
+on:
+  workflow_dispatch:
+    inputs:
+      dataset:
+        description: "Annual monthly-earnings by occupation and currency indicator from the official ILOSTAT catalogue"
+        required: true
+        default: "EAR_EMTA_SEX_OCU_CUR_NB_A"
+permissions:
+  contents: write
+concurrency:
+  group: ilostat-salary-refresh
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Validate and import source data
+        env:
+          GPP_CACHE_DB: ${{ runner.temp }}/gpp_import.sqlite3
+          DATASET: ${{ inputs.dataset }}
+        run: |
+          python -m app.ilostat_import --list
+          python -m app.ilostat_import --dataset "$DATASET"
+          python -m app.ilostat_import --export
+          python -m pytest -q
+      - name: Commit sourced snapshot
+        run: |
+          git add data/salaries_snapshot.json
+          if git diff --cached --quiet; then
+            echo "Snapshot unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: refresh observed ILOSTAT salary snapshot"
+          git push
