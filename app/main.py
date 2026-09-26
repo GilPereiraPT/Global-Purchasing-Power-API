@@ -15,6 +15,7 @@ from app.store import connect
 from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot
 import csv
 import io
+import unicodedata
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -70,17 +71,31 @@ def country(code: str):
 def languages():
     return {"languages": [{"code": k, "label": v} for k, v in SUPPORTED_LANGUAGES.items()],
             "default": "en", "portuguese_locale": "pt",
-            "note": "Occupation labels have pt/en translations; remaining interface translations are planned."}
+            "note": "Occupation labels are localized in all seven supported languages; other interface text may require client localization."}
+
+def _search_key(value: str) -> str:
+    value = unicodedata.normalize("NFKD", value.casefold())
+    return "".join(char for char in value if not unicodedata.combining(char)).strip()
+
 
 @app.get("/v1/occupations")
-def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$")):
+def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$"),
+                q: str | None = Query(default=None, max_length=100)):
     base = lang.split("-")[0].lower()
     if base not in SUPPORTED_LANGUAGES:
         raise HTTPException(422, "Unsupported interface language")
-    return {"language": lang, "fallback": "en", "occupations": [
-        {"id": item["id"], "isco08": item["isco08"], "label": item["translations"].get(base, item["translations"]["en"]),
-         "translations": item["translations"]} for item in OCCUPATIONS
-    ]}
+    term = _search_key(q or "")
+    items = []
+    for item in OCCUPATIONS:
+        terms = [item["id"], *item["translations"].values(),
+                 *(alias for group in item.get("aliases", {}).values() for alias in group)]
+        if term and not any(term in _search_key(value) for value in terms):
+            continue
+        items.append({"id": item["id"], "isco08": item["isco08"],
+                      "label": item["translations"][base],
+                      "translations": item["translations"],
+                      "aliases": item.get("aliases", {})})
+    return {"language": base, "fallback": "en", "count": len(items), "occupations": items}
 
 @app.get("/v1/inflation/{code}")
 async def inflation(code: str):
@@ -166,8 +181,15 @@ def sources():
     }
 
 @app.get("/v1/salaries/availability/matrix")
-def salary_availability_matrix():
+def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$")):
+    base = lang.split("-")[0].lower()
+    if base not in SUPPORTED_LANGUAGES:
+        raise HTTPException(422, "Unsupported interface language")
+    labels = {item["id"]: item["translations"][base] for item in OCCUPATIONS}
     result = availability()
+    result["language"] = base
+    for cell in result["cells"]:
+        cell["occupation_label"] = labels[cell["occupation"]]
     na = na_wages.observed_coverage()
     for cell in result["cells"]:
         key = (cell["country"], cell["occupation"])
