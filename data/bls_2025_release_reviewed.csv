@@ -1,0 +1,10 @@
+occupation,soc,title,annual_mean_usd,source_url
+nurse,29-1141,Registered Nurses,101420,https://www.bls.gov/news.release/ocwage.t01.htm
+civil_engineer,17-2051,Civil Engineers,108670,https://www.bls.gov/news.release/ocwage.t01.htm
+electrician,47-2111,Electricians,71490,https://www.bls.gov/news.release/ocwage.t01.htm
+software_developer,15-1252,Software Developers,148100,https://www.bls.gov/news.release/ocwage.t01.htm
+mechanical_engineer,17-2141,Mechanical Engineers,113610,https://www.bls.gov/news.release/ocwage.t01.htm
+pharmacist,29-1051,Pharmacists,140920,https://www.bls.gov/news.release/ocwage.t01.htm
+physiotherapist,29-1123,Physical Therapists,105280,https://www.bls.gov/news.release/ocwage.t01.htm
+dentist,29-1021,"Dentists, General",191350,https://www.bls.gov/news.release/ocwage.t01.htm
+cybersecurity_specialist,15-1212,Information Security Analysts,132510,https://www.bls.gov/news.release/ocwage.t01.htm

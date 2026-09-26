@@ -1,0 +1,37 @@
+name: Import reviewed official BLS 2025 release wages
+on:
+  push:
+    paths:
+      - '.github/workflows/import-us-bls.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: us-bls-wages
+  cancel-in-progress: false
+jobs:
+  verified:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Validate approved BLS Table 1 extract and keep Canadian data
+        env:
+          GPP_CACHE_DB: ${{ runner.temp }}/us_canada_wages.sqlite3
+        run: |
+          python -m app.bls_release_import
+          python -m pytest -q
+      - name: Commit real source-backed US/CA wage snapshot
+        run: |
+          git add data/north_america_wages.json
+          if git diff --cached --quiet; then
+            echo "No source-backed changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: publish official US BLS 2025 national wages alongside Canadian wages"
+          git push
