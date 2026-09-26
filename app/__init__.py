@@ -1,0 +1,1 @@
+"""Global Purchasing Power API."""

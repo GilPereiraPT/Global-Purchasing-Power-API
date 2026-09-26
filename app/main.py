@@ -1,0 +1,105 @@
+"""HTTP contract for Android and web clients."""
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import JSONResponse
+
+from app.catalog import COUNTRY_MAP, OCCUPATIONS
+from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
+from app.store import connect
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    with connect():
+        pass
+    yield
+
+app = FastAPI(
+    title="Global Purchasing Power API",
+    version="0.1.0",
+    description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
+    lifespan=lifespan,
+)
+
+@app.exception_handler(UpstreamUnavailable)
+async def upstream_error(request, exc):
+    return JSONResponse(status_code=503, content={"error": "upstream_unavailable", "detail": str(exc)})
+
+@app.get("/v1/health")
+def health():
+    return {"status": "ok", "version": app.version}
+
+@app.get("/v1/countries")
+def countries():
+    return {"countries": list(COUNTRY_MAP.values()), "count": len(COUNTRY_MAP)}
+
+@app.get("/v1/countries/{code}")
+def country(code: str):
+    item = COUNTRY_MAP.get(code.upper())
+    if not item:
+        raise HTTPException(404, "Unknown country")
+    return item
+
+@app.get("/v1/occupations")
+def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$")):
+    base = lang.split("-")[0].lower()
+    return {"language": lang, "fallback": "en", "occupations": [
+        {"id": item["id"], "label": item["translations"].get(base, item["translations"]["en"]),
+         "translations": item["translations"]} for item in OCCUPATIONS
+    ]}
+
+@app.get("/v1/inflation/{code}")
+async def inflation(code: str):
+    item = COUNTRY_MAP.get(code.upper())
+    if not item:
+        raise HTTPException(404, "Unknown country")
+    if item["inflation_provider"] != "eurostat":
+        return {"country": item["code"], "status": "unavailable",
+                "reason": "No validated free national importer in v0.1.0"}
+    return {"status": "available", **await inflation_series(item["code"])}
+
+@app.get("/v1/exchange-rates/{currency}")
+async def fx(currency: str):
+    code = currency.upper()
+    if len(code) != 3 or not code.isalpha():
+        raise HTTPException(422, "Invalid ISO currency")
+    result = await exchange_rate(code)
+    if result is None:
+        return {"currency": code, "status": "unavailable",
+                "reason": "No ECB reference series for this currency"}
+    return {"status": "available", **result}
+
+@app.get("/v1/compare")
+async def compare(country_a: str, country_b: str, occupation: str | None = None):
+    a, b = country_a.upper(), country_b.upper()
+    if a not in COUNTRY_MAP or b not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    if occupation and occupation not in {x["id"] for x in OCCUPATIONS}:
+        raise HTTPException(422, "Unknown occupation")
+    import asyncio
+    async def side(code):
+        item = COUNTRY_MAP[code].copy()
+        item["salary"] = {"status": "unavailable", "reason": "Occupation wages importer pending; national wages must not be labeled capital wages"}
+        item["tax"] = {"status": "unavailable", "reason": "Country-specific model not validated"}
+        item["capital_cost_of_living"] = {"status": "unavailable", "reason": "No verified capital-level series"}
+        if item["inflation_provider"] == "eurostat":
+            item["inflation"] = {"status": "available", **await inflation_series(code)}
+        else:
+            item["inflation"] = {"status": "unavailable", "reason": "Validated importer pending"}
+        return item
+    first, second = await asyncio.gather(side(a), side(b))
+    return {"version": app.version, "country_a": first, "country_b": second,
+            "occupation": occupation, "comparison_note": "National inflation is NOT city cost of living; no fabricated profession wages or net salary."}
+
+@app.get("/v1/sources")
+def sources():
+    return {
+        "eurostat_hicp": {"url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr",
+                          "role": "monthly harmonized national inflation", "status": "implemented"},
+        "ecb_exr": {"url": "https://data-api.ecb.europa.eu/service/data/EXR",
+                    "role": "reference exchange rates", "status": "implemented"},
+        "esco": {"url": "https://ec.europa.eu/esco/api/", "role": "profession translations and identifiers",
+                 "status": "planned; current labels are curated, not ESCO-linked"},
+        "oecd": {"url": "https://sdmx.oecd.org/public/rest/v1/",
+                 "role": "national wages and taxing wages", "status": "planned"},
+    }
