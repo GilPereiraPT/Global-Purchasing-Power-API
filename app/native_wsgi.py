@@ -234,8 +234,6 @@ def dispatch(path, q):
                 "occupation": job,
                 "comparison_note": "National inflation is not city cost of living; no inferred net salary."}
     parts = [p for p in path.split("/") if p]
-    if len(parts) == 3 and parts[:2] == ["v1", "regions"]:
-        raise ApiError(404, "Unknown route")
     if len(parts) == 3 and parts[:2] == ["v1", "countries"]:
         return COUNTRY_MAP[country(parts[2])]
     if len(parts) == 3 and parts[:2] == ["v1", "regions"]:
