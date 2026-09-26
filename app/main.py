@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import jobs as job_provider
 from app import north_america as na_wages
+from app.tax_components import components as tax_components
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot
@@ -24,7 +25,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.4.2",
+    version="0.5.0",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -112,6 +113,12 @@ async def compare(country_a: str, country_b: str, occupation: str | None = None)
 @app.get("/v1/sources")
 def sources():
     return {
+        "irs_2026_federal_tax": {"url": "https://www.irs.gov/irb/2025-45_IRB",
+                                "role": "2026 US federal single tax brackets and standard deduction",
+                                "status": "partial illustration implemented"},
+        "cra_2026_cpp_ei": {"url": "https://www.canada.ca/en/revenue-agency/services/forms-publications/payroll/t4032-payroll-deductions-tables/t4032oc-jan/t4032oc-january-general-information.html",
+                            "role": "2026 CPP, CPP2, and EI employee contribution rates outside Quebec",
+                            "status": "partial illustration implemented"},
         "canada_job_bank_wages": {
             "url": na_wages.CANADA_URL,
             "role": "Canada national occupational hourly/annual median and mean, as published",
@@ -204,3 +211,24 @@ def north_america_wages(country: str, occupation: str):
     if occupation not in {x["id"] for x in OCCUPATIONS}:
         raise HTTPException(422, "Unknown occupation")
     return na_wages.wages(code, occupation)
+
+@app.get("/v1/tax-components/{country}")
+def tax_components_endpoint(
+    country: str,
+    annual_gross: float = Query(..., gt=0, le=100000000),
+    tax_year: int = 2026,
+    filing_status: str = "single",
+    province: str | None = None,
+):
+    """Partial source-backed 2026 components, deliberately no take-home pay."""
+    code = country.upper()
+    if code not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    if code not in ("US", "CA"):
+        return tax_components(code, annual_gross, tax_year=tax_year)
+    try:
+        return tax_components(code, annual_gross, tax_year=tax_year,
+                              filing_status=filing_status,
+                              province=province.upper() if province else None)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc

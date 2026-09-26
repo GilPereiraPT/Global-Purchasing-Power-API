@@ -1,6 +1,6 @@
 # Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.4.2 is a first integration, not a completed wage or tax calculator.**
+Free-source international economic data backend for Android and web. **v0.5.0 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
 
 ## Current scope
 
@@ -202,3 +202,42 @@ Coverage: **9 of 40** US occupations; **28 of 40** Canadian occupations;
 covering **37** distinct country/occupation cells. Other combinations
 remain unavailable. A Canadian reimport loads the existing combined
 snapshot first, so its update cannot silently erase American wages.
+
+## v0.5.0 — strictly partial 2026 tax components, not net pay
+
+The new `GET /v1/tax-components/{country}` accepts an **explicit user
+annual gross wage**, never silently annualizes Job Bank hourly pay and never
+pretends that May 2025 BLS wages were observed in tax year 2026.
+
+```text
+GET /v1/tax-components/US?annual_gross=101420&tax_year=2026
+GET /v1/tax-components/CA?annual_gross=100000&province=ON&tax_year=2026
+```
+
+**US:** Standard *single* employee only: official 2026 federal marginal
+brackets, USD 16,100 standard deduction, employee Social Security (6.2% up
+to USD 184,500), Medicare (1.45%), and additional Medicare (0.9% on wages
+above USD 200,000). The income-tax figure is **before credits**. Missing:
+state/local taxes, credits, itemized and special deductions, health/pension
+premiums, complex wage circumstances. Filing statuses besides single are
+rejected rather than silently modeled with single thresholds.
+
+Sources:
+- https://www.irs.gov/irb/2025-45_IRB
+- https://www.irs.gov/taxtopics/tc751
+- https://www.irs.gov/taxtopics/tc560
+
+**Canada:** 2026 employee CPP base (4.95%), first additional CPP (1%),
+CPP2 (4% above CAD 74,600 through CAD 85,000) and EI (1.63% up to
+CAD 68,900), for a typical CPP/EI-covered adult employee **outside Quebec**.
+A supported non-Quebec province must be supplied. Federal and provincial
+income tax are NOT calculated. The Quebec regime and special occupations
+need independent validation.
+
+Source: https://www.canada.ca/en/revenue-agency/services/forms-publications/payroll/t4032-payroll-deductions-tables/t4032oc-jan/t4032oc-january-general-information.html
+
+Both return `status: partial_estimate`, `net_income: null`, itemized
+components, excluded items and source URLs. **Do not label a subtotal of these
+items "net salary", "take-home pay", "disposable income", or purchasing power.**
+The 2026 tax-rule year is distinct from each source occupation wage's own
+statistical reference period.
