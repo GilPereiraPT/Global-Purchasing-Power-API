@@ -8,6 +8,7 @@ from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import jobs as job_provider
 from app import north_america as na_wages
 from app.client_config import configuration as earnwage_configuration, region_configuration
+from app import earnwage_queries as ew_queries
 from app.tax_components import components as tax_components
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
@@ -26,7 +27,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="EarnWage — Global Purchasing Power API",
-    version="0.5.1",
+    version="0.5.2",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -246,5 +247,49 @@ def tax_components_endpoint(
         return tax_components(code, annual_gross, tax_year=tax_year,
                               filing_status=filing_status,
                               province=province.upper() if province else None)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/v1/earnwage/coverage")
+def earnwage_coverage():
+    """Real imported wage coverage; safe to show on an Android home screen."""
+    return ew_queries.coverage()
+
+
+@app.get("/v1/earnwage/overview")
+def earnwage_overview(
+    country: str,
+    occupation: str,
+    region: str | None = None,
+    annual_gross: float | None = Query(default=None, gt=0, le=100000000),
+    tax_year: int = 2026,
+):
+    """One screen-ready place/occupation record, no live external requests."""
+    try:
+        return ew_queries.overview(country, occupation, region, annual_gross, tax_year)
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/v1/earnwage/compare")
+def earnwage_compare(
+    country_a: str,
+    country_b: str,
+    occupation: str,
+    region_a: str | None = None,
+    region_b: str | None = None,
+    annual_gross_a: float | None = Query(default=None, gt=0, le=100000000),
+    annual_gross_b: float | None = Query(default=None, gt=0, le=100000000),
+    tax_year: int = 2026,
+):
+    """Side-by-side verified national wages, never a fabricated PPP winner."""
+    try:
+        return ew_queries.compare(country_a, country_b, occupation, region_a, region_b,
+                                  annual_gross_a, annual_gross_b, tax_year)
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
