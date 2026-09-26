@@ -1,5 +1,5 @@
 name: Import free Canadian occupational wages
-# Expanded official NOC mapping: refresh the versioned snapshot.
+# Expanded official NOC mapping: refresh the versioned snapshot (28 audited roles).
 on:
   push:
     paths:
