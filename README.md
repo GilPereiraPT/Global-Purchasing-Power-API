@@ -1,6 +1,6 @@
-# Global Purchasing Power API
+# EarnWage — Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.5.0 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
+Free-source international economic data backend for Android and web. **v0.5.1 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
 
 ## Current scope
 
@@ -241,3 +241,31 @@ components, excluded items and source URLs. **Do not label a subtotal of these
 items "net salary", "take-home pay", "disposable income", or purchasing power.**
 The 2026 tax-rule year is distinct from each source occupation wage's own
 statistical reference period.
+
+## v0.5.1 — EarnWage public identity and simple country/region UX
+
+The public application is **EarnWage**, subtitle **Salary & Cost of Living**,
+tagline **Your salary. Your world.** The technical project and current
+repository remain `Global-Purchasing-Power-API`, without breaking endpoint
+paths, SQLite snapshot schemas or the Collexall service. No live deployment,
+DNS change, Android bundle rename or trademark/domain registration is implied.
+
+```text
+GET /v1/app-config
+GET /v1/regions/US
+GET /v1/regions/CA
+GET /v1/regions/PT
+```
+
+`/v1/app-config` exposes brand strings, 14 country codes, seven intended
+interface languages (a single `pt` for Portugal and Brazil), a default `en`,
+and a **conditional** region selector. Only the US and Canada show optional
+state/province choices. All fifty US states and thirteen Canadian provinces
+and territories are exposed as *selection options*, **not** as claims of
+available state/provincial tax calculation.
+
+For US and Canada, the API returns a warning that local tax rules may differ.
+Québec is flagged as requiring its distinct payroll regime. A partial
+federal/national estimate remains partial after selecting a region. Other
+countries do not show an additional region field by default. This is a client
+configuration contract, ready for the later Android/web interface.

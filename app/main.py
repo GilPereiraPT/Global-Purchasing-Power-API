@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import jobs as job_provider
 from app import north_america as na_wages
+from app.client_config import configuration as earnwage_configuration, region_configuration
 from app.tax_components import components as tax_components
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
@@ -24,8 +25,8 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="Global Purchasing Power API",
-    version="0.5.0",
+    title="EarnWage — Global Purchasing Power API",
+    version="0.5.1",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -37,6 +38,21 @@ async def upstream_error(request, exc):
 @app.get("/v1/health")
 def health():
     return {"status": "ok", "version": app.version}
+
+@app.get("/v1/app-config")
+def app_config():
+    """EarnWage identity and client UI capabilities; no client-specific secret."""
+    return earnwage_configuration()
+
+
+@app.get("/v1/regions/{country}")
+def region_options(country: str):
+    """Optional state/province selector for supported regions only."""
+    result = region_configuration(country)
+    if result is None:
+        raise HTTPException(404, "Unknown country")
+    return result
+
 
 @app.get("/v1/countries")
 def countries():
