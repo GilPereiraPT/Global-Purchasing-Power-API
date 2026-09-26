@@ -225,6 +225,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        }
         if (screen != "cover") {
             NavigationBar(containerColor = navy) {
                 listOf("home", "inflation", "power", "currency", "salary").forEachIndexed { idx, page ->
