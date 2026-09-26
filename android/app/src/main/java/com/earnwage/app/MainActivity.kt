@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
 }
 @Composable private fun EarnWage() {
     var language by remember { mutableStateOf("en") }
-    var screen by remember { mutableStateOf("cover") }
+    var screen by remember { mutableStateOf("home") }
     var countries by remember { mutableStateOf(listOf<Country>()) }
     var occupations by remember { mutableStateOf(listOf<Job>()) }
     var country by remember { mutableStateOf("PT") }
@@ -144,6 +144,7 @@ class MainActivity : ComponentActivity() {
                     TextButton(onClick = { screen = "home"; result = ""; request = ""; response = null; error = "" }) { Text(t(language, 20)) }
                 }
                 if (screen == "home") {
+                    Image(painterResource(R.drawable.earnwage_hero), contentDescription = "EarnWage — Your salary. Your world.", modifier = Modifier.fillMaxWidth().height(160.dp), contentScale = ContentScale.Fit)
                     Text(t(language, 7), color = teal)
                     LanguageSelector(language) { language = it }
                     modules.forEachIndexed { index, key ->
@@ -235,13 +236,6 @@ class MainActivity : ComponentActivity() {
                     NavigationBarItem(selected = screen == page, onClick = { screen = page; response = null; error = ""; result = ""; request = "" },
                         icon = { Text(listOf("⌂", "↗", "◈", "⇄", "▤")[idx], color = if (screen == page) gold else Color.White, fontSize = 21.sp) },
                         label = { Text(if (page == "home") "Home" else t(language, modules.indexOf(page)), color = Color.White, fontSize = 9.sp, maxLines = 1) })
-                }
-            }
-            Row(Modifier.fillMaxWidth().background(navy).padding(horizontal = 10.dp, vertical = 2.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                listOf("compare", "jobs", "about").forEach { page ->
-                    TextButton(onClick = { screen = page; response = null; error = ""; result = ""; request = "" }) {
-                        Text(t(language, modules.indexOf(page)), color = if (screen == page) gold else Color.White, fontSize = 12.sp)
-                    }
                 }
             }
         }
