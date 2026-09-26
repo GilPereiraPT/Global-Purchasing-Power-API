@@ -1,6 +1,6 @@
 # EarnWage — Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.5.2 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
+Free-source international economic data backend for Android and web. **v0.5.3 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
 
 ## Current scope
 
@@ -40,7 +40,7 @@ GET /v1/sources
 
 Use `GPP_CACHE_DB=/absolute/writable/path/cache.sqlite3` on cPanel. The default `/tmp/gpp_api_cache.sqlite3` is suitable for development but may not persist across hosting restarts.
 
-On a cPanel deployment that supports Python Passenger WSGI applications, point the app at `passenger_wsgi.py`. It uses the included `a2wsgi` adapter to wrap FastAPI's ASGI interface. Verify the host's Python version, startup path and Passenger process configuration before production use.
+On cPanel/CloudLinux Passenger, point the app at `passenger_wsgi.py`, entry point `application`. This deployment now uses **native WSGI** (`app/native_wsgi.py`) rather than an ASGI adapter: FastAPI/`a2wsgi` failed to answer HTTP requests on the actual host even though imports passed. FastAPI `app.main:app` is preserved for ASGI-capable hosts and local tests. Verify the host's Python version, startup path and Passenger process configuration.
 
 Run tests: `pytest -q`. GitHub Actions executes the local test suite on push and pull requests.
 
@@ -310,3 +310,42 @@ once validated tax engines are available.
 Existing `/v1/compare`, `/v1/salaries`, `/v1/jobs` and all other v1 API
 routes remain supported. There is no server deployment or DNS action in this
 commit.
+
+## v0.5.3 — CloudLinux native WSGI deployment (Collexall pattern)
+
+The actual cPanel host successfully served a pure WSGI test, while minimal
+FastAPI + a2wsgi requests hung without HTTP response. The production
+`passenger_wsgi.py` therefore now **imports a native WSGI callable**, not
+`ASGIMiddleware`. The API's salary, country, occupation, region, tax,
+source, coverage, overview and compare logic reuse the existing source-
+validated Python modules. The legacy FastAPI app is kept independently for
+local/other ASGI use. Both entrypoints have tests; changing WSGI adapter
+does not change the real wage snapshots.
+
+Upload/copy these updated files from the repository to the **existing**
+`/home3/policli1/api-earnwage` application:
+
+```text
+passenger_wsgi.py
+app/native_wsgi.py
+```
+
+Do not paste the Collexall code into EarnWage. Do not overwrite cPanel's
+`.htaccess`. Python 3.12, the environment and dependencies were already
+verified on the host. Restart only the EarnWage Python app and visit
+`https://earnwage-api.policlinicosdesantoandre.com/v1/health`.
+Expected: `status=ok`, `version=0.5.3`, `runtime=native_wsgi`.
+
+The WSGI entrypoint loads checked-in wage snapshots at the first request
+per process. It uses the existing cPanel environment for SQLite/cache.
+Do not publish directory indexing, `.py` sources, SQLite files or internal
+`data/` as static HTTP resources. Configure a separate non-public application
+root/public document root where supported; ask hosting support when necessary.
+Do not assume passing GitHub Actions means the public domain is deployed.
+`/docs` is a FastAPI-only development route and is not exposed by native
+WSGI: use the README endpoint list.
+
+Native WSGI external-data routes call the existing async providers through
+a per-request event loop. Server-specific live HTTP requests still require
+individual smoke tests after deployment; local unit tests prove routing and
+payload format, not external provider availability.
