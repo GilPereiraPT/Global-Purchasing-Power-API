@@ -24,6 +24,7 @@ CANADA_URL = (
 CANADA_DATASET = "Job Bank 2025 Wages (published 2025-11-19)"
 BLS_DATASET = "BLS May 2025 OEWS national"
 BLS_TABLE = "https://www.bls.gov/oes/tables.htm"
+BLS_NEWS_TABLE = "https://www.bls.gov/news.release/ocwage.t01.htm"
 # Verified matches to NOC 2021 unit groups. Broad/ambiguous job names stay absent.
 CANADA_NOC = {
     "nurse": ("31301", "Registered nurses"),
@@ -62,6 +63,11 @@ US_SOC = {
     "civil_engineer": ("17-2051", "Civil Engineers"),
     "electrician": ("47-2111", "Electricians"),
     "software_developer": ("15-1252", "Software Developers"),
+    "mechanical_engineer": ("17-2141", "Mechanical Engineers"),
+    "pharmacist": ("29-1051", "Pharmacists"),
+    "physiotherapist": ("29-1123", "Physical Therapists"),
+    "dentist": ("29-1021", "Dentists, General"),
+    "cybersecurity_specialist": ("15-1212", "Information Security Analysts"),
 }
 
 
