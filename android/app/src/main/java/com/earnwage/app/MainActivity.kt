@@ -15,6 +15,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -168,16 +169,18 @@ class MainActivity : ComponentActivity() {
                             Button(onClick = { load("/v1/inflation/$country") }) { Text(t(language, 12)) }
                         }
                         "power" -> {
-                            Text("Manual illustration only: enter the accumulated inflation for the chosen period. It is NOT fetched or verified by the API.")
-                            OutlinedTextField(start, { start = it }, label = { Text(t(language, 17)) }, modifier = Modifier.fillMaxWidth())
-                            OutlinedTextField(end, { end = it }, label = { Text(t(language, 18)) }, modifier = Modifier.fillMaxWidth())
+                            Text("Compare past income with today using official national inflation observations when available.")
+                            YearSelector(t(language, 17), start, { start = it })
+                            YearSelector(t(language, 18), end, { end = it })
                             NumberField(t(language, 15), initial) { initial = it }
                             NumberField(t(language, 16), current) { current = it }
+                            Button(onClick = { load("/v1/inflation/$country") }) { Text("Calculate with official inflation") }
+                            Text("Manual fallback if official observations are unavailable:", color = teal)
                             NumberField(t(language, 14), inflation) { inflation = it }
                             val a = initial.toDoubleOrNull()
                             val b = current.toDoubleOrNull()
                             val i = inflation.toDoubleOrNull()
-                            if (a != null && b != null && i != null && a > 0 && i > -100) {
+                            if (response == null && a != null && b != null && i != null && a > 0 && i > -100) {
                                 val needed = a * (1 + i / 100)
                                 val real = ((b / needed) - 1) * 100
                                 Text("Required to maintain purchasing power: %.2f".format(Locale.US, needed))
@@ -221,7 +224,7 @@ class MainActivity : ComponentActivity() {
                     }
                     if (loading) CircularProgressIndicator()
                     if (error.isNotBlank()) { Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEFEA))) { Text(error, color = Color(0xFF913D2E), modifier = Modifier.padding(16.dp)) } }
-                    response?.let { data -> ResultView(screen, data, language, start, end, amount.toDoubleOrNull()) }
+                    response?.let { data -> ResultView(screen, data, language, start, end, amount.toDoubleOrNull(), initial.toDoubleOrNull(), current.toDoubleOrNull()) }
                 }
             }
         }
@@ -313,13 +316,34 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-@Composable private fun ResultView(screen: String, data: JSONObject, language: String, start: String, end: String, amount: Double?) {
+@Composable private fun ResultView(screen: String, data: JSONObject, language: String, start: String, end: String, amount: Double?, initialIncome: Double?, currentIncome: Double?) {
     val status = data.optString("status", "available")
     if (status == "unavailable") {
         DataCard(t(language, 21), data.optString("reason", "No validated observations"))
         return
     }
     when (screen) {
+        "power" -> {
+            val series = data.optJSONArray("series") ?: JSONArray()
+            val observations = (0 until series.length()).mapNotNull { series.optJSONObject(it) }
+            val first = observations.firstOrNull { it.optString("period").startsWith(start) }
+            val last = observations.lastOrNull { it.optString("period").startsWith(end) }
+            val firstIndex = first?.optDouble("index", Double.NaN) ?: Double.NaN
+            val lastIndex = last?.optDouble("index", Double.NaN) ?: Double.NaN
+            if (firstIndex.isFinite() && lastIndex.isFinite() && firstIndex > 0 && lastIndex > 0 && first != null && last != null && first.optString("period") < last.optString("period")) {
+                val factor = lastIndex / firstIndex
+                DataCard("Official accumulated inflation", "%+.2f%%".format(Locale.US, (factor - 1) * 100), first.optString("period") + " → " + last.optString("period") + " · " + data.optString("source"))
+                if (initialIncome != null && initialIncome > 0) {
+                    val required = initialIncome * factor
+                    DataCard("Income needed to preserve purchasing power", "%.2f".format(Locale.US, required), "Same currency and income period as entered · official national inflation")
+                    DataCard("Past income in end-period purchasing power", "%.2f".format(Locale.US, initialIncome / factor), "If nominal income remained unchanged")
+                    if (currentIncome != null && currentIncome >= 0) {
+                        DataCard("Real income change", "%+.2f%%".format(Locale.US, (currentIncome / required - 1) * 100), "Current income versus inflation-adjusted initial income")
+                        DataCard("Difference from required income", "%+.2f".format(Locale.US, currentIncome - required))
+                    }
+                } else DataCard("Enter past income", "Required for income comparison")
+            } else DataCard("Selected period", "No matching official observations", "Choose years covered by the national series, with start before end. Manual fallback remains available.")
+        }
         "inflation" -> {
             val series = data.optJSONArray("series") ?: JSONArray()
             val first = (0 until series.length()).map { series.optJSONObject(it) }.firstOrNull { it?.optString("period")?.startsWith(start) == true }
@@ -364,13 +388,18 @@ class MainActivity : ComponentActivity() {
                 data.optJSONObject("wage_comparability")?.optString("reason") ?: "")
         }
         "jobs" -> {
+            val uriHandler = LocalUriHandler.current
             val keys = listOf("jobs", "results", "listings")
             val items = keys.firstNotNullOfOrNull { data.optJSONArray(it) }
             if (items != null) {
                 DataCard("Remote listings", items.length().toString(), "Source: Remotive")
                 (0 until minOf(items.length(), 25)).forEach { index ->
                     val item = items.optJSONObject(index)
-                    if (item != null) DataCard(item.optString("title", "Job"), item.optString("company_name", item.optString("company")), item.optString("candidate_required_location", ""))
+                    if (item != null) {
+                        DataCard(item.optString("title", "Job"), item.optString("company_name", item.optString("company")), item.optString("candidate_required_location", ""))
+                        val url = item.optString("apply_url", item.optString("source_url"))
+                        if (url.startsWith("https://")) TextButton(onClick = { uriHandler.openUri(url) }) { Text("View original vacancy / Apply") }
+                    }
                 }
             } else DataCard("Job search", data.optString("status", "No listings"), data.optString("reason", ""))
         }
