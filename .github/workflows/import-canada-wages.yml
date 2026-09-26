@@ -1,4 +1,5 @@
 name: Import free Canadian occupational wages
+# Retry after source classification normalization.
 on:
   push:
     paths:
