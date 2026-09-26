@@ -76,7 +76,7 @@ The matrix has 40 × 12 = 480 cells. Before importing data, all cells are unavai
 
 ## Publish actual wages from the free ILOSTAT source
 
-The ILOSTAT import is **opt-in** until a complete source run has been validated.
+The ILOSTAT import is **opt-in** until a complete source run has been validated. An attempted live import on 2026-09-26 received HTTP 404 from the officially documented bulk catalogue URL. Therefore no real salary snapshot has been committed; the other API endpoints and tests remain usable. The REST endpoint was reachable but did not provide verified importable observations in this test. Do not claim live salary coverage until a source import passes.
 Navigate to **Actions → Refresh official ILOSTAT salaries → Run workflow**.
 The default candidate is `EAR_EMTA_SEX_OCU_CUR_NB_A`, but the job checks its existence
 and label against ILOSTAT's live official catalogue before downloading anything.
