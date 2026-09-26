@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import jobs as job_provider
+from app import north_america as na_wages
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot
@@ -18,11 +19,12 @@ async def lifespan(app: FastAPI):
         pass
     from pathlib import Path
     load_snapshot(Path(__file__).resolve().parent.parent / "data" / "salaries_snapshot.json")
+    na_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "north_america_wages.json")
     yield
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.3.1",
+    version="0.4.0",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -93,7 +95,9 @@ async def compare(country_a: str, country_b: str, occupation: str | None = None)
     import asyncio
     async def side(code):
         item = COUNTRY_MAP[code].copy()
-        item["salary"] = salary(code, occupation) if occupation else {"status": "unavailable", "reason": "Select an occupation"}
+        item["salary"] = (
+            na_wages.wages(code, occupation) if code in ("US", "CA") else salary(code, occupation)
+        ) if occupation else {"status": "unavailable", "reason": "Select an occupation"}
         item["tax"] = {"status": "unavailable", "reason": "Country-specific model not validated"}
         item["capital_cost_of_living"] = {"status": "unavailable", "reason": "No verified capital-level series"}
         if item["inflation_provider"] == "eurostat":
@@ -108,6 +112,16 @@ async def compare(country_a: str, country_b: str, occupation: str | None = None)
 @app.get("/v1/sources")
 def sources():
     return {
+        "canada_job_bank_wages": {
+            "url": na_wages.CANADA_URL,
+            "role": "Canada national occupational hourly/annual median and mean, as published",
+            "status": "offline importer implemented; real data snapshot required",
+        },
+        "us_bls_oews": {
+            "url": na_wages.BLS_TABLE,
+            "role": "US national detailed occupation wages in BLS May 2025 workbook",
+            "status": "local official XLSX importer implemented; workbook needed",
+        },
         "remotive_jobs": {
             "url": "https://remotive.com/remote-jobs/api",
             "role": "Attributed remote job listings only, not national vacancy coverage",
@@ -173,3 +187,12 @@ async def job_detail(job_id: int):
     if record is None:
         raise HTTPException(404, "Job not in latest available Remotive feed")
     return record
+
+@app.get("/v1/wages/{country}/{occupation}")
+def north_america_wages(country: str, occupation: str):
+    code = country.upper()
+    if code not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    if occupation not in {x["id"] for x in OCCUPATIONS}:
+        raise HTTPException(422, "Unknown occupation")
+    return na_wages.wages(code, occupation)

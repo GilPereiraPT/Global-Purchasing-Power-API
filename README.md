@@ -1,6 +1,6 @@
 # Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.3.1 is a first integration, not a completed wage or tax calculator.**
+Free-source international economic data backend for Android and web. **v0.4.0 is a first integration, not a completed wage or tax calculator.**
 
 ## Current scope
 
@@ -92,7 +92,7 @@ combinations remain unavailable.
 The ILOSTAT table may not provide all 40 professions or all 14 countries;
 the availability matrix reports the actual imported coverage, not an estimate.
 
-## Jobs module v0.3.1 — attributed remote vacancies
+## Jobs module v0.4.0 — attributed remote vacancies
 
 The first jobs provider is **Remotive**: https://remotive.com/remote-jobs/api .
 Its public API permits developers to share listings with a visible **Remotive**
@@ -137,3 +137,22 @@ The language catalogue contains exactly seven single interface locales: `en`,
 Occupation labels are currently translated only into English and Portuguese;
 other selected languages fall back to English pending actual translations.
 `GET /v1/languages` exposes the planned interface locales.
+
+## 0.4.0 — North America wage observations (no guesses)
+
+Canada source: [Job Bank 2025 Wages open data](https://open.canada.ca/data/en/dataset/adad580f-76b0-4502-bd05-20c125de9116), Open Government Licence Canada. Its official CSV has NOC unit group, national/provincial/region, minimum/median/mean/maximum, reference period, and annual-wage flag. This importer currently supports a **small explicitly mapped subset of occupations**, always restricts to `prov=NAT` and `ER_Code_Code_RE=ER00`, and keeps published wage units intact (`CAD/hour` or `CAD/year`). It does not claim Ottawa wages from national rows.
+
+US source: [BLS May 2025 OEWS](https://www.bls.gov/oes/tables.htm), an official free XLSX workbook. The BLS host may return 403 to automated clients. Download the official **national** XLSX manually and import with `python -m app.north_america --us-xlsx FILE --year 2025`. Only selected confirmed SOC detailed codes and national `AREA=99` rows are accepted; annual **mean** and median are not merged.
+
+```bash
+python -m app.north_america --canada
+python -m app.north_america --export
+# The web server automatically loads data/north_america_wages.json at startup
+```
+
+```text
+GET /v1/wages/CA/nurse
+GET /v1/wages/US/software_developer
+```
+
+The US and Canada providers never synthesize annual or monthly salaries from hourly rates. Values are published with their **unit, measure, occupation code, published year, reference period and original source**. No values are shown until successfully imported. The Canadian import job runs on workflow dispatch; successful validated snapshot changes are versioned in GitHub.

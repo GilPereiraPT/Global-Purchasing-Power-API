@@ -1,0 +1,36 @@
+name: Import free Canadian occupational wages
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: north-america-wage-import
+  cancel-in-progress: false
+jobs:
+  canada:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Import official Canada Job Bank file
+        env:
+          GPP_CACHE_DB: ${{ runner.temp }}/north_america.sqlite3
+        run: |
+          python -m app.north_america --canada
+          python -m app.north_america --export
+          python -m pytest -q
+      - name: Save verified observations
+        run: |
+          git add data/north_america_wages.json
+          if git diff --cached --quiet; then
+            echo "No new data"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: import official Canadian occupational wages"
+          git push
