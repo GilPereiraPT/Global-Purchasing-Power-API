@@ -18,6 +18,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
@@ -80,6 +83,8 @@ class MainActivity : ComponentActivity() {
     var destination by remember { mutableStateOf("US") }
     var occupation by remember { mutableStateOf("accountant") }
     var result by remember { mutableStateOf("") }
+    var response by remember { mutableStateOf<JSONObject?>(null) }
+    var error by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var health by remember { mutableStateOf("Checking API…") }
     var annual by remember { mutableStateOf("") }
@@ -91,6 +96,8 @@ class MainActivity : ComponentActivity() {
     var currency by remember { mutableStateOf("USD") }
     var amount by remember { mutableStateOf("1000") }
     var request by remember { mutableStateOf("") }
+    var requestSerial by remember { mutableIntStateOf(0) }
+    fun load(path: String) { request = path; requestSerial++ ; response = null; result = ""; error = "" }
     LaunchedEffect(Unit) {
         try {
             val h = api("/v1/health")
@@ -107,17 +114,18 @@ class MainActivity : ComponentActivity() {
             occupations = (0 until a.length()).map { a.getJSONObject(it) }.map { Job(it.optString("id"), it.optString("label")) }
         } catch (_: Exception) { occupations = emptyList() }
     }
-    LaunchedEffect(request) {
+    LaunchedEffect(requestSerial) {
         if (request.isNotBlank()) {
             loading = true
             result = ""
-            try { result = api(request).toString(2) }
-            catch (e: Exception) { result = "Unable to retrieve verified data: " + (e.message ?: "network error") }
+            try { response = api(request); result = response!!.toString(2) }
+            catch (e: Exception) { error = "Data temporarily unavailable. " + (e.message ?: "Network error") }
             finally { loading = false }
         }
     }
     MaterialTheme(colorScheme = lightColorScheme(primary = teal, secondary = navy)) {
-        Column(Modifier.fillMaxSize().background(Color(0xFFF5F8F8)).verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.fillMaxSize().background(Color(0xFFF5F8F8))) {
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (screen == "cover") {
                 Spacer(Modifier.height(45.dp))
                 Image(painterResource(R.drawable.earnwage_hero), contentDescription = "EarnWage hero", modifier = Modifier.fillMaxWidth().height(245.dp), contentScale = ContentScale.Fit)
@@ -132,13 +140,13 @@ class MainActivity : ComponentActivity() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.earnwage_logo), contentDescription = "EarnWage logo", modifier = Modifier.size(48.dp))
                     Text("EarnWage", fontSize = 26.sp, color = navy, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { screen = "home"; result = ""; request = "" }) { Text(t(language, 20)) }
+                    TextButton(onClick = { screen = "home"; result = ""; request = ""; response = null; error = "" }) { Text(t(language, 20)) }
                 }
                 if (screen == "home") {
                     Text(t(language, 7), color = teal)
                     LanguageSelector(language) { language = it }
                     modules.forEachIndexed { index, key ->
-                        Card(onClick = { screen = key; result = ""; request = "" }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = navy)) {
+                        Card(onClick = { screen = key; result = ""; request = ""; response = null; error = "" }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = navy)) {
                             Text(t(language, index), color = Color.White, fontSize = 19.sp, modifier = Modifier.padding(18.dp))
                         }
                     }
@@ -154,10 +162,10 @@ class MainActivity : ComponentActivity() {
                     when (screen) {
                         "inflation" -> {
                             Text("Official national monthly HICP where supported. The current API does not yet provide a validated arbitrary start/end-period cumulative series.")
-                            OutlinedTextField(start, { start = it }, label = { Text(t(language, 17)) }, modifier = Modifier.fillMaxWidth())
-                            OutlinedTextField(end, { end = it }, label = { Text(t(language, 18)) }, modifier = Modifier.fillMaxWidth())
+                            YearSelector(t(language, 17), start, { start = it })
+                            YearSelector(t(language, 18), end, { end = it })
                             Text("Period fields are reserved for the forthcoming historical API. The current result is NOT a cumulative change between these dates.", color = teal)
-                            Button(onClick = { request = "/v1/inflation/$country" }) { Text(t(language, 12)) }
+                            Button(onClick = { load("/v1/inflation/$country") }) { Text(t(language, 12)) }
                         }
                         "power" -> {
                             Text("Manual illustration only: enter the accumulated inflation for the chosen period. It is NOT fetched or verified by the API.")
@@ -182,22 +190,22 @@ class MainActivity : ComponentActivity() {
                             Text("ECB reference exchange rate against EUR; latest available observation, NOT a historical rate.")
                             OutlinedTextField(currency, { currency = it.uppercase(Locale.ROOT).take(3) }, label = { Text("ISO currency (e.g. USD, GBP, CAD)") }, modifier = Modifier.fillMaxWidth())
                             NumberField("EUR amount", amount) { amount = it }
-                            Button(onClick = { request = "/v1/exchange-rates/" + currency }) { Text(t(language, 12)) }
+                            Button(onClick = { load("/v1/exchange-rates/" + currency) }) { Text(t(language, 12)) }
                             Text("Conversion must use the published rate and date in the API response. A historical conversion endpoint is not yet available.")
                         }
                         "compare" -> Button(onClick = {
-                            request = "/v1/earnwage/compare?country_a=$country&country_b=$destination&occupation=" + query(occupation)
+                            load("/v1/earnwage/compare?country_a=$country&country_b=$destination&occupation=" + query(occupation))
                         }) { Text(t(language, 12)) }
                         "salary" -> {
                             NumberField(t(language, 13) + " (optional)", annual) { annual = it }
                             Button(onClick = {
-                                request = "/v1/earnwage/overview?country=$country&occupation=" + query(occupation) +
-                                    (annual.toDoubleOrNull()?.takeIf { it > 0 }?.let { "&annual_gross=$it" } ?: "")
+                                load("/v1/earnwage/overview?country=$country&occupation=" + query(occupation) +
+                                    (annual.toDoubleOrNull()?.takeIf { it > 0 }?.let { "&annual_gross=$it" } ?: ""))
                             }) { Text(t(language, 12)) }
                             Text("Official national occupation data when available; tax components are partial and must not be read as net pay.")
                         }
                         "jobs" -> {
-                            Button(onClick = { request = "/v1/jobs?country=$country&occupation=" + query(occupation) }) { Text(t(language, 12)) }
+                            Button(onClick = { load("/v1/jobs?country=$country&occupation=" + query(occupation)) }) { Text(t(language, 12)) }
                             Text("Remote jobs only. Country selection means candidate eligibility, not employer location. Source: Remotive.")
                         }
                         "about" -> {
@@ -212,9 +220,23 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     if (loading) CircularProgressIndicator()
-                    if (result.isNotBlank()) {
-                        Text(t(language, 19), fontWeight = FontWeight.Bold, color = teal)
-                        SelectionContainerSafe(result)
+                    if (error.isNotBlank()) { Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEFEA))) { Text(error, color = Color(0xFF913D2E), modifier = Modifier.padding(16.dp)) } }
+                    response?.let { data -> ResultView(screen, data, language, start, end, amount.toDoubleOrNull()) }
+                }
+            }
+        }
+        if (screen != "cover") {
+            NavigationBar(containerColor = navy) {
+                listOf("home", "inflation", "power", "currency", "salary").forEachIndexed { idx, page ->
+                    NavigationBarItem(selected = screen == page, onClick = { screen = page; response = null; error = ""; result = ""; request = "" },
+                        icon = { Text(listOf("⌂", "↗", "◈", "⇄", "▤")[idx], color = if (screen == page) gold else Color.White, fontSize = 21.sp) },
+                        label = { Text(if (page == "home") "Home" else t(language, modules.indexOf(page)), color = Color.White, fontSize = 9.sp, maxLines = 1) })
+                }
+            }
+            Row(Modifier.fillMaxWidth().background(navy).padding(horizontal = 10.dp, vertical = 2.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                listOf("compare", "jobs", "about").forEach { page ->
+                    TextButton(onClick = { screen = page; response = null; error = ""; result = ""; request = "" }) {
+                        Text(t(language, modules.indexOf(page)), color = if (screen == page) gold else Color.White, fontSize = 12.sp)
                     }
                 }
             }
@@ -266,5 +288,91 @@ class MainActivity : ComponentActivity() {
 @Composable private fun SelectionContainerSafe(text: String) {
     androidx.compose.foundation.text.selection.SelectionContainer {
         Text(text, fontSize = 12.sp, color = navy, modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(12.dp)).padding(12.dp))
+    }
+}
+
+@Composable private fun YearSelector(label: String, selected: String, change: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) { Text("$label: $selected ▾") }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            (1995..2026).reversed().forEach { year ->
+                DropdownMenuItem(text = { Text(year.toString()) }, onClick = { change(year.toString()); expanded = false })
+            }
+        }
+    }
+}
+@Composable private fun DataCard(title: String, value: String, detail: String = "") {
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(16.dp)) {
+        Column(Modifier.padding(17.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(title, color = teal, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(value, color = navy, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            if (detail.isNotBlank()) Text(detail, color = Color.DarkGray, fontSize = 12.sp)
+        }
+    }
+}
+@Composable private fun ResultView(screen: String, data: JSONObject, language: String, start: String, end: String, amount: Double?) {
+    val status = data.optString("status", "available")
+    if (status == "unavailable") {
+        DataCard(t(language, 21), data.optString("reason", "No validated observations"))
+        return
+    }
+    when (screen) {
+        "inflation" -> {
+            val series = data.optJSONArray("series") ?: JSONArray()
+            val first = (0 until series.length()).map { series.optJSONObject(it) }.firstOrNull { it?.optString("period")?.startsWith(start) == true }
+            val last = (0 until series.length()).map { series.optJSONObject(it) }.lastOrNull { it?.optString("period")?.startsWith(end) == true }
+            DataCard("Official observations", series.length().toString(), data.optString("source") + " · " + data.optString("dataset"))
+            if (first != null && last != null && first.optDouble("index") > 0) {
+                val change = (last.optDouble("index") / first.optDouble("index") - 1) * 100
+                DataCard("Index change between selected observations", "%+.2f%%".format(Locale.US, change),
+                    first.optString("period") + " → " + last.optString("period") + " · " + data.optString("source"))
+            } else DataCard("Selected period", "No matching observations", "Choose years covered by the official monthly series.")
+            Text("HICP index change is not a city-specific cost-of-living estimate.", fontSize = 12.sp)
+        }
+        "currency" -> {
+            val rate = data.optDouble("units_per_eur", Double.NaN)
+            if (rate.isFinite()) {
+                DataCard("1 EUR", "%.4f %s".format(Locale.US, rate, data.optString("currency")), data.optString("period") + " · " + data.optString("source"))
+                if (amount != null) DataCard("Converted amount", "%.2f %s".format(Locale.US, amount * rate, data.optString("currency")), "ECB reference rate, not a retail quote")
+            } else DataCard("Exchange rate", "Unavailable")
+        }
+        "salary" -> {
+            val wage = data.optJSONObject("national_occupation_wage")
+            DataCard("Occupation", data.optJSONObject("occupation")?.optString("label") ?: "")
+            DataCard("Country", data.optJSONObject("country")?.optString("name") ?: "")
+            if (wage?.optString("status") == "available") {
+                val keys = wage.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    if (key !in listOf("status", "raw", "metadata")) DataCard(key.replace("_", " ").replaceFirstChar { it.uppercase() }, wage.opt(key).toString().take(240))
+                }
+            } else DataCard("Verified wage", "Not available", wage?.optString("reason") ?: "No imported observation")
+        }
+        "compare" -> {
+            listOf("country_a", "country_b").forEach { key ->
+                val side = data.optJSONObject(key)
+                val place = side?.optJSONObject("country")
+                val wage = side?.optJSONObject("national_occupation_wage")
+                DataCard(flag(place?.optString("code") ?: "") + " " + (place?.optString("name") ?: ""), 
+                    if (wage?.optString("status") == "available") "Verified national wage available" else "Wage data unavailable",
+                    "Currency: " + (place?.optString("currency") ?: "") + " · " + (wage?.optString("reason") ?: "Check source details"))
+            }
+            DataCard("Comparability", data.optJSONObject("wage_comparability")?.optString("status") ?: "Not normalized",
+                data.optJSONObject("wage_comparability")?.optString("reason") ?: "")
+        }
+        "jobs" -> {
+            val keys = listOf("jobs", "results", "listings")
+            val items = keys.firstNotNullOfOrNull { data.optJSONArray(it) }
+            if (items != null) {
+                DataCard("Remote listings", items.length().toString(), "Source: Remotive")
+                (0 until minOf(items.length(), 25)).forEach { index ->
+                    val item = items.optJSONObject(index)
+                    if (item != null) DataCard(item.optString("title", "Job"), item.optString("company_name", item.optString("company")), item.optString("candidate_required_location", ""))
+                }
+            } else DataCard("Job search", data.optString("status", "No listings"), data.optString("reason", ""))
+        }
+        else -> DataCard("Source", data.optString("source", "EarnWage API"))
     }
 }
