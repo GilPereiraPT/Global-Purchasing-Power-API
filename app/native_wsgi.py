@@ -4,12 +4,9 @@ Does not import FastAPI or a2wsgi. Reuses EarnWage's validated business modules.
 FastAPI app.main remains for local ASGI / existing API tests.
 """
 import asyncio
-import csv
-import io
 import json
 import logging
 import unicodedata
-import os
 import threading
 from pathlib import Path
 from urllib.parse import parse_qs
@@ -20,7 +17,7 @@ from app import north_america as na
 from app import jobs
 from app.client_config import configuration, region_configuration
 from app.ilostat_import import (
-    TOC, download, earnings_datasets, salary, availability, load_snapshot, catalogue_rows,
+    TOC, earnings_datasets, availability, load_snapshot, catalogue_rows,
 )
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
@@ -69,9 +66,9 @@ def reply(start_response, payload, code=200, method="GET", origin=None):
         ("Cache-Control", "no-store"),
         ("X-Content-Type-Options", "nosniff"),
     ]
+    headers.append(("Vary", "Origin"))
     if origin == "https://gilpereirapt.github.io":
         headers.append(("Access-Control-Allow-Origin", origin))
-        headers.append(("Vary", "Origin"))
     start_response(HTTP_STATUS[code], headers)
     return [] if method == "HEAD" else [body]
 
@@ -100,7 +97,7 @@ def occupation(value):
 
 def integer(params, name, default):
     try:
-        return int(one(params, name, str(default)))
+        return int(one(params, name, default))
     except (TypeError, ValueError):
         raise ApiError(422, "Invalid integer: " + name)
 
@@ -200,7 +197,7 @@ def dispatch(path, q):
         lang = str(one(q, "lang", "en")).split("-")[0].lower()
         if lang not in SUPPORTED_LANGUAGES:
             raise ApiError(422, "Unsupported interface language")
-        labels = {j["id"]: j["translations"][lang] for j in OCCUPATIONS}
+        labels = {j["id"]: (j["translations"].get(lang) or j["translations"]["en"]) for j in OCCUPATIONS}
         result = availability()
         result["language"] = lang
         for cell in result["cells"]:
@@ -231,7 +228,7 @@ def dispatch(path, q):
             if term and not any(term in value for value in normalized):
                 continue
             items.append({"id": j["id"], "isco08": j["isco08"],
-                          "label": j["translations"][lang],
+                          "label": (j["translations"].get(lang) or j["translations"]["en"]),
                           "translations": j["translations"],
                           "aliases": j.get("aliases", {})})
         return {"language": lang, "fallback": "en", "count": len(items), "occupations": items}
