@@ -68,8 +68,8 @@ def test_nonlocal_annual_currency_never_admitted():
 def test_catalogue_rds_transport_and_schema(monkeypatch):
     import app.ilostat_import as importer
     monkeypatch.setattr(importer, "download", lambda url, max_bytes=0: (
-        b"id,indicator.label,last.update,data.end\\n"
-        b"EAR_EXAMPLE_A,Average monthly earnings of employees by sex occupation and currency,2026-01-01,2024\\n"
+        b"id,indicator.label,last.update,data.end\n"
+        b"EAR_EXAMPLE_A,Average monthly earnings of employees by sex occupation and currency,2026-01-01,2024\n"
     ))
     rows = importer.catalogue_rows()
     assert "/metadata/toc/indicator/" in importer.TOC
