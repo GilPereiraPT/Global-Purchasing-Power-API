@@ -1,0 +1,46 @@
+name: Audit Canada NOC wage coverage
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/audit-canada-noc.yml'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install httpx
+      - name: Inspect official national occupation labels and Ottawa wage regions
+        run: |
+          python - <<'PY'
+          import csv,io,httpx
+          from app.north_america import CANADA_URL
+          r=httpx.get(CANADA_URL,follow_redirects=True,timeout=90)
+          r.raise_for_status()
+          records=list(csv.DictReader(io.StringIO(r.content.decode("utf-8-sig"))))
+          needles=["account","audit","financial","physician","nurse","pharmac","psycholog","physiotherap",
+          "teacher","educator","software","computer","civil engineer","mechanical engineer","architect",
+          "administrative assistant","manager","receptionist","sales","retail","truck driver","bus driver",
+          "electrician","plumber","construction","cook","chef","waiter","cleaner","security guard","lawyer",
+          "dentist","health care aide","healthcare aide","data analyst","cybersecurity","warehouse",
+          "machine operator","welder","automotive","farm worker","agricultural"]
+          matches=[]
+          for x in records:
+              if x.get("prov")=="NAT" and x.get("ER_Code_Code_RE")=="ER00":
+                  title=x["NOC_Title_eng"]
+                  if any(q in title.lower() for q in needles):
+                      matches.append((x["NOC_CNP"],title,x["Reference_Period"],x["Annual_Wage_Flag_Salaire_annuel"],
+                          x["Median_Wage_Salaire_Median"]))
+          print("NATIONAL_TITLE_MATCHES",len(matches))
+          for x in matches[:250]:print("NOC",repr(x))
+          print("ONTARIO_OTTAWA_REGION_CANDIDATES")
+          seen=set()
+          for x in records:
+              if x.get("prov")=="ON" and "ottawa" in x.get("ER_Name","").lower():
+                  key=(x["ER_Code_Code_RE"],x["ER_Name"])
+                  if key not in seen:print("REGION",repr(key));seen.add(key)
+          print("CANADA_ROWS",len(records))
+          PY
