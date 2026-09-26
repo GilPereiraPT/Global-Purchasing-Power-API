@@ -40,6 +40,9 @@ jobs:
                   with httpx.Client(timeout=20,follow_redirects=True) as c:
                       with c.stream("GET", url) as r:
                           print(r.status_code, r.headers.get("content-type"), str(r.url), flush=True)
+                          if "rplumber" in url and r.status_code == 200:
+                              first = next(r.iter_bytes(), b"")
+                              print("REST first bytes:", repr(first[:350]), flush=True)
               except Exception as e:
                   print(type(e).__name__, str(e)[:150], flush=True)
           PY
