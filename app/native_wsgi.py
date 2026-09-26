@@ -60,7 +60,7 @@ def initialize():
         INITIALIZED = True
 
 
-def reply(start_response, payload, code=200, method="GET"):
+def reply(start_response, payload, code=200, method="GET", origin=None):
     body = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
     headers = [
         ("Content-Type", "application/json; charset=utf-8"),
@@ -68,6 +68,9 @@ def reply(start_response, payload, code=200, method="GET"):
         ("Cache-Control", "no-store"),
         ("X-Content-Type-Options", "nosniff"),
     ]
+    if origin == "https://gilpereirapt.github.io":
+        headers.append(("Access-Control-Allow-Origin", origin))
+        headers.append(("Vary", "Origin"))
     start_response(HTTP_STATUS[code], headers)
     return [] if method == "HEAD" else [body]
 
@@ -296,12 +299,15 @@ def dispatch(path, q):
 def application(environ, start_response):
     """WSGI entry for Passenger; never display tracebacks or server paths."""
     method = environ.get("REQUEST_METHOD", "GET").upper()
+    origin = environ.get("HTTP_ORIGIN")
+    if origin != "https://gilpereirapt.github.io":
+        origin = None
     if method not in ("GET", "HEAD"):
         return reply(start_response, {"detail": "Only GET and HEAD are supported"},
-                     405, method)
+                     405, method, origin)
     path = environ.get("PATH_INFO", "/")
     if len(path) > 2048:
-        return reply(start_response, {"detail": "Invalid request path"}, 422, method)
+        return reply(start_response, {"detail": "Invalid request path"}, 422, method, origin)
     try:
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True,
                          max_num_fields=30)
@@ -309,15 +315,15 @@ def application(environ, start_response):
             raise ApiError(422, "Query parameter too long")
         initialize()
         data = dispatch(path.rstrip("/") or "/", query)
-        return reply(start_response, data, method=method)
+        return reply(start_response, data, method=method, origin=origin)
     except ApiError as exc:
-        return reply(start_response, {"detail": exc.detail}, exc.code, method)
+        return reply(start_response, {"detail": exc.detail}, exc.code, method, origin)
     except LookupError as exc:
-        return reply(start_response, {"detail": str(exc)}, 404, method)
+        return reply(start_response, {"detail": str(exc)}, 404, method, origin)
     except ValueError as exc:
         return reply(start_response, {"detail": str(exc)}, 422, method)
     except UpstreamUnavailable:
-        return reply(start_response, {"error": "upstream_unavailable"}, 503, method)
+        return reply(start_response, {"error": "upstream_unavailable"}, 503, method, origin)
     except Exception:
         LOG.exception("EarnWage WSGI request failed: %s", path)
-        return reply(start_response, {"error": "internal_server_error"}, 500, method)
+        return reply(start_response, {"error": "internal_server_error"}, 500, method, origin)
