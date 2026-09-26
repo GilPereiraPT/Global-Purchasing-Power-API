@@ -52,4 +52,12 @@ JOBS = [
     ("security_guard", "Segurança privado", "Security guard"),
     ("lawyer", "Advogado", "Lawyer"),
 ]
-OCCUPATIONS = [{"id": key, "translations": {"pt": pt, "en": en}} for key, pt, en in JOBS]
+from app.occupations import EXTRA_JOBS, ISCO08_EXACT
+
+JOBS.extend(EXTRA_JOBS)
+OCCUPATIONS = [
+    {"id": key, "isco08": ISCO08_EXACT.get(key),
+     "translations": {"pt": pt, "en": en}} for key, pt, en in JOBS
+]
+assert len(OCCUPATIONS) == 40
+

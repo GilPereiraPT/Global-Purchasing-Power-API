@@ -7,6 +7,9 @@ from fastapi.responses import JSONResponse
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
+from app.ilostat_import import salary, availability, earnings_datasets, TOC, download
+import csv
+import io
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,7 +19,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Global Purchasing Power API",
-    version="0.1.0",
+    version="0.2.0",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -44,7 +47,7 @@ def country(code: str):
 def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$")):
     base = lang.split("-")[0].lower()
     return {"language": lang, "fallback": "en", "occupations": [
-        {"id": item["id"], "label": item["translations"].get(base, item["translations"]["en"]),
+        {"id": item["id"], "isco08": item["isco08"], "label": item["translations"].get(base, item["translations"]["en"]),
          "translations": item["translations"]} for item in OCCUPATIONS
     ]}
 
@@ -79,7 +82,7 @@ async def compare(country_a: str, country_b: str, occupation: str | None = None)
     import asyncio
     async def side(code):
         item = COUNTRY_MAP[code].copy()
-        item["salary"] = {"status": "unavailable", "reason": "Occupation wages importer pending; national wages must not be labeled capital wages"}
+        item["salary"] = salary(code, occupation) if occupation else {"status": "unavailable", "reason": "Select an occupation"}
         item["tax"] = {"status": "unavailable", "reason": "Country-specific model not validated"}
         item["capital_cost_of_living"] = {"status": "unavailable", "reason": "No verified capital-level series"}
         if item["inflation_provider"] == "eurostat":
@@ -94,6 +97,9 @@ async def compare(country_a: str, country_b: str, occupation: str | None = None)
 @app.get("/v1/sources")
 def sources():
     return {
+        "ilostat": {"url": "https://webapps.ilo.org/ilostat-files/WEB_bulk_download/indicator/",
+                    "role": "ISCO-08 occupation-specific annual employee earnings",
+                    "status": "offline importer implemented; import required"},
         "eurostat_hicp": {"url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr",
                           "role": "monthly harmonized national inflation", "status": "implemented"},
         "ecb_exr": {"url": "https://data-api.ecb.europa.eu/service/data/EXR",
@@ -103,3 +109,29 @@ def sources():
         "oecd": {"url": "https://sdmx.oecd.org/public/rest/v1/",
                  "role": "national wages and taxing wages", "status": "planned"},
     }
+
+@app.get("/v1/salaries/availability/matrix")
+def salary_availability_matrix():
+    return availability()
+
+
+@app.get("/v1/salaries/{code}/{occupation}")
+def occupation_salary(code: str, occupation: str):
+    country = code.upper()
+    if country not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    if occupation not in {x["id"] for x in OCCUPATIONS}:
+        raise HTTPException(422, "Unknown occupation")
+    return salary(country, occupation)
+
+
+@app.get("/v1/ilostat/datasets")
+def ilostat_datasets():
+    """Read-only official catalogue. Large imports are CLI-only, never HTTP."""
+    from app.providers import UpstreamUnavailable
+    try:
+        raw = download(TOC, 3_000_000).decode("utf-8-sig")
+    except Exception as exc:
+        raise UpstreamUnavailable("ILOSTAT catalogue unavailable") from exc
+    return {"source_url": TOC, "datasets":
+            earnings_datasets(csv.DictReader(io.StringIO(raw)))}

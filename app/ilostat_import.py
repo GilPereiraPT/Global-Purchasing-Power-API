@@ -1,0 +1,212 @@
+"""Reproducible ILOSTAT bulk CSV/GZIP ingestion. Run as admin CLI, never a public HTTP job.
+
+Only actual reported values and documented periods are saved. Sex-total, ISCO-08
+exact 4-digit, monthly earnings, local-currency observations are admitted.
+Unknown classifications, non-total sex, or ambiguous currency are excluded.
+"""
+import argparse
+import csv
+import gzip
+import io
+import json
+import os
+import re
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+import httpx
+
+from app.catalog import COUNTRY_MAP
+from app.occupations import ISCO08_EXACT
+from app.store import connect
+
+BULK = "https://webapps.ilo.org/ilostat-files/WEB_bulk_download/indicator"
+TOC = f"{BULK}/table_of_contents_en.csv"
+MAX_COMPRESSED = 35 * 1024 * 1024
+MAX_EXPANDED = 180 * 1024 * 1024
+COUNTRY_ISO3 = {
+    "PT": "PRT", "ES": "ESP", "DE": "DEU", "FR": "FRA",
+    "GB": "GBR", "IN": "IND", "BR": "BRA", "PK": "PAK",
+    "NL": "NLD", "CH": "CHE", "IT": "ITA", "IE": "IRL",
+}
+CODE_TO_JOB = {v: k for k, v in ISCO08_EXACT.items() if v}
+ISCO_RE = re.compile(r"(?:^|_)ISCO08_([0-9]{4})$")
+YEAR_RE = re.compile(r"^[12][0-9]{3}$")
+
+
+def init_salary_db(db):
+    db.execute("""CREATE TABLE IF NOT EXISTS salary_observations (
+        country TEXT NOT NULL, occupation TEXT NOT NULL, period TEXT NOT NULL,
+        indicator TEXT NOT NULL, source_code TEXT NOT NULL,
+        classification TEXT NOT NULL, currency TEXT NOT NULL,
+        value REAL NOT NULL, dataset TEXT NOT NULL, source_url TEXT NOT NULL,
+        PRIMARY KEY(country,occupation,period,indicator,source_code,classification,currency)
+    )""")
+
+
+def earnings_datasets(rows):
+    """Select ONLY occupation-specific employee monthly earning datasets."""
+    out = []
+    for row in rows:
+        label = row.get("indicator.label", "").lower()
+        dataset = row.get("id", "")
+        if not re.fullmatch(r"[A-Za-z0-9_]+_A", dataset):
+            continue
+        if ("average monthly earnings" in label and "occupation" in label
+                and "employees" in label and "sex" in label
+                and ("local currency" in label or "currency" in label)):
+            out.append({"id": dataset, "label": row.get("indicator.label"),
+                        "last_update": row.get("last.update"),
+                        "period_end": row.get("data.end")})
+    return out
+
+
+def parse_row(row, dataset, dataset_label):
+    country = next((k for k, v in COUNTRY_ISO3.items()
+                    if v == row.get("ref_area")), None)
+    if country is None or row.get("sex") != "SEX_T":
+        return None
+    if not YEAR_RE.fullmatch(row.get("time", "")):
+        return None
+    # ILO classification is explicitly ISCO-08. Different classification
+    # editions, country-specific groups and 1/2/3-digit groups are NOT mapped.
+    match = ISCO_RE.search(row.get("classif1", ""))
+    if not match or match.group(1) not in CODE_TO_JOB:
+        return None
+    label = dataset_label.lower()
+    currency_code = COUNTRY_MAP[country]["currency"]
+    # Annual ILOSTAT datasets can include multiple currencies/PPPs.
+    # Only declared local currency can be treated as national-currency salary.
+    if "local currency" not in label:
+        if row.get("classif2") not in ("CUR_LCU", "CUR_NCU"):
+            return None
+    try:
+        value = float(row["obs_value"])
+    except (KeyError, ValueError, TypeError):
+        return None
+    if not (0 < value < 1e12):
+        return None
+    return (
+        country, CODE_TO_JOB[match.group(1)], row["time"],
+        row.get("indicator", dataset.removesuffix("_A")),
+        row.get("source", "unspecified"), row["classif1"],
+        currency_code, value, dataset, f"{BULK}/{dataset}.csv.gz",
+    )
+
+
+def import_csv(db, text, dataset, label):
+    init_salary_db(db)
+    if "average monthly earnings" not in label.lower():
+        raise ValueError("Only average monthly earnings datasets are supported")
+    if not re.fullmatch(r"[A-Za-z0-9_]+_A", dataset):
+        raise ValueError("Invalid annual dataset id")
+    count = 0
+    for row in csv.DictReader(io.StringIO(text)):
+        observation = parse_row(row, dataset, label)
+        if observation:
+            db.execute("""INSERT OR REPLACE INTO salary_observations
+                (country,occupation,period,indicator,source_code,classification,
+                 currency,value,dataset,source_url)
+                VALUES (?,?,?,?,?,?,?,?,?,?)""", observation)
+            count += 1
+    db.commit()
+    return count
+
+
+def salary(country, occupation):
+    with connect() as db:
+        init_salary_db(db)
+        rows = db.execute("""SELECT period, indicator, source_code, classification,
+               currency, value, dataset, source_url FROM salary_observations
+               WHERE country=? AND occupation=? ORDER BY period DESC,source_code""",
+               (country, occupation)).fetchall()
+    if not rows:
+        return {"status": "unavailable", "reason": "No matching imported ISCO-08 exact observation",
+                "country": country, "occupation": occupation, "geography": "national"}
+    latest = rows[0][0]
+    current = [r for r in rows if r[0] == latest]
+    if len(current) != 1:
+        return {"status": "ambiguous", "reason": "Multiple source observations for latest year; choose a source explicitly",
+                "country": country, "occupation": occupation, "latest_period": latest,
+                "sources": [r[2] for r in current]}
+    period, indicator, source, classification, currency, value, dataset, url = current[0]
+    return {"status": "available", "country": country, "occupation": occupation,
+            "value": value, "currency": currency, "period": period,
+            "unit": "monthly gross earnings (as reported by ILOSTAT dataset)",
+            "geography": "national", "classification": classification,
+            "precision": "exact_occupation_isco08", "source": "ILOSTAT",
+            "source_code": source, "indicator": indicator, "dataset": dataset,
+            "source_url": url, "note": "Not a capital-city salary or an individual salary offer."}
+
+
+def availability():
+    """40 occupations x 12 countries: strictly observed, never estimated."""
+    with connect() as db:
+        init_salary_db(db)
+        rows = db.execute("""SELECT country,occupation,MAX(period)
+                             FROM salary_observations GROUP BY country,occupation""").fetchall()
+    observed = {(country, job): period for country, job, period in rows}
+    from app.catalog import OCCUPATIONS
+    return {
+        "countries": len(COUNTRY_MAP), "occupations": len(OCCUPATIONS),
+        "cells": [
+            {"country": code, "occupation": job["id"],
+             "status": "available" if (code, job["id"]) in observed else "unavailable",
+             "latest_period": observed.get((code, job["id"]))}
+            for code in COUNTRY_MAP for job in OCCUPATIONS
+        ],
+    }
+
+
+def download(url, max_bytes=MAX_COMPRESSED):
+    with httpx.Client(timeout=90, follow_redirects=True) as client:
+        with client.stream("GET", url) as response:
+            response.raise_for_status()
+            chunks = []
+            size = 0
+            for chunk in response.iter_bytes():
+                size += len(chunk)
+                if size > max_bytes:
+                    raise ValueError("Source download exceeds configured size limit")
+                chunks.append(chunk)
+            return b"".join(chunks)
+
+
+def run(dataset, label=None):
+    toc_rows = list(csv.DictReader(io.StringIO(download(TOC, 3_000_000).decode("utf-8-sig"))))
+    candidates = {x["id"]: x for x in earnings_datasets(toc_rows)}
+    if dataset not in candidates:
+        raise ValueError("Dataset is absent from official earnings-by-occupation annual catalogue")
+    known = candidates[dataset]
+    if label and label != known["label"]:
+        raise ValueError("Dataset label does not match official catalogue")
+    compressed = download(f"{BULK}/{dataset}.csv.gz")
+    with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as stream:
+        text_bytes = stream.read(MAX_EXPANDED + 1)
+    if len(text_bytes) > MAX_EXPANDED:
+        raise ValueError("Uncompressed source exceeds configured size limit")
+    with connect() as db:
+        inserted = import_csv(db, text_bytes.decode("utf-8-sig"), dataset, known["label"])
+    return {"dataset": dataset, "eligible_rows_imported": inserted,
+            "source": f"{BULK}/{dataset}.csv.gz",
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+            "official_last_update": known["last_update"]}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--list", action="store_true", help="List official eligible annual datasets")
+    parser.add_argument("--dataset", help="Validated ILOSTAT annual indicator id")
+    args = parser.parse_args()
+    if args.list:
+        toc = list(csv.DictReader(io.StringIO(download(TOC, 3_000_000).decode("utf-8-sig"))))
+        print(json.dumps(earnings_datasets(toc), indent=2))
+    elif args.dataset:
+        print(json.dumps(run(args.dataset), indent=2))
+    else:
+        parser.error("Provide --list or --dataset DATASET_ID")
+
+
+if __name__ == "__main__":
+    main()
