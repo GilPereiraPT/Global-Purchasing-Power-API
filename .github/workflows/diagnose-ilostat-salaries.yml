@@ -1,0 +1,38 @@
+name: Diagnose actual ILOSTAT salary observations
+on:
+  workflow_dispatch:
+    inputs:
+      dataset:
+        description: "Official annual occupation earnings indicator"
+        required: true
+        type: choice
+        default: EAR_EMTA_SEX_OCU_NB_A
+        options:
+          - EAR_EMTA_SEX_OCU_NB_A
+          - EAR_EMTA_SEX_OCU_CUR_NB_A
+permissions:
+  contents: read
+jobs:
+  salary-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: any::Rilostat
+      - name: Inspect salary observations for EarnWage countries (read-only)
+        env:
+          DATASET: ${{ inputs.dataset }}
+        run: Rscript scripts/ilostat_salary_diagnostic.R "$DATASET"
+      - name: Upload diagnostic CSVs even if inspection fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ilostat-salary-diagnostic-${{ inputs.dataset }}
+          path: diagnostics/*.csv
+          if-no-files-found: ignore
