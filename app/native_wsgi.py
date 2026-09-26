@@ -8,6 +8,7 @@ import csv
 import io
 import json
 import logging
+import unicodedata
 import os
 import threading
 from pathlib import Path
@@ -19,7 +20,7 @@ from app import north_america as na
 from app import jobs
 from app.client_config import configuration, region_configuration
 from app.ilostat_import import (
-    TOC, download, earnings_datasets, salary, availability, load_snapshot,
+    TOC, download, earnings_datasets, salary, availability, load_snapshot, catalogue_rows,
 )
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
@@ -192,11 +193,18 @@ def dispatch(path, q):
     if path == "/v1/languages":
         return {"languages": [{"code": k, "label": v} for k, v in SUPPORTED_LANGUAGES.items()],
                 "default": "en", "portuguese_locale": "pt",
-                "note": "Occupation labels translated only pt/en; other interface translations planned."}
+                "note": "Occupation labels localized in seven supported languages; other interface text may require client localization."}
     if path == "/v1/sources":
         return sources()
     if path == "/v1/salaries/availability/matrix":
+        lang = str(one(q, "lang", "en")).split("-")[0].lower()
+        if lang not in SUPPORTED_LANGUAGES:
+            raise ApiError(422, "Unsupported interface language")
+        labels = {j["id"]: j["translations"][lang] for j in OCCUPATIONS}
         result = availability()
+        result["language"] = lang
+        for cell in result["cells"]:
+            cell["occupation_label"] = labels[cell["occupation"]]
         observations = na.observed_coverage()
         for cell in result["cells"]:
             period = observations.get((cell["country"], cell["occupation"]))
@@ -206,14 +214,27 @@ def dispatch(path, q):
         result["available_cells"] = sum(c["status"] == "available" for c in result["cells"])
         return result
     if path == "/v1/occupations":
-        lang = str(one(q, "lang", "en"))
-        base = lang.split("-")[0].lower()
-        if base not in SUPPORTED_LANGUAGES:
+        lang = str(one(q, "lang", "en")).split("-")[0].lower()
+        if lang not in SUPPORTED_LANGUAGES:
             raise ApiError(422, "Unsupported interface language")
-        return {"language": lang, "fallback": "en", "occupations": [
-            {"id": j["id"], "isco08": j["isco08"],
-             "label": j["translations"].get(base, j["translations"]["en"]),
-             "translations": j["translations"]} for j in OCCUPATIONS]}
+        term = str(one(q, "q", "")).casefold()
+        term = "".join(ch for ch in unicodedata.normalize("NFKD", term)
+                       if not unicodedata.combining(ch)).strip()
+        if len(term) > 100:
+            raise ApiError(422, "Search term too long")
+        items = []
+        for j in OCCUPATIONS:
+            terms = [j["id"], *j["translations"].values(),
+                     *(alias for group in j.get("aliases", {}).values() for alias in group)]
+            normalized = ["".join(ch for ch in unicodedata.normalize("NFKD", value.casefold())
+                                  if not unicodedata.combining(ch)) for value in terms]
+            if term and not any(term in value for value in normalized):
+                continue
+            items.append({"id": j["id"], "isco08": j["isco08"],
+                          "label": j["translations"][lang],
+                          "translations": j["translations"],
+                          "aliases": j.get("aliases", {})})
+        return {"language": lang, "fallback": "en", "count": len(items), "occupations": items}
     if path == "/v1/compare":
         a, b = country(one(q, "country_a")), country(one(q, "country_b"))
         job = one(q, "occupation")
@@ -271,11 +292,11 @@ def dispatch(path, q):
                                         if one(q, "province") else None))
     if path == "/v1/ilostat/datasets":
         try:
-            raw = download(TOC, 3_000_000).decode("utf-8-sig")
+            datasets = earnings_datasets(catalogue_rows())
         except Exception as exc:
             raise UpstreamUnavailable("ILOSTAT catalogue unavailable") from exc
         return {"source_url": TOC, "datasets":
-                earnings_datasets(csv.DictReader(io.StringIO(raw)))}
+                datasets}
     if path == "/v1/jobs":
         c, job = country(one(q, "country")), occupation(one(q, "occupation"))
         limit = integer(q, "limit", 20)
