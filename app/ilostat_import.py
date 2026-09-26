@@ -78,9 +78,8 @@ def parse_row(row, dataset, dataset_label):
     currency_code = COUNTRY_MAP[country]["currency"]
     # Annual ILOSTAT datasets can include multiple currencies/PPPs.
     # Only declared local currency can be treated as national-currency salary.
-    if "local currency" not in label:
-        if row.get("classif2") not in ("CUR_LCU", "CUR_NCU", "CUR_TYPE_LCU"):
-            return None
+    if row.get("classif2") not in ("CUR_LCU", "CUR_NCU", "CUR_TYPE_LCU"):
+        return None
     try:
         value = float(row["obs_value"])
     except (KeyError, ValueError, TypeError):
