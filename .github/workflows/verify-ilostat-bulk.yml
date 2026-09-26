@@ -1,0 +1,16 @@
+name: Verify ILOSTAT bulk CSV endpoints
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Probe proposed CSV catalogue and salary files without importing
+        run: python scripts/ilostat_bulk_probe.py
