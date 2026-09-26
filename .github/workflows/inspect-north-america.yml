@@ -1,0 +1,42 @@
+name: Inspect US and Canada wage data formats
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/inspect-north-america.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check official wage feeds
+        run: |
+          python - <<'PY'
+          import re, urllib.request
+          from html.parser import HTMLParser
+          urls=[
+            "https://www.bls.gov/oes/tables.htm",
+            "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv",
+          ]
+          class Links(HTMLParser):
+              def handle_starttag(self,tag,attrs):
+                  if tag=="a":
+                      a=dict(attrs);h=a.get("href","")
+                      if ("25" in h or "2025" in h) and any(k in h.lower() for k in (".xlsx",".zip","oesm","oes_")):
+                          print("BLS LINK",h[:250])
+          for u in urls:
+              try:
+                  req=urllib.request.Request(u,headers={"User-Agent":"Mozilla/5.0 (research)"})
+                  with urllib.request.urlopen(req,timeout=45) as r:
+                      print("SOURCE",r.status,r.url,r.headers.get("Content-Type"))
+                      first=r.read(6500)
+                      if "bls.gov" in u:
+                          Links().feed(first.decode("utf-8","replace"))
+                      else:
+                          print("CANADA SAMPLE",repr(first[:1400]))
+              except Exception as e:
+                  print("SOURCE FAILURE",type(e).__name__,str(e)[:300])
+          PY
