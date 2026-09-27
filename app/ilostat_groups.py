@@ -173,7 +173,20 @@ def group_history(country, group, start_year, end_year, path=DEFAULT):
                                "source_codes":sorted({r["source_code"] for r in matches})}
             else:
                 units[unit] = {"status":"unavailable"}
-        observations.append({"year":year,
+        local = units["local_currency"]
+        annual = ({"status":"available", "value":round(local["value"] * 12, 6),
+                   "currency":local["currency"], "unit":"per_year",
+                   "kind":"group_annualized_12_month_equivalent",
+                   "reference_period":str(year), "source":"ILOSTAT",
+                   "monthly_optional":local["value"],
+                   "monthly_kind":"reported_group_monthly",
+                   "payments_per_year":None, "payments_verified":False,
+                   "precision":"isco08_major_group",
+                   "note":"Group monthly earnings × 12 only; not verified total annual remuneration or an exact occupation wage."}
+                  if local["status"] == "available" else
+                  {"status":local["status"], "value":None, "unit":"per_year",
+                   "reason":"No unambiguous local-currency monthly observation"})
+        observations.append({"year":year, "annual_presentation":annual,
                              "status":"available" if any(v["status"] == "available" for v in units.values()) else
                                       "ambiguous" if any(v["status"] == "ambiguous" for v in units.values()) else "unavailable",
                              "values":units})
