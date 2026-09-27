@@ -1,0 +1,75 @@
+name: EarnWage production data refresh
+on:
+  schedule:
+    # GitHub cron uses UTC. The client selects weekdays in Europe/Lisbon.
+    - cron: '21 4 * * *'
+    - cron: '21 5 * * *'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Official data source to refresh in production
+        required: true
+        type: choice
+        default: world_bank
+        options: [world_bank, eurostat]
+      country:
+        description: 'ISO country code, or AUTO for the scheduled weekday pair'
+        required: true
+        type: string
+        default: AUTO
+      mode:
+        description: 'missing = initial backfill; refresh = regular updated observations'
+        required: true
+        type: choice
+        default: missing
+        options: [missing, refresh]
+      essentials:
+        description: 'World Bank only: annual inflation and consumption PPP'
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: earnwage-data-refresh-production
+  cancel-in-progress: false
+jobs:
+  world-bank:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.source == 'world_bank') ||
+      (github.event_name == 'schedule' && github.event.schedule == '21 4 * * *' &&
+       vars.EARNWAGE_SCHEDULE_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Refresh official WDI data through authenticated server API
+        env:
+          EARNWAGE_ADMIN_TOKEN: ${{ secrets.EARNWAGE_ADMIN_TOKEN }}
+          COUNTRY: ${{ inputs.country || 'AUTO' }}
+          MODE: ${{ github.event_name == 'schedule' && 'refresh' || inputs.mode }}
+          ESSENTIALS: ${{ inputs.essentials && '--essentials' || '' }}
+        run: |
+          python -m scripts.remote_data_manager --source world_bank --country "$COUNTRY" --mode "$MODE" $ESSENTIALS
+  eurostat:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.source == 'eurostat') ||
+      (github.event_name == 'schedule' && github.event.schedule == '21 5 * * *' &&
+       vars.EARNWAGE_SCHEDULE_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Refresh official Eurostat / ONS / OECD through authenticated server API
+        env:
+          EARNWAGE_ADMIN_TOKEN: ${{ secrets.EARNWAGE_ADMIN_TOKEN }}
+          COUNTRY: ${{ inputs.country || 'AUTO' }}
+          MODE: ${{ github.event_name == 'schedule' && 'refresh' || inputs.mode }}
+        run: |
+          python -m scripts.remote_data_manager --source eurostat --country "$COUNTRY" --mode "$MODE"
