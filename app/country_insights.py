@@ -7,7 +7,7 @@ import json
 import threading
 import time
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 ISO3 = {
@@ -48,17 +48,14 @@ UHC_SERIES = {
              "Compare years and methodologies before making time-trend claims."),
 }
 SOURCE = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}?format=json&per_page=1000"
+WHO_UHC_SOURCE = "https://ghoapi.azureedge.net/api/UHC_INDEX_REPORTED"
 CACHE_SECONDS = 86400
 _CACHE = {}
 _LOCK = threading.Lock()
 
 
-def _fetch(country, indicator):
-    key = (country, indicator)
-    with _LOCK:
-        cached = _CACHE.get(key)
-        if cached and time.time() - cached[0] < CACHE_SECONDS:
-            return cached[1]
+def _fetch_world_bank(country, indicator):
+    """Official World Bank indicator mirror. No fabricated missing years."""
     url = SOURCE.format(country=quote(ISO3[country]),
                         indicator=quote(indicator))
     request = Request(url, headers={"User-Agent": "EarnWage/0.5 CountryInsights",
@@ -75,9 +72,73 @@ def _fetch(country, indicator):
             and str(row.get("date", "")).isdigit()
         ]
         observations.sort(key=lambda item: item["year"], reverse=True)
-        result = ("available", observations, None)
-    except (HTTPError, URLError, TimeoutError, ValueError, TypeError, KeyError, OSError) as exc:
-        result = ("upstream_unavailable", [], type(exc).__name__)
+        return "available", observations, None
+    except (HTTPError, URLError, TimeoutError, ValueError,
+            TypeError, KeyError, OSError) as exc:
+        return "upstream_unavailable", [], type(exc).__name__
+
+
+def _fetch_who_uhc(country):
+    """WHO GHO, revised SDG 3.8.1 index (not percent or old methodology)."""
+    url = WHO_UHC_SOURCE + "?" + urlencode({
+        "$filter": "SpatialDim eq '" + ISO3[country] + "'",
+        "$top": "1000",
+        "$select": "SpatialDim,TimeDim,NumericValue,SpatialDimType",
+    })
+    request = Request(url, headers={"User-Agent": "EarnWage/0.5 WHO-UHC",
+                                    "Accept": "application/json"})
+    try:
+        with urlopen(request, timeout=15) as response:
+            payload = json.load(response)
+        if not isinstance(payload, dict) or not isinstance(payload.get("value"), list):
+            raise ValueError("Unexpected WHO UHC response")
+        if payload.get("@odata.nextLink"):
+            # Fail closed rather than silently discarding part of a time series.
+            raise ValueError("Unexpected paginated WHO UHC response")
+        observations = []
+        for row in payload["value"]:
+            if not isinstance(row, dict) or row.get("NumericValue") is None:
+                continue
+            if row.get("SpatialDim") != ISO3[country] or row.get("SpatialDimType") not in (None, "COUNTRY"):
+                continue
+            if not str(row.get("TimeDim", "")).isdigit():
+                continue
+            year, value = int(row["TimeDim"]), float(row["NumericValue"])
+            if not 0 <= value <= 100:
+                raise ValueError("Invalid WHO UHC 0-100 index")
+            observations.append({"year": year, "value": value})
+        observations.sort(key=lambda item: item["year"], reverse=True)
+        if not observations:
+            return "upstream_unavailable", [], "NoWHOObservations"
+        if len({row["year"] for row in observations}) != len(observations):
+            raise ValueError("Duplicate WHO country-year records")
+        return "available", observations, None
+    except (HTTPError, URLError, TimeoutError, ValueError,
+            TypeError, KeyError, OSError) as exc:
+        return "upstream_unavailable", [], type(exc).__name__
+
+
+def _fetch(country, indicator):
+    key = (country, indicator)
+    with _LOCK:
+        cached = _CACHE.get(key)
+        if cached and time.time() - cached[0] < CACHE_SECONDS:
+            return cached[1]
+    if indicator == UHC_SERIES["current"]:
+        # WHO's live 2025-methodology index was verified on 2026-09-27
+        # for Portugal: 24 records, latest year 2023, index 83.0.
+        # World Bank has the same published SH_UHC_SCI indicator but its
+        # API timed out twice on the GitHub-hosted source verification.
+        result = _fetch_who_uhc(country)
+        if result[0] != "available":
+            mirror = _fetch_world_bank(country, indicator)
+            if mirror[0] == "available" and mirror[1] and all(
+                    0 <= item["value"] <= 100 for item in mirror[1]):
+                result = mirror
+            elif mirror[0] == "available" and mirror[1]:
+                result = ("upstream_unavailable", [], "InvalidUHCIndex")
+    else:
+        result = _fetch_world_bank(country, indicator)
     with _LOCK:
         _CACHE[key] = (time.time(), result)
     return result
