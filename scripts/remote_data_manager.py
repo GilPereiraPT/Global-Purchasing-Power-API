@@ -31,10 +31,8 @@ ECONOMIC = (
     "net_annual_earnings_reference",
 )
 ESSENTIAL = ("inflation_annual", "ppp_private_consumption")
-# This World Bank code fails for all 14 countries in the exported baseline.
-# Do not generate a predictable failing scheduled run until its official
-# replacement/lineage has been validated; keep the browser diagnostic available.
-PENDING_SOURCE_REVIEW = frozenset({"health_coverage"})
+# WHO 2025 UHC source verified and imported for all 14 countries on
+# 2026-09-27. health_coverage is included in regular scheduled refresh.
 
 
 def post(token, route, payload=None, timeout=60):
@@ -72,8 +70,6 @@ def plan(source, country, essentials=False, weekday=None, indicators=None):
         selected_indicators = (ESSENTIAL if essentials else indicators)
         if not selected_indicators:
             raise ValueError("World Bank indicator catalogue missing")
-        selected_indicators = tuple(i for i in selected_indicators
-                                    if i not in PENDING_SOURCE_REVIEW)
         return [(source, c, i) for c in selected_countries
                 for i in selected_indicators]
     return [(source, c, i) for c in selected_countries for i in ECONOMIC]
