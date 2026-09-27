@@ -91,7 +91,7 @@ def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$"),
                  *(alias for group in item.get("aliases", {}).values() for alias in group)]
         if term and not any(term in _search_key(value) for value in terms):
             continue
-        items.append({"id": item["id"], "isco08": item["isco08"],
+        items.append({"id": item["id"], "isco08": item["isco08"], "isco08_major_group": item["isco08_major_group"],
                       "label": (item["translations"].get(base) or item["translations"]["en"]),
                       "translations": item["translations"],
                       "aliases": item.get("aliases", {})})
