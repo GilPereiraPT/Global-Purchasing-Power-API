@@ -69,3 +69,20 @@ def test_real_coverage_and_invalid_region():
         assert client.get("/v1/earnwage/overview?country=XX&occupation=nurse").status_code == 404
         assert client.get("/v1/earnwage/compare?country_a=US&country_b=CA&occupation=invalid").status_code == 422
         assert client.get("/v1/earnwage/overview?country=US&occupation=nurse&annual_gross=0").status_code == 422
+
+
+def test_group_context_does_not_replace_exact_profession_wage():
+    with TestClient(app) as client:
+        response = client.get("/v1/earnwage/overview?country=PT&occupation=nurse")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["national_occupation_wage"]["status"] == "unavailable"
+        context = data["national_major_group_context"]
+        assert context["precision"] == "isco08_major_group"
+        assert context["isco08_major_group"] == "2"
+        assert context["country"] == "PT"
+        assert data["net_purchasing_power"]["value"] is None
+        comparison = client.get("/v1/earnwage/compare?country_a=PT&country_b=US&occupation=nurse")
+        assert comparison.status_code == 200
+        assert comparison.json()["country_a"]["national_major_group_context"]["precision"] == "isco08_major_group"
+        assert comparison.json()["country_a"]["national_occupation_wage"]["status"] == "unavailable"
