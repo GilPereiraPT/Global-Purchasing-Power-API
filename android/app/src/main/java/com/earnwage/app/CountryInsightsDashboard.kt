@@ -94,9 +94,9 @@ private suspend fun getDashboardJson(path:String):JSONObject=withContext(Dispatc
     } finally {connection.disconnect()}
 }
 private fun e(s:String)=URLEncoder.encode(s,"UTF-8")
-private fun valid(o:JSONObject?):Boolean=o?.optString("status")=="available" &&
+private fun valid(o:JSONObject?):Boolean=o!=null && o.optString("status")=="available" &&
     !o.isNull("value") && o.optDouble("value",Double.NaN).isFinite()
-private fun themeCard()=CardDefaults.cardColors(containerColor=Color(0xFFF8FBF9))
+@Composable private fun themeCard()=CardDefaults.cardColors(containerColor=Color(0xFFF8FBF9))
 private fun localeText(pt:Boolean,ptText:String,enText:String)=if(pt)ptText else enText
 
 @Composable
