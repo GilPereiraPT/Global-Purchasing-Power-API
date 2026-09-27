@@ -9,13 +9,15 @@ pretend that a committed file or importer is a successful production refresh.
 - API JSON: https://earnwage-api.policlinicosdesantoandre.com/v1/data-inventory
 - API Lab: https://gilpereirapt.github.io/Global-Purchasing-Power-API/
 
-The inventory audits 14 countries, 13 WDI indicators per country, three
+The inventory audits 14 countries and the deployed WDI catalogue (13 at the
+2026-09-27 baseline, **29 after OFFICIAL_OPEN_DATA_WAVE.md is deployed**), three
 Eurostat/ONS/OECD economic series for nine eligible countries, the complete
 14 × 40 exact-occupation wage availability matrix, nine ILOSTAT major groups
 per country and the ECB currency cache. Each official indicator includes the
 stored value, source, observation period, observation count, last successful
 refresh, latest attempted refresh and source URL. Country and source totals
-are counts of real observations only.
+are counts of real observations only. A newly deployed catalogue changes the
+number of possible indicator cells before any new observations are imported.
 
 Exact occupation wages and ISCO-08 major-group wage **contexts** are separate.
 The presence of a large-group value does not turn it into the specific
