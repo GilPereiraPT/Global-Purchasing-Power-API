@@ -8,8 +8,8 @@ from app.north_america import BLS_NEWS_TABLE
 
 def test_reviewed_bls_2025_extract():
     data = list(reviewed_rows())
-    assert len(data) == 9
-    assert len({r[1] for r in data}) == 9
+    assert len(data) == 10
+    assert len({r[1] for r in data}) == 10
     assert all(r[0] == "US" and r[2] == "national" for r in data)
     assert all(r[5] == "May 2025" and r[7] == "USD" and r[8] == "mean"
                and r[9] == "USD/year" and r[12] == BLS_NEWS_TABLE for r in data)
