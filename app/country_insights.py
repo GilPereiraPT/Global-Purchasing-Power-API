@@ -48,7 +48,7 @@ def _fetch(country, indicator):
     request = Request(url, headers={"User-Agent": "EarnWage/0.5 CountryInsights",
                                     "Accept": "application/json"})
     try:
-        with urlopen(request, timeout=4) as response:
+        with urlopen(request, timeout=15) as response:
             payload = json.load(response)
         if not isinstance(payload, list) or len(payload) < 2 or not isinstance(payload[1], list):
             raise ValueError("Unexpected World Bank response")
