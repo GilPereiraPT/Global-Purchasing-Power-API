@@ -53,7 +53,7 @@ def _clean(value):
 def terms(occupation, country=None, provider=None):
     """Return deduplicated query terms; provider-specific behavior belongs in adapters."""
     row = CATALOG.get(occupation)
-    if row is None:
+    if row is None or occupation == "manager":
         return ()
     languages = COUNTRY_INTERFACE_LANGUAGES.get(country, ["en"]) if country else LANGUAGES
     languages = tuple(dict.fromkeys((*languages, "en")))
@@ -61,7 +61,7 @@ def terms(occupation, country=None, provider=None):
     for lang in languages:
         explicit = EXTRA.get(occupation, {}).get(lang, ())
         label = row["translations"].get(lang, "")
-        aliases = row.get("aliases", {}).get(lang, ())
+        aliases = row.get("aliases", {}).get(lang, ()) if occupation != "accountant" else ()
         candidates = (*explicit, *((label,) if "/" not in label else ()), *aliases)
         for candidate in candidates:
             if not isinstance(candidate, str):
