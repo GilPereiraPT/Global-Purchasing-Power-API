@@ -121,7 +121,7 @@ def recent_jobs(result, max_age_days, limit):
     now = datetime.now(timezone.utc)
     kept, excluded = [], 0
     for job in result["jobs"]:
-        published = job.get("published_at")
+        published = job.get("published_at") if job.get("publication_date_status") != "unknown" else None
         try:
             date = datetime.fromisoformat(published.replace("Z", "+00:00"))
             if date.tzinfo is None:
@@ -133,7 +133,7 @@ def recent_jobs(result, max_age_days, limit):
             excluded += 1
             continue
         kept.append({**job, "age_days": age,
-                     "publication_date_status": "reported" if age is not None else "unknown"})
+                     "publication_date_status": job.get("publication_date_status", "reported") if age is not None else "unknown"})
     return {**result, "jobs": kept[:limit], "count": len(kept),
             "returned": min(len(kept), limit),
             "status": "available" if kept else "no_results",
