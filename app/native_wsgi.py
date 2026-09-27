@@ -408,6 +408,19 @@ def dispatch(path, q):
         return {"version": VERSION, "country_a": side(a), "country_b": side(b),
                 "occupation": job,
                 "comparison_note": "National inflation is not city cost of living; no inferred net salary."}
+    if path == "/v1/es/earnings/groups":
+        from app.es_eaes_groups import catalogue
+        return catalogue()
+    if path.startswith("/v1/es/earnings/groups/") and len(path.split("/")) == 6:
+        from app.es_eaes_groups import group_history
+        group = path.rsplit("/", 1)[-1]
+        try:
+            return group_history(group,
+                                 one(q, "sex", "both"),
+                                 integer(q, "start_year", 2008),
+                                 integer(q, "end_year", 2024))
+        except ValueError as exc:
+            raise ApiError(422, str(exc)) from exc
     parts = [p for p in path.split("/") if p]
     if len(parts) == 3 and parts[:2] == ["v1", "countries"]:
         return COUNTRY_MAP[country(parts[2])]

@@ -1,5 +1,52 @@
 # Spain wage import: INE EES 2022, evidence-gated
 
+## Verified and imported: annual EAES 2008–2024 **BROAD GROUP CONTEXT ONLY**
+
+From the actual official INE JSON for **Table 28186 — Sexo y grupos
+principales de ocupación**, supplied as `28186.json` and checked against
+INE's national 2024 release, the repository now ships
+`data/es_ine_eaes_28186.json`. Source:
+https://www.ine.es/jaxiT3/Tabla.htm?t=28186
+
+The snapshot has exactly **54 series** = 17 major occupation groups
+CNO-11 `A`–`Q` plus total, each with both sexes, women and men;
+2008–2024; **918 original year × group × sex cells**, comprising **856
+published amounts**, **62 null/suppressed** and **29 published with
+small-sample high-variability flags**. Military group Q has no values.
+Currency EUR, measure national **mean gross annual wage**, not gross
+monthly wage, not median and NOT specific to 40 EarnWage occupations.
+
+The source encodes a published small-sample flag as a NEGATIVE number
+(e.g. J / women / 2024 = -24001.36), and supplies an explicit `Notas`
+explanation (100 to 500 sample observations). The importer preserves the
+flag and presents **positive 24001.36 EUR/year** with
+`sample_quality=sample_100_to_500_high_variability`. A null value
+with the source's `<100` note remains `status=suppressed`, value null.
+It never exposes negative earnings or silently fills absent categories.
+
+Endpoints (FastAPI and production native Passenger WSGI):
+- `GET /v1/es/earnings/groups`
+- `GET /v1/es/earnings/groups/B?sex=both&start_year=2008&end_year=2024`
+- `GET /v1/es/earnings/groups/H?sex=women&start_year=2024&end_year=2024`
+
+Group B **40,554.53 EUR/year in 2024** includes health AND education
+scientific/intellectual specialists. Group H **19,479.94 EUR/year**
+includes health and personal-care services workers. Neither is a
+doctor, nurse or psychologist salary. Salary cards, exact-occupation
+coverage, and occupation comparisons deliberately do not import these
+groups. The data inventory has an *independent* ES group count. This
+snapshot is included in GitHub source but needs the user's usual
+server code deployment to appear at the live API.
+
+Reuse: INE's original statistical information is generally CC BY 4.0
+with attribution, including commercial use unless an exception applies.
+https://www.ine.es/datosabiertos/
+Attribution: `Fonte: Instituto Nacional de Estadística (INE), Encuesta
+Anual de Estructura Salarial, tabla 28186, www.ine.es. Dados tratados
+pela EarnWage.` This is not an INE-endorsed application.
+
+
+
 ## Confirmed sources
 
 Official INE EES annual 2024 public results (published 28 May 2026)
