@@ -26,7 +26,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.13"
+VERSION = "0.5.14"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -132,7 +132,12 @@ def recent_jobs(result, max_age_days, limit):
         if max_age_days and age is not None and age > max_age_days:
             excluded += 1
             continue
+        salary = job.get("salary_text")
+        structured = job.get("salary_structured")
+        salary_display = salary.strip() if isinstance(salary, str) and salary.strip() else "Não divulgado"
         kept.append({**job, "age_days": age,
+                     "salary_display": salary_display,
+                     "salary_disclosed": bool(salary_display != "Não divulgado" or structured),
                      "publication_date_status": job.get("publication_date_status", "reported") if age is not None else "unknown"})
     updated = {**result, "jobs": kept[:limit], "count": len(kept),
             "returned": min(len(kept), limit),
