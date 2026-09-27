@@ -86,3 +86,49 @@ def test_native_eurostat_routes_without_live_fetch(tmp_path, monkeypatch):
     assert request("/v1/eurostat/US/hicp_annual_change_monthly")[0] == 404
     assert request("/v1/eurostat/compare", {"country_a": "PT", "country_b": "DE"})[0] == 200
     assert request("/v1/eurostat/compare", {"country_a": "PT", "country_b": "US"})[0] == 422
+
+
+def test_admin_import_requires_configured_secret(tmp_path, monkeypatch):
+    from app.native_wsgi import application
+    monkeypatch.setenv("EARNWAGE_INSIGHTS_DB", str(tmp_path / "insights.sqlite3"))
+    monkeypatch.delenv("EARNWAGE_ADMIN_TOKEN", raising=False)
+    statuses = []
+    def start_response(status, headers):
+        statuses.append(status)
+    environ = {"PATH_INFO": "/v1/admin/eurostat/import",
+               "REQUEST_METHOD": "POST", "CONTENT_LENGTH": "2",
+               "wsgi.input": io.BytesIO(b"{}")}
+    result = json.loads(b"".join(application(environ, start_response)))
+    assert statuses[0].startswith("503")
+    assert result["error"] == "admin_not_configured"
+
+
+def test_admin_import_auth_and_cors(tmp_path, monkeypatch):
+    from app.native_wsgi import application
+    monkeypatch.setenv("EARNWAGE_INSIGHTS_DB", str(tmp_path / "insights.sqlite3"))
+    monkeypatch.setenv("EARNWAGE_ADMIN_TOKEN", "z" * 40)
+    payload = json.dumps({"country": "PT", "indicator": "hicp_annual_change_monthly"}).encode()
+    def send(method, token=None, origin="https://gilpereirapt.github.io"):
+        statuses, headers = [], []
+        def start_response(status, response_headers):
+            statuses.append(status)
+            headers.extend(response_headers)
+        environ = {"PATH_INFO": "/v1/admin/eurostat/import",
+                   "REQUEST_METHOD": method, "HTTP_ORIGIN": origin,
+                   "CONTENT_LENGTH": str(len(payload)),
+                   "wsgi.input": io.BytesIO(payload)}
+        if token is not None:
+            environ["HTTP_X_EARNWAGE_ADMIN_TOKEN"] = token
+        result = b"".join(application(environ, start_response))
+        return statuses[0], dict(headers), json.loads(result) if result else None
+    assert send("POST")[0].startswith("401")
+    assert send("POST", "wrong")[0].startswith("401")
+    assert send("POST", "z" * 40, "https://evil.example")[0].startswith("403")
+    status, headers, _ = send("OPTIONS")
+    assert status.startswith("204")
+    assert headers["Access-Control-Allow-Headers"].find("X-EarnWage-Admin-Token") >= 0
+    monkeypatch.setattr(eu, "fetch", lambda code, spec: [("2025-01", 2.5)])
+    status, _, result = send("POST", "z" * 40)
+    assert status.startswith("200")
+    assert result["import_status"] == "available"
+    assert result["indicator"]["value"] == 2.5
