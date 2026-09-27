@@ -1,4 +1,5 @@
 """Eurostat importer: exact JSON-stat selection, safe cache, no HTTP-time downloads."""
+import io
 import json
 from urllib.parse import parse_qs, urlparse
 
@@ -66,7 +67,17 @@ def test_failed_refresh_retains_verified_observation(tmp_path, monkeypatch):
 
 def test_native_eurostat_routes_without_live_fetch(tmp_path, monkeypatch):
     from app import country_insights_store as store
-    from tests.test_native_wsgi import request
+    from app.native_wsgi import application
+    from urllib.parse import urlencode
+    def request(path, params=None):
+        statuses = []
+        def start_response(status, headers):
+            statuses.append(status)
+        environ = {"PATH_INFO": path, "REQUEST_METHOD": "GET",
+                   "QUERY_STRING": urlencode(params or {}),
+                   "wsgi.input": io.BytesIO(b"")}
+        body = b"".join(application(environ, start_response))
+        return int(statuses[0].split()[0]), json.loads(body), {}
     monkeypatch.setenv("EARNWAGE_INSIGHTS_DB", str(tmp_path / "insights.sqlite3"))
     code, coverage, _ = request("/v1/eurostat/coverage")
     assert code == 200 and coverage["count"] == 9
