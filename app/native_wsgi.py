@@ -25,7 +25,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.7"
+VERSION = "0.5.8"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -399,6 +399,10 @@ def dispatch(path, q):
             raise UpstreamUnavailable("ILOSTAT catalogue unavailable") from exc
         return {"source_url": TOC, "datasets":
                 datasets}
+    if path == "/v1/jobs/dictionary":
+        from app.job_dictionary import dictionary
+        code = one(q, "country")
+        return dictionary(occupation(one(q, "occupation")), country(code) if code else None)
     if path == "/v1/jobs":
         c, job = country(one(q, "country")), occupation(one(q, "occupation"))
         limit = integer(q, "limit", 20)
