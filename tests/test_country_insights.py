@@ -120,7 +120,7 @@ class CountryInsightsTests(unittest.TestCase):
 
     def test_uhc_who_failure_can_use_valid_world_bank_mirror(self):
         with patch.object(ci, "_fetch_who_uhc",
-                          return_value=("upstream_unavailable", [], "TimeoutError")), \\
+                          return_value=("upstream_unavailable", [], "TimeoutError")), \
              patch.object(ci, "_fetch_world_bank",
                           return_value=("available", [
                               {"year": 2023, "value": 82.0}], None)) as mirror:
