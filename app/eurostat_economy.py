@@ -21,7 +21,7 @@ EUROSTAT_COUNTRIES = ("PT", "ES", "DE", "FR", "IE", "NL", "IT", "GB", "CH")
 SERIES = {
     "hicp_annual_change_monthly": {
         "dataset": "prc_hicp_minr",
-        "filters": {"freq": "M", "unit": "RCH_A", "coicop": "CP00"},
+        "filters": {"freq": "M", "unit": "RCH_A", "coicop": "TOTAL"},
         "unit": "percent_year_on_year", "frequency": "monthly",
         "description": "All-items HICP annual rate of change for the stated month",
     },
