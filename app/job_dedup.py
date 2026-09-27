@@ -16,7 +16,7 @@ COUNTRY_EQUIVALENTS = {
 def _norm(value):
     text = unicodedata.normalize("NFKD", str(value or "")).casefold()
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
-    return re.sub(r"[^\\w]+", " ", text).strip()
+    return re.sub(r"[^\w]+", " ", text).strip()
 
 def _location(job):
     raw = _norm(job.get("candidate_required_location"))
