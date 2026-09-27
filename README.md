@@ -349,3 +349,45 @@ Native WSGI external-data routes call the existing async providers through
 a per-request event loop. Server-specific live HTTP requests still require
 individual smoke tests after deployment; local unit tests prove routing and
 payload format, not external provider availability.
+
+## Eurostat economic reference series (cron-only, no API key)
+
+The Eurostat module imports three independently labelled observations for PT, ES,
+DE, FR, IE, NL, IT, GB and CH **where the official series actually contains
+data**. Availability is not assumed from country membership.
+
+- `hicp_annual_change_monthly`: `prc_hicp_minr`, all-items CP00,
+  annual percentage change for each month; NOT the price index itself.
+- `household_price_level_eu27`: `prc_ppp_ind`, household final
+  consumption E011, EU27_2020=100. This is the historical COICOP 1999
+  series; do not splice with `prc_ppp_ind_1` without a reviewed bridge.
+- `net_annual_earnings_reference`: `earn_nt_net`, single person without
+  children earning 100% of average earnings, EUR/year. This is a
+  statistical scenario, NOT a personalized tax calculation or profession wage.
+
+Import only from server cron; each run accepts at most two countries:
+
+```bash
+python -m app.eurostat_economy --country PT
+python -m app.eurostat_economy --pair DE FR
+```
+
+Set `EARNWAGE_INSIGHTS_DB=/home3/policli1/earnwage-private/country_insights.sqlite3`
+in the server environment before importing and when running Passenger. The
+existing country-insights database gains separate `eurostat_observations`
+and `eurostat_refresh` tables; no migration or downloaded SQLite file
+is committed. Restart Passenger after deploying the code. An API code
+update alone does NOT import Eurostat observations or restart the host.
+
+```text
+GET /v1/eurostat/coverage
+GET /v1/eurostat/PT/hicp_annual_change_monthly
+GET /v1/eurostat/PT/household_price_level_eu27
+GET /v1/eurostat/PT/net_annual_earnings_reference
+GET /v1/eurostat/compare?country_a=PT&country_b=DE
+```
+
+Every response includes actual period, unit, dataset, source URL and refresh
+status. The Eurostat importer does not overwrite World Bank CPI/PPP series,
+and the app should not mix them as equivalent measures. No live Eurostat
+requests occur on these HTTP routes.
