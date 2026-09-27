@@ -43,6 +43,8 @@ def _observation(item, history):
         "last_successful_refresh": item.get("last_successful_refresh"),
         "last_attempt": item.get("last_attempt"),
         "refresh_status": item.get("refresh_status"),
+        **({"family": item["family"]} if "family" in item else {}),
+        **({"underlying_source": item["underlying_source"]} if "underlying_source" in item else {}),
         **history,
     }
 
