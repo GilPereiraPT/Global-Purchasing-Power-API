@@ -101,6 +101,35 @@ def location_matches(location: str, country: str) -> str | None:
     return None
 
 
+
+# ATS employer boards commonly supply US cities/states without a country name.
+# Do not interpret a bare "Remote" as permission to work from the US.
+US_STATE_CODES = frozenset((
+    "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI "
+    "MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT "
+    "VT VA WA WV WI WY DC").split())
+US_CITY_NAMES = ("san francisco", "new york city", "los angeles",
+                 "san diego", "foster city")
+
+def ats_location_matches(location: str, country: str) -> str | None:
+    """Country match for employer-board location strings; no remote inference."""
+    if not isinstance(location, str):
+        return None
+    direct = location_matches(location, country)
+    if direct:
+        return direct
+    if country != "US":
+        return None
+    # An uppercase state code after a comma, e.g. "Foster City, CA".
+    # Case-sensitive to avoid confusing "in" with Indiana or "ca" with Canada.
+    state_codes = re.findall(r",\s*([A-Z]{2})(?=\s*(?:[,;/()]|$))", location)
+    if any(code in US_STATE_CODES for code in state_codes):
+        return "us_state_code"
+    if any(re.search(r"(?<!\w)" + re.escape(city) + r"(?!\w)", location, re.I)
+           for city in US_CITY_NAMES):
+        return "us_city_mentioned"
+    return None
+
 def normalize(row: dict, fetched_at: str) -> dict | None:
     url = row.get("url")
     if not isinstance(url, str):
