@@ -111,6 +111,10 @@ US_STATE_CODES = frozenset((
 US_CITY_NAMES = ("san francisco", "new york city", "los angeles",
                  "san diego", "foster city")
 
+EU_COUNTRIES = frozenset(("PT ES DE FR NL IT IE").split())
+EU_REGION = re.compile(r"(?<!\\w)(?:european union|eu countries|eu member states|eu only|eu remote|remote[ -]+eu)(?!\\w)", re.I)
+# UK and Switzerland are not EU member states. EMEA/Europe is not proof of EU eligibility.
+
 def ats_location_matches(location: str, country: str) -> str | None:
     """Country match for employer-board location strings; no remote inference."""
     if not isinstance(location, str):
@@ -118,6 +122,8 @@ def ats_location_matches(location: str, country: str) -> str | None:
     direct = location_matches(location, country)
     if direct:
         return direct
+    if country in EU_COUNTRIES and EU_REGION.search(location):
+        return "eu_region_mentioned"
     if country != "US":
         return None
     # An uppercase state code after a comma, e.g. "Foster City, CA".
