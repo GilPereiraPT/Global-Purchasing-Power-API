@@ -401,7 +401,39 @@ def dispatch(path, q):
         limit = integer(q, "limit", 20)
         if not 1 <= limit <= 100:
             raise ApiError(422, "limit must be between 1 and 100")
-        return run_async(jobs.search(c, job, boolean(q, "salary_published"), limit))
+        provider = str(one(q, "provider", "all")).lower()
+        if provider not in ("all", "remotive", "arbeitnow"):
+            raise ApiError(422, "provider must be all, remotive or arbeitnow")
+        published = boolean(q, "salary_published")
+        if provider == "remotive":
+            return run_async(jobs.search(c, job, published, limit))
+        from app import arbeitnow_jobs
+        if provider == "arbeitnow":
+            return run_async(arbeitnow_jobs.search(c, job, published, limit))
+        results, failures = [], []
+        for name, fn in (("Remotive", jobs.search), ("Arbeitnow", arbeitnow_jobs.search)):
+            try:
+                results.append(run_async(fn(c, job, published, 100)))
+            except UpstreamUnavailable:
+                failures.append(name)
+        if not results:
+            raise UpstreamUnavailable("All job feeds unavailable")
+        combined = []
+        seen = set()
+        for result in results:
+            for listing in result["jobs"]:
+                key = listing["source_url"].rstrip("/")
+                if key not in seen:
+                    seen.add(key)
+                    combined.append(listing)
+        combined.sort(key=lambda x: x["published_at"], reverse=True)
+        return {"status": "available" if combined else "no_results",
+                "provider": "EarnWage", "providers": [x["provider"] for x in results],
+                "failed_providers": failures, "country": c, "occupation": job,
+                "count": len(combined), "returned": min(len(combined), limit),
+                "jobs": combined[:limit],
+                "scope": "Remotive remote eligibility and Arbeitnow advertised locations; not a national vacancy census.",
+                "notice": "Arbeitnow.com and Remotive source links are included on each listing. Verify eligibility and availability at source."}
     if len(parts) == 4 and parts[:3] == ["v1", "jobs", "remotive"]:
         try:
             job_id = int(parts[3])
