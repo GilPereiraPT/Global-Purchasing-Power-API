@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EarnWage · Inventário real da base de dados</title>
+<meta name="description" content="Cobertura real de indicadores, salários e taxas cambiais importados no servidor EarnWage.">
+<style>
+:root{font:15px system-ui,-apple-system,Segoe UI,sans-serif;color:#19353c;background:#f2f7f8}
+*{box-sizing:border-box}body{margin:0}header{background:#102d38;color:#fff;padding:27px max(18px,calc((100vw - 1160px)/2))}
+header a{color:#a8e9d3}header p{color:#c6dadd;max-width:740px}h1{margin:6px 0;font-size:clamp(1.6rem,4vw,2.3rem)}
+main{max-width:1160px;margin:auto;padding:20px 16px 55px}
+.panel{background:#fff;border:1px solid #deeaed;border-radius:16px;padding:19px;margin-bottom:16px;box-shadow:0 2px 11px #0b303908}
+h2{font-size:1.15rem;margin:0 0 13px}.muted{color:#5f7176}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:11px}
+.stat{background:#f2f9f7;border:1px solid #d8eae4;border-radius:13px;padding:16px}.stat b{display:block;font-size:1.65rem;color:#087d68;margin:7px 0}
+.stat small{color:#526f72}.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px}
+label{display:block;font-size:.83rem;font-weight:700;margin-bottom:5px}select,input,button{font:inherit;width:100%;padding:11px;border-radius:9px;border:1px solid #b9cbd0;background:white;color:#19353c}
+button{border:0;background:#087c67;color:#fff;font-weight:700;cursor:pointer}button.secondary{background:#e6f4ee;color:#075b4a}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}.actions button{width:auto}
+.notice{border-left:4px solid #d1aa57;background:#fff9ec;padding:12px;border-radius:5px}
+.scroll{overflow:auto;max-height:72vh}table{border-collapse:collapse;width:100%;min-width:970px}
+th,td{border-bottom:1px solid #e1e9eb;padding:10px 8px;text-align:left;vertical-align:top}
+th{font-size:.8rem;background:#eff6f5;position:sticky;top:0;z-index:1}
+td{font-size:.86rem}td:first-child{font-weight:650}td small{display:block;color:#63767c;margin-top:3px}
+.badge{font-size:.77rem;display:inline-block;padding:4px 9px;border-radius:40px;font-weight:700;background:#e8f0f3;color:#315c6b}
+.good{background:#e0f3e9;color:#176745}.warn{background:#fff0d9;color:#84500b}
+a{color:#076f5b}footer{text-align:center;color:#62747a;padding:22px}.status{min-height:20px}
+@media(max-width:600px){main{padding:13px 10px}.panel{padding:14px}}
+</style>
+</head>
+<body>
+<header><a href="./">← EarnWage API Lab</a><h1>Inventário real dos dados</h1>
+<p>O que está efetivamente guardado na nossa API: indicadores, períodos, séries históricas, salários e fontes. Sem confundir código disponível com dados importados.</p></header>
+<main>
+<section class="panel">
+<div class="actions"><button id="refresh">↻ Consultar o servidor</button><button class="secondary" id="csv" disabled>Exportar inventário CSV</button><button class="secondary" id="json" disabled>Exportar JSON</button></div>
+<p id="status" class="status muted" role="status" aria-live="polite">A aguardar consulta.</p>
+<p class="notice"><strong>Leitura direta da API de produção.</strong> Uma célula «Não importado» significa apenas que não existem observações guardadas nesta base de dados. Não significa que a entidade estatística não publique o indicador. A existência do script não prova que o agendamento esteja ativo.</p>
+</section>
+<section class="panel"><h2>Resumo da informação efetivamente armazenada</h2>
+<div id="summary" class="grid"></div><p id="date" class="muted"></p></section>
+<section class="panel">
+<h2>Matriz completa de cobertura</h2>
+<div class="controls">
+<div><label for="country">País</label><select id="country"><option value="">Todos os países</option></select></div>
+<div><label for="family">Origem / tipo</label><select id="family">
+<option value="">Todas as fontes</option><option value="Banco Mundial">Banco Mundial</option>
+<option value="Eurostat / ONS / OCDE">Eurostat / ONS / OCDE</option>
+<option value="Salário profissional exato">Salário profissional exato</option>
+<option value="Grupo profissional ILOSTAT">Grupo profissional ILOSTAT</option>
+<option value="Câmbio BCE">Câmbio BCE</option></select></div>
+<div><label for="state">Estado</label><select id="state"><option value="">Todos</option>
+<option value="available">Com dados</option><option value="missing">Sem dados</option>
+<option value="stale">Atualização falhada / cache expirada</option></select></div>
+<div><label for="search">Pesquisar indicador ou profissão</label><input id="search" type="search" placeholder="Ex.: esperança de vida, médico…"></div>
+</div>
+<p id="count" class="muted"></p>
+<div class="scroll"><table><thead><tr>
+<th>País</th><th>Tipo</th><th>Indicador / profissão</th><th>Estado</th>
+<th>Último valor</th><th>Período</th><th>Observações</th><th>Fonte / importação</th></tr></thead>
+<tbody id="rows"></tbody></table></div>
+</section>
+<section class="panel"><h2>O que este inventário mede</h2>
+<p>Banco Mundial: séries anuais independentes. Eurostat/ONS/OCDE: três séries económicas distintas. Salários profissionais: observações de profissões específicas, separadas das médias de grupos ISCO-08. Câmbio: apenas taxas BCE encontradas na cache local; uma cache vazia não implica ausência de câmbio na fonte.</p>
+<p>Este ecrã não cria nem atualiza estatísticas: lê o que existe no processo da API. A importação do Banco Mundial e do Eurostat tem de ser executada no servidor. A data da última importação não altera o ano da observação oficial.</p>
+</section>
+</main><footer>EarnWage · Your salary. Your world.</footer>
+<script>
+"use strict";
+const API="https://earnwage-api.policlinicosdesantoandre.com";
+const $=x=>document.getElementById(x);
+const names={
+ life_expectancy:"Esperança de vida",unemployment:"Desemprego",
+ gdp_per_capita:"PIB per capita",gini:"Índice de Gini",
+ health_coverage:"Cobertura de saúde (UHC)",
+ primary_completion:"Conclusão do ensino primário",
+ adult_literacy:"Alfabetização de adultos",
+ electricity_access:"Acesso a eletricidade",safe_drinking_water:"Água potável segura",
+ safe_sanitation:"Saneamento seguro",internet_use:"Utilização da Internet",
+ inflation_annual:"Inflação anual (IPC)",
+ ppp_private_consumption:"PPC do consumo das famílias",
+ hicp_annual_change_monthly:"Inflação homóloga",
+ household_price_level_eu27:"Nível de preços (UE27=100)",
+ net_annual_earnings_reference:"Salário líquido anual de referência"
+};
+const labels={available:"Disponível",not_imported:"Não importado",
+ unavailable:"Sem observações",upstream_unavailable:"Fonte indisponível",
+ failed:"Atualização falhada",empty:"Sem observações",cached:"Em cache",
+ expired:"Cache expirada",not_cached:"Não consultado",identity:"Moeda-base"};
+const nf=new Intl.NumberFormat("pt-PT",{maximumFractionDigits:2});
+let inventory=null,allRows=[];
+function stateKind(status,refresh){
+ if(status==="available"||status==="cached"||status==="identity")
+    return refresh && refresh!=="available" ? "stale" : "available";
+ return status==="expired"?"stale":"missing";
+}
+function observationRow(country,type,name,item) {
+ const status=item.status||"not_imported";
+ const refresh=item.refresh_status;
+ return {
+  country:country.code,countryName:country.name,type,name,status,refresh,
+  value:item.value===null||item.value===undefined?"":nf.format(item.value)+(item.unit?" "+item.unit:""),
+  period:item.period===null||item.period===undefined?"":String(item.period),
+  observations:item.observations??"",
+  source:item.source||"",sourceUrl:item.source_url||"",
+  imported:item.last_successful_refresh||"", note:""
+ };
+}
+function normalize(data) {
+ const rows=[];
+ for(const country of data.countries){
+  for(const [key,item] of Object.entries(country.world_bank||{}))
+   rows.push(observationRow(country,"Banco Mundial",names[key]||key,item));
+  for(const [key,item] of Object.entries(country.eurostat_ons_oecd||{}))
+   rows.push(observationRow(country,"Eurostat / ONS / OCDE",names[key]||key,item));
+  for(const [key,item] of Object.entries(country.exact_occupational_wages?.occupations||{})){
+   const sources=item.sources||[];
+   rows.push({
+    country:country.code,countryName:country.name,
+    type:"Salário profissional exato",name:key.replace(/_/g," "),
+    status:item.status,refresh:"",
+    value:"",period:sources.map(s=>s.latest_period).filter(Boolean).join(" / "),
+    observations:sources.reduce((n,s)=>n+s.observations,0),
+    source:sources.map(s=>s.source).join(" / "),
+    sourceUrl:"",imported:"",note:""
+   });
+  }
+  for(const [key,item] of Object.entries(country.ilostat_major_groups||{}))
+   rows.push({country:country.code,countryName:country.name,
+    type:"Grupo profissional ILOSTAT",name:"ISCO-08 grupo "+key,
+    status:item.status,refresh:"",value:"",
+    period:item.latest_period||"",observations:item.observations??0,
+    source:item.status==="available"?"ILOSTAT":"",
+    sourceUrl:data.source_registry?.ilostat_major_groups?.source_url||"",imported:"",note:""});
+ }
+ for(const [code,item] of Object.entries(data.exchange_rates||{})){
+  rows.push({country:"—",countryName:"Todas as moedas",type:"Câmbio BCE",
+   name:"EUR → "+code,status:item.status,refresh:"",value:"",
+   period:item.period||"",observations:item.status==="not_cached"?0:1,
+   source:item.source||"BCE",sourceUrl:"",imported:item.fetched_at||"",note:""});
+ }
+ return rows;
+}
+function tile(title,value,subtitle){
+ const el=document.createElement("div");el.className="stat";
+ const small=document.createElement("small");small.textContent=title;
+ const big=document.createElement("b");big.textContent=value;
+ const detail=document.createElement("small");detail.textContent=subtitle;
+ el.append(small,big,detail);return el;
+}
+function drawSummary(data){
+ const s=data.summary;
+ $("summary").replaceChildren(
+  tile("Banco Mundial",s.world_bank.available+" / "+s.world_bank.possible,
+       s.world_bank.historical_observations+" observações históricas"),
+  tile("Eurostat / ONS / OCDE",
+       s.eurostat_ons_oecd.available+" / "+s.eurostat_ons_oecd.possible,
+       s.eurostat_ons_oecd.historical_observations+" observações históricas"),
+  tile("Salários profissionais exatos",
+       s.exact_occupational_wages.observed_pairs+" / "+s.exact_occupational_wages.possible_pairs,
+       s.exact_occupational_wages.stored_observations+" observações"),
+  tile("Grupos profissionais ILOSTAT",
+       s.ilostat_major_groups.observed_pairs+" / "+s.ilostat_major_groups.possible_pairs,
+       s.ilostat_major_groups.stored_observations+" observações"));
+ $("date").textContent="Inventário consultado: "+
+   new Date(data.generated_at).toLocaleString("pt-PT")+" · "+
+   data.country_count+" países.";
+ $("country").replaceChildren(new Option("Todos os países",""));
+ for(const c of data.countries)$("country").add(new Option(c.name+" ("+c.code+")",c.code));
+}
+function td(row,value){
+ const c=document.createElement("td");c.textContent=value??"";row.append(c);return c;
+}
+function render(){
+ if(!inventory)return;
+ const country=$("country").value,family=$("family").value,
+       state=$("state").value,query=$("search").value.trim().toLocaleLowerCase("pt-PT");
+ const filtered=allRows.filter(x=>
+  (!country||x.country===country)&&(!family||x.type===family)&&
+  (!state||stateKind(x.status,x.refresh)===state)&&
+  (!query||(x.name+" "+x.countryName+" "+x.country+" "+x.source+" "+x.type)
+       .toLocaleLowerCase("pt-PT").includes(query)));
+ $("count").textContent=filtered.length+" registos apresentados de "+allRows.length+
+  " posições do inventário.";
+ const tbody=$("rows");const frag=document.createDocumentFragment();
+ for(const x of filtered){
+  const tr=document.createElement("tr");
+  td(tr,x.countryName);
+  td(tr,x.type);td(tr,x.name);
+  const st=td(tr,labels[x.status]||x.status);
+  if(x.refresh&&x.refresh!=="available"&&x.status==="available"){
+   const sm=document.createElement("small");sm.textContent="Última atualização: "+
+     (labels[x.refresh]||x.refresh);st.append(sm);
+  }
+  const badge=document.createElement("span");
+  badge.className="badge "+(stateKind(x.status,x.refresh)==="available"?"good":"warn");
+  badge.textContent=st.firstChild?.textContent||"";st.replaceChild(badge,st.firstChild);
+  td(tr,x.value);td(tr,x.period);td(tr,x.observations);
+  const src=td(tr,x.source);
+  if(x.sourceUrl.startsWith("https://")){
+   src.append(document.createElement("br"));
+   const link=document.createElement("a");link.href=x.sourceUrl;
+   link.target="_blank";link.rel="noopener noreferrer";
+   link.textContent="Fonte oficial ↗";src.append(link);
+  }
+  if(x.imported){const small=document.createElement("small");
+   small.textContent="Base: "+x.imported.slice(0,16).replace("T"," ");
+   src.append(small);}
+  frag.append(tr);
+ }
+ tbody.replaceChildren(frag);
+}
+async function refresh(){
+ const btn=$("refresh");btn.disabled=true;
+ $("status").textContent="A consultar as observações guardadas no servidor…";
+ try{
+  const response=await fetch(API+"/v1/data-inventory",{cache:"no-store",headers:{Accept:"application/json"}});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const data=await response.json();
+  if(!data||!Array.isArray(data.countries)||!data.summary)
+   throw Error("Resposta inesperada da API");
+  inventory=data;allRows=normalize(data);
+  drawSummary(data);render();
+  $("csv").disabled=false;$("json").disabled=false;
+  $("status").textContent="Inventário carregado diretamente da API: "+
+    data.country_count+" países, "+allRows.length+" posições verificadas.";
+ }catch(error){
+  $("status").textContent="Não foi possível consultar o inventário. "+
+   "Confirma que a API de produção já tem a nova versão e tenta novamente. ("+
+   error.message+")";
+ }finally{btn.disabled=false}
+}
+function download(filename,text,media){
+ const blob=new Blob([text],{type:media});const url=URL.createObjectURL(blob);
+ const anchor=document.createElement("a");anchor.href=url;anchor.download=filename;
+ document.body.append(anchor);anchor.click();anchor.remove();
+ URL.revokeObjectURL(url);
+}
+function csvEscape(value){
+ const s=String(value??"");return '"'+s.replace(/"/g,'""')+'"';
+}
+$("csv").onclick=()=>{
+ const cols=["country","countryName","type","name","status","refresh","value",
+             "period","observations","source","sourceUrl","imported"];
+ const values=[cols.join(";"),...allRows.map(x=>cols.map(k=>csvEscape(x[k])).join(";"))];
+ download("earnwage-inventario.csv","\uFEFF"+values.join("\r\n"),"text/csv;charset=utf-8");
+};
+$("json").onclick=()=>inventory&&download("earnwage-inventario.json",
+ JSON.stringify(inventory,null,2),"application/json;charset=utf-8");
+$("refresh").onclick=refresh;
+for(const id of ["country","family","state","search"])
+ $(id).addEventListener(id==="search"?"input":"change",render);
+refresh();
+</script></body></html>
