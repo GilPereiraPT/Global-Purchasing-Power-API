@@ -2,6 +2,7 @@
 import json
 
 import pytest
+import httpx
 from fastapi.testclient import TestClient
 
 from app import pt_occupation_wages as pt
@@ -118,3 +119,74 @@ def test_snapshot_tampering_rejected_before_database_write(monkeypatch,tmp_path)
     with pytest.raises(ValueError,match="Invalid Portuguese wage"):
         pt.load_snapshot(p)
     assert pt.observed_coverage()=={}
+
+
+def test_ine_transient_timeout_then_recovery(monkeypatch):
+    attempts=[]
+    pauses=[]
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self,*args): return False
+        def raise_for_status(self): return None
+        def iter_bytes(self): yield json.dumps(fixture()).encode("utf-8")
+
+    class Client:
+        def __init__(self,**kwargs):
+            attempts.append(kwargs)
+        def __enter__(self): return self
+        def __exit__(self,*args): return False
+        def stream(self,method,url):
+            assert method=="GET" and url==pt.URL
+            if len(attempts)==1:
+                raise httpx.ConnectTimeout("network timed out")
+            return Response()
+
+    monkeypatch.setattr(pt.httpx,"Client",Client)
+    monkeypatch.setattr(pt.time,"sleep",pauses.append)
+    assert pt.fetch()==fixture()
+    assert len(attempts)==2
+    assert pauses==[3]
+    timeout=attempts[0]["timeout"]
+    assert timeout.connect==18.0 and timeout.read==75.0
+
+
+def test_ine_3_timeouts_fail_with_safe_diagnostic(monkeypatch):
+    count=[]
+    class Client:
+        def __init__(self,**kwargs): count.append(True)
+        def __enter__(self): return self
+        def __exit__(self,*args): return False
+        def stream(self,method,url):
+            raise httpx.ConnectTimeout("secret proxy endpoint must not be printed")
+    monkeypatch.setattr(pt.httpx,"Client",Client)
+    monkeypatch.setattr(pt.time,"sleep",lambda seconds:None)
+    with pytest.raises(RuntimeError,match="No data were imported"):
+        pt.fetch()
+    assert len(count)==3
+
+
+def test_ine_malformed_success_payload_never_retried(monkeypatch):
+    count=[]
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self,*args): return False
+        def raise_for_status(self): return None
+        def iter_bytes(self): yield b"<html>Blocked</html>"
+    class Client:
+        def __init__(self,**kwargs): count.append(True)
+        def __enter__(self): return self
+        def __exit__(self,*args): return False
+        def stream(self,method,url): return Response()
+    monkeypatch.setattr(pt.httpx,"Client",Client)
+    with pytest.raises(json.JSONDecodeError):
+        pt.fetch()
+    assert len(count)==1
+
+
+def test_offline_inspection_never_opens_a_network_socket(monkeypatch,tmp_path,capsys):
+    raw=tmp_path/"ine.json"
+    raw.write_text(json.dumps(fixture()),encoding="utf-8")
+    monkeypatch.setattr(pt,"fetch",lambda:pytest.fail("No network allowed in --source"))
+    assert pt.main(["--source",str(raw),"--inspect"])==0
+    assert '"indicator": "0010385"' in capsys.readouterr().out

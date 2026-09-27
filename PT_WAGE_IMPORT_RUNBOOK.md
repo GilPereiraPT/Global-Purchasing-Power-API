@@ -49,6 +49,32 @@ four-digit CPP-2010 categories. If the dataset only has large 1-/2-/3-digit
 groups, stop. Find a different freely reusable detailed source; do not
 generate fictional doctor/nurse/psychologist differences.
 
+## If GitHub Actions reports `httpx.ConnectTimeout`
+
+This is a failed network connection to the INE HTTP endpoint, not a
+salary-record or CPP mapping failure. The inspector now retries up to three
+times with independently bounded connect/read timeouts and safe errors. If
+all three attempts fail, **no salary is imported**, and rerunning indefinitely
+is not recommended.
+
+From a computer that can access the published INE JSON, open the exact
+[official data URL](https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0010385&lang=PT).
+If your browser displays a JSON document, use **Save As** to store
+`ine-0010385-raw.json` (UTF-8, complete file; do not save the HTML
+indicator webpage). Then use:
+
+```bash
+python -m app.pt_occupation_wages --source ine-0010385-raw.json --inspect
+```
+
+Only a source-backed, inspected JSON response can be used for the later
+mapping/export; **do not commit mock/test fixtures as real wages**.
+The open-data catalogue at https://dados.gov.pt/pt/datasets/ganho-medio-mensal-eur-7/
+is a publisher catalogue, not a guarantee that its linked resource is
+reachable from GitHub's IP range or a permanent copy hosted elsewhere.
+Do not replace the INE URL with an unrelated salary series when a connection
+fails.
+
 ## Stage 2 — approve the source's ACTUAL correspondence
 
 Create a local file `pt-cpp-approved.json`, with the **real** geographic
