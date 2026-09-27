@@ -319,7 +319,8 @@ class MainActivity:ComponentActivity() {
                                     modifier=Modifier.fillMaxWidth().height(164.dp),contentScale=ContentScale.Fit)
                             }
                             item { Heading(tr(lang,"welcome")) }
-                            item { Feature("⇄",tr(lang,"compare"),tr(lang,"wagesnote")) {navigate("compare")} }
+                            item { Feature("⇄",tr(lang,"compare"),tr(lang,"salary")) {navigate("compare")} }
+                            item { Feature("▥",if(lang=="pt") "Comparar países" else "Country insights",if(lang=="pt") "Gráficos e indicadores económicos" else "Economic charts and indicators") {navigate("insights")} }
                             item { Feature("▣",tr(lang,"jobs"),tr(lang,"jobnote")) {navigate("jobs")} }
                             item { Feature("◈",tr(lang,"salary"),tr(lang,"official")) {navigate("salary")} }
                             item { Feature("⊕",tr(lang,"tools"),tr(lang,"more")) {navigate("tools")} }
@@ -352,7 +353,7 @@ class MainActivity:ComponentActivity() {
                                     Text(tr(lang,"search"))
                                 }
                             }
-                            item { Caption(tr(lang,"wagesnote")+"\n"+tr(lang,"nethint")) }
+                            
                         }
                         "jobs" -> {
                             item { Heading(tr(lang,"jobs")) }
@@ -372,54 +373,90 @@ class MainActivity:ComponentActivity() {
                                     Text(tr(lang,"search"))
                                 }
                             }
-                            item { Caption(tr(lang,"jobnote")) }
+                            
                         }
                         "tools" -> {
                             item { Heading(tr(lang,"tools")) }
                             item { Feature("↗",tr(lang,"inflation"),tr(lang,"official")) {navigate("inflation")} }
                             item { Feature("◈",tr(lang,"power"),tr(lang,"powernote")) {navigate("power")} }
                             item { Feature("⇆",tr(lang,"exchange"),tr(lang,"fxnote")) {navigate("exchange")} }
+                            item { Feature("▥",if(lang=="pt") "Comparar países" else "Country insights",if(lang=="pt") "Inflação e desemprego com gráficos" else "Economic charts") {navigate("insights")} }
                         }
                         "inflation","power" -> {
                             item { Heading(tr(lang,if(page=="inflation") "inflation" else "power")) }
-                            item { PlaceMenu(tr(lang,"country"),countries,country) {country=it} }
+                            item { PlaceMenu(tr(lang,"country"),countries,country) {country=it;response=null} }
                             item { NumberBox(tr(lang,"yearfrom"),fromYear) {fromYear=it} }
                             item { NumberBox(tr(lang,"yearto"),toYear) {toYear=it} }
                             if(page=="power") {
-                                item { NumberBox(tr(lang,"initial"),previous) {previous=it} }
-                                item { NumberBox(tr(lang,"current"),current) {current=it} }
-                                item { NumberBox("Inflation % (manual / opcional)",enteredInflation) {enteredInflation=it} }
+                                item { NumberBox(if(lang=="pt") "Salário inicial ("+currency+")" else "Initial salary ("+currency+")",previous) {previous=it} }
+                                item { NumberBox(if(lang=="pt") "Salário atual ("+currency+", opcional)" else "Current salary ("+currency+", optional)",current) {current=it} }
                             }
                             item {
-                                Button(onClick={search("/v1/inflation/"+country)},
-                                    enabled=(fromYear.toIntOrNull() ?: 0)<(toYear.toIntOrNull() ?: 0),
+                                Button(onClick={search("/v1/countries/"+country+"/indicators/inflation_annual?history=true")},
+                                    enabled=(fromYear.toIntOrNull() ?: 0)<(toYear.toIntOrNull() ?: 0) &&
+                                    (page!="power" || (numeric(previous) ?: 0.0)>0),
                                     modifier=Modifier.fillMaxWidth()) {Text(tr(lang,"calculate"))}
                             }
-                            if(page=="power") item {
-                                val inflation=enteredInflation.toDoubleOrNull()
-                                val a=previous.toDoubleOrNull()
-                                val b=current.toDoubleOrNull()
-                                if(inflation!=null && inflation>-100 && a!=null && a>0 && b!=null && b>=0) {
-                                    val required=a*(1+inflation/100)
-                                    Metric("Manual inflation (user entered)",number(inflation)+" %","Not an official series")
-                                    Metric("Income required",number(required),"Same period and currency as entered")
-                                    Metric("Real income change",number((b/required-1)*100)+" %","Based solely on entered inflation")
-                                }
-                            }
-                            item { Caption(tr(lang,"powernote")) }
                         }
                         "exchange" -> {
                             item { Heading(tr(lang,"exchange")) }
-                            item { CurrencyMenu(lang,currency) {currency=it} }
-                            item { NumberBox(tr(lang,"amount"),amount) {amount=it} }
-                            item {
-                                Button(onClick={
-                                    if(currency=="EUR") response=JSONObject()
-                                        .put("currency","EUR").put("units_per_eur",1.0).put("source","Identity EUR/EUR")
-                                    else search("/v1/exchange-rates/"+currency)
-                                },modifier=Modifier.fillMaxWidth()) {Text(tr(lang,"calculate"))}
+                            item { SelectMenu(if(lang=="pt") "Moeda de origem" else "From currency",currencies,fxFrom) {fxFrom=it;fxResult=null} }
+                            item { SelectMenu(if(lang=="pt") "Moeda de destino" else "To currency",currencies,fxTo) {fxTo=it;fxResult=null} }
+                            item { OutlinedButton(onClick={
+                                val old=fxFrom; fxFrom=fxTo; fxTo=old; fxResult=null
+                            },modifier=Modifier.fillMaxWidth()) {Text(if(lang=="pt") "⇄ Inverter moedas" else "⇄ Swap currencies")} }
+                            item { NumberBox(if(lang=="pt") "Montante em "+fxFrom else "Amount in "+fxFrom,amount) {amount=it;fxResult=null} }
+                            item { Button(onClick={fxId++},modifier=Modifier.fillMaxWidth()) {Text(tr(lang,"calculate"))} }
+                            if(fxLoading) item {CircularProgressIndicator()}
+                            if(fxError.isNotBlank()) item {Metric(tr(lang,"unavailable"),fxError)}
+                            fxResult?.let { result ->
+                                item {Metric(if(lang=="pt") "Valor convertido" else "Converted amount",
+                                    money(result.optDouble("value"),result.optString("to")),
+                                    "1 "+result.optString("from")+" = "+number(result.optDouble("rate"))+
+                                    " "+result.optString("to")+" · "+result.optString("period")+" · ECB")}
                             }
-                            item { Caption(tr(lang,"fxnote")) }
+                        }
+                        "insights" -> {
+                            item {Heading(if(lang=="pt") "Comparar países" else "Country insights")}
+                            item {Caption(if(lang=="pt") "Seleciona entre 2 e 5 países e um indicador." else "Select 2 to 5 countries and an indicator.")}
+                            item {
+                                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement=Arrangement.spacedBy(7.dp)) {
+                                    countries.forEach { place ->
+                                        FilterChip(selected=place.code in insightCountries,
+                                            onClick={
+                                                insightCountries=if(place.code in insightCountries)
+                                                    insightCountries.filterNot {it==place.code}.takeIf {it.size>=2} ?: insightCountries
+                                                else if(insightCountries.size<5) insightCountries+place.code else insightCountries
+                                                insightData=null
+                                            },label={Text(countryFlag(place.code)+" "+place.code)})
+                                    }
+                                }
+                            }
+                            item { SelectMenu(if(lang=="pt") "Indicador" else "Indicator",
+                                insightsIndicators,insightIndicator) {insightIndicator=it; insightData=null} }
+                            item {Button(onClick={insightId++},modifier=Modifier.fillMaxWidth()) {
+                                Text(if(lang=="pt") "Comparar indicadores" else "Compare indicators")
+                            }}
+                            if(insightLoading) item {CircularProgressIndicator()}
+                            if(insightError.isNotBlank()) item {Metric(tr(lang,"unavailable"),insightError)}
+                            insightData?.let {data ->
+                                item {Heading(indicatorTitle(insightIndicator,lang),20)}
+                                item {InsightsGraph(data,insightCountries,insightIndicator,countries)}
+                                insightCountries.forEach {code ->
+                                    item {
+                                        val d=data.optJSONObject(code)
+                                        val name=countries.find {it.code==code}?.name ?: code
+                                        val v=d?.optDouble("value",Double.NaN) ?: Double.NaN
+                                        val period=d?.optInt("year",0) ?: 0
+                                        Metric(countryFlag(code)+" "+name,
+                                            if(d?.optString("status")=="available" && v.isFinite())
+                                                number(v)+if(insightIndicator in listOf("inflation_annual","unemployment","internet_use")) " %" else ""
+                                            else tr(lang,"unavailable"),
+                                            if(period>0) period.toString()+" · World Bank" else "")
+                                    }
+                                }
+                            }
                         }
                         "settings" -> {
                             item { Heading(tr(lang,"settings")) }
