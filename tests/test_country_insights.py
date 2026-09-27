@@ -78,17 +78,15 @@ class CountryInsightsTests(unittest.TestCase):
         self.assertIn("/SH_UHC_SCI?", result["source_url"])
 
     def test_uhc_mocked_official_json_import_preserves_year(self):
-        from unittest.mock import Mock
         import json
-        payload = [
-            {"page": 1, "pages": 1, "total": 4},
-            [
-                {"date": "2025", "value": None},
-                {"date": "2023", "value": 81.2},
-                {"date": "2021", "value": 79.1},
-                {"date": "2020", "value": None},
-            ],
-        ]
+        payload = {
+            "value": [
+                {"SpatialDim": "PRT", "TimeDim": 2023, "NumericValue": 83.0},
+                {"SpatialDim": "PRT", "TimeDim": 2021, "NumericValue": 78.0},
+                {"SpatialDim": "PRT", "TimeDim": 2020, "NumericValue": None},
+                {"SpatialDim": "USA", "TimeDim": 2023, "NumericValue": 99.0},
+            ]
+        }
 
         class Response:
             def __enter__(self):
@@ -99,7 +97,8 @@ class CountryInsightsTests(unittest.TestCase):
                 return json.dumps(payload).encode("utf-8")
 
         def fake_urlopen(request, timeout):
-            self.assertIn("/indicator/SH_UHC_SCI?", request.full_url)
+            self.assertIn("/api/UHC_INDEX_REPORTED?", request.full_url)
+            self.assertIn("PRT", request.full_url)
             self.assertEqual(timeout, 15)
             return Response()
 
@@ -108,15 +107,44 @@ class CountryInsightsTests(unittest.TestCase):
         self.assertEqual(status, "available")
         self.assertIsNone(error)
         self.assertEqual(observations, [
-            {"year": 2023, "value": 81.2},
-            {"year": 2021, "value": 79.1},
+            {"year": 2023, "value": 83.0},
+            {"year": 2021, "value": 78.0},
         ])
         with connect() as db:
             save_result(db, "PT", "health_coverage", observations, status)
             result = read_indicator(db, "PT", "health_coverage")
         self.assertEqual(result["year"], 2023)
-        self.assertEqual(result["value"], 81.2)
+        self.assertEqual(result["value"], 83.0)
         self.assertEqual(result["unit"], "index_0_100")
+
+    def test_uhc_who_failure_can_use_valid_world_bank_mirror(self):
+        with patch.object(ci, "_fetch_who_uhc",
+                          return_value=("upstream_unavailable", [], "TimeoutError")), \\
+             patch.object(ci, "_fetch_world_bank",
+                          return_value=("available", [
+                              {"year": 2023, "value": 82.0}], None)) as mirror:
+            status, observations, error = ci._fetch("ES", "SH_UHC_SCI")
+        self.assertEqual(status, "available")
+        self.assertEqual(observations[0]["year"], 2023)
+        self.assertIsNone(error)
+        mirror.assert_called_once_with("ES", "SH_UHC_SCI")
+
+    def test_uhc_invalid_who_values_do_not_reach_database(self):
+        import json
+        class Response:
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def read(self, *args):
+                return json.dumps({"value": [
+                    {"SpatialDim": "PRT", "TimeDim": 2023,
+                     "NumericValue": 150}]}).encode("utf-8")
+        with patch.object(ci, "urlopen", return_value=Response()):
+            result = ci._fetch_who_uhc("PT")
+        self.assertEqual(result[0], "upstream_unavailable")
+        self.assertEqual(result[1], [])
+        self.assertEqual(result[2], "ValueError")
 
     def test_weekly_rotation_and_safety(self):
         self.assertEqual(len(WEEK), 7)
