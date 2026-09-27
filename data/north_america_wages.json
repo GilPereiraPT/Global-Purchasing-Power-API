@@ -87,7 +87,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 25.0,
+      "value": 25,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -177,7 +177,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 25.0,
+      "value": 25,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -207,7 +207,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 18.0,
+      "value": 18,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -252,7 +252,7 @@
       "currency": "CAD",
       "measure": "mean",
       "unit": "CAD/year",
-      "value": 124000.0,
+      "value": 124000,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -267,7 +267,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/year",
-      "value": 110000.0,
+      "value": 110000,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -297,7 +297,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 35.0,
+      "value": 35,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -357,7 +357,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 24.0,
+      "value": 24,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -537,7 +537,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 34.0,
+      "value": 34,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -627,7 +627,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 21.0,
+      "value": 21,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -717,7 +717,7 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 21.0,
+      "value": 21,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
     },
@@ -837,9 +837,24 @@
       "currency": "CAD",
       "measure": "median",
       "unit": "CAD/hour",
-      "value": 30.0,
+      "value": 30,
       "source": "Job Bank 2025 Wages (published 2025-11-19)",
       "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
+    },
+    {
+      "country": "US",
+      "occupation": "accountant",
+      "geography": "national",
+      "classification": "SOC2018:13-2011",
+      "job_title": "Accountants and Auditors",
+      "reference_period": "May 2025",
+      "published_year": 2025,
+      "currency": "USD",
+      "measure": "mean",
+      "unit": "USD/year",
+      "value": 94750,
+      "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
+      "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
     {
       "country": "US",
@@ -852,7 +867,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 108670.0,
+      "value": 108670,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -867,7 +882,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 132510.0,
+      "value": 132510,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -882,7 +897,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 191350.0,
+      "value": 191350,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -897,7 +912,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 71490.0,
+      "value": 71490,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -912,7 +927,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 113610.0,
+      "value": 113610,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -927,7 +942,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 101420.0,
+      "value": 101420,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -942,7 +957,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 140920.0,
+      "value": 140920,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -957,7 +972,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 105280.0,
+      "value": 105280,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     },
@@ -972,7 +987,7 @@
       "currency": "USD",
       "measure": "mean",
       "unit": "USD/year",
-      "value": 148100.0,
+      "value": 148100,
       "source": "BLS May 2025 OEWS national (Table 1 reviewed subset)",
       "source_url": "https://www.bls.gov/news.release/ocwage.t01.htm"
     }
