@@ -4,7 +4,6 @@ This module does not calculate an EarnWage quality-of-life score.
 Gallup Law and Order data are not fetched/scraped without a redistribution licence.
 """
 import json
-from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 from urllib.error import HTTPError, URLError
@@ -66,32 +65,10 @@ def _fetch(country, indicator):
 
 
 def indicator(country, name, year=None, history=False):
-    if country not in ISO3:
-        raise ValueError("Unsupported country")
-    if name not in INDICATORS:
-        raise ValueError("Unknown indicator")
-    if year is not None and (not isinstance(year, int) or not 1960 <= year <= 2100):
-        raise ValueError("Invalid year")
-    code, unit = INDICATORS[name]
-    status, observations, error = _fetch(country, code)
-    matching = [row for row in observations if year is None or row["year"] == year]
-    row = matching[0] if matching else None
-    result = {
-        "country": country, "iso3": ISO3[country], "name": name,
-        "indicator_code": code, "unit": unit,
-        "status": "available" if row else ("unavailable" if status == "available" else status),
-        "value": row["value"] if row else None,
-        "year": row["year"] if row else None,
-        "requested_year": year,
-        "source": "World Bank World Development Indicators",
-        "source_url": SOURCE.format(country=ISO3[country], indicator=code),
-        "note": "Latest non-null observation; years may differ across countries and indicators. No interpolation.",
-    }
-    if history:
-        result["history"] = matching
-    if error:
-        result["error_type"] = error
-    return result
+    """Serve only locally imported data; never call the World Bank on HTTP."""
+    from app.country_insights_store import connect, read_indicator
+    with connect() as db:
+        return read_indicator(db, country, name, year=year, history=history)
 
 
 def safety(country):
@@ -117,11 +94,9 @@ def safety(country):
 def country_insights(country):
     if country not in ISO3:
         raise ValueError("Unsupported country")
-    # World Bank calls are independent: never block the entire response for 10 x timeout.
-    # Maximum latency for a cold request is approximately one upstream timeout.
-    with ThreadPoolExecutor(max_workers=len(INDICATORS)) as pool:
-        futures = {name: pool.submit(indicator, country, name) for name in INDICATORS}
-        result = {name: future.result() for name, future in futures.items()}
+    from app.country_insights_store import connect, read_indicator
+    with connect() as db:
+        result = {name: read_indicator(db, country, name) for name in INDICATORS}
     result["safety"] = safety(country)
     return {"country": country, "iso3": ISO3[country], "indicators": result,
-            "note": "Independent official indicators, not a composite EarnWage score or personal access guarantee."}
+            "note": "Locally cached independent official indicators; no live World Bank calls, composite score or personal access guarantee."}
