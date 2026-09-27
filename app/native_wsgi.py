@@ -25,7 +25,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.6"
+VERSION = "0.5.7"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -149,6 +149,9 @@ def sources():
             "role": "Canadian national occupational wages", "status": "verified subset imported"},
         "us_bls_oews": {"url": na.BLS_TABLE,
             "role": "US national occupation wages", "status": "verified subset imported"},
+        "himalayas_jobs": {"url": "https://himalayas.app/jobs/api", "role": "Attributed remote vacancies", "status": "integrated"},
+        "jobicy_jobs": {"url": "https://jobicy.com/api/v2/remote-jobs", "role": "Attributed remote vacancies", "status": "integrated"},
+        "remoteok_jobs": {"url": "https://remoteok.com/api", "role": "Attributed remote vacancies", "status": "integrated"},
         "remotive_jobs": {"url": "https://remotive.com/remote-jobs/api",
             "role": "Remote-only attributed job listings", "status": "integrated"},
         "ilostat": {"url": TOC, "role": "Official occupation earnings",
@@ -402,16 +405,21 @@ def dispatch(path, q):
         if not 1 <= limit <= 100:
             raise ApiError(422, "limit must be between 1 and 100")
         provider = str(one(q, "provider", "all")).lower()
-        if provider not in ("all", "remotive", "arbeitnow"):
-            raise ApiError(422, "provider must be all, remotive or arbeitnow")
+        if provider not in ("all", "remotive", "arbeitnow", "himalayas", "jobicy", "remoteok"):
+            raise ApiError(422, "provider must be all, remotive, arbeitnow, himalayas, jobicy or remoteok")
         published = boolean(q, "salary_published")
         if provider == "remotive":
             return run_async(jobs.search(c, job, published, limit))
-        from app import arbeitnow_jobs
+        from app import arbeitnow_jobs, remote_job_feeds
+        if provider in ("himalayas", "jobicy", "remoteok"):
+            return run_async(remote_job_feeds.search(provider, c, job, published, limit))
         if provider == "arbeitnow":
             return run_async(arbeitnow_jobs.search(c, job, published, limit))
         results, failures = [], []
-        for name, fn in (("Remotive", jobs.search), ("Arbeitnow", arbeitnow_jobs.search)):
+        for name, fn in (("Remotive", jobs.search), ("Arbeitnow", arbeitnow_jobs.search),
+                         ("Himalayas", lambda *args: remote_job_feeds.search("himalayas", *args)),
+                         ("Jobicy", lambda *args: remote_job_feeds.search("jobicy", *args)),
+                         ("Remote OK", lambda *args: remote_job_feeds.search("remoteok", *args))):
             try:
                 results.append(run_async(fn(c, job, published, 100)))
             except UpstreamUnavailable:
@@ -432,8 +440,8 @@ def dispatch(path, q):
                 "failed_providers": failures, "country": c, "occupation": job,
                 "count": len(combined), "returned": min(len(combined), limit),
                 "jobs": combined[:limit],
-                "scope": "Remotive remote eligibility and Arbeitnow advertised locations; not a national vacancy census.",
-                "notice": "Arbeitnow.com and Remotive source links are included on each listing. Verify eligibility and availability at source."}
+                "scope": "Five attributed recent feeds with conservative geographic matching; not a national vacancy census.",
+                "notice": "Each listing links to its attributed provider. Verify eligibility and availability at source."}
     if len(parts) == 4 and parts[:3] == ["v1", "jobs", "remotive"]:
         try:
             job_id = int(parts[3])
