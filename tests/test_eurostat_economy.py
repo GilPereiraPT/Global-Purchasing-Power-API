@@ -140,3 +140,25 @@ def test_hicp_2026_uses_coicop18_dimension_and_total():
     assert spec["filters"]["coicop18"] == "TOTAL"
     assert spec["filters"]["unit"] == "RCH_A"
     assert parse_qs(urlparse(eu.source_url("PT", spec)).query)["coicop18"] == ["TOTAL"]
+
+
+def test_ons_monthly_cpi():
+    raw = {"months": [{"date": "2026 JUL", "value": "3.2"},
+                      {"date": "2026 AUG", "value": "3.1"},
+                      {"date": "2025", "value": "5.0"}]}
+    assert eu.decode_ons_cpi(raw) == [("2026-07", 3.2), ("2026-08", 3.1)]
+
+
+def test_uk_cpi_metadata_and_missing_other_series(tmp_path, monkeypatch):
+    from app import country_insights_store as store
+    monkeypatch.setenv("EARNWAGE_INSIGHTS_DB", str(tmp_path / "ons.sqlite3"))
+    monkeypatch.setattr(eu, "fetch_ons_cpi", lambda: [("2026-08", 3.1)])
+    assert eu.fetch("GB", eu.SERIES["hicp_annual_change_monthly"]) == [("2026-08", 3.1)]
+    assert eu.fetch("GB", eu.SERIES["household_price_level_eu27"]) == []
+    assert eu.fetch("GB", eu.SERIES["net_annual_earnings_reference"]) == []
+    with store.connect() as db:
+        eu.ensure_tables(db)
+        eu.save(db, "GB", "hicp_annual_change_monthly", [("2026-08", 3.1)], "available")
+        row = eu.read(db, "GB", "hicp_annual_change_monthly")
+    assert row["source"] == "ONS" and row["dataset"] == "MM23/D7G7"
+    assert row["value"] == 3.1 and row["period"] == "2026-08"
