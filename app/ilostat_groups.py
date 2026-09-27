@@ -91,6 +91,23 @@ def load_snapshot(path=DEFAULT):
     return snapshot["observations"]
 
 
+
+def group_coverage(path=DEFAULT):
+    """Separate coverage: country × ISCO-08 major group, not exact occupations."""
+    rows = load_snapshot(path)
+    pairs = {(r["country"], r["isco08_major_group"]) for r in rows
+             if r.get("unit_type") == "local_currency"}
+    by_country = [{"code":code,
+                   "observed_groups":sum((code, str(g)) in pairs for g in range(1, 10)),
+                   "possible_groups":9}
+                  for code in COUNTRY_MAP]
+    return {"source":"ILOSTAT", "dataset":DATASET,
+            "precision":"isco08_major_group", "observations":len(rows),
+            "observed_pairs":len(pairs), "possible_pairs":len(COUNTRY_MAP)*9,
+            "by_country":by_country,
+            "note":"Group-level observations are NOT salaries for the 40 individual occupations."}
+
+
 def group_salary(country, group, path=DEFAULT):
     code = country.upper()
     if code not in COUNTRY_MAP or not re.fullmatch("[1-9]", str(group)):
