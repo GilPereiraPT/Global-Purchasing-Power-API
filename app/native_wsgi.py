@@ -6,6 +6,8 @@ FastAPI app.main remains for local ASGI / existing API tests.
 import asyncio
 import json
 import logging
+import os
+import hmac
 import unicodedata
 import threading
 from pathlib import Path
@@ -33,6 +35,7 @@ HTTP_STATUS = {
     200: "200 OK", 400: "400 Bad Request", 404: "404 Not Found",
     405: "405 Method Not Allowed", 413: "413 Content Too Large",
     422: "422 Unprocessable Entity", 503: "503 Service Unavailable",
+    401: "401 Unauthorized", 403: "403 Forbidden",
     500: "500 Internal Server Error",
 }
 
@@ -413,16 +416,57 @@ def dispatch(path, q):
     raise ApiError(404, "Unknown route")
 
 
+def admin_eurostat(environ, start_response, origin):
+    """Import one selected series per authenticated request."""
+    from app.eurostat_economy import EUROSTAT_COUNTRIES, SERIES, fetch, save, ensure_tables, read
+    from app.country_insights_store import connect as insights_connect
+    secret = os.environ.get("EARNWAGE_ADMIN_TOKEN", "")
+    supplied = environ.get("HTTP_X_EARNWAGE_ADMIN_TOKEN", "")
+    if len(secret) < 32:
+        return reply(start_response, {"error": "admin_not_configured"}, 503, "POST", origin)
+    if not supplied or not hmac.compare_digest(secret, supplied):
+        return reply(start_response, {"error": "unauthorized"}, 401, "POST", origin)
+    if environ.get("HTTP_ORIGIN") not in (None, "https://gilpereirapt.github.io"):
+        return reply(start_response, {"error": "forbidden_origin"}, 403, "POST", origin)
+    try:
+        size = int(environ.get("CONTENT_LENGTH", "0") or "0")
+        if not 0 < size <= 1024:
+            raise ValueError("Invalid request length")
+        payload = json.loads(environ["wsgi.input"].read(size).decode("utf-8"))
+        code, name = payload.get("country"), payload.get("indicator")
+        if code not in EUROSTAT_COUNTRIES or name not in SERIES:
+            raise ValueError("Unsupported country or indicator")
+    except (ValueError, TypeError, AttributeError, KeyError, UnicodeError):
+        return reply(start_response, {"error": "invalid_import_request"}, 422, "POST", origin)
+    try:
+        observations = fetch(code, SERIES[name])
+        status, error_type = ("available" if observations else "empty"), None
+    except Exception as exc:
+        from urllib.error import HTTPError, URLError
+        if not isinstance(exc, (HTTPError, URLError, TimeoutError, ValueError,
+                                KeyError, TypeError, OSError)):
+            LOG.exception("Unexpected Eurostat import failure")
+        observations, status, error_type = [], "failed", type(exc).__name__
+    with insights_connect() as db:
+        ensure_tables(db)
+        save(db, code, name, observations, status, error_type)
+        result = read(db, code, name)
+    return reply(start_response, {"import_status": status, "observation_count": len(observations),
+                                  "indicator": result}, 200, "POST", origin)
+
+
 def application(environ, start_response):
     """WSGI entry for Passenger; never display tracebacks or server paths."""
     method = environ.get("REQUEST_METHOD", "GET").upper()
     origin = environ.get("HTTP_ORIGIN")
     if origin != "https://gilpereirapt.github.io":
         origin = None
+    path = environ.get("PATH_INFO", "/")
+    if path.rstrip("/") == "/v1/admin/eurostat/import" and method == "POST":
+        return admin_eurostat(environ, start_response, origin)
     if method not in ("GET", "HEAD"):
         return reply(start_response, {"detail": "Only GET and HEAD are supported"},
                      405, method, origin)
-    path = environ.get("PATH_INFO", "/")
     if len(path) > 2048:
         return reply(start_response, {"detail": "Invalid request path"}, 422, method, origin)
     try:
