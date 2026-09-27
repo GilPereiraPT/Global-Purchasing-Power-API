@@ -391,3 +391,34 @@ Every response includes actual period, unit, dataset, source URL and refresh
 status. The Eurostat importer does not overwrite World Bank CPI/PPP series,
 and the app should not mix them as equivalent measures. No live Eurostat
 requests occur on these HTTP routes.
+
+### Browser administration without Terminal
+
+The GitHub Pages interface is `docs/eurostat-admin.html` (published at
+`https://gilpereirapt.github.io/Global-Purchasing-Power-API/eurostat-admin.html`).
+It imports one country/indicator per request, or iterates through the 27
+country/indicator combinations with a stop button. The interface is public
+but the **write operation is protected server-side**. The admin token is
+never embedded in GitHub Pages or transmitted in the URL.
+
+Before the import button can work, the hosting administrator must deploy the
+latest code and set `EARNWAGE_ADMIN_TOKEN` as a private Passenger/cPanel
+environment variable (random secret, at least 32 characters), and keep
+`EARNWAGE_INSIGHTS_DB` pointing at the existing writable private SQLite
+file. Use the hosting application's environment-variable UI, if available.
+Never put the token in a repository, a public file, or a chat message.
+A deployment/restart may be necessary to load changed environment variables.
+
+The protected route is `POST /v1/admin/eurostat/import`, accepting only
+`{"country":"PT","indicator":"hicp_annual_change_monthly"}` and the
+`X-EarnWage-Admin-Token` request header. Missing or incorrect tokens return
+401; no configured server secret returns 503. The browser only keeps the
+token in the password field while the page is open; it does not use browser
+storage. A successful request saves the actual observation and exposes
+its period and refresh status. No external data is imported merely by
+visiting the page. The public GET coverage endpoint requires no token.
+
+**If the host does not offer an environment-variable UI, this admin route
+cannot safely be enabled by copying a token into JavaScript.** Use a
+hosting-supported private configuration method or a separate GitHub Actions
+import/deployment design instead.
