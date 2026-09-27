@@ -1,9 +1,13 @@
 package com.earnwage.app
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,392 +15,604 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import org.json.JSONArray
+import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
 
 private val navy = Color(0xFF092733)
-private val teal = Color(0xFF16A085)
+private val teal = Color(0xFF087F73)
+private val cream = Color(0xFFF6F7F4)
 private val gold = Color(0xFFF1D28C)
-private val modules = listOf("inflation", "power", "currency", "compare", "salary", "jobs", "about")
-private val languageNames = linkedMapOf("en" to "🇬🇧 English", "pt" to "🇵🇹 Português", "es" to "🇪🇸 Español", "de" to "🇩🇪 Deutsch", "fr" to "🇫🇷 Français", "it" to "🇮🇹 Italiano", "nl" to "🇳🇱 Nederlands")
-private val words = mapOf(
-    "en" to listOf("Inflation Explorer", "Purchasing Power", "Currency Explorer", "Country Comparison", "Salary Explorer", "Job Explorer", "About EarnWage", "Your salary. Your world.", "Get started", "Country", "Destination", "Occupation", "Search", "Annual gross salary", "User-entered accumulated inflation (%)", "Initial income", "Current income", "Start period", "End period", "Source / status", "Back", "Unavailable", "Loading", "Language"),
-    "pt" to listOf("Explorar inflação", "Poder de compra", "Explorar moedas", "Comparar países", "Explorar salários", "Explorar empregos", "Sobre a EarnWage", "O teu salário. O teu mundo.", "Começar", "País", "Destino", "Profissão", "Pesquisar", "Salário bruto anual", "Inflação acumulada introduzida (%)", "Rendimento inicial", "Rendimento atual", "Período inicial", "Período final", "Fonte / estado", "Voltar", "Indisponível", "A carregar", "Idioma"),
-    "es" to listOf("Explorar inflación", "Poder adquisitivo", "Explorar divisas", "Comparar países", "Explorar salarios", "Explorar empleos", "Acerca de EarnWage", "Tu salario. Tu mundo.", "Empezar", "País", "Destino", "Profesión", "Buscar", "Salario bruto anual", "Inflación acumulada introducida (%)", "Ingreso inicial", "Ingreso actual", "Periodo inicial", "Periodo final", "Fuente / estado", "Volver", "No disponible", "Cargando", "Idioma"),
-    "de" to listOf("Inflation", "Kaufkraft", "Währungen", "Ländervergleich", "Gehälter", "Jobs", "Über EarnWage", "Dein Gehalt. Deine Welt.", "Starten", "Land", "Zielland", "Beruf", "Suchen", "Bruttojahresgehalt", "Eingegebene kumulierte Inflation (%)", "Anfangseinkommen", "Aktuelles Einkommen", "Anfangszeitraum", "Endzeitraum", "Quelle / Status", "Zurück", "Nicht verfügbar", "Lädt", "Sprache"),
-    "fr" to listOf("Inflation", "Pouvoir d’achat", "Devises", "Comparer les pays", "Salaires", "Emplois", "À propos d’EarnWage", "Votre salaire. Votre monde.", "Commencer", "Pays", "Destination", "Profession", "Rechercher", "Salaire annuel brut", "Inflation cumulée saisie (%)", "Revenu initial", "Revenu actuel", "Période initiale", "Période finale", "Source / état", "Retour", "Indisponible", "Chargement", "Langue"),
-    "it" to listOf("Inflazione", "Potere d’acquisto", "Valute", "Confronta paesi", "Stipendi", "Lavori", "Informazioni su EarnWage", "Il tuo stipendio. Il tuo mondo.", "Inizia", "Paese", "Destinazione", "Professione", "Cerca", "Stipendio lordo annuo", "Inflazione cumulata inserita (%)", "Reddito iniziale", "Reddito attuale", "Periodo iniziale", "Periodo finale", "Fonte / stato", "Indietro", "Non disponibile", "Caricamento", "Lingua"),
-    "nl" to listOf("Inflatie", "Koopkracht", "Valuta", "Landen vergelijken", "Salarissen", "Banen", "Over EarnWage", "Jouw salaris. Jouw wereld.", "Beginnen", "Land", "Bestemming", "Beroep", "Zoeken", "Bruto jaarsalaris", "Ingevoerde cumulatieve inflatie (%)", "Begininkomen", "Huidig inkomen", "Beginperiode", "Eindperiode", "Bron / status", "Terug", "Niet beschikbaar", "Laden", "Taal")
+private val fallbackCountries = listOf(
+    Place("PT","Portugal","EUR"),Place("ES","Spain","EUR"),Place("DE","Germany","EUR"),
+    Place("FR","France","EUR"),Place("GB","United Kingdom","GBP"),Place("IN","India","INR"),
+    Place("BR","Brazil","BRL"),Place("PK","Pakistan","PKR"),Place("NL","Netherlands","EUR"),
+    Place("CH","Switzerland","CHF"),Place("IT","Italy","EUR"),Place("IE","Ireland","EUR"),
+    Place("US","United States","USD"),Place("CA","Canada","CAD")
 )
-private fun t(lang: String, index: Int) = words[lang]?.getOrNull(index) ?: words.getValue("en")[index]
-private fun flag(code: String): String {
-    if (code.length != 2 || code.any { it !in 'A'..'Z' }) return "🌐"
-    val base = 0x1F1E6
-    return String(Character.toChars(base + code[0].code - 65)) + String(Character.toChars(base + code[1].code - 65))
+private val currencies = listOf("EUR","USD","GBP","CAD","CHF","BRL","INR","PKR")
+private val feeds = listOf("all","remotive","arbeitnow","himalayas","jobicy","remoteok","greenhouse","lever","ashby")
+private data class Place(val code:String,val name:String,val currency:String)
+private data class Profession(val id:String,val name:String)
+private data class Region(val code:String,val name:String)
+
+private fun enc(s:String) = URLEncoder.encode(s,"UTF-8")
+private fun number(n:Double):String = String.format(Locale.getDefault(),"%,.2f",n)
+private fun salaryLabel(job:JSONObject,lang:String):String {
+    val explicit = job.optString("salary_text","").trim()
+    if (explicit.isNotEmpty() && explicit != "null") return explicit
+    val unreported = mapOf("pt" to "Não divulgado","en" to "Not disclosed","es" to "No publicado",
+        "fr" to "Non communiqué","de" to "Nicht angegeben","it" to "Non divulgato",
+        "nl" to "Niet vermeld")
+    return unreported[lang] ?: "Not disclosed"
 }
-private fun query(value: String) = URLEncoder.encode(value, "UTF-8")
-private suspend fun api(path: String): JSONObject = withContext(Dispatchers.IO) {
+private suspend fun api(path:String):JSONObject = withContext(Dispatchers.IO) {
     val connection = URL(BuildConfig.API_BASE_URL + path).openConnection() as HttpURLConnection
     try {
-        connection.connectTimeout = 12000
-        connection.readTimeout = 18000
-        connection.setRequestProperty("Accept", "application/json")
-        val status = connection.responseCode
-        val stream = if (status in 200..299) connection.inputStream else connection.errorStream
-        val raw = stream?.bufferedReader()?.use { it.readText() } ?: ""
-        if (status !in 200..299) throw IllegalStateException("HTTP $status: " + raw.take(180))
+        connection.connectTimeout=12000
+        connection.readTimeout=30000
+        connection.setRequestProperty("Accept","application/json")
+        val code=connection.responseCode
+        val raw=(if(code in 200..299) connection.inputStream else connection.errorStream)
+            ?.bufferedReader()?.use { it.readText() } ?: ""
+        if(code !in 200..299) throw IllegalStateException("HTTP " + code + ": " + raw.take(120))
         JSONObject(raw)
     } finally { connection.disconnect() }
 }
-private data class Country(val code: String, val name: String, val currency: String)
-private data class Job(val id: String, val label: String)
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+class MainActivity:ComponentActivity() {
+    override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState)
         setContent { EarnWage() }
     }
 }
+
 @Composable private fun EarnWage() {
-    var language by remember { mutableStateOf("en") }
-    var screen by remember { mutableStateOf("home") }
-    var countries by remember { mutableStateOf(listOf<Country>()) }
-    var occupations by remember { mutableStateOf(listOf<Job>()) }
-    var country by remember { mutableStateOf("PT") }
-    var destination by remember { mutableStateOf("US") }
-    var occupation by remember { mutableStateOf("accountant") }
-    var result by remember { mutableStateOf("") }
+    val context=LocalContext.current
+    val prefs=remember { context.getSharedPreferences("earnwage_settings",Context.MODE_PRIVATE) }
+    var lang by remember { mutableStateOf(prefs.getString("language",Locale.getDefault().language.takeIf { it in languageNames } ?: "en") ?: "en") }
+    var country by remember { mutableStateOf(prefs.getString("country","PT") ?: "PT") }
+    var dest by remember { mutableStateOf(prefs.getString("destination","US") ?: "US") }
+    var currency by remember { mutableStateOf(prefs.getString("currency","EUR") ?: "EUR") }
+    var appearance by remember { mutableStateOf(prefs.getString("theme","system") ?: "system") }
+    var onboarded by remember { mutableStateOf(prefs.getBoolean("onboarded",false)) }
+    var page by remember { mutableStateOf("home") }
+    var occupation by remember { mutableStateOf("software_developer") }
+    var countries by remember { mutableStateOf(fallbackCountries) }
+    var professions by remember { mutableStateOf(emptyList<Profession>()) }
+    var region by remember { mutableStateOf("") }
+    var regionB by remember { mutableStateOf("") }
+    var regions by remember { mutableStateOf(emptyList<Region>()) }
+    var regionsB by remember { mutableStateOf(emptyList<Region>()) }
+    var apiVersion by remember { mutableStateOf("?") }
+    var connectivity by remember { mutableStateOf("") }
+    var remoteOnly by remember { mutableStateOf(false) }
+    var salaryOnly by remember { mutableStateOf(false) }
+    var age by remember { mutableIntStateOf(90) }
+    var feed by remember { mutableStateOf("all") }
+    var annual by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("1000") }
+    var previous by remember { mutableStateOf("") }
+    var current by remember { mutableStateOf("") }
+    var enteredInflation by remember { mutableStateOf("") }
+    var fromYear by remember { mutableStateOf("2020") }
+    var toYear by remember { mutableStateOf("2026") }
+    var request by remember { mutableStateOf("") }
+    var requestPage by remember { mutableStateOf("") }
     var response by remember { mutableStateOf<JSONObject?>(null) }
     var error by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
-    var health by remember { mutableStateOf("Checking API…") }
-    var annual by remember { mutableStateOf("") }
-    var initial by remember { mutableStateOf("") }
-    var current by remember { mutableStateOf("") }
-    var inflation by remember { mutableStateOf("") }
-    var start by remember { mutableStateOf("2020") }
-    var end by remember { mutableStateOf("2026") }
-    var currency by remember { mutableStateOf("USD") }
-    var amount by remember { mutableStateOf("1000") }
-    var request by remember { mutableStateOf("") }
-    var requestSerial by remember { mutableIntStateOf(0) }
-    fun load(path: String) { request = path; requestSerial++ ; response = null; result = ""; error = "" }
+    fun navigate(next:String) { page=next; request=""; response=null; error=""; loading=false }
+    fun search(path:String) { response=null; error=""; requestPage=page; request=path }
+    val dark=when(appearance) {
+        "dark" -> true
+        "light" -> false
+        else -> androidx.compose.foundation.isSystemInDarkTheme()
+    }
+    val palette=if(dark) darkColorScheme(primary=gold,secondary=Color(0xFF60CCB2),
+        background=Color(0xFF071B23),surface=Color(0xFF102F3B),onSurface=Color.White)
+    else lightColorScheme(primary=teal,secondary=navy,background=cream,
+        surface=Color.White,onSurface=navy)
     LaunchedEffect(Unit) {
         try {
-            val h = api("/v1/health")
-            health = "API: " + h.optString("status") + " · " + h.optString("version")
-            val a = api("/v1/countries").optJSONArray("countries") ?: JSONArray()
-            countries = (0 until a.length()).map { a.getJSONObject(it) }.map {
-                Country(it.optString("code"), it.optString("name"), it.optString("currency"))
-            }
-        } catch (e: Exception) { health = "API unavailable: " + (e.message ?: "network error") }
+            val h=api("/v1/health")
+            apiVersion=h.optString("version","?")
+            val arr=api("/v1/countries").optJSONArray("countries") ?: JSONArray()
+            if(arr.length()>0) countries=(0 until arr.length()).mapNotNull { arr.optJSONObject(it) }
+                .map { Place(it.optString("code"),it.optString("name"),it.optString("currency")) }
+            connectivity="OK"
+        } catch(e:Exception) { connectivity=e.message ?: "Network error" }
     }
-    LaunchedEffect(language) {
+    LaunchedEffect(lang) {
+        prefs.edit().putString("language",lang).apply()
         try {
-            val a = api("/v1/occupations?lang=" + query(language)).optJSONArray("occupations") ?: JSONArray()
-            occupations = (0 until a.length()).map { a.getJSONObject(it) }.map { Job(it.optString("id"), it.optString("label")) }
-        } catch (_: Exception) { occupations = emptyList() }
+            val arr=api("/v1/occupations?lang=" + enc(lang)).optJSONArray("occupations") ?: JSONArray()
+            professions=(0 until arr.length()).mapNotNull { arr.optJSONObject(it) }
+                .map { Profession(it.optString("id"),it.optString("label")) }
+        } catch(e:Exception) { if(professions.isEmpty()) connectivity=e.message ?: "Network error" }
     }
-    LaunchedEffect(requestSerial) {
-        if (request.isNotBlank()) {
-            loading = true
-            result = ""
-            try { response = api(request); result = response!!.toString(2) }
-            catch (e: Exception) { error = "Data temporarily unavailable. " + (e.message ?: "Network error") }
-            finally { loading = false }
+    LaunchedEffect(country) {
+        prefs.edit().putString("country",country).apply()
+        region=""
+        regions=if(country in listOf("US","CA")) try {
+            parseRegions(api("/v1/regions/"+country))
+        } catch (_:Exception) { emptyList() } else emptyList()
+    }
+    LaunchedEffect(dest) {
+        prefs.edit().putString("destination",dest).apply()
+        regionB=""
+        regionsB=if(dest in listOf("US","CA")) try {
+            parseRegions(api("/v1/regions/"+dest))
+        } catch (_:Exception) { emptyList() } else emptyList()
+    }
+    LaunchedEffect(currency) { prefs.edit().putString("currency",currency).apply() }
+    LaunchedEffect(appearance) { prefs.edit().putString("theme",appearance).apply() }
+    LaunchedEffect(request) {
+        if(request.isNotBlank()) {
+            val target=requestPage
+            loading=true
+            try {
+                val data=api(request)
+                if(page==target) response=data
+            } catch(e:Exception) {
+                if(page==target) error=e.message ?: "Network error"
+            } finally { if(page==target) loading=false }
         }
     }
-    MaterialTheme(colorScheme = lightColorScheme(primary = teal, secondary = navy)) {
-        Column(Modifier.fillMaxSize().background(Color(0xFFF5F8F8))) {
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (screen == "cover") {
-                Spacer(Modifier.height(45.dp))
-                Image(painterResource(R.drawable.earnwage_hero), contentDescription = "EarnWage hero", modifier = Modifier.fillMaxWidth().height(245.dp), contentScale = ContentScale.Fit)
-                Text("EarnWage", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = navy)
-                Text("Salary & Cost of Living", fontSize = 18.sp, color = teal)
-                Text(t(language, 7), fontSize = 22.sp, color = navy)
-                Text("Inflation · Purchasing power · Currencies · Salaries · Jobs")
-                Button(onClick = { screen = "home" }) { Text(t(language, 8)) }
-                LanguageSelector(language) { language = it }
-                Text(health, fontSize = 12.sp)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(painterResource(R.drawable.earnwage_logo), contentDescription = "EarnWage logo", modifier = Modifier.size(48.dp))
-                    Text("EarnWage", fontSize = 26.sp, color = navy, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { screen = "home"; result = ""; request = ""; response = null; error = "" }) { Text(t(language, 20)) }
+    BackHandler(enabled=onboarded && page!="home") { navigate("home") }
+    MaterialTheme(colorScheme=palette) {
+        Scaffold(containerColor=MaterialTheme.colorScheme.background,
+            bottomBar={
+                if(onboarded) NavigationBar(containerColor=MaterialTheme.colorScheme.surface) {
+                    listOf("home","compare","jobs","settings").forEach { destination ->
+                        val symbol=when(destination) {"home"->"⌂";"compare"->"⇄";"jobs"->"▣";else->"⚙"}
+                        NavigationBarItem(selected=page==destination, onClick={navigate(destination)},
+                            icon={Text(symbol,fontSize=21.sp)},
+                            label={Text(tr(lang,destination),maxLines=1,fontSize=10.sp)})
+                    }
                 }
-                if (screen == "home") {
-                    Image(painterResource(R.drawable.earnwage_hero), contentDescription = "EarnWage — Your salary. Your world.", modifier = Modifier.fillMaxWidth().height(160.dp), contentScale = ContentScale.Fit)
-                    Text(t(language, 7), color = teal)
-                    LanguageSelector(language) { language = it }
-                    modules.forEachIndexed { index, key ->
-                        Card(onClick = { screen = key; result = ""; request = ""; response = null; error = "" }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = navy)) {
-                            Text(t(language, index), color = Color.White, fontSize = 19.sp, modifier = Modifier.padding(18.dp))
+            }
+        ) { inset ->
+            LazyColumn(modifier=Modifier.fillMaxSize().padding(inset),
+                contentPadding=PaddingValues(horizontal=18.dp,vertical=16.dp),
+                verticalArrangement=Arrangement.spacedBy(14.dp)) {
+                item {
+                    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(11.dp)) {
+                        Image(painterResource(R.drawable.earnwage_logo),contentDescription="EarnWage",
+                            modifier=Modifier.size(49.dp),contentScale=ContentScale.Fit)
+                        Column(Modifier.weight(1f)) {
+                            Text("EarnWage",fontWeight=FontWeight.Bold,fontSize=27.sp)
+                            Text(tr(lang,"welcome"),color=MaterialTheme.colorScheme.secondary,fontSize=12.sp)
                         }
+                        if(onboarded) TextButton(onClick={navigate("settings")}) { Text("⚙",fontSize=22.sp) }
                     }
-                    Text(health, fontSize = 12.sp)
+                }
+                if(!onboarded) {
+                    item {
+                        Image(painterResource(R.drawable.earnwage_hero),contentDescription="EarnWage",
+                            modifier=Modifier.fillMaxWidth().height(170.dp),contentScale=ContentScale.Fit)
+                        Heading(tr(lang,"choose"))
+                    }
+                    item { LanguageMenu(lang) { lang=it } }
+                    item { PlaceMenu(tr(lang,"country"),countries,country) { country=it } }
+                    item { CurrencyMenu(lang,currency) { currency=it } }
+                    item { ThemeMenu(lang,appearance) { appearance=it } }
+                    item {
+                        Button(onClick={
+                            onboarded=true
+                            prefs.edit().putBoolean("onboarded",true).apply()
+                            navigate("home")
+                        },modifier=Modifier.fillMaxWidth().height(52.dp)) { Text(tr(lang,"start")) }
+                    }
                 } else {
-                    val index = modules.indexOf(screen)
-                    Text(t(language, index.coerceAtLeast(0)), fontSize = 23.sp, fontWeight = FontWeight.Bold, color = navy)
-                    if (screen != "about") {
-                        CountrySelector(t(language, 9), countries, country) { country = it }
-                        if (screen == "compare") CountrySelector(t(language, 10), countries, destination) { destination = it }
-                        if (screen in listOf("salary", "jobs", "compare")) JobSelector(t(language, 11), occupations, occupation) { occupation = it }
-                    }
-                    when (screen) {
-                        "inflation" -> {
-                            Text("Official national monthly series, where available. Select two years to compare observed index values.")
-                            YearSelector(t(language, 17), start, { start = it })
-                            YearSelector(t(language, 18), end, { end = it })
-                            Text("The result uses the first observation in the start year and last observation in the end year, where the API provides a valid index series.", color = teal)
-                            Button(onClick = { load("/v1/inflation/$country") }) { Text(t(language, 12)) }
-                        }
-                        "power" -> {
-                            Text("Compare past income with today using official national inflation observations when available.")
-                            YearSelector(t(language, 17), start, { start = it })
-                            YearSelector(t(language, 18), end, { end = it })
-                            NumberField(t(language, 15), initial) { initial = it }
-                            NumberField(t(language, 16), current) { current = it }
-                            Button(onClick = { load("/v1/inflation/$country") }) { Text("Calculate with official inflation") }
-                            Text("Manual fallback if official observations are unavailable:", color = teal)
-                            NumberField(t(language, 14), inflation) { inflation = it }
-                            val a = initial.toDoubleOrNull()
-                            val b = current.toDoubleOrNull()
-                            val i = inflation.toDoubleOrNull()
-                            if (response == null && a != null && b != null && i != null && a > 0 && i > -100) {
-                                val needed = a * (1 + i / 100)
-                                val real = ((b / needed) - 1) * 100
-                                Text("Required to maintain purchasing power: %.2f".format(Locale.US, needed))
-                                Text("Nominal change: %+.2f%%".format(Locale.US, (b / a - 1) * 100))
-                                Text("Real change: %+.2f%%".format(Locale.US, real), color = teal, fontWeight = FontWeight.Bold)
-                                Text("Monthly difference against inflation-adjusted initial income: %+.2f".format(Locale.US, b - needed))
+                    when(page) {
+                        "home" -> {
+                            item {
+                                Image(painterResource(R.drawable.earnwage_hero),contentDescription="EarnWage",
+                                    modifier=Modifier.fillMaxWidth().height(164.dp),contentScale=ContentScale.Fit)
                             }
+                            item { Heading(tr(lang,"welcome")) }
+                            item { Feature("⇄",tr(lang,"compare"),tr(lang,"wagesnote")) {navigate("compare")} }
+                            item { Feature("▣",tr(lang,"jobs"),tr(lang,"jobnote")) {navigate("jobs")} }
+                            item { Feature("◈",tr(lang,"salary"),tr(lang,"official")) {navigate("salary")} }
+                            item { Feature("⊕",tr(lang,"tools"),tr(lang,"more")) {navigate("tools")} }
+                            item { Caption(countryFlag(country)+" "+(countries.find { it.code==country }?.name ?: country)+
+                                " · "+tr(lang,"currency")+": "+currency+" · API "+apiVersion) }
                         }
-                        "currency" -> {
-                            Text("ECB reference exchange rate against EUR; latest available observation, NOT a historical rate.")
-                            OutlinedTextField(currency, { currency = it.uppercase(Locale.ROOT).take(3) }, label = { Text("ISO currency (e.g. USD, GBP, CAD)") }, modifier = Modifier.fillMaxWidth())
-                            NumberField("EUR amount", amount) { amount = it }
-                            Button(onClick = { load("/v1/exchange-rates/" + currency) }) { Text(t(language, 12)) }
-                            Text("Conversion must use the published rate and date in the API response. A historical conversion endpoint is not yet available.")
-                        }
-                        "compare" -> Button(onClick = {
-                            load("/v1/earnwage/compare?country_a=$country&country_b=$destination&occupation=" + query(occupation))
-                        }) { Text(t(language, 12)) }
-                        "salary" -> {
-                            NumberField(t(language, 13) + " (optional)", annual) { annual = it }
-                            Button(onClick = {
-                                load("/v1/earnwage/overview?country=$country&occupation=" + query(occupation) +
-                                    (annual.toDoubleOrNull()?.takeIf { it > 0 }?.let { "&annual_gross=$it" } ?: ""))
-                            }) { Text(t(language, 12)) }
-                            Text("Official national occupation data when available; tax components are partial and must not be read as net pay.")
+                        "compare","salary" -> {
+                            item { Heading(tr(lang,if(page=="compare") "compare" else "salary")) }
+                            item { PlaceMenu(tr(lang,"country"),countries,country) {country=it} }
+                            if(regions.isNotEmpty()) item { RegionMenu(tr(lang,"region"),regions,region) { region=it } }
+                            if(page=="compare") {
+                                item { PlaceMenu(tr(lang,"destination"),countries,dest) {dest=it} }
+                                if(regionsB.isNotEmpty()) item {RegionMenu(tr(lang,"region"),regionsB,regionB) {regionB=it} }
+                            }
+                            item { ProfessionMenu(tr(lang,"profession"),professions,occupation,lang) {occupation=it} }
+                            if(page=="salary") item { NumberBox(tr(lang,"annual"),annual) {annual=it} }
+                            item {
+                                Button(onClick={
+                                    val selected=enc(occupation)
+                                    val path=if(page=="salary") "/v1/earnwage/overview?country="+country+
+                                        "&occupation="+selected+
+                                        (if(region.isNotBlank()) "&region="+region else "")+
+                                        (annual.toDoubleOrNull()?.takeIf {it>0}?.let {"&annual_gross="+it} ?: "")
+                                    else "/v1/earnwage/compare?country_a="+country+"&country_b="+dest+
+                                        "&occupation="+selected+
+                                        (if(region.isNotBlank()) "&region_a="+region else "")+
+                                        (if(regionB.isNotBlank()) "&region_b="+regionB else "")
+                                    search(path)
+                                },enabled=professions.isNotEmpty(),modifier=Modifier.fillMaxWidth()) {
+                                    Text(tr(lang,"search"))
+                                }
+                            }
+                            item { Caption(tr(lang,"wagesnote")+"
+"+tr(lang,"nethint")) }
                         }
                         "jobs" -> {
-                            Button(onClick = { load("/v1/jobs?country=$country&occupation=" + query(occupation)) }) { Text(t(language, 12)) }
-                            Text("Remote jobs only. Country selection means candidate eligibility, not employer location. Source: Remotive.")
+                            item { Heading(tr(lang,"jobs")) }
+                            item { PlaceMenu(tr(lang,"country"),countries,country) {country=it} }
+                            item { ProfessionMenu(tr(lang,"profession"),professions,occupation,lang) {occupation=it} }
+                            item { Heading(tr(lang,"filters"),20) }
+                            item { CheckRow(tr(lang,"remote"),remoteOnly) {remoteOnly=it} }
+                            item { CheckRow(tr(lang,"disclosed"),salaryOnly) {salaryOnly=it} }
+                            item { SelectMenu(tr(lang,"source"),feeds,feed) {feed=it} }
+                            item { SelectMenu(tr(lang,"age"),listOf("30","90","180"),age.toString()) {age=it.toInt()} }
+                            item {
+                                Button(onClick={
+                                    search("/v1/jobs?country="+country+"&occupation="+enc(occupation)+
+                                        "&provider="+feed+"&salary_published="+salaryOnly+
+                                        "&max_age_days="+age+"&limit=100")
+                                },enabled=professions.isNotEmpty(),modifier=Modifier.fillMaxWidth()) {
+                                    Text(tr(lang,"search"))
+                                }
+                            }
+                            item { Caption(tr(lang,"jobnote")) }
+                        }
+                        "tools" -> {
+                            item { Heading(tr(lang,"tools")) }
+                            item { Feature("↗",tr(lang,"inflation"),tr(lang,"official")) {navigate("inflation")} }
+                            item { Feature("◈",tr(lang,"power"),tr(lang,"powernote")) {navigate("power")} }
+                            item { Feature("⇆",tr(lang,"exchange"),tr(lang,"fxnote")) {navigate("exchange")} }
+                        }
+                        "inflation","power" -> {
+                            item { Heading(tr(lang,if(page=="inflation") "inflation" else "power")) }
+                            item { PlaceMenu(tr(lang,"country"),countries,country) {country=it} }
+                            item { NumberBox(tr(lang,"yearfrom"),fromYear) {fromYear=it} }
+                            item { NumberBox(tr(lang,"yearto"),toYear) {toYear=it} }
+                            if(page=="power") {
+                                item { NumberBox(tr(lang,"initial"),previous) {previous=it} }
+                                item { NumberBox(tr(lang,"current"),current) {current=it} }
+                                item { NumberBox("Inflation % (manual / opcional)",enteredInflation) {enteredInflation=it} }
+                            }
+                            item {
+                                Button(onClick={search("/v1/inflation/"+country)},
+                                    enabled=(fromYear.toIntOrNull() ?: 0)<(toYear.toIntOrNull() ?: 0),
+                                    modifier=Modifier.fillMaxWidth()) {Text(tr(lang,"calculate"))}
+                            }
+                            if(page=="power") item {
+                                val inflation=enteredInflation.toDoubleOrNull()
+                                val a=previous.toDoubleOrNull()
+                                val b=current.toDoubleOrNull()
+                                if(inflation!=null && inflation>-100 && a!=null && a>0 && b!=null && b>=0) {
+                                    val required=a*(1+inflation/100)
+                                    Metric("Manual inflation (user entered)",number(inflation)+" %","Not an official series")
+                                    Metric("Income required",number(required),"Same period and currency as entered")
+                                    Metric("Real income change",number((b/required-1)*100)+" %","Based solely on entered inflation")
+                                }
+                            }
+                            item { Caption(tr(lang,"powernote")) }
+                        }
+                        "exchange" -> {
+                            item { Heading(tr(lang,"exchange")) }
+                            item { CurrencyMenu(lang,currency) {currency=it} }
+                            item { NumberBox(tr(lang,"amount"),amount) {amount=it} }
+                            item {
+                                Button(onClick={
+                                    if(currency=="EUR") response=JSONObject()
+                                        .put("currency","EUR").put("units_per_eur",1.0).put("source","Identity EUR/EUR")
+                                    else search("/v1/exchange-rates/"+currency)
+                                },modifier=Modifier.fillMaxWidth()) {Text(tr(lang,"calculate"))}
+                            }
+                            item { Caption(tr(lang,"fxnote")) }
+                        }
+                        "settings" -> {
+                            item { Heading(tr(lang,"settings")) }
+                            item { LanguageMenu(lang) {lang=it} }
+                            item { PlaceMenu(tr(lang,"country"),countries,country) {country=it} }
+                            item { CurrencyMenu(lang,currency) {currency=it} }
+                            item { ThemeMenu(lang,appearance) {appearance=it} }
+                            item { Caption(tr(lang,"settingsnote")+"
+"+tr(lang,"countryhint")) }
+                            item { Feature("ⓘ",tr(lang,"about"),tr(lang,"data")) {navigate("about")} }
                         }
                         "about" -> {
-                            Text("EarnWage v0.1.0 · com.earnwage.app")
-                            Text("Your salary. Your world.")
-                            Text("Explore inflation, purchasing power, exchange rates, official occupational wages and attributed remote vacancies.")
-                            Text("Developed by Gil Pereira")
-                            Text("API: " + BuildConfig.API_BASE_URL)
-                            Text("Sources: Eurostat, ECB, BLS, Canada Job Bank, Remotive and other attributed official data when available.")
-                            Text("Missing data are marked unavailable. National wages are not city wages. Inflation is not a city spending basket.")
-                            Text(health)
+                            item { Heading(tr(lang,"about")) }
+                            item { Metric("EarnWage","v"+BuildConfig.VERSION_NAME,
+                                "com.earnwage.app · Gil Pereira") }
+                            item { Metric(tr(lang,"apiversion"),apiVersion,BuildConfig.API_BASE_URL) }
+                            item { Caption("Your salary. Your world.
+14 countries · 40 occupations · 7 interface languages") }
+                            item { Caption("Eurostat · ECB · ILOSTAT · BLS · Canada Job Bank · Remotive · Arbeitnow · Himalayas · Jobicy · Remote OK · Greenhouse · Lever · Ashby") }
+                            item { Caption(tr(lang,"wagesnote")+"
+"+tr(lang,"nethint")+"
+"+tr(lang,"jobnote")) }
                         }
                     }
-                    if (loading) CircularProgressIndicator()
-                    if (error.isNotBlank()) { Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEFEA))) { Text(error, color = Color(0xFF913D2E), modifier = Modifier.padding(16.dp)) } }
-                    response?.let { data -> ResultView(screen, data, language, start, end, amount.toDoubleOrNull(), initial.toDoubleOrNull(), current.toDoubleOrNull()) }
+                    if(loading) item { CircularProgressIndicator() }
+                    if(error.isNotBlank()) item {
+                        Metric(tr(lang,"unavailable"),error,tr(lang,"retry"))
+                    }
+                    response?.let { data ->
+                        if(page=="jobs") {
+                            val arr=data.optJSONArray("jobs") ?: JSONArray()
+                            val listings=(0 until arr.length()).mapNotNull {arr.optJSONObject(it)}
+                                .filter { !remoteOnly || it.optBoolean("remote",false) }
+                            item { Metric(tr(lang,"results"),listings.size.toString(),
+                                tr(lang,"source")+": "+feed+" · "+tr(lang,"age")+": "+age+" "+tr(lang,"days")) }
+                            if(listings.isEmpty()) item { Caption(tr(lang,"noresults")) }
+                            items(listings,key={it.optString("id")}) { JobCard(it,lang) }
+                            if(data.optInt("count")>arr.length()) item {
+                                Caption("Showing first "+arr.length()+" results; refine filters to narrow the search.")
+                            }
+                        } else if(page in listOf("salary","compare","inflation","power","exchange")) {
+                            item { ApiResult(page,data,lang,country,fromYear,toYear,previous.toDoubleOrNull(),current.toDoubleOrNull(),amount.toDoubleOrNull()) }
+                        }
+                    }
                 }
             }
         }
-        }
-        if (screen != "cover") {
-            NavigationBar(containerColor = navy) {
-                listOf("home", "inflation", "power", "currency", "salary").forEachIndexed { idx, page ->
-                    NavigationBarItem(selected = screen == page, onClick = { screen = page; response = null; error = ""; result = ""; request = "" },
-                        icon = { Text(listOf("⌂", "↗", "◈", "⇄", "▤")[idx], color = if (screen == page) gold else Color.White, fontSize = 21.sp) },
-                        label = { Text(if (page == "home") "Home" else t(language, modules.indexOf(page)), color = Color.White, fontSize = 9.sp, maxLines = 1) })
-                }
-            }
-        }
     }
 }
-@Composable private fun NumberField(label: String, value: String, change: (String) -> Unit) {
-    OutlinedTextField(value, change, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-}
-@Composable private fun LanguageSelector(value: String, change: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        OutlinedButton(onClick = { expanded = true }) { Text(languageNames[value] ?: value) }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            languageNames.forEach { (code, name) ->
-                DropdownMenuItem(text = { Text(name) }, onClick = { change(code); expanded = false })
-            }
-        }
-    }
-}
-@Composable private fun CountrySelector(label: String, entries: List<Country>, selected: String, change: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val item = entries.find { it.code == selected }
-    Box {
-        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text("$label: " + flag(selected) + " " + (item?.name ?: selected) + " · " + (item?.currency ?: ""), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            entries.forEach { c ->
-                DropdownMenuItem(text = { Text(flag(c.code) + " " + c.name + " · " + c.currency) }, onClick = { change(c.code); expanded = false })
-            }
-        }
-    }
-}
-@Composable private fun JobSelector(label: String, entries: List<Job>, selected: String, change: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text("$label: " + (entries.find { it.id == selected }?.label ?: selected), maxLines = 1)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            entries.forEach { j ->
-                DropdownMenuItem(text = { Text(j.label) }, onClick = { change(j.id); expanded = false })
-            }
-        }
-    }
-}
-@Composable private fun SelectionContainerSafe(text: String) {
-    androidx.compose.foundation.text.selection.SelectionContainer {
-        Text(text, fontSize = 12.sp, color = navy, modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(12.dp)).padding(12.dp))
-    }
+private fun parseRegions(data:JSONObject):List<Region> {
+    val arr=data.optJSONArray("options") ?: JSONArray()
+    return (0 until arr.length()).mapNotNull { arr.optJSONObject(it) }
+        .map {Region(it.optString("code"),it.optString("name"))}
 }
 
-@Composable private fun YearSelector(label: String, selected: String, change: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
+@Composable private fun Heading(label:String,size:Int=25) {
+    Text(label,fontSize=size.sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
+}
+@Composable private fun Caption(text:String) {
+    Text(text,fontSize=12.sp,color=MaterialTheme.colorScheme.onSurface.copy(alpha=.72f))
+}
+@Composable private fun Metric(title:String,value:String,detail:String="") {
+    Card(shape=RoundedCornerShape(18.dp),modifier=Modifier.fillMaxWidth(),
+        colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
+            Text(title,color=MaterialTheme.colorScheme.secondary,fontSize=13.sp,fontWeight=FontWeight.SemiBold)
+            Text(value,color=MaterialTheme.colorScheme.onSurface,fontSize=19.sp,fontWeight=FontWeight.Bold)
+            if(detail.isNotBlank()) Caption(detail)
+        }
+    }
+}
+@Composable private fun Feature(icon:String,title:String,subtitle:String,open:()->Unit) {
+    Card(onClick=open,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(18.dp),
+        colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
+        Row(Modifier.padding(17.dp),verticalAlignment=Alignment.CenterVertically,
+            horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+            Text(icon,fontSize=29.sp,color=MaterialTheme.colorScheme.secondary)
+            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                Text(title,fontSize=18.sp,fontWeight=FontWeight.Bold)
+                Caption(subtitle)
+            }
+            Text("›",fontSize=26.sp,color=MaterialTheme.colorScheme.secondary)
+        }
+    }
+}
+@Composable private fun NumberBox(label:String,value:String,change:(String)->Unit) {
+    OutlinedTextField(value,change,modifier=Modifier.fillMaxWidth(),label={Text(label)},singleLine=true,
+        keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Decimal))
+}
+@Composable private fun CheckRow(label:String,checked:Boolean,change:(Boolean)->Unit) {
+    Row(Modifier.fillMaxWidth().clickable{change(!checked)}.padding(vertical=3.dp),
+        verticalAlignment=Alignment.CenterVertically) {
+        Text(label,Modifier.weight(1f))
+        Switch(checked=checked,onCheckedChange=change)
+    }
+}
+@Composable private fun SelectMenu(label:String,options:List<String>,value:String,change:(String)->Unit) {
+    var expanded by remember {mutableStateOf(false)}
     Box {
-        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) { Text("$label: $selected ▾") }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            (1995..2026).reversed().forEach { year ->
-                DropdownMenuItem(text = { Text(year.toString()) }, onClick = { change(year.toString()); expanded = false })
+        OutlinedButton(onClick={expanded=true},modifier=Modifier.fillMaxWidth()) {
+            Text(label+": "+value,modifier=Modifier.weight(1f),maxLines=1,overflow=TextOverflow.Ellipsis)
+            Text(" ▾")
+        }
+        DropdownMenu(expanded=expanded,onDismissRequest={expanded=false}) {
+            options.forEach {option->
+                DropdownMenuItem(text={Text(option)},onClick={change(option);expanded=false})
             }
         }
     }
 }
-@Composable private fun DataCard(title: String, value: String, detail: String = "") {
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(16.dp)) {
-        Column(Modifier.padding(17.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(title, color = teal, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Text(value, color = navy, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            if (detail.isNotBlank()) Text(detail, color = Color.DarkGray, fontSize = 12.sp)
+@Composable private fun LanguageMenu(lang:String,change:(String)->Unit) {
+    var expanded by remember {mutableStateOf(false)}
+    Box {
+        OutlinedButton(onClick={expanded=true},modifier=Modifier.fillMaxWidth()) {
+            Text(tr(lang,"language")+": "+(languageNames[lang] ?: lang),modifier=Modifier.weight(1f))
+            Text(" ▾")
+        }
+        DropdownMenu(expanded=expanded,onDismissRequest={expanded=false}) {
+            languageNames.forEach {(code,label)->
+                DropdownMenuItem(text={Text(label)},onClick={change(code);expanded=false})
+            }
         }
     }
 }
-@Composable private fun ResultView(screen: String, data: JSONObject, language: String, start: String, end: String, amount: Double?, initialIncome: Double?, currentIncome: Double?) {
-    val status = data.optString("status", "available")
-    if (status == "unavailable") {
-        DataCard(t(language, 21), data.optString("reason", "No validated observations"))
-        return
+@Composable private fun PlaceMenu(label:String,countries:List<Place>,value:String,change:(String)->Unit) {
+    var opened by remember {mutableStateOf(false)}
+    val selected=countries.firstOrNull {it.code==value}
+    OutlinedButton(onClick={opened=true},modifier=Modifier.fillMaxWidth()) {
+        Text(label+": "+countryFlag(value)+" "+(selected?.name ?: value),
+            modifier=Modifier.weight(1f),maxLines=1,overflow=TextOverflow.Ellipsis)
+        Text(" ▾")
     }
-    when (screen) {
-        "power" -> {
-            val series = data.optJSONArray("series") ?: JSONArray()
-            val observations = (0 until series.length()).mapNotNull { series.optJSONObject(it) }
-            val first = observations.firstOrNull { it.optString("period").startsWith(start) }
-            val last = observations.lastOrNull { it.optString("period").startsWith(end) }
-            val firstIndex = first?.optDouble("index", Double.NaN) ?: Double.NaN
-            val lastIndex = last?.optDouble("index", Double.NaN) ?: Double.NaN
-            if (firstIndex.isFinite() && lastIndex.isFinite() && firstIndex > 0 && lastIndex > 0 && first != null && last != null && first.optString("period") < last.optString("period")) {
-                val factor = lastIndex / firstIndex
-                DataCard("Official accumulated inflation", "%+.2f%%".format(Locale.US, (factor - 1) * 100), first.optString("period") + " → " + last.optString("period") + " · " + data.optString("source"))
-                if (initialIncome != null && initialIncome > 0) {
-                    val required = initialIncome * factor
-                    DataCard("Income needed to preserve purchasing power", "%.2f".format(Locale.US, required), "Same currency and income period as entered · official national inflation")
-                    DataCard("Unchanged nominal income in start-period purchasing power", "%.2f".format(Locale.US, initialIncome / factor), "Value of the same nominal amount after inflation")
-                    if (currentIncome != null && currentIncome >= 0) {
-                        DataCard("Real income change", "%+.2f%%".format(Locale.US, (currentIncome / required - 1) * 100), "Current income versus inflation-adjusted initial income")
-                        DataCard("Difference from required income", "%+.2f".format(Locale.US, currentIncome - required))
-                    }
-                } else DataCard("Enter past income", "Required for income comparison")
-            } else DataCard("Selected period", "No matching official observations", "Choose years covered by the national series, with start before end. Manual fallback remains available.")
-        }
-        "inflation" -> {
-            val series = data.optJSONArray("series") ?: JSONArray()
-            val first = (0 until series.length()).map { series.optJSONObject(it) }.firstOrNull { it?.optString("period")?.startsWith(start) == true }
-            val last = (0 until series.length()).map { series.optJSONObject(it) }.lastOrNull { it?.optString("period")?.startsWith(end) == true }
-            DataCard("Official observations", series.length().toString(), data.optString("source") + " · " + data.optString("dataset"))
-            if (first != null && last != null && first.optDouble("index") > 0) {
-                val change = (last.optDouble("index") / first.optDouble("index") - 1) * 100
-                DataCard("Index change between selected observations", "%+.2f%%".format(Locale.US, change),
-                    first.optString("period") + " → " + last.optString("period") + " · " + data.optString("source"))
-            } else DataCard("Selected period", "No matching observations", "Choose years covered by the official monthly series.")
-            Text("HICP index change is not a city-specific cost-of-living estimate.", fontSize = 12.sp)
-        }
-        "currency" -> {
-            val rate = data.optDouble("units_per_eur", Double.NaN)
-            if (rate.isFinite()) {
-                DataCard("1 EUR", "%.4f %s".format(Locale.US, rate, data.optString("currency")), data.optString("period") + " · " + data.optString("source"))
-                if (amount != null) DataCard("Converted amount", "%.2f %s".format(Locale.US, amount * rate, data.optString("currency")), "ECB reference rate, not a retail quote")
-            } else DataCard("Exchange rate", "Unavailable")
-        }
-        "salary" -> {
-            val wage = data.optJSONObject("national_occupation_wage")
-            DataCard("Occupation", data.optJSONObject("occupation")?.optString("label") ?: "")
-            DataCard("Country", data.optJSONObject("country")?.optString("name") ?: "")
-            if (wage?.optString("status") == "available") {
-                val keys = wage.keys()
-                while (keys.hasNext()) {
-                    val key = keys.next()
-                    if (key !in listOf("status", "raw", "metadata")) DataCard(key.replace("_", " ").replaceFirstChar { it.uppercase() }, wage.opt(key).toString().take(240))
+    if(opened) Dialog(onDismissRequest={opened=false}) {
+        Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surface) {
+            LazyColumn(Modifier.heightIn(max=510.dp),contentPadding=PaddingValues(12.dp)) {
+                items(countries) {place->
+                    Text(countryFlag(place.code)+"  "+place.name+" · "+place.currency,
+                        modifier=Modifier.fillMaxWidth().clickable{
+                            change(place.code);opened=false
+                        }.padding(14.dp))
+                    HorizontalDivider()
                 }
-            } else DataCard("Verified wage", "Not available", wage?.optString("reason") ?: "No imported observation")
+            }
         }
+    }
+}
+@Composable private fun ProfessionMenu(label:String,professions:List<Profession>,value:String,lang:String,change:(String)->Unit) {
+    var opened by remember {mutableStateOf(false)}
+    var filter by remember {mutableStateOf("")}
+    val selected=professions.firstOrNull{it.id==value}
+    OutlinedButton(onClick={opened=true},modifier=Modifier.fillMaxWidth()) {
+        Text(label+": "+(selected?.name ?: value),modifier=Modifier.weight(1f),
+            maxLines=1,overflow=TextOverflow.Ellipsis)
+        Text(" ▾")
+    }
+    if(opened) Dialog(onDismissRequest={opened=false}) {
+        Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surface) {
+            Column(Modifier.padding(12.dp)) {
+                OutlinedTextField(filter,{filter=it},modifier=Modifier.fillMaxWidth(),
+                    label={Text(tr(lang,"search"))},singleLine=true)
+                val matches=professions.filter {
+                    it.name.contains(filter,ignoreCase=true) || it.id.contains(filter,ignoreCase=true)
+                }
+                LazyColumn(Modifier.heightIn(max=440.dp)) {
+                    items(matches,key={it.id}) {profession->
+                        Text(profession.name,modifier=Modifier.fillMaxWidth().clickable {
+                            change(profession.id);opened=false;filter=""
+                        }.padding(14.dp))
+                        HorizontalDivider()
+                    }
+                }
+            }
+        }
+    }
+}
+@Composable private fun RegionMenu(label:String,regions:List<Region>,selected:String,change:(String)->Unit) {
+    val choices=listOf(Region("","—"))+regions
+    var opened by remember {mutableStateOf(false)}
+    OutlinedButton(onClick={opened=true},modifier=Modifier.fillMaxWidth()) {
+        Text(label+": "+(choices.firstOrNull{it.code==selected}?.name ?: selected),
+            modifier=Modifier.weight(1f),maxLines=1)
+        Text(" ▾")
+    }
+    if(opened) Dialog(onDismissRequest={opened=false}) {
+        Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surface) {
+            LazyColumn(Modifier.heightIn(max=510.dp),contentPadding=PaddingValues(12.dp)) {
+                items(choices) {item->
+                    Text(item.name,modifier=Modifier.fillMaxWidth().clickable {
+                        change(item.code);opened=false
+                    }.padding(13.dp))
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+@Composable private fun CurrencyMenu(lang:String,value:String,change:(String)->Unit) =
+    SelectMenu(tr(lang,"currency"),currencies,value,change)
+@Composable private fun ThemeMenu(lang:String,value:String,change:(String)->Unit) =
+    SelectMenu(tr(lang,"theme"),listOf("system","light","dark"),value,change)
+
+@Composable private fun JobCard(job:JSONObject,lang:String) {
+    val uri=LocalUriHandler.current
+    val rawLink=job.optString("apply_url",job.optString("source_url",""))
+    val link=rawLink.takeIf {url->
+        try { URL(url).protocol=="https" && URL(url).host.isNotBlank() }
+        catch (_:Exception) {false}
+    }
+    val label=job.optString("company","").takeIf {it.isNotBlank()} ?: tr(lang,"unavailable")
+    Card(modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(18.dp),
+        colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
+            Text(job.optString("title"),fontSize=18.sp,fontWeight=FontWeight.Bold)
+            Text(label,color=MaterialTheme.colorScheme.secondary,fontWeight=FontWeight.SemiBold)
+            Caption(countryFlag(job.optString("destination_country"))+" "+
+                job.optString("candidate_required_location","—")+
+                (if(job.optBoolean("remote",false)) " · Remote" else ""))
+            Text(salaryLabel(job,lang),fontWeight=FontWeight.Bold,fontSize=16.sp)
+            Caption(job.optString("source")+" · "+job.optString("published_at").take(10))
+            if(link!=null) Button(onClick={uri.openUri(link)},modifier=Modifier.fillMaxWidth()) {
+                Text(tr(lang,"apply"))
+            }
+        }
+    }
+}
+@Composable private fun ApiResult(page:String,data:JSONObject,lang:String,origin:String,
+    start:String,end:String,previous:Double?,current:Double?,amount:Double?) {
+    when(page) {
+        "salary" -> WageCard(data,lang)
         "compare" -> {
-            listOf("country_a", "country_b").forEach { key ->
-                val side = data.optJSONObject(key)
-                val place = side?.optJSONObject("country")
-                val wage = side?.optJSONObject("national_occupation_wage")
-                DataCard(flag(place?.optString("code") ?: "") + " " + (place?.optString("name") ?: ""), 
-                    if (wage?.optString("status") == "available") "Verified national wage available" else "Wage data unavailable",
-                    "Currency: " + (place?.optString("currency") ?: "") + " · " + (wage?.optString("reason") ?: "Check source details"))
-            }
-            DataCard("Comparability", data.optJSONObject("wage_comparability")?.optString("status") ?: "Not normalized",
-                data.optJSONObject("wage_comparability")?.optString("reason") ?: "")
+            data.optJSONObject("country_a")?.let {WageCard(it,lang)}
+            data.optJSONObject("country_b")?.let {WageCard(it,lang)}
+            Caption(tr(lang,"nethint"))
         }
-        "jobs" -> {
-            val uriHandler = LocalUriHandler.current
-            val keys = listOf("jobs", "results", "listings")
-            val items = keys.firstNotNullOfOrNull { data.optJSONArray(it) }
-            if (items != null) {
-                DataCard("Remote listings", items.length().toString(), "Source: Remotive")
-                (0 until minOf(items.length(), 25)).forEach { index ->
-                    val item = items.optJSONObject(index)
-                    if (item != null) {
-                        DataCard(item.optString("title", "Job"), item.optString("company_name", item.optString("company")), item.optString("candidate_required_location", ""))
-                        val url = item.optString("apply_url", item.optString("source_url"))
-                        if (url.startsWith("https://")) TextButton(onClick = { uriHandler.openUri(url) }) { Text("View original vacancy / Apply") }
-                    }
+        "exchange" -> {
+            val rate=data.optDouble("units_per_eur",Double.NaN)
+            if(rate.isFinite() && rate>0) {
+                Metric("1 EUR",number(rate)+" "+data.optString("currency"),
+                    data.optString("period")+" · "+data.optString("source"))
+                if(amount!=null && amount>=0)
+                    Metric(tr(lang,"value"),number(amount*rate)+" "+data.optString("currency"),
+                        tr(lang,"fxnote"))
+            } else Metric(tr(lang,"unavailable"),tr(lang,"nomatch"))
+        }
+        "inflation","power" -> {
+            val arr=data.optJSONArray("series") ?: JSONArray()
+            val observations=(0 until arr.length()).mapNotNull{arr.optJSONObject(it)}
+            val first=observations.firstOrNull{it.optString("period").startsWith(start)}
+            val last=observations.lastOrNull{it.optString("period").startsWith(end)}
+            val a=first?.optDouble("index",Double.NaN) ?: Double.NaN
+            val b=last?.optDouble("index",Double.NaN) ?: Double.NaN
+            if(a.isFinite() && b.isFinite() && a>0 && b>0 &&
+                first!!.optString("period")<last!!.optString("period")) {
+                val factor=b/a
+                Metric(tr(lang,"inflation"),number((factor-1)*100)+" %",
+                    first.optString("period")+" → "+last.optString("period")+" · "+data.optString("source"))
+                if(page=="power" && previous!=null && previous>0) {
+                    val needed=previous*factor
+                    Metric("Income required",number(needed),"Verified national inflation · original income units")
+                    if(current!=null && current>=0) Metric("Real income change",
+                        number((current/needed-1)*100)+" %","Based on national inflation, not city costs")
                 }
-            } else DataCard("Job search", data.optString("status", "No listings"), data.optString("reason", ""))
+            } else Metric(tr(lang,"unavailable"),tr(lang,"nomatch"),tr(lang,"powernote"))
         }
-        else -> DataCard("Source", data.optString("source", "EarnWage API"))
     }
+}
+@Composable private fun WageCard(data:JSONObject,lang:String) {
+    val c=data.optJSONObject("country")
+    val name=(c?.optString("code") ?: "")+" · "+(c?.optString("name") ?: "")
+    val annual=data.optJSONObject("annual_presentation")
+    val exact=data.optJSONObject("national_occupation_wage")?.optString("status")=="available"
+    val valid=annual?.optString("status")=="available"
+    if(valid) {
+        val value=annual!!.optDouble("value",Double.NaN)
+        if(value.isFinite()) {
+            Metric(countryFlag(c?.optString("code") ?: "")+" "+name,
+                number(value)+" "+annual.optString("currency")+
+                    (if(annual.optString("unit")=="per_year") " / year" else ""),
+                (if(exact) tr(lang,"profession") else "ISCO-08 major-group context (NOT profession salary)")+
+                    " · "+annual.optString("reference_period")+" · "+annual.optString("source"))
+            Caption(annual.optString("note"))
+        } else Metric(name,tr(lang,"nomatch"))
+    } else Metric(name,tr(lang,"nomatch"))
+    Caption(tr(lang,"wagesnote"))
 }
