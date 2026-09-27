@@ -9,7 +9,7 @@ from app import eurostat_economy as eu
 
 
 def payload(spec, country, value=123.4):
-    dimensions = ["freq", "unit", "coicop", "geo", "time"] if (
+    dimensions = ["freq", "unit", "coicop18", "geo", "time"] if (
         spec["dataset"] == "prc_hicp_minr") else [
         "freq", "na_item", "ppp_cat", "geo", "time"] if (
         spec["dataset"] == "prc_ppp_ind") else [
@@ -134,9 +134,9 @@ def test_admin_import_auth_and_cors(tmp_path, monkeypatch):
     assert result["indicator"]["value"] == 2.5
 
 
-def test_hicp_2026_uses_coicop_v2_total():
+def test_hicp_2026_uses_coicop18_dimension_and_total():
     spec = eu.SERIES["hicp_annual_change_monthly"]
     assert spec["dataset"] == "prc_hicp_minr"
-    assert spec["filters"]["coicop"] == "TOTAL"
+    assert spec["filters"]["coicop18"] == "TOTAL"
     assert spec["filters"]["unit"] == "RCH_A"
-    assert parse_qs(urlparse(eu.source_url("PT", spec)).query)["coicop"] == ["TOTAL"]
+    assert parse_qs(urlparse(eu.source_url("PT", spec)).query)["coicop18"] == ["TOTAL"]
