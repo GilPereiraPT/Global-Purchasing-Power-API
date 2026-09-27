@@ -210,6 +210,16 @@ def occupation_salary(code: str, occupation: str):
     return na_wages.wages(country, occupation) if country in ("US", "CA") else salary(country, occupation)
 
 
+@app.get("/v1/salaries/groups/{code}/{isco08_major_group}")
+def ilostat_major_group_salary(code: str, isco08_major_group: str):
+    """Official ILOSTAT ISCO-08 major groups, never individual-job estimates."""
+    from app.ilostat_groups import group_salary
+    try:
+        return group_salary(code, isco08_major_group)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 @app.get("/v1/ilostat/datasets")
 def ilostat_datasets():
     """Read-only official catalogue. Large imports are CLI-only, never HTTP."""
