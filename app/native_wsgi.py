@@ -193,6 +193,9 @@ def dispatch(path, q):
                 "note": "Occupation labels localized in seven supported languages; other interface text may require client localization."}
     if path == "/v1/sources":
         return sources()
+    if path == "/v1/salaries/groups/coverage":
+        from app.ilostat_groups import group_coverage
+        return group_coverage()
     if path == "/v1/salaries/availability/matrix":
         lang = str(one(q, "lang", "en")).split("-")[0].lower()
         if lang not in SUPPORTED_LANGUAGES:
