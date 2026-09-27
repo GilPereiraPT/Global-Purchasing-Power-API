@@ -4,6 +4,7 @@ This module does not calculate an EarnWage quality-of-life score.
 Gallup Law and Order data are not fetched/scraped without a redistribution licence.
 """
 import json
+from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 from urllib.error import HTTPError, URLError
@@ -45,7 +46,7 @@ def _fetch(country, indicator):
     request = Request(url, headers={"User-Agent": "EarnWage/0.5 CountryInsights",
                                     "Accept": "application/json"})
     try:
-        with urlopen(request, timeout=9) as response:
+        with urlopen(request, timeout=4) as response:
             payload = json.load(response)
         if not isinstance(payload, list) or len(payload) < 2 or not isinstance(payload[1], list):
             raise ValueError("Unexpected World Bank response")
@@ -116,7 +117,11 @@ def safety(country):
 def country_insights(country):
     if country not in ISO3:
         raise ValueError("Unsupported country")
-    result = {name: indicator(country, name) for name in INDICATORS}
+    # World Bank calls are independent: never block the entire response for 10 x timeout.
+    # Maximum latency for a cold request is approximately one upstream timeout.
+    with ThreadPoolExecutor(max_workers=len(INDICATORS)) as pool:
+        futures = {name: pool.submit(indicator, country, name) for name in INDICATORS}
+        result = {name: future.result() for name, future in futures.items()}
     result["safety"] = safety(country)
     return {"country": country, "iso3": ISO3[country], "indicators": result,
             "note": "Independent official indicators, not a composite EarnWage score or personal access guarantee."}
