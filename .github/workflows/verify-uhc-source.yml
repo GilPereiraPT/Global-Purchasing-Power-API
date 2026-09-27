@@ -1,0 +1,21 @@
+name: Verify WHO UHC 2025 source
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/verify_uhc_series.py'
+      - '.github/workflows/verify-uhc-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate-official-revised-service-coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check PT WHO SDG 3.8.1 source read-only
+        run: python -m scripts.verify_uhc_series
