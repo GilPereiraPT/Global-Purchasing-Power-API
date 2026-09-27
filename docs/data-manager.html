@@ -153,6 +153,15 @@ try{body=await r.json()}catch{throw Error("Resposta HTTP "+r.status+" inválida"
 if(!r.ok){
 if(r.status===409 && body.import_status==="backup_required")
  throw Error("backup_required · Antes de importar, utiliza a secção 2 para criar e verificar uma cópia de segurança.");
+if(r.status===409 && body.status==="prerequisites_missing"){
+ const problems=Object.entries(body.backup_readiness?.databases||{})
+  .filter(([,state])=>state!=="ready")
+  .map(([variable,state])=>variable+" ("+state+")");
+ if(body.backup_readiness?.destination!=="ready_for_attempt")
+  problems.push("pasta de backup ("+body.backup_readiness?.destination+")");
+ throw Error("Cópia não criada: "+problems.join("; ")+
+  ". Corrige apenas as definições da aplicação Python no cPanel, sem criar bases vazias.");
+}
 throw Error((body.error||body.detail||"HTTP "+r.status)+
  (body.note?" · "+body.note:""));
 }
@@ -161,9 +170,17 @@ return body;
 async function status(){
 const data=await admin("status");
 metadata=data;
+const ready=data.backup_readiness;
+const missing=Object.entries(ready?.databases||{}).filter(([,state])=>state!=="ready")
+ .map(([name,state])=>name+" ("+state+")");
+if(ready?.destination && ready.destination!=="ready_for_attempt")
+ missing.push("pasta de backup ("+ready.destination+")");
 $("backupResult").textContent=data.backups.length?
 "Existem "+data.backups.length+" cópias privadas listadas. Última: "+data.backups[0]:
-"Não foi encontrada nenhuma cópia privada do Data Manager.";
+missing.length?
+"Sem cópia de segurança. Pré-requisitos em falta: "+missing.join("; ")+
+". Verifica os valores existentes em Setup Python App no cPanel; não cries bases novas.":
+"Não foi encontrada nenhuma cópia privada do Data Manager. Carrega no botão «Criar e verificar cópia de segurança» acima.";
 drawHistory(data);
 updateOptions();
 return data;
@@ -256,11 +273,16 @@ $("check").onclick=()=>standalone(async()=>{
 await publicInventory();await status();report("Ligação protegida verificada · Data Manager disponível.");
 },"A verificar acesso protegido...");
 $("backup").onclick=()=>standalone(async()=>{
+try{
 const r=await admin("backup");
 $("backupResult").textContent="Cópia verificada: "+r.backup_id+
 " · bases: "+Object.keys(r.databases).join(", ")+".";
 log("Cópia de segurança concluída: "+r.backup_id);
 await status();report("Cópia privada criada e verificada.");
+}catch(error){
+$("backupResult").textContent="Cópia NÃO criada: "+error.message;
+throw error;
+}
 },"A fazer cópia SQLite segura…");
 $("preview").onclick=()=>startBatch([[$("source").value,$("country").value,
  $("indicator").value]],true);
