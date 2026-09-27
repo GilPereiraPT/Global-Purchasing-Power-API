@@ -118,13 +118,18 @@ JOB_ALIASES = {
     "doctor": {"pt": ["médica"], "en": ["physician"]},
 }
 
-from app.occupations import EXTRA_JOBS, ISCO08_EXACT
+from app.occupations import EXTRA_JOBS, ISCO08_EXACT, ISCO08_MAJOR_GROUP, ISCO08_MAJOR_GROUP_CAUTION
 
 JOBS.extend(EXTRA_JOBS)
 OCCUPATIONS = [
     {"id": key, "isco08": ISCO08_EXACT.get(key),
+     "isco08_major_group": ISCO08_MAJOR_GROUP[key],
+     "group_mapping_caution": ISCO08_MAJOR_GROUP_CAUTION.get(key),
      "translations": {"pt": pt, "en": en, **JOB_TRANSLATIONS[key]},
      "aliases": JOB_ALIASES.get(key, {})} for key, pt, en in JOBS
 ]
 assert len(OCCUPATIONS) == 40
+assert set(ISCO08_MAJOR_GROUP) == {item["id"] for item in OCCUPATIONS}
+assert all(item["isco08_major_group"] == item["isco08"][0]
+           for item in OCCUPATIONS if item["isco08"] is not None)
 
