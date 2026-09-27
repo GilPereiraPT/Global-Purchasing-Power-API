@@ -4,6 +4,7 @@ Keep Eurostat observations separate from World Bank series and retain periods,
 exact dimension selections and source links. Run on the server via cron.
 """
 import argparse
+import re
 import json
 import math
 import sys
@@ -16,6 +17,9 @@ from urllib.request import Request, urlopen
 from app.country_insights_store import connect
 
 BASE = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
+ONS_CPI_URL = ("https://api.beta.ons.gov.uk/v1/data?uri="
+               "/economy/inflationandpriceindices/timeseries/d7g7/mm23")
+ONS_CPI_SOURCE = "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g7/mm23"
 EUROSTAT_COUNTRIES = ("PT", "ES", "DE", "FR", "IE", "NL", "IT", "GB", "CH")
 # Explicit selections avoid mixing index with inflation rate or net with gross.
 SERIES = {
@@ -42,6 +46,8 @@ SERIES = {
 
 
 def source_url(country, spec):
+    if country == "GB" and spec["dataset"] == "prc_hicp_minr":
+        return ONS_CPI_SOURCE
     return BASE + spec["dataset"] + "?" + urlencode(
         {"geo": country, "lang": "EN", **spec["filters"]})
 
@@ -128,22 +134,71 @@ def read(db, country, name):
     log = db.execute("""SELECT attempted_at,succeeded_at,status,error_type
         FROM eurostat_refresh WHERE country=? AND indicator=?""",
         (country, name)).fetchone()
+    ons_cpi = country == "GB" and name == "hicp_annual_change_monthly"
     return {
         "country": country, "name": name, "status": "available" if row else
         (log[2] if log else "not_imported"),
         "value": row[1] if row else None, "period": row[0] if row else None,
         "unit": spec["unit"], "frequency": spec["frequency"],
-        "description": spec["description"], "source": "Eurostat",
-        "dataset": spec["dataset"], "source_url": source_url(country, spec),
+        "description": ("UK CPI annual rate, all items; ONS D7G7, not Eurostat HICP"
+                        if ons_cpi else spec["description"]),
+        "source": "ONS" if ons_cpi else "Eurostat",
+        "dataset": "MM23/D7G7" if ons_cpi else spec["dataset"], "source_url": source_url(country, spec),
         "last_attempt": log[0] if log else None,
         "last_successful_refresh": log[1] if log else None,
         "refresh_status": log[2] if log else "not_imported",
         "error_type": log[3] if log else None,
-        "note": "National observation; periods can differ. Previous values remain after a failed refresh.",
+        "note": ("UK CPI is not identical to the Eurostat HICP series; do not silently treat them as equivalent. "
+                 if ons_cpi else "National observation; periods can differ. ")
+                + "Previous values remain after a failed refresh.",
     }
 
 
+def decode_ons_cpi(payload):
+    """Read ONS D7G7 monthly observations, rejecting non-monthly/invalid values."""
+    months = payload.get("months")
+    if not isinstance(months, list):
+        raise ValueError("ONS D7G7 monthly series missing")
+    observations = {}
+    month_names = {name: i for i, name in enumerate(
+        ("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG",
+         "SEP", "OCT", "NOV", "DEC"), 1)}
+    for item in months:
+        if not isinstance(item, dict):
+            continue
+        raw = str(item.get("date") or "").strip().upper()
+        match = re.fullmatch(r"(\\d{4})-(\\d{2})(?:-\\d{2})?", raw)
+        if match:
+            year, month = int(match[1]), int(match[2])
+        else:
+            match = re.fullmatch(r"(\\d{4})\\s+([A-Z]{3})", raw)
+            if not match or match[2] not in month_names:
+                continue
+            year, month = int(match[1]), month_names[match[2]]
+        if not 1 <= month <= 12:
+            continue
+        try:
+            value = float(item["value"])
+        except (KeyError, ValueError, TypeError):
+            continue
+        if math.isfinite(value):
+            observations[f"{year:04d}-{month:02d}"] = value
+    return sorted(observations.items())
+
+
+def fetch_ons_cpi():
+    request = Request(ONS_CPI_URL, headers={
+        "User-Agent": "EarnWage/0.6 (ONS public CPI series)",
+        "Accept": "application/json"})
+    with urlopen(request, timeout=30) as response:
+        return decode_ons_cpi(json.load(response))
+
+
 def fetch(country, spec):
+    if country == "GB":
+        if spec["dataset"] == "prc_hicp_minr":
+            return fetch_ons_cpi()
+        return []
     request = Request(source_url(country, spec),
                       headers={"User-Agent": "EarnWage/0.6 (Eurostat public data)",
                                "Accept": "application/json"})
