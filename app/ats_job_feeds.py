@@ -144,16 +144,35 @@ async def feed(provider):
 async def search(provider, country, occupation, salary_published=False, limit=20):
     data = await feed(provider)
     found = []
-    stats = {board: {**values, "jobs_after_filter": 0}
+    stats = {board: {**values, "jobs_matching_occupation": 0,
+                     "jobs_matching_country": 0, "jobs_matching_both": 0,
+                     "jobs_after_filter": 0, "rejected_samples": []}
              for board, values in data["board_stats"].items()}
     for item in data["jobs"]:
-        if not title_matches(item["title"], occupation):
-            continue
+        board = item["id"].split(":", 2)[1]
+        entry = stats[board]
+        matches_title = title_matches(item["title"], occupation)
         scope = location_matches(item["candidate_required_location"], country)
-        if not scope or (salary_published and not item["salary_structured"]):
+        matches_country = bool(scope)
+        if matches_title:
+            entry["jobs_matching_occupation"] += 1
+        if matches_country:
+            entry["jobs_matching_country"] += 1
+        if matches_title and matches_country:
+            entry["jobs_matching_both"] += 1
+        if not matches_title or not matches_country:
+            if len(entry["rejected_samples"]) < 8 and (
+                    matches_title or len(entry["rejected_samples"]) < 3):
+                entry["rejected_samples"].append({
+                    "title": item["title"],
+                    "location": item["candidate_required_location"],
+                    "matches_occupation": matches_title,
+                    "matches_country": matches_country})
+            continue
+        if salary_published and not item["salary_structured"]:
             continue
         found.append({**item, "destination_country": country, "location_match": scope})
-        stats[item["id"].split(":", 2)[1]]["jobs_after_filter"] += 1
+        entry["jobs_after_filter"] += 1
     found.sort(key=lambda item: item["published_at"], reverse=True)
     return {"status": "available" if found else "no_results", "provider": LABELS[provider],
             "country": country, "occupation": occupation, "count": len(found),
@@ -164,6 +183,9 @@ async def search(provider, country, occupation, salary_published=False, limit=20
             "boards_failed": data["boards_failed"],
             "jobs_before_filter": sum(v["jobs_before_filter"] for v in stats.values()),
             "jobs_normalized": len(data["jobs"]),
+            "jobs_matching_occupation": sum(v["jobs_matching_occupation"] for v in stats.values()),
+            "jobs_matching_country": sum(v["jobs_matching_country"] for v in stats.values()),
+            "jobs_matching_both": sum(v["jobs_matching_both"] for v in stats.values()),
             "jobs_after_filter": len(found),
             "board_stats": stats,
             "source_url": _endpoint(provider, BOARDS[provider][0]),
