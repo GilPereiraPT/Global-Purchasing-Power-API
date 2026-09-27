@@ -146,3 +146,39 @@ if __name__ == "__main__":
     parser.add_argument("--output", default=str(DEFAULT))
     args = parser.parse_args()
     print("Eligible group salary observations:", save_snapshot(args.csv, args.output))
+
+
+def group_history(country, group, start_year, end_year, path=DEFAULT):
+    """Year-scoped official group observations; preserve missing years and units."""
+    code = country.upper()
+    if code not in COUNTRY_MAP or not re.fullmatch("[1-9]", str(group)):
+        raise ValueError("Unknown country or ISCO-08 major group")
+    if not 1900 <= start_year <= end_year <= 2100 or end_year-start_year > 100:
+        raise ValueError("Invalid history year range")
+    rows = [r for r in load_snapshot(path) if r["country"] == code
+            and r["isco08_major_group"] == str(group)
+            and start_year <= int(r["period"]) <= end_year]
+    observations = []
+    for year in range(start_year, end_year+1):
+        year_rows = [r for r in rows if int(r["period"]) == year]
+        units = {}
+        for unit in UNITS.values():
+            matches = [r for r in year_rows if r["unit_type"] == unit]
+            if len(matches) == 1:
+                row = matches[0]
+                units[unit] = {"status":"available", "value":row["value"],
+                               "currency":row["currency"], "source_code":row["source_code"]}
+            elif len(matches) > 1:
+                units[unit] = {"status":"ambiguous",
+                               "source_codes":sorted({r["source_code"] for r in matches})}
+            else:
+                units[unit] = {"status":"unavailable"}
+        observations.append({"year":year,
+                             "status":"available" if any(v["status"] == "available" for v in units.values()) else
+                                      "ambiguous" if any(v["status"] == "ambiguous" for v in units.values()) else "unavailable",
+                             "values":units})
+    return {"country":code, "isco08_major_group":str(group),
+            "precision":"isco08_major_group", "start_year":start_year,
+            "end_year":end_year, "unit":"monthly employee earnings",
+            "observations":observations, "dataset":DATASET, "source_url":SOURCE_URL,
+            "note":"Group earnings are not the selected occupation's earnings. Missing years are not interpolated."}
