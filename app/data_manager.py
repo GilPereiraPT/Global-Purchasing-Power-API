@@ -23,6 +23,7 @@ from app.eurostat_economy import (
 LOG = logging.getLogger("earnwage.data_manager")
 ROOT = Path(__file__).resolve().parent.parent
 ALLOW_ORIGIN = "https://gilpereirapt.github.io"
+MANAGER_VERSION = "0.2.1"
 BACKUP_DIR = ROOT / "_earnwage_backups"
 
 ALLOWED_ACTIONS = ("backup", "import", "status")
@@ -98,10 +99,13 @@ def _record(db, source, country, indicator, mode, status, count, error=None):
 
 def _backup_readiness():
     """Return safe diagnostic labels, not private filesystem paths or secrets."""
-    from app.country_insights_store import db_path as insights_db_path
     from app.store import DB_PATH as active_cache_db
+    # Never call db_path() before checking for relative configuration: it
+    # deliberately raises ValueError and would incorrectly return HTTP 422.
     expected = {
-        "EARNWAGE_INSIGHTS_DB": insights_db_path(),
+        "EARNWAGE_INSIGHTS_DB": Path(
+            os.environ.get("EARNWAGE_INSIGHTS_DB")
+            or "/tmp/earnwage_country_insights.sqlite3"),
         "GPP_CACHE_DB": Path(active_cache_db),
     }
     sources = {}
@@ -188,6 +192,7 @@ def _status(payload):
     return {"status": "ok", "history": [
         dict(zip(columns, row)) for row in rows],
         "backups": _backups(), "backup_readiness": _backup_readiness(),
+        "manager_version": MANAGER_VERSION,
         "indicators": list(INDICATORS),
         "world_bank_countries": list(ISO3),
         "eurostat_countries": list(EUROSTAT_COUNTRIES),
@@ -275,6 +280,28 @@ def _import_one(payload):
     }
 
 
+def _safe_backup_failure(exc):
+    """Classify known backup issues without revealing paths or internals."""
+    reason = str(exc)
+    if isinstance(exc, PermissionError):
+        return "backup_permission_denied"
+    if isinstance(exc, FileNotFoundError):
+        return "configured_database_missing"
+    if "integrity check failed" in reason:
+        return "sqlite_integrity_check_failed"
+    if "Separate insights and wages/cache databases expected" in reason:
+        return "both_database_variables_point_to_same_file"
+    if "existing persistent SQLite DB" in reason:
+        return "database_variable_missing"
+    if "public_html" in reason or "Unsafe backup location" in reason:
+        return "unsafe_backup_location"
+    if "Backup destination already exists" in reason:
+        return "backup_destination_already_exists"
+    if isinstance(exc, sqlite3.Error):
+        return "sqlite_backup_failed"
+    return "backup_preparation_failed"
+
+
 def handle(environ, start_response, origin, action, reply):
     """Entry from the production WSGI adapter; never return internal tracebacks."""
     auth = _authorize(environ)
@@ -295,7 +322,15 @@ def handle(environ, start_response, origin, action, reply):
         code = (409 if result.get("import_status") == "backup_required"
                 or result.get("status") == "prerequisites_missing" else 200)
         return _response(reply, start_response, origin, code, result)
-    except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError):
+    except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError) as exc:
+        if action == "backup":
+            LOG.warning("Data Manager backup preparation failed (%s)", type(exc).__name__)
+            return _response(reply, start_response, origin, 409, {
+                "error": "backup_failed",
+                "reason": _safe_backup_failure(exc),
+                "backup_readiness": _backup_readiness(),
+                "manager_version": MANAGER_VERSION,
+            })
         return _response(reply, start_response, origin, 422,
                          {"error": "invalid_manager_request"})
     except RuntimeError as exc:
@@ -303,8 +338,14 @@ def handle(environ, start_response, origin, action, reply):
             return _response(reply, start_response, origin, 409,
                              {"error": "another_import_is_running"})
         LOG.exception("Data Manager runtime failure")
-    except (sqlite3.Error, OSError):
+    except (sqlite3.Error, OSError) as exc:
         LOG.exception("Data Manager storage or source failure")
+        if action == "backup":
+            return _response(reply, start_response, origin, 503, {
+                "error": "backup_failed",
+                "reason": _safe_backup_failure(exc),
+                "manager_version": MANAGER_VERSION,
+            })
     except Exception:
         LOG.exception("Unexpected Data Manager error")
     return _response(reply, start_response, origin, 503,
