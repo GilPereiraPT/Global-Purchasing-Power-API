@@ -12,7 +12,7 @@ from app.providers import UpstreamUnavailable
 
 BOARDS = {
     "greenhouse": ("stripe",),
-    "lever": ("lever", "teamsnap", "zoox", "finch"),
+    "lever": ("lever", "teamsnap", "zoox", "finch", "truv", "sambatv", "integrate"),
     "ashby": ("Ashby",),
 }
 LABELS = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}
@@ -101,7 +101,7 @@ def _endpoint(provider, board):
 async def feed(provider):
     if provider not in BOARDS:
         raise ValueError("Unknown provider")
-    key = "jobs:ats:" + provider + ":v3"
+    key = "jobs:ats:" + provider + ":v4"
     cached = store.get(key, TTL)
     if cached is not None:
         return cached
@@ -145,9 +145,10 @@ async def feed(provider):
 async def search(provider, country, occupation, salary_published=False, limit=20, debug=False):
     data = await feed(provider)
     found = []
+    remote_unverified = []
     stats = {board: {**values, "jobs_matching_occupation": 0,
                      "jobs_matching_country": 0, "jobs_matching_both": 0,
-                     "jobs_after_filter": 0, "rejected_samples": []}
+                     "jobs_after_filter": 0, "remote_unverified": 0, "rejected_samples": []}
              for board, values in data["board_stats"].items()}
     for item in data["jobs"]:
         board = item["id"].split(":", 2)[1]
@@ -161,6 +162,12 @@ async def search(provider, country, occupation, salary_published=False, limit=20
             entry["jobs_matching_country"] += 1
         if matches_title and matches_country:
             entry["jobs_matching_both"] += 1
+        if matches_title and not matches_country and item["remote"] and (
+                item["candidate_required_location"].strip().lower() == "remote"):
+            entry["remote_unverified"] += 1
+            remote_unverified.append({**item, "destination_country": country,
+                "location_match": "unverified_remote",
+                "eligibility_note": "Remote job: eligible countries not confirmed by the source location."})
         if not matches_title or not matches_country:
             if len(entry["rejected_samples"]) < 8 and (
                     matches_title or len(entry["rejected_samples"]) < 3):
@@ -175,9 +182,12 @@ async def search(provider, country, occupation, salary_published=False, limit=20
         found.append({**item, "destination_country": country, "location_match": scope})
         entry["jobs_after_filter"] += 1
     found.sort(key=lambda item: item["published_at"] or "", reverse=True)
+    remote_unverified.sort(key=lambda item: item["published_at"] or "", reverse=True)
     result = {"status": "available" if found else "no_results", "provider": LABELS[provider],
             "country": country, "occupation": occupation, "count": len(found),
             "returned": min(len(found), limit), "jobs": found[:limit],
+            "remote_unverified_count": len(remote_unverified),
+            "remote_unverified": remote_unverified[:limit],
             "fetched_at": data["fetched_at"],
             "boards_checked": data["boards_checked"],
             "boards_succeeded": data["boards_succeeded"],
@@ -188,6 +198,7 @@ async def search(provider, country, occupation, salary_published=False, limit=20
             "jobs_matching_country": sum(v["jobs_matching_country"] for v in stats.values()),
             "jobs_matching_both": sum(v["jobs_matching_both"] for v in stats.values()),
             "jobs_after_filter": len(found),
+            "remote_unverified_total": len(remote_unverified),
             "board_stats": stats,
             "source_url": _endpoint(provider, BOARDS[provider][0]),
             "scope": "Curated employer boards only, not a national vacancy census.",
