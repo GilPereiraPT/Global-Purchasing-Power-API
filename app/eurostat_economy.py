@@ -20,6 +20,10 @@ BASE = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
 ONS_CPI_URL = ("https://api.beta.ons.gov.uk/v1/data?uri="
                "/economy/inflationandpriceindices/timeseries/d7g7/mm23")
 ONS_CPI_SOURCE = "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g7/mm23"
+OECD_UK_NET_SOURCE = "https://www.oecd.org/en/publications/taxing-wages-2026_3a5169ef-en/full-report/evolution-of-effective-tax-rates-on-labour-income-2000-25_5aed550b.html"
+# OECD Taxing Wages 2026, table 6.26, GBP, single/no children/100% average wage.
+# Publication snapshot: explicit years; do not represent as a live OECD API feed.
+OECD_UK_NET_GBP = [("2024", 41074.0), ("2025", 43027.0)]
 EUROSTAT_COUNTRIES = ("PT", "ES", "DE", "FR", "IE", "NL", "IT", "GB", "CH")
 # Explicit selections avoid mixing index with inflation rate or net with gross.
 SERIES = {
@@ -48,6 +52,8 @@ SERIES = {
 def source_url(country, spec):
     if country == "GB" and spec["dataset"] == "prc_hicp_minr":
         return ONS_CPI_SOURCE
+    if country == "GB" and spec["dataset"] == "earn_nt_net":
+        return OECD_UK_NET_SOURCE
     return BASE + spec["dataset"] + "?" + urlencode(
         {"geo": country, "lang": "EN", **spec["filters"]})
 
@@ -135,21 +141,26 @@ def read(db, country, name):
         FROM eurostat_refresh WHERE country=? AND indicator=?""",
         (country, name)).fetchone()
     ons_cpi = country == "GB" and name == "hicp_annual_change_monthly"
+    oecd_net = country == "GB" and name == "net_annual_earnings_reference"
     return {
         "country": country, "name": name, "status": "available" if row else
         (log[2] if log else "not_imported"),
         "value": row[1] if row else None, "period": row[0] if row else None,
-        "unit": spec["unit"], "frequency": spec["frequency"],
+        "unit": "GBP_per_year" if oecd_net else spec["unit"], "frequency": spec["frequency"],
         "description": ("UK CPI annual rate, all items; ONS D7G7, not Eurostat HICP"
-                        if ons_cpi else spec["description"]),
-        "source": "ONS" if ons_cpi else "Eurostat",
-        "dataset": "MM23/D7G7" if ons_cpi else spec["dataset"], "source_url": source_url(country, spec),
+                        if ons_cpi else
+                        "OECD Taxing Wages table 6.26: single, no children, 100% average wage; GBP/year"
+                        if oecd_net else spec["description"]),
+        "source": "ONS" if ons_cpi else "OECD" if oecd_net else "Eurostat",
+        "dataset": "MM23/D7G7" if ons_cpi else "Taxing Wages 2026 Table 6.26" if oecd_net else spec["dataset"], "source_url": source_url(country, spec),
         "last_attempt": log[0] if log else None,
         "last_successful_refresh": log[1] if log else None,
         "refresh_status": log[2] if log else "not_imported",
         "error_type": log[3] if log else None,
         "note": ("UK CPI is not identical to the Eurostat HICP series; do not silently treat them as equivalent. "
-                 if ons_cpi else "National observation; periods can differ. ")
+                 if ons_cpi else
+                 "OECD published annual reference in GBP, not EUR; do not compare nominal values across currencies. "
+                 if oecd_net else "National observation; periods can differ. ")
                 + "Previous values remain after a failed refresh.",
     }
 
@@ -198,7 +209,10 @@ def fetch(country, spec):
     if country == "GB":
         if spec["dataset"] == "prc_hicp_minr":
             return fetch_ons_cpi()
-        return []
+        if spec["dataset"] == "earn_nt_net":
+            return list(OECD_UK_NET_GBP)
+        # Attempt the exact Eurostat household PLI selection for GB, preserving
+        # its original EU27=100 methodology; missing years remain unavailable.
     request = Request(source_url(country, spec),
                       headers={"User-Agent": "EarnWage/0.6 (Eurostat public data)",
                                "Accept": "application/json"})
