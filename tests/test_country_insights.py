@@ -75,7 +75,8 @@ class CountryInsightsTests(unittest.TestCase):
         self.assertEqual(result["sdg_indicator"], "3.8.1")
         self.assertEqual(result["legacy_indicator_code"], "SH.UHC.SRVS.CV.XD")
         self.assertIn("not the share of people covered", result["note"])
-        self.assertIn("/SH_UHC_SCI?", result["source_url"])
+        self.assertIn("/UHC_INDEX_REPORTED", result["source_url"])
+        self.assertIn("/SH_UHC_SCI?", result["world_bank_mirror_url"])
 
     def test_uhc_mocked_official_json_import_preserves_year(self):
         import json
