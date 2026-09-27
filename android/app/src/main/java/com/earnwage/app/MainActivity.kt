@@ -262,8 +262,7 @@ class MainActivity:ComponentActivity() {
                                     Text(tr(lang,"search"))
                                 }
                             }
-                            item { Caption(tr(lang,"wagesnote")+"
-"+tr(lang,"nethint")) }
+                            item { Caption(tr(lang,"wagesnote")+"\n"+tr(lang,"nethint")) }
                         }
                         "jobs" -> {
                             item { Heading(tr(lang,"jobs")) }
@@ -338,8 +337,7 @@ class MainActivity:ComponentActivity() {
                             item { PlaceMenu(tr(lang,"country"),countries,country) {country=it} }
                             item { CurrencyMenu(lang,currency) {currency=it} }
                             item { ThemeMenu(lang,appearance) {appearance=it} }
-                            item { Caption(tr(lang,"settingsnote")+"
-"+tr(lang,"countryhint")) }
+                            item { Caption(tr(lang,"settingsnote")+"\n"+tr(lang,"countryhint")) }
                             item { Feature("ⓘ",tr(lang,"about"),tr(lang,"data")) {navigate("about")} }
                         }
                         "about" -> {
@@ -347,12 +345,9 @@ class MainActivity:ComponentActivity() {
                             item { Metric("EarnWage","v"+BuildConfig.VERSION_NAME,
                                 "com.earnwage.app · Gil Pereira") }
                             item { Metric(tr(lang,"apiversion"),apiVersion,BuildConfig.API_BASE_URL) }
-                            item { Caption("Your salary. Your world.
-14 countries · 40 occupations · 7 interface languages") }
+                            item { Caption("Your salary. Your world.\n14 countries · 40 occupations · 7 interface languages") }
                             item { Caption("Eurostat · ECB · ILOSTAT · BLS · Canada Job Bank · Remotive · Arbeitnow · Himalayas · Jobicy · Remote OK · Greenhouse · Lever · Ashby") }
-                            item { Caption(tr(lang,"wagesnote")+"
-"+tr(lang,"nethint")+"
-"+tr(lang,"jobnote")) }
+                            item { Caption(tr(lang,"wagesnote")+"\n"+tr(lang,"nethint")+"\n"+tr(lang,"jobnote")) }
                         }
                     }
                     if(loading) item { CircularProgressIndicator() }
