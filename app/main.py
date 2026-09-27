@@ -97,6 +97,33 @@ def occupations(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$"),
                       "aliases": item.get("aliases", {})})
     return {"language": base, "fallback": "en", "count": len(items), "occupations": items}
 
+@app.get("/v1/economy/coverage")
+def economy_coverage():
+    from app.country_insights import ISO3
+    from app.country_insights_store import connect as insights_connect, read_indicator
+    names = ("inflation_annual", "ppp_private_consumption")
+    with insights_connect() as db:
+        rows = [{"country": code, "currency": COUNTRY_MAP[code]["currency"],
+                 "indicators": {name: read_indicator(db, code, name) for name in names}}
+                for code in ISO3]
+    return {"countries": rows, "count": len(rows),
+            "note": "Annual CPI inflation and household consumption PPP are distinct measures; observation years may differ."}
+
+
+@app.get("/v1/economy/compare")
+def economy_compare(country_a: str, country_b: str):
+    from app.country_insights_store import connect as insights_connect, read_indicator
+    a, b = country_a.upper(), country_b.upper()
+    if a not in COUNTRY_MAP or b not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    names = ("inflation_annual", "ppp_private_consumption")
+    with insights_connect() as db:
+        rows = [{"country": code, "currency": COUNTRY_MAP[code]["currency"],
+                 "indicators": {name: read_indicator(db, code, name) for name in names}}
+                for code in (a, b)]
+    return {"countries": rows, "note": "PPP private consumption is local currency per international dollar. Do not compare mismatched observation years or treat national PPP as city prices."}
+
+
 @app.get("/v1/inflation/{code}")
 async def inflation(code: str):
     item = COUNTRY_MAP.get(code.upper())
