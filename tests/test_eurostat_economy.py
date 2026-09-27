@@ -175,3 +175,20 @@ def test_uk_oecd_net_earnings_provenance(tmp_path, monkeypatch):
     assert row["value"] == 43027.0 and row["period"] == "2025"
     assert row["unit"] == "GBP_per_year" and row["source"] == "OECD"
     assert "Table 6.26" in row["dataset"]
+
+
+def test_uk_eurostat_geo_mapping():
+    spec = eu.SERIES["household_price_level_eu27"]
+    url = eu.source_url("GB", spec)
+    assert parse_qs(urlparse(url).query)["geo"] == ["UK"]
+    assert parse_qs(urlparse(eu.source_url("PT", spec)).query)["geo"] == ["PT"]
+    payload = {"id": ["freq", "geo", "na_item", "ppp_cat", "time"],
+               "size": [1, 1, 1, 1, 1],
+               "dimension": {
+                   "freq": {"category": {"index": {"A": 0}}},
+                   "geo": {"category": {"index": {"UK": 0}}},
+                   "na_item": {"category": {"index": {"PLI_EU27_2020": 0}}},
+                   "ppp_cat": {"category": {"index": {"E011": 0}}},
+                   "time": {"category": {"index": {"2024": 0}}}},
+               "value": {"0": 109.2}}
+    assert eu.decode(payload, "GB", spec) == [("2024", 109.2)]
