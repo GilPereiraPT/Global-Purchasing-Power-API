@@ -36,7 +36,7 @@ HTTP_STATUS = {
     200: "200 OK", 204: "204 No Content", 400: "400 Bad Request", 404: "404 Not Found",
     405: "405 Method Not Allowed", 413: "413 Content Too Large",
     422: "422 Unprocessable Entity", 503: "503 Service Unavailable",
-    401: "401 Unauthorized", 403: "403 Forbidden",
+    401: "401 Unauthorized", 403: "403 Forbidden", 409: "409 Conflict",
     500: "500 Internal Server Error",
 }
 
@@ -577,6 +577,8 @@ def application(environ, start_response):
             ("Cache-Control", "no-store"),
             ("Content-Length", "0")])
         return []
+    if normalized in data_manager_actions and method not in ("POST", "OPTIONS"):
+        return reply(start_response, {"error": "method_not_allowed"}, 405, method, origin)
     if normalized in data_manager_actions and method == "POST":
         from app.data_manager import handle
         return handle(environ, start_response, origin,
