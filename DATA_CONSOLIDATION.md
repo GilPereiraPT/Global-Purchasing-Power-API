@@ -74,13 +74,41 @@ WDI cells selectively by weekday pair with --missing-only.
 Do NOT add --missing-only to the normal weekly refresh cron: it is intended
 for one-off backfilling and deliberately skips already-available series.
 
-## 5. UHC series requires source review
-The existing health_coverage key maps to SH.UHC.SRVS.CV.XD
-(original published World Bank metadata reports observations through 2021).
-A different published WHO/World Bank identifier, SH_UHC_SCI, shows years
-through 2023. A similar label is insufficient evidence to overwrite the
-historical records with a different series: confirm lineage and methodology
-before a separately versioned mapping. Diagnose one country first.
+## 5. UHC service coverage — WHO 2025 methodology (2026-09-27)
+
+Research verified WHO and World Bank's new SDG 3.8.1 SCI. The obsolete
+SH.UHC.SRVS.CV.XD series (metadata published through 2021) is NOT an
+interchangeable percentage of people covered; the new code is SH_UHC_SCI,
+index 0-100. In 2025 WHO updated three of the 14 tracer indicators and
+introduced a population-weighted geometric mean. The new WHO source is:
+https://ghoapi.azureedge.net/api/UHC_INDEX_REPORTED
+World Bank's official mirror:
+https://data.worldbank.org/indicator/SH_UHC_SCI
+Metadata:
+https://blogs.worldbank.org/en/opendata/tracking-universal-health-coverage-with-updated-indicators-in-th0
+
+A read-only source validation in GitHub Actions on 2026-09-27 succeeded
+against WHO: Portugal 24 observations, latest published year 2023, index 83.
+The World Bank API mirror timed out twice during read-only source verification,
+so the official WHO OData source is now primary and World Bank is fallback.
+
+The 2026-09-27 production inventory showed 0 saved health_coverage
+observations across all 14 countries under the obsolete code. Thus the
+replacement under the existing logical key will import a consistent revised
+historical series, not silently splice it onto old observations.
+
+NO production import was performed by source verification. Required browser
+steps: first upload ONLY app/country_insights.py and app/country_insights_store.py
+from GitHub Raw via cPanel File Manager to the same app/ folder, retaining
+copies of existing files, then restart the Python App with the cPanel GUI.
+Ensure /v1/health and /v1/data-inventory still work. Data Manager: country PT,
+source World Bank grouping (WHO primary provider for this series),
+indicator health_coverage, mode missing, import once. Verify index 0-100,
+source WHO, year (expected <= 2023 in this source release), and nonzero
+historical observation count. Then fill remaining countries individually.
+
+The GitHub Actions periodic runner still EXCLUDES health_coverage pending
+positive production trial; enable it only after a successful real import.
 
 ## 6. Exact occupation wages
 The export shows no exact ILOSTAT salary snapshot and no observed exact
