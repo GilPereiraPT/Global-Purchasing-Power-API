@@ -55,7 +55,7 @@ def source_url(country, spec):
     if country == "GB" and spec["dataset"] == "earn_nt_net":
         return OECD_UK_NET_SOURCE
     return BASE + spec["dataset"] + "?" + urlencode(
-        {"geo": country, "lang": "EN", **spec["filters"]})
+        {"geo": "UK" if country == "GB" else country, "lang": "EN", **spec["filters"]})
 
 
 def decode(payload, country, spec):
@@ -64,7 +64,7 @@ def decode(payload, country, spec):
     expected = {"geo", "time", *spec["filters"]}
     if set(dimensions) != expected or len(dimensions) != len(sizes):
         raise ValueError("Unexpected Eurostat dimensions")
-    chosen = {"geo": country, **spec["filters"]}
+    chosen = {"geo": "UK" if country == "GB" else country, **spec["filters"]}
     indexes = {}
     for name in dimensions:
         mapping = payload["dimension"][name]["category"]["index"]
