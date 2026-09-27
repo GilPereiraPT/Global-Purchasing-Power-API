@@ -30,6 +30,26 @@ INDICATORS = {
     "internet_use": ("IT.NET.USER.ZS", "percent_of_population"),
     "inflation_annual": ("FP.CPI.TOTL.ZG", "annual_percent"),
     "ppp_private_consumption": ("PA.NUS.PRVT.PP", "local_currency_units_per_international_dollar"),
+    # Public World Bank WDI series (source licence: CC BY 4.0 on each indicator page).
+    # Safety: national observations; no claim about city-level security.
+    "intentional_homicides": ("VC.IHR.PSRC.P5", "per_100000_people"),
+    "intentional_homicides_female": ("VC.IHR.PSRC.FE.P5", "per_100000_female"),
+    "intentional_homicides_male": ("VC.IHR.PSRC.MA.P5", "per_100000_male"),
+    "political_stability": ("GOV_WGI_PV_SC", "governance_score_0_100"),
+    "rule_of_law": ("GOV_WGI_RL_SC", "governance_score_0_100"),
+    "battle_related_deaths": ("VC.BTL.DETH", "persons"),
+    # Governance perceptions and sampled Enterprise Surveys (not annual censuses).
+    "control_of_corruption": ("GOV_WGI_CC_SC", "governance_score_0_100"),
+    "bribery_incidence_firms": ("IC.FRM.BRIB.ZS", "percent_of_firms"),
+    "tax_official_gifts_firms": ("IC.TAX.GIFT.ZS", "percent_of_firms"),
+    # Work, health-system resources and the environment.
+    "youth_unemployment": ("SL.UEM.1524.ZS", "percent_of_labor_force_ages_15_24"),
+    "employment_population_ratio": ("SL.EMP.TOTL.SP.ZS", "percent_of_population_ages_15_plus"),
+    "advanced_education_unemployment": ("SL.UEM.ADVN.ZS", "percent_of_advanced_education_labor_force"),
+    "physicians": ("SH.MED.PHYS.ZS", "per_1000_people"),
+    "hospital_beds": ("SH.MED.BEDS.ZS", "per_1000_people"),
+    "out_of_pocket_health_expenditure": ("SH.XPD.OOPC.CH.ZS", "percent_of_current_health_expenditure"),
+    "pm25_air_pollution": ("EN.ATM.PM25.MC.M3", "micrograms_per_cubic_meter"),
 }
 # SH.UHC.SRVS.CV.XD is the archived 2000-2021 WHO index. The official
 # revised SDG 3.8.1 indicator is SH_UHC_SCI (2025 methodology; available
