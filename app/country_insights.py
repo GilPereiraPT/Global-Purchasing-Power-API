@@ -19,6 +19,7 @@ ISO3 = {
 INDICATORS = {
     "life_expectancy": ("SP.DYN.LE00.IN", "years"),
     "unemployment": ("SL.UEM.TOTL.ZS", "percent_of_labor_force"),
+    "gdp_per_capita": ("NY.GDP.PCAP.CD", "USD_current_per_person"),
     "gini": ("SI.POV.GINI", "index_0_100"),
     "health_coverage": ("SH.UHC.SRVS.CV.XD", "index_0_100"),
     "primary_completion": ("SE.PRM.CMPT.ZS", "percent_of_relevant_age_group"),
