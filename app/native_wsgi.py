@@ -559,6 +559,28 @@ def application(environ, start_response):
     if origin != "https://gilpereirapt.github.io":
         origin = None
     path = environ.get("PATH_INFO", "/")
+    normalized = path.rstrip("/")
+    data_manager_actions = {
+        "/v1/admin/data-manager/status": "status",
+        "/v1/admin/data-manager/backup": "backup",
+        "/v1/admin/data-manager/import": "import",
+    }
+    if normalized in data_manager_actions and method == "OPTIONS":
+        if origin != "https://gilpereirapt.github.io":
+            return reply(start_response, {"error": "forbidden_origin"}, 403, "OPTIONS", origin)
+        start_response("204 No Content", [
+            ("Access-Control-Allow-Origin", origin),
+            ("Access-Control-Allow-Methods", "POST, OPTIONS"),
+            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token"),
+            ("Access-Control-Max-Age", "600"),
+            ("Vary", "Origin"),
+            ("Cache-Control", "no-store"),
+            ("Content-Length", "0")])
+        return []
+    if normalized in data_manager_actions and method == "POST":
+        from app.data_manager import handle
+        return handle(environ, start_response, origin,
+                      data_manager_actions[normalized], reply)
     if path.rstrip("/") == "/v1/admin/eurostat/import" and method == "OPTIONS":
         if origin != "https://gilpereirapt.github.io":
             return reply(start_response, {"error": "forbidden_origin"}, 403, "OPTIONS", origin)
