@@ -47,6 +47,32 @@ The actual import endpoint is
 - No data point is labelled as a capital/city result. The recorded statistical
   year is distinct from last successful import time.
 
+## Browser backfill (no cPanel terminal)
+
+The [Data Manager](https://gilpereirapt.github.io/Global-Purchasing-Power-API/data-manager.html)
+now has two dedicated buttons:
+**Novos 16 indicadores deste país** and
+**Novos 16 indicadores dos 14 países**. They select only the 16
+new WDI indicators, use authenticated single-pair requests serially with a
+small pause, and automatically set **missing-only**. They stop after three
+consecutive failures and may be re-run; stored valid observations are skipped.
+An upstream empty series is reported separately from a failed fetch. For the
+14-country button keep the browser tab open until the progress ends.
+
+Before pressing a wave button, enter the existing server-side
+`EARNWAGE_ADMIN_TOKEN` only in the browser, press
+**Verificar acesso e estado**, then
+**Criar e verificar cópia de segurança**. Do not send the token in chat.
+Test Portugal first, then launch the 14-country wave. The protected Data
+Manager must expose all 29 catalogue entries; if it does not, do not
+import or silently fall back to an outdated 13-series catalogue.
+
+The browser imports into the live SQLite through the private
+`/v1/admin/data-manager/import` POST route. GitHub Pages alone cannot
+populate cPanel. The one-off wave is not equivalent to automatic future
+refresh. The configured Actions schedule (if enabled) continues to
+refresh all 29 indicators over the weekly two-country rotation.
+
 ## Deploy / import safely (server administrator)
 
 1. Confirm `GET /v1/health` and export existing `GET /v1/data-inventory`.
