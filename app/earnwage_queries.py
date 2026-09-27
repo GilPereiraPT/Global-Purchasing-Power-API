@@ -7,6 +7,7 @@ from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
+from app.earnwage_history import exact_history
 from app.client_config import region_configuration
 from app.tax_components import components as tax_components
 
@@ -66,8 +67,7 @@ def history(country, occupation, start_year, end_year):
     group = JOBS[occupation]["isco08_major_group"]
     return {"country":code, "occupation":occupation,
             "start_year":start_year, "end_year":end_year,
-            "exact_occupation_history":{"status":"not_implemented",
-                "reason":"Historical exact-occupation importer is not yet connected to this endpoint; latest wage remains in overview."},
+            "exact_occupation_history":exact_history(code, occupation, start_year, end_year),
             "major_group_history":group_history(code, group, start_year, end_year),
             "note":"Group series is independent and cannot be relabelled as exact occupation salary."}
 
