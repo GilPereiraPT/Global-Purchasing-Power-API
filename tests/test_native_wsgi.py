@@ -26,7 +26,7 @@ def test_native_wsgi_health_and_config():
     code, body, headers = request("/v1/health")
     assert code == 200
     assert body["status"] == "ok"
-    assert body["version"] == "0.5.10"
+    assert body["version"] == "0.5.11"
     assert body["runtime"] == "native_wsgi"
     assert headers["Content-Type"].startswith("application/json")
     assert request("/v1/app-config")[1]["product"]["name"] == "EarnWage"
@@ -70,3 +70,18 @@ def test_native_wsgi_partial_fiscal_and_errors():
     assert request("/v1/tax-components/US")[0] == 422
     assert request("/v1/health", {"a": "1"}, method="HEAD")[1] is None
     assert request("/v1/no-such-route")[0] == 404
+
+def test_job_freshness_filters_old_dates_without_faking_unknown_dates():
+    from app.native_wsgi import recent_jobs
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    sample = {"jobs": [
+        {"id": "new", "published_at": (now - timedelta(days=5)).isoformat()},
+        {"id": "old", "published_at": (now - timedelta(days=365)).isoformat()},
+        {"id": "unknown", "published_at": None, "publication_date_status": "unknown"},
+    ]}
+    result = recent_jobs(sample, 180, 100)
+    assert [x["id"] for x in result["jobs"]] == ["new", "unknown"]
+    assert result["excluded_by_age"] == 1
+    assert result["jobs"][1]["age_days"] is None
+    assert recent_jobs(sample, 0, 100)["count"] == 3
