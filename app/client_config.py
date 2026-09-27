@@ -84,7 +84,7 @@ def configuration():
     }
 
 
-def region_configuration(country, region=None, tax_year=2026):
+def region_configuration(country, region=None, tax_year=2026, annual_gross=None):
     country = country.upper()
     if country not in COUNTRY_MAP:
         return None
@@ -95,7 +95,7 @@ def region_configuration(country, region=None, tax_year=2026):
     state_status = None
     if country == "US" and region:
         from app.us_state_tax import state_wage_income_tax
-        state_status = state_wage_income_tax(region, tax_year)["status"]
+        state_status = state_wage_income_tax(region, tax_year, annual_gross)["status"]
     coverage = ("wage_income_tax_only" if state_status == "available" else
                 "partial_components" if state_status == "partial_components" else
                 "not_implemented")
