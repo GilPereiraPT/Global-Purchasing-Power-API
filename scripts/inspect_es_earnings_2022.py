@@ -25,11 +25,11 @@ MAX_ROWS = 30_000
 MAX_DICTIONARY_ROWS = 1000
 MAX_CATEGORIES = 35
 MAX_ENTRIES = 500
-DATA_SUFFIXES = (".csv", ".txt")
+DATA_SUFFIXES = (".csv", ".tab")
 DICTIONARY_SUFFIXES = (".xlsx",)
 OCCUPATION = re.compile(r"(cno|ocupac|occup|profesi)", re.I)
-SALARY = re.compile(r"(ganan|salari|remun|earning|wage|pay|bruto|annual|anual)", re.I)
-WEIGHT = re.compile(r"(factor|ponder|weight|fexp|elevac)", re.I)
+SALARY = re.compile(r"(ganan|salari|remun|earning|wage|pay|bruto|annual|anual|^retri|^vesp|^gextra|^salbase|^comsal)", re.I)
+WEIGHT = re.compile(r"(factor|ponder|weight|fexp|elevac|factotal)", re.I)
 
 
 def _encoding(raw):
@@ -61,7 +61,7 @@ def inspect_csv_file(stream, name, *, max_rows=MAX_ROWS):
     dialect=";"
     probe=head.decode(encoding,errors="replace")
     try:
-        dialect=csv.Sniffer().sniff(probe,delimiters=";,\t|").delimiter
+        dialect="\t" if "\t" in probe.splitlines()[0] else csv.Sniffer().sniff(probe,delimiters=";,\t|").delimiter
     except csv.Error:
         dialect=";" if probe.splitlines()[0].count(";") >= probe.splitlines()[0].count(",") else ","
     # Streaming prefix wrapper: zip readers cannot reliably seek backwards.
@@ -145,6 +145,29 @@ def inspect_dictionary(stream, name):
         workbook.close()
 
 
+def inspect_json_design(stream, name):
+    """Inspect only schema/definitions, never respondent rows or identifiers."""
+    obj=json.load(stream)
+    layout=obj.get("layout")
+    if not isinstance(layout,list) or len(layout)>300:
+        raise ValueError("Unrecognised INE variable design")
+    allowed=("CNO1","CNACE","NUTS1","SEXO","CONTROL","TIPOJOR",
+             "FACTOTAL","RETRINOIN","RETRIIN","VESPNOIN",
+             "VESPIN","GEXTRA","DRELABAM","DRELABAD",
+             "DSIESPA2","DSIESPA4")
+    result=[]
+    for field in layout:
+        if field.get("name") in allowed:
+            result.append({"variable":field["name"],
+                           "description":field.get("description"),
+                           "observations":field.get("observations"),
+                           "length":field.get("length")})
+    return {"file":name,"variables":result,
+            "source_schema_occupations_are_detailed":
+                any(field.get("name") in ("CNO4","CNO_4") for field in layout),
+            "warning":"CNO1=main CNO-11 group, not a 4-digit detailed occupation."}
+
+
 def inspect_zip(path):
     path=Path(path)
     if not path.is_file() or path.stat().st_size>ARCHIVE_MAX_BYTES:
@@ -173,6 +196,9 @@ def inspect_zip(path):
                         reports["csv"].append(inspect_csv_file(raw,n))
                     except (ValueError,UnicodeError,csv.Error) as exc:
                         reports["issues"].append(n+": "+type(exc).__name__+" (inspect its data dictionary)")
+            elif lower == "dr_ees_2022.json":
+                with archive.open(entry) as raw:
+                    reports["source_design"]=inspect_json_design(raw,n)
             elif lower.endswith(DICTIONARY_SUFFIXES):
                 with archive.open(entry) as raw:
                     try:
