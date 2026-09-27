@@ -1,8 +1,13 @@
 name: Prepare verified ILOSTAT major-group salary snapshot
 on:
   workflow_dispatch:
+    inputs:
+      publish_snapshot:
+        description: "Commit validated official group salary snapshot to repository"
+        type: boolean
+        default: false
 permissions:
-  contents: read
+  contents: write
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -25,14 +30,26 @@ jobs:
         run: pip install -r requirements.txt pytest
       - name: Validate and prepare group salary snapshot
         run: |
-          python -m app.ilostat_groups diagnostics/ilostat_groups_raw.csv --output diagnostics/ilostat_group_salaries.json
+          python -m app.ilostat_groups diagnostics/ilostat_groups_raw.csv --output data/ilostat_group_salaries.json
           python -m pytest -q
-      - name: Upload for review, without publishing
+      - name: Commit verified source-backed snapshot when explicitly requested
+        if: ${{ inputs.publish_snapshot == true }}
+        run: |
+          git add data/ilostat_group_salaries.json
+          if git diff --cached --quiet; then
+            echo "Salary snapshot unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: publish validated ILOSTAT major-group earnings"
+          git push
+      - name: Upload for review
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ilostat-major-group-salaries-review
           path: |
             diagnostics/ilostat_groups_raw.csv
-            diagnostics/ilostat_group_salaries.json
+            data/ilostat_group_salaries.json
           if-no-files-found: ignore
