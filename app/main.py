@@ -210,6 +210,12 @@ def occupation_salary(code: str, occupation: str):
     return na_wages.wages(country, occupation) if country in ("US", "CA") else salary(country, occupation)
 
 
+@app.get("/v1/salaries/groups/coverage")
+def ilostat_group_coverage():
+    from app.ilostat_groups import group_coverage
+    return group_coverage()
+
+
 @app.get("/v1/salaries/groups/{code}/{isco08_major_group}")
 def ilostat_major_group_salary(code: str, isco08_major_group: str):
     """Official ILOSTAT ISCO-08 major groups, never individual-job estimates."""
