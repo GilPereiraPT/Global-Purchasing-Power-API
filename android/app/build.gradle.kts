@@ -10,9 +10,19 @@ android {
         applicationId = "com.earnwage.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.6.0"
         buildConfigField("String", "API_BASE_URL", "\"https://earnwage-api.policlinicosdesantoandre.com\"")
+    }
+    buildTypes {
+        getByName("release") {
+            // Internal testing only: optimized release signed with the Android debug key.
+            // Use the production upload keystore before any Play Store submission.
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -25,7 +35,4 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    debugImplementation("androidx.compose.ui:ui-tooling")
 }
