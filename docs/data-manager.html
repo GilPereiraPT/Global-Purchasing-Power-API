@@ -69,6 +69,7 @@ code{word-break:break-word}
 <button id="one">Importar indicador selecionado</button>
 <button class="secondary" id="countryAll">Todos os indicadores deste país</button>
 <button class="secondary" id="essentials">Inflação anual + PPC dos 14 países</button>
+<button class="secondary" id="gdpAll">PIB per capita dos 14 países</button>
 <button class="danger" id="stop" disabled>Parar após o pedido atual</button>
 </div>
 <div class="progress"><div id="bar"></div></div>
@@ -114,7 +115,7 @@ function report(t){$("status").textContent=t}
 function busy(on){
 working=on;
 for(const id of ["check","inventory","backup","preview","one","countryAll","essentials",
-                 "history","source","country","indicator","mode"])$(id).disabled=on;
+                 "history","gdpAll","source","country","indicator","mode"])$(id).disabled=on;
 $("stop").disabled=!on;
 }
 function smallCard(title,value,note){
@@ -313,6 +314,11 @@ $("source").value="world_bank";updateOptions();
 $("mode").value="missing";
 startBatch(fallbackCountries.flatMap(c=>[
 ["world_bank",c,"inflation_annual"],["world_bank",c,"ppp_private_consumption"]]),false);
+};
+$("gdpAll").onclick=()=>{
+$("source").value="world_bank";updateOptions();
+$("mode").value="missing";
+startBatch(fallbackCountries.map(c=>["world_bank",c,"gdp_per_capita"]),false);
 };
 $("stop").onclick=()=>{stopped=true;report("A interromper após o pedido atual…")};
 $("history").onclick=()=>standalone(status,"A consultar o histórico…");
