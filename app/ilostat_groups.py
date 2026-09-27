@@ -30,7 +30,7 @@ def build_snapshot(csv_path):
     with open(csv_path, encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
         required = {"ref_area","source","indicator","sex","classif1",
-                    "classif2","time","obs_value"}
+                    "classif2","time","obs_value","best_source"}
         if not required.issubset(reader.fieldnames or []):
             raise ValueError("Missing official ILOSTAT columns")
         for row in reader:
@@ -38,7 +38,7 @@ def build_snapshot(csv_path):
             match = GROUP_RE.fullmatch(row["classif1"])
             unit = UNITS.get(row["classif2"])
             if (not country or not match or not unit or
-                    row["sex"] != "SEX_T" or
+                    row["sex"] != "SEX_T" or row["best_source"] != "1" or
                     row["indicator"] != INDICATOR or
                     not YEAR_RE.fullmatch(row["time"])):
                 continue
@@ -54,6 +54,7 @@ def build_snapshot(csv_path):
                 "unit_type":unit,
                 "currency": COUNTRY_MAP[country]["currency"] if unit == "local_currency" else None,
                 "value":value, "source_code":row["source"],
+                "best_source":True,
                 "indicator":INDICATOR, "dataset":DATASET,
                 "source_url":SOURCE_URL,
                 "precision":"isco08_major_group",
