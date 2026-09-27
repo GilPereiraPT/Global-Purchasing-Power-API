@@ -97,7 +97,8 @@ def region_configuration(country, region=None, tax_year=2026, annual_gross=None)
         from app.us_state_tax import state_wage_income_tax
         state_status = state_wage_income_tax(region, tax_year, annual_gross)["status"]
     coverage = ("wage_income_tax_only" if state_status == "available" else
-                "partial_components" if state_status == "partial_components" else
+                "partial_components" if state_status == "partial_components" or
+                (country == "US" and region == "NY" and tax_year == 2026) else
                 "not_implemented")
     return {
         "country": country, "visible": True, "required_for_initial_comparison": False,
