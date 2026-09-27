@@ -107,8 +107,13 @@ indicator health_coverage, mode missing, import once. Verify index 0-100,
 source WHO, year (expected <= 2023 in this source release), and nonzero
 historical observation count. Then fill remaining countries individually.
 
-The GitHub Actions periodic runner still EXCLUDES health_coverage pending
-positive production trial; enable it only after a successful real import.
+Production imports completed on 2026-09-27: all 14 EarnWage countries report
+health_coverage available, with 24 observations per country. Portugal was
+confirmed first, then all remaining 13 countries succeeded. The weekly GitHub
+Actions world_bank refresh now INCLUDES health_coverage automatically; no
+additional server upload, scheduled variable, or new token is required.
+The user-provided Data Manager audit is the evidence for the imports; do not
+confuse successful imports with confirmation of all countries' latest values.
 
 ## 6. Exact occupation wages
 The export shows no exact ILOSTAT salary snapshot and no observed exact
