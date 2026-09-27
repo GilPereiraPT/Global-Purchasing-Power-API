@@ -86,3 +86,18 @@ def test_group_context_does_not_replace_exact_profession_wage():
         assert comparison.status_code == 200
         assert comparison.json()["country_a"]["national_major_group_context"]["precision"] == "isco08_major_group"
         assert comparison.json()["country_a"]["national_occupation_wage"]["status"] == "unavailable"
+
+
+def test_all_40_jobs_have_curated_group_and_fallback_is_explicit():
+    with TestClient(app) as client:
+        jobs = client.get("/v1/occupations?lang=pt").json()["occupations"]
+        assert len(jobs) == 40
+        assert all(job["isco08_major_group"] in "123456789" for job in jobs)
+        for job in jobs:
+            if job["isco08"] is not None:
+                assert job["isco08_major_group"] == job["isco08"][0]
+        pt = client.get("/v1/earnwage/overview?country=PT&occupation=nurse").json()
+        assert pt["salary_display"]["source"] == "isco08_major_group_context"
+        assert pt["national_occupation_wage"]["status"] == "unavailable"
+        ca = client.get("/v1/earnwage/overview?country=CA&occupation=nurse").json()
+        assert ca["salary_display"]["source"] == "exact_occupation"
