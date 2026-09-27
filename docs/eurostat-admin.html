@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EarnWage · Administração Eurostat</title>
+<title>EarnWage · Administração de indicadores económicos</title>
 <style>
 :root{font:16px system-ui,Arial,sans-serif;background:#f3f7f8;color:#16343c}*{box-sizing:border-box}
 body{margin:0}header{background:#102d38;color:white;padding:24px max(16px,calc((100vw - 920px)/2))}
@@ -16,7 +16,7 @@ button:disabled{opacity:.55;cursor:wait}.secondary{background:#dcefe9;color:#165
 small{color:#5d737b}table{width:100%;border-collapse:collapse}th,td{text-align:left;border-bottom:1px solid #e3eaeb;padding:9px;font-size:.9rem}
 .scroll{overflow-x:auto}#status{font-weight:650}
 </style></head><body>
-<header><a href="./">← EarnWage API Lab</a><h1>Administração Eurostat</h1><p>Importação manual de indicadores oficiais, sem Terminal. A chave nunca é guardada no navegador.</p></header>
+<header><a href="./">← EarnWage API Lab</a><h1>Administração de indicadores económicos</h1><p>Importação manual de indicadores oficiais, sem Terminal. A chave nunca é guardada no navegador.</p></header>
 <main><section><h2>1. Acesso protegido</h2>
 <p>Esta página só consegue importar dados quando o servidor tiver a variável <code>EARNWAGE_ADMIN_TOKEN</code> configurada com uma chave privada de pelo menos 32 caracteres. Não publiques a chave no GitHub nem a envies por mensagem.</p>
 <label for="api">Endereço da API</label><input id="api" value="https://earnwage-api.policlinicosdesantoandre.com" spellcheck="false">
@@ -43,6 +43,7 @@ hicp_annual_change_monthly:"Inflação harmonizada (homóloga mensal)",
 household_price_level_eu27:"Nível de preços do consumo doméstico",
 net_annual_earnings_reference:"Salário líquido anual de referência"
 };
+const labelFor=(country,name)=>country==="GB"&&name==="hicp_annual_change_monthly"?"Inflação CPI (ONS, não HICP)":indicators[name]||name;
 const $=id=>document.getElementById(id);
 for(const code of countries)$("country").add(new Option(code,code));
 for(const [code,label] of Object.entries(indicators))$("indicator").add(new Option(label,code));
@@ -57,7 +58,7 @@ if(!response.ok)throw Error("HTTP "+response.status);
 const data=await response.json();$("rows").replaceChildren();
 for(const country of data.countries)for(const [name,observation] of Object.entries(country.indicators)){
 const tr=document.createElement("tr");
-for(const text of [country.country,indicators[name]||name,observation.status,
+for(const text of [country.country,labelFor(country.country,name),observation.status,
 observation.period||"—",observation.value===null?"—":String(observation.value)]){
 const td=document.createElement("td");td.textContent=text;tr.append(td)}
 $("rows").append(tr)}
@@ -82,7 +83,7 @@ if(running)return;stopped=false;busy(true);let ok=0,failed=0;
 try{
 for(const [country,indicator] of items){
 if(stopped)break;
-$("status").textContent="A atualizar "+country+" · "+indicators[indicator]+" ("+(ok+failed+1)+"/"+items.length+")";
+$("status").textContent="A atualizar "+country+" · "+labelFor(country,indicator)+" ("+(ok+failed+1)+"/"+items.length+")";
 try{const result=await importOne(country,indicator);if(result.import_status==="failed")failed++;else ok++}
 catch(error){failed++;log(country+" · "+indicator+" · ERRO: "+error.message);
 if(/unauthorized|admin_not_configured|forbidden_origin|Failed to fetch/.test(error.message))break}
