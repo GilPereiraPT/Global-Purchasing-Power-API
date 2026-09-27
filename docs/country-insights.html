@@ -18,6 +18,7 @@
 <section class="panel"><h2>Comparar países</h2><p class="muted">Seleciona entre dois e cinco países. São comparados os mesmos indicadores, mas o ano de cada observação é mostrado individualmente.</p>
 <div id="comparePick" class="comparepick"></div><div class="actions"><button id="compare">Comparar países</button></div>
 <p id="compareStatus" class="muted" role="status" aria-live="polite"></p><div class="scroll" id="compareTable"></div><hr style="border:0;border-top:1px solid #dce8e9;margin:25px 0"><h3>Evolução histórica comparada</h3><p class="muted">Utiliza os países assinalados acima (2–5), o indicador e o intervalo de anos. Uma linha por país; os anos sem observações não são preenchidos nem ligados artificialmente.</p><div class="controls"><div><label for="compareMetric">Indicador</label><select id="compareMetric"></select></div><div><label for="compareStart">Ano inicial</label><input id="compareStart" type="number" min="1960" max="2100" value="2000"></div><div><label for="compareEnd">Ano final</label><input id="compareEnd" type="number" min="1960" max="2100" value="2026"></div></div><div class="actions"><button id="compareHistory">Comparar evolução histórica</button></div><p id="compareHistoryStatus" class="muted" role="status" aria-live="polite"></p><div id="compareLegend" class="legend"></div><div id="compareChart" class="chartbox" role="img" aria-label="Gráfico de evolução histórica comparada"></div><div id="compareHistoryTable" class="scroll"></div></section>
+<section class="panel" id="auditPanel"><h2>Estado da importação · 14 países</h2><p class="muted">Auditoria em tempo real dos indicadores guardados na API. Não executa importações nem altera a base de dados. Um indicador sem observações não significa necessariamente erro.</p><div class="actions"><button id="auditBtn" type="button">Verificar os 14 países</button></div><p id="auditStatus" class="muted status" role="status" aria-live="polite">Clica para consultar a cobertura dos países.</p><div id="auditSummary" class="grid"></div><div id="auditTable" class="scroll"></div><div id="auditDetails"></div></section>
 <section class="panel"><h2>Metodologia e limitações</h2><p>Fonte: <a href="https://data.worldbank.org/" target="_blank" rel="noopener">World Bank — World Development Indicators</a>. Os valores são séries oficiais armazenadas pela EarnWage e atualizadas semanalmente, dois países por dia. A atualização agendada não implica a publicação de um novo valor estatístico.</p>
 <p>Acesso a água e saneamento refere-se aos conceitos de serviços geridos de forma segura; não mede o preço nem garante acesso individual. O índice de Gini mede desigualdade e não rendimento. A conclusão do ensino primário pode exceder 100% pela metodologia do indicador. Um valor de alfabetização antigo continua identificado pelo respetivo ano.</p>
 <p>O indicador de cobertura de saúde UHC poderá aparecer indisponível enquanto a série não estiver validada. O Gallup Law and Order Index não está integrado: não substituímos segurança percecionada por homicídios nem apresentamos valores sem direitos de reutilização. Os dados não constituem um índice composto nem um ranking de países.</p></section>
@@ -87,4 +88,68 @@ $("compareHistoryStatus").textContent=METRICS[metric][0]+" · "+start+"–"+end+
 }catch(e){$("compareHistoryStatus").textContent="Erro: "+e.message}finally{setBusy(button,false)}
 }
 $("load").addEventListener("click",loadCountry);$("compareHistory").addEventListener("click",compareHistory);$("draw").addEventListener("click",loadHistory);$("historyBtn").addEventListener("click",()=>{$("metric").focus();$("metric").scrollIntoView({behavior:"smooth",block:"center"})});$("compare").addEventListener("click",compare);countrySelect.addEventListener("change",loadCountry);loadCountry();
+
+async function auditCoverage(){
+ const btn=$("auditBtn"),summary=$("auditSummary"),tableTarget=$("auditTable"),details=$("auditDetails");
+ setBusy(btn,true);summary.replaceChildren();tableTarget.replaceChildren();details.replaceChildren();
+ $("auditStatus").textContent="A consultar os 14 países…";
+ const codes=Object.keys(COUNTRIES),results=[];
+ try{
+  // Three concurrent requests keep the audit responsive without overloading shared hosting.
+  for(let i=0;i<codes.length;i+=3){
+   const batch=await Promise.all(codes.slice(i,i+3).map(async code=>{
+    try{return {code,data:await get("/v1/countries/"+code+"/indicators")}}
+    catch(error){return {code,error:error.message}}
+   }));
+   results.push(...batch);
+   $("auditStatus").textContent="Consultados "+results.length+" de "+codes.length+" países…";
+  }
+  const metrics=Object.keys(METRICS).filter(key=>key!=="safety");
+  let available=0,missing=0,failed=0,notImported=0,unreachable=0;
+  const table=document.createElement("table"),head=document.createElement("tr");
+  ["País","Com dados","Sem observações","Atualização falhada","Não importados"].forEach(v=>text(head,"th",v));
+  table.append(head);
+  for(const row of results){
+   const tr=document.createElement("tr");text(tr,"td",COUNTRIES[row.code]+" ("+row.code+")");
+   if(row.error){
+    unreachable++;const td=text(tr,"td","Erro de acesso à API: "+row.error);td.colSpan=4;
+   }else{
+    let a=0,m=0,f=0,n=0;const notes=[];
+    for(const key of metrics){
+     const item=row.data.indicators&&row.data.indicators[key];
+     const hasValue=!!item&&item.value!==null&&item.value!==undefined&&item.status==="available";
+     if(hasValue)a++;else m++;
+     const refresh=item&&item.refresh_status;
+     if(!item||refresh==="not_imported"||item.status==="not_imported")n++;
+     else if(refresh&&refresh!=="available"&&refresh!=="empty")f++;
+     if(!hasValue||refresh&&refresh!=="available"){
+      notes.push((METRICS[key]||[key])[0]+": "+(hasValue?"valor anterior guardado; ":"sem observações; ")+
+       "atualização "+(refresh||"não identificada")+
+       (item&&item.error_type?" ("+item.error_type+")":"")+
+       (item&&item.last_attempt?"; tentativa "+new Date(item.last_attempt).toLocaleString("pt-PT"):""));
+     }
+    }
+    available+=a;missing+=m;failed+=f;notImported+=n;
+    [a+"/"+metrics.length,m,f,n].forEach(v=>text(tr,"td",String(v)));
+    if(notes.length){
+     const box=document.createElement("details"),heading=document.createElement("summary");
+     heading.textContent=COUNTRIES[row.code]+" — "+notes.length+" indicadores a verificar";
+     box.append(heading);const ul=document.createElement("ul");
+     for(const note of notes)text(ul,"li",note);box.append(ul);details.append(box);
+    }
+   }
+   table.append(tr);
+  }
+  tableTarget.append(table);
+  for(const [label,value] of [["Países consultados",codes.length-unreachable+"/"+codes.length],["Indicadores com dados",available],["Sem observações",missing],["Atualizações falhadas",failed],["Não importados",notImported]]){
+   const tile=document.createElement("article");tile.className="tile";
+   text(tile,"h3",label);text(tile,"div",String(value),"value");summary.append(tile);
+  }
+  $("auditStatus").textContent=unreachable?
+   "Auditoria parcial: "+unreachable+" país(es) sem resposta da API. Os valores em falta nesses países não foram classificados.":
+   "Auditoria concluída. A disponibilidade estatística e o estado da última atualização são apresentados separadamente.";
+ }catch(error){$("auditStatus").textContent="Não foi possível concluir a auditoria: "+error.message}
+ finally{setBusy(btn,false)}
+}
+$("auditBtn").addEventListener("click",auditCoverage);
 </script></body></html>
