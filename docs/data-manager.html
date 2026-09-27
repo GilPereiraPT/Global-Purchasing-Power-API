@@ -150,8 +150,12 @@ headers:{"Content-Type":"application/json","X-EarnWage-Admin-Token":token},
 body:JSON.stringify(payload)});
 let body;
 try{body=await r.json()}catch{throw Error("Resposta HTTP "+r.status+" inválida");}
-if(!r.ok)throw Error((body.error||body.detail||"HTTP "+r.status)+
+if(!r.ok){
+if(r.status===409 && body.import_status==="backup_required")
+ throw Error("backup_required · Antes de importar, utiliza a secção 2 para criar e verificar uma cópia de segurança.");
+throw Error((body.error||body.detail||"HTTP "+r.status)+
  (body.note?" · "+body.note:""));
+}
 return body;
 }
 async function status(){
@@ -206,6 +210,14 @@ if(working)return;
 stopped=false;busy(true);
 let available=0,skipped=0,failed=0;
 try{
+if(!dryRun){
+ const gate=await status();
+ if(!gate.backups || gate.backups.length===0){
+  const reason="Importação não iniciada: cria primeiro uma cópia de segurança na secção 2.";
+  log(reason);report(reason);$("progress").textContent=reason;
+  return;
+ }
+}
 for(let i=0;i<pairs.length;i++){
 if(stopped)break;
 const [source,country,indicator]=pairs[i];
