@@ -155,7 +155,7 @@ internal fun CountryInsightsDashboard(
         }finally{loading=false}
     }
     LaunchedEffect(tab,historyRequest) {
-        if(tab!=1) return@LaunchedEffect
+        if(tab !in listOf(0,1)) return@LaunchedEffect
         historiesLoading=true;historicalError="";historyData=emptyMap()
         val start=fromYear.toIntOrNull();val end=toYear.toIntOrNull()
         if(start==null || end==null || start !in 1960..2100 || end !in 1960..2100 || start>end){
@@ -165,7 +165,7 @@ internal fun CountryInsightsDashboard(
         }
         val result=mutableMapOf<String,List<Pair<Int,Double>>>()
         try{
-            for(code in countries) {
+            for(code in (if(tab==0) listOf(single) else countries)) {
                 try {
                     val obj=getDashboardJson("/v1/countries/"+code+"/indicators/"+
                         metricKey+"?history=true")
@@ -207,7 +207,7 @@ internal fun CountryInsightsDashboard(
         when(tab){
             0 -> {
                 DashboardCountryMenu(localeText(pt,"País","Country"),allowed,single) {
-                    single=it;singleData=null;singleRequest++
+                    single=it;singleData=null;historyData=emptyMap();singleRequest++;historyRequest++
                 }
                 if(loading) LinearProgressIndicator(Modifier.fillMaxWidth())
                 if(error.isNotBlank())DashboardRetry(error) {singleRequest++}
@@ -224,6 +224,35 @@ internal fun CountryInsightsDashboard(
                     IndicatorTile(IndicatorSpec("safety","Segurança percecionada",
                         "Perceived safety","índice 0–100","index 0–100",3),
                         values.optJSONObject("safety"),pt)
+                }
+                HorizontalDivider()
+                Text(localeText(pt,"Evolução histórica","Historical trends"),
+                    fontSize=20.sp,fontWeight=FontWeight.Bold)
+                DashboardMetricMenu(metrics,metricKey,pt) {
+                    metricKey=it;historyRequest++
+                }
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(fromYear,{fromYear=it},Modifier.weight(1f),
+                        label={Text(localeText(pt,"De","From"))},singleLine=true)
+                    OutlinedTextField(toYear,{toYear=it},Modifier.weight(1f),
+                        label={Text(localeText(pt,"Até","To"))},singleLine=true)
+                }
+                Button(onClick={historyRequest++},Modifier.fillMaxWidth()) {
+                    Text(localeText(pt,"Atualizar gráfico","Refresh chart"))
+                }
+                if(historiesLoading)LinearProgressIndicator(Modifier.fillMaxWidth())
+                if(historicalError.isNotBlank())Text(historicalError,
+                    color=MaterialTheme.colorScheme.error)
+                if(!historiesLoading && historyData.isNotEmpty()) {
+                    TrendChart(historyData,listOf(single),placeName,pt)
+                    val spec=metrics.firstOrNull{it.key==metricKey}
+                    historyData[single].orEmpty().takeLast(15).reversed().forEach{(year,value)->
+                        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){
+                            Text(year.toString(),fontSize=12.sp)
+                            Text(dec(value)+" "+(spec?.let{unit(it,pt)}?:""),
+                                fontWeight=FontWeight.SemiBold,fontSize=12.sp)
+                        }
+                    }
                 }
             }
             1 -> {
