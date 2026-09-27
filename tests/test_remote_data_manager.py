@@ -58,8 +58,11 @@ def test_auto_backup_then_bounded_import(monkeypatch):
                for route, item in invoked if route == "import")
 
 
-def test_unvalidated_uhc_excluded_only_from_automatic_plan():
+def test_verified_who_uhc_included_in_weekly_automatic_plan():
     indicators = ("life_expectancy", "health_coverage", "gdp_per_capita")
     rows = runner.plan("world_bank", "PT", weekday=0, indicators=indicators)
-    assert [item[2] for item in rows] == ["life_expectancy", "gdp_per_capita"]
-    assert "health_coverage" in runner.PENDING_SOURCE_REVIEW
+    assert [item[2] for item in rows] == list(indicators)
+    for day in range(7):
+        scheduled = runner.plan("world_bank", "AUTO", weekday=day,
+                                indicators=indicators)
+        assert len([row for row in scheduled if row[2] == "health_coverage"]) == 2
