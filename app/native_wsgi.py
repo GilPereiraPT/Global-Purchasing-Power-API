@@ -224,6 +224,9 @@ def dispatch(path, q):
                     "health": "/v1/health", "documentation": "See README.md in GitHub"}
     if path == "/v1/app-config":
         return configuration()
+    if path == "/v1/data-inventory":
+        from app.data_inventory import build_inventory
+        return build_inventory()
     if path == "/v1/earnwage/coverage":
         return ew.coverage()
     if path == "/v1/earnwage/history":
