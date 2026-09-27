@@ -54,11 +54,15 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     region_check(code, region)
     selected = COUNTRY_MAP[code]
     wage = wage_for(code, occupation)
-    isco = JOBS[occupation]["isco08"]
-    major_group = str(isco)[0] if isco and str(isco)[0] in "123456789" else None
+    major_group = JOBS[occupation]["isco08_major_group"]
     group_context = (group_salary(code, major_group) if major_group else {
         "status": "unavailable", "precision": "isco08_major_group",
         "reason": "No validated ISCO-08 major-group mapping"})
+    exact_available = wage.get("status") == "available"
+    group_available = (group_context.get("status") == "available" and
+                       any(v.get("status") == "available" for v in group_context.get("values", {}).values()))
+    display_source = ("exact_occupation" if exact_available else
+                      "isco08_major_group_context" if group_available else "unavailable")
     warnings = []
     if code == "US":
         warnings.append("Federal components only; state and local tax models are not implemented.")
@@ -81,6 +85,18 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                    "regional_tax_model_status": "not_implemented" if code in ("US","CA") else "not_applicable"},
         "national_occupation_wage": wage,
         "national_major_group_context": group_context,
+        "salary_display": {
+            "source": display_source,
+            "status": "available" if display_source != "unavailable" else "unavailable",
+            "precision": "occupation" if exact_available else
+                         "isco08_major_group" if group_available else None,
+            "isco08_major_group": major_group,
+            "group_mapping_caution": JOBS[occupation]["group_mapping_caution"],
+            "note": ("Group earnings are context only, not the salary of this occupation."
+                     if display_source == "isco08_major_group_context" else
+                     "Exact occupation observation shown; group context remains separate."
+                     if exact_available else "No validated earnings available."),
+        },
         "tax_scenario": fiscal_context(code, region, annual_gross, tax_year),
         "capital_cost_of_living": {"status": "unavailable", "value": None},
         "net_purchasing_power": {"status": "unavailable", "value": None},
