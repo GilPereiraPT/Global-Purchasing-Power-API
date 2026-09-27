@@ -47,8 +47,8 @@ hour if necessary.
 Monday PT ES; Tuesday DE FR; Wednesday GB IE; Thursday NL CH;
 Friday IT US; Saturday CA BR; Sunday IN PK.
 
-Each of the ten indicators is requested **sequentially** with a one-second
-pause, for at most 20 requests per day. A timeout or an empty series never
+Each of the 13 World Bank indicators is requested **sequentially** with a one-second
+pause, for at most 26 requests per day (two countries). A timeout or an empty series never
 deletes an older valid observation. The log records each indicator outcome.
 A failed run exits with code 1 for monitoring; it does not retry immediately
 and will be retried on the next scheduled cycle.
