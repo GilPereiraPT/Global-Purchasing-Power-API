@@ -6,11 +6,70 @@ They do not trigger Remotive, Eurostat or ECB traffic on every screen render.
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
-from app.ilostat_groups import group_salary
+from app.ilostat_groups import group_salary, group_history
 from app.client_config import region_configuration
 from app.tax_components import components as tax_components
 
 JOBS = {job["id"]: job for job in OCCUPATIONS}
+
+
+
+def annual_presentation(wage, group_context):
+    """Source-preserving annual display. Never guess contractual 13th/14th payments."""
+    if wage.get("status") == "available":
+        observations = wage.get("observations")
+        if observations:
+            preferred = next((o for o in observations if o.get("measure") == "mean"
+                              and o.get("unit", "").endswith("/year")), None)
+            if preferred is None:
+                preferred = next((o for o in observations if o.get("unit", "").endswith("/year")), None)
+            if preferred is not None:
+                return {"status":"available", "value":preferred["value"],
+                        "currency":preferred["currency"], "unit":"per_year",
+                        "kind":"reported_annual", "reference_period":preferred["reference_period"],
+                        "source":preferred["source"], "monthly_optional":preferred["value"]/12,
+                        "monthly_kind":"annual_divided_by_12",
+                        "payments_per_year":None, "payments_verified":False,
+                        "note":"Published annual wage; monthly figure is annual/12, not contractual monthly pay."}
+        if wage.get("unit", "").startswith("monthly"):
+            return {"status":"available", "value":wage["value"]*12,
+                    "currency":wage["currency"], "unit":"per_year",
+                    "kind":"annualized_12_month_equivalent",
+                    "reference_period":wage["period"], "source":wage["source"],
+                    "monthly_optional":wage["value"], "monthly_kind":"reported_monthly",
+                    "payments_per_year":None, "payments_verified":False,
+                    "note":"Monthly earnings × 12 for comparison only. This is not verified total annual remuneration; extra payments are not assumed."}
+    if group_context.get("status") == "available":
+        v = group_context["values"].get("local_currency", {})
+        if v.get("status") == "available":
+            return {"status":"available", "value":v["value"]*12,
+                    "currency":v["currency"], "unit":"per_year",
+                    "kind":"group_annualized_12_month_equivalent",
+                    "reference_period":group_context["period"], "source":"ILOSTAT",
+                    "monthly_optional":v["value"], "monthly_kind":"reported_group_monthly",
+                    "payments_per_year":None, "payments_verified":False,
+                    "precision":"isco08_major_group",
+                    "note":"Group monthly earnings × 12, not the occupation's annual remuneration. No 13th/14th/15th payment is inferred."}
+    return {"status":"unavailable", "value":None, "unit":"per_year",
+            "reason":"No unambiguous annual or monthly local-currency observation"}
+
+
+def history(country, occupation, start_year, end_year):
+    """Separate history tab; never merge group observations with exact wages."""
+    code = country.upper()
+    if code not in COUNTRY_MAP:
+        raise LookupError("Unknown country")
+    if occupation not in JOBS:
+        raise ValueError("Unknown occupation")
+    if not 1900 <= start_year <= end_year <= 2100 or end_year-start_year > 100:
+        raise ValueError("Invalid history year range")
+    group = JOBS[occupation]["isco08_major_group"]
+    return {"country":code, "occupation":occupation,
+            "start_year":start_year, "end_year":end_year,
+            "exact_occupation_history":{"status":"not_implemented",
+                "reason":"Historical exact-occupation importer is not yet connected to this endpoint; latest wage remains in overview."},
+            "major_group_history":group_history(code, group, start_year, end_year),
+            "note":"Group series is independent and cannot be relabelled as exact occupation salary."}
 
 
 def region_check(country, region):
@@ -85,6 +144,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                    "regional_tax_model_status": "not_implemented" if code in ("US","CA") else "not_applicable"},
         "national_occupation_wage": wage,
         "national_major_group_context": group_context,
+        "annual_presentation": annual_presentation(wage, group_context),
         "salary_display": {
             "source": display_source,
             "status": "available" if display_source != "unavailable" else "unavailable",
