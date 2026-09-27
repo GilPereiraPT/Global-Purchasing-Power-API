@@ -86,9 +86,9 @@ def test_official_tab_and_json_variable_design_without_employee_data(tmp_path):
     ]}
     with zipfile.ZipFile(zpath,"w",zipfile.ZIP_DEFLATED) as z:
         z.writestr("CSV/EES_2022.tab",
-                   "CNO1\\tFACTOTAL\\tRETRINOIN\\n"
-                   "B0\\t1.5\\t35000\\n"
-                   "H0\\t2.0\\t24000\\n")
+                   "CNO1\tFACTOTAL\tRETRINOIN\n"
+                   "B0\t1.5\t35000\n"
+                   "H0\t2.0\t24000\n")
         z.writestr("dr_EES_2022.json",json.dumps(design))
         z.writestr("md_EES_2022.txt","FIXEDWIDTHSECRET")
     result=inspect_zip(zpath)
