@@ -101,7 +101,7 @@ def fiscal_context(country, region, annual_gross, tax_year):
         result = tax_components(country, annual_gross, tax_year=tax_year,
                                 province=region if country == "CA" else None)
         if country == "US":
-            result["state_wage_income_tax"] = state_wage_income_tax(region, tax_year)
+            result["state_wage_income_tax"] = state_wage_income_tax(region, tax_year, annual_gross)
         return result
     return tax_components(country, annual_gross, tax_year=tax_year)
 
@@ -128,7 +128,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                       "isco08_major_group_context" if group_available else "unavailable")
     warnings = []
     if code == "US":
-        warnings.append("Federal components only; state and local tax models are not implemented.")
+        warnings.append("Federal components and selected state wage/payroll components only; complete state and local tax models are not implemented.")
     elif code == "CA":
         warnings.append("Federal/provincial income tax models are not implemented; Quebec payroll differs.")
     if wage.get("status") == "available":
@@ -144,7 +144,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "occupation": {"id": occupation, "label": JOBS[occupation]["translations"]["en"],
                        "translations": JOBS[occupation]["translations"],
                        "isco08": JOBS[occupation]["isco08"]},
-        "region": {"selected": region, "ui": region_configuration(code),
+        "region": {"selected": region, "ui": region_configuration(code, region, tax_year),
                    "regional_tax_model_status": ("wage_income_tax_only" if code == "US" and region and
                      state_wage_income_tax(region, tax_year).get("status") == "available"
                      else "not_implemented" if code in ("US","CA") else "not_applicable")},
