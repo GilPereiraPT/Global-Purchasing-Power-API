@@ -51,6 +51,27 @@ INDICATORS = {
     "out_of_pocket_health_expenditure": ("SH.XPD.OOPC.CH.ZS", "percent_of_current_health_expenditure"),
     "pm25_air_pollution": ("EN.ATM.PM25.MC.M3", "micrograms_per_cubic_meter"),
 }
+# Attribution is additive: the public data distributor remains the World Bank WDI.
+# Do not turn perception scores, business survey samples or battle death counts
+# into city-crime rates, annual censuses or implicit zeroes for missing countries.
+INDICATOR_METADATA = {
+    "intentional_homicides": ("safety", "UNODC"),
+    "intentional_homicides_female": ("safety", "UNODC"),
+    "intentional_homicides_male": ("safety", "UNODC"),
+    "political_stability": ("safety", "World Bank Worldwide Governance Indicators"),
+    "rule_of_law": ("safety", "World Bank Worldwide Governance Indicators"),
+    "battle_related_deaths": ("safety", "Uppsala Conflict Data Program"),
+    "control_of_corruption": ("corruption", "World Bank Worldwide Governance Indicators"),
+    "bribery_incidence_firms": ("corruption", "World Bank Enterprise Surveys"),
+    "tax_official_gifts_firms": ("corruption", "World Bank Enterprise Surveys"),
+    "youth_unemployment": ("employment", "ILOSTAT ILO modelled estimates"),
+    "employment_population_ratio": ("employment", "ILOSTAT ILO modelled estimates"),
+    "advanced_education_unemployment": ("employment", "ILOSTAT Education and Mismatch Indicators"),
+    "physicians": ("health", "WHO Global Health Workforce Statistics"),
+    "hospital_beds": ("health", "WHO and country health statistics"),
+    "out_of_pocket_health_expenditure": ("health", "WHO Global Health Expenditure Database"),
+    "pm25_air_pollution": ("environment", "Global Burden of Disease air pollution estimates"),
+}
 # SH.UHC.SRVS.CV.XD is the archived 2000-2021 WHO index. The official
 # revised SDG 3.8.1 indicator is SH_UHC_SCI (2025 methodology; available
 # years include 2000-2023). It is not a population coverage percentage.
