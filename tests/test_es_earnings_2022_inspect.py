@@ -72,3 +72,32 @@ def test_rejects_empty_csv_without_exporting_data():
         assert "Empty" in str(exc)
     else:
         assert False,"Empty source must not be silently accepted"
+
+
+def test_official_tab_and_json_variable_design_without_employee_data(tmp_path):
+    """Actual official ZIP contains a TSV called CSV/EES_2022.tab and a JSON layout."""
+    zpath=tmp_path/"synthetic_ine_package.zip"
+    design={"layout":[
+        {"name":"IDENCCC","description":"Centro identifier","length":8},
+        {"name":"CNO1","description":"CODIGO DE OCUPACION",
+         "observations":"GRUPO PRINCIPAL CNO-11","length":2},
+        {"name":"FACTOTAL","description":"FACTOR DE ELEVACIÓN","length":12},
+        {"name":"RETRINOIN","description":"Annual earnings","length":9}
+    ]}
+    with zipfile.ZipFile(zpath,"w",zipfile.ZIP_DEFLATED) as z:
+        z.writestr("CSV/EES_2022.tab",
+                   "CNO1\\tFACTOTAL\\tRETRINOIN\\n"
+                   "B0\\t1.5\\t35000\\n"
+                   "H0\\t2.0\\t24000\\n")
+        z.writestr("dr_EES_2022.json",json.dumps(design))
+        z.writestr("md_EES_2022.txt","FIXEDWIDTHSECRET")
+    result=inspect_zip(zpath)
+    assert len(result["csv"])==1
+    assert result["csv"][0]["sample_rows_read"]==2
+    assert result["csv"][0]["occupation_fields"][0]["code_lengths"]==[2]
+    assert result["csv"][0]["salary_field_candidates"]==["RETRINOIN"]
+    assert result["csv"][0]["weight_field_candidates"]==["FACTOTAL"]
+    assert result["source_design"]["source_schema_occupations_are_detailed"] is False
+    assert result["source_design"]["variables"][0]["variable"]=="CNO1"
+    assert "35000" not in json.dumps(result)
+    assert "FIXEDWIDTHSECRET" not in json.dumps(result)
