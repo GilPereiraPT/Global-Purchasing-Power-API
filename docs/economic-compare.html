@@ -57,7 +57,7 @@ const tr=document.createElement("tr");const th=document.createElement("th");th.t
 for(const country of rows){
 const indicators=country.indicators,w=indicators.net_annual_earnings_reference,p=indicators.household_price_level_eu27;
 if(key==="adjusted"){
-const cur=wageCurrency(w),amount=valid(w)&&valid(p)&&cur&&p.value>0?convert(w.value,cur)/ (p.value/100):null;
+const cur=wageCurrency(w),converted=valid(w)&&valid(p)&&cur&&p.value>0?convert(w.value,cur):null;const amount=converted===null?null:converted/(p.value/100);
 cell(tr,amount===null||!Number.isFinite(amount)?"Indisponível":number(amount,target),amount===null?"Câmbio ou indicadores indisponíveis":"Salário "+w.period+" · preços "+p.period+" · estimativa");continue}
 const item=indicators[key];
 if(!valid(item)){cell(tr,"Sem dados","");continue}
