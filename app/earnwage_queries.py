@@ -5,6 +5,7 @@ They do not trigger Remotive, Eurostat or ECB traffic on every screen render.
 """
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
+from app import pt_occupation_wages as pt_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -79,7 +80,13 @@ def region_check(country, region):
 
 
 def wage_for(country, occupation):
-    return na.wages(country, occupation) if country in ("US", "CA") else ilostat_salary(country, occupation)
+    if country in ("US", "CA"):
+        return na.wages(country, occupation)
+    if country == "PT":
+        official = pt_wages.wages(country, occupation)
+        if official.get("status") != "unavailable":
+            return official
+    return ilostat_salary(country, occupation)
 
 
 def fiscal_context(country, region, annual_gross, tax_year):
@@ -192,6 +199,8 @@ def coverage():
     observed = {(c["country"], c["occupation"]): c["latest_period"]
                 for c in ilostat_availability()["cells"] if c["status"] == "available"}
     observed.update(na.observed_coverage())
+    observed.update({key: period for key, (_count, period)
+                     in pt_wages.observed_coverage().items()})
     return {
         "countries": len(COUNTRY_MAP), "occupations": len(OCCUPATIONS),
         "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
