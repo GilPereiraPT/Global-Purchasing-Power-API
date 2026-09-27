@@ -1,7 +1,7 @@
 """Provider contract tests use synthetic examples, never fictional production jobs."""
 from fastapi.testclient import TestClient
 
-from app.jobs import location_matches, normalize, search, title_matches
+from app.jobs import ats_location_matches, location_matches, normalize, search, title_matches
 from app.main import app
 
 
@@ -54,3 +54,14 @@ def test_jobs_endpoint(monkeypatch):
         assert client.get("/v1/jobs?country=XX&occupation=nurse").status_code == 404
         assert client.get("/v1/jobs?country=DE&occupation=not_real").status_code == 422
         assert client.get("/v1/jobs/remotive/12").json()["source"] == "Remotive"
+
+def test_ats_us_locations_do_not_infer_remote_eligibility():
+    assert ats_location_matches("Foster City, CA", "US") == "us_state_code"
+    assert ats_location_matches("San Diego, CA", "US") == "us_state_code"
+    assert ats_location_matches("Los Angeles, CA", "US") == "us_state_code"
+    assert ats_location_matches("San Francisco, New York City", "US") == "us_city_mentioned"
+    assert ats_location_matches("Remote", "US") is None
+    assert ats_location_matches("Remote", "CA") is None
+    assert ats_location_matches("Foster City, CA", "CA") is None
+    assert ats_location_matches("Germany", "US") is None
+    assert title_matches("Full-Stack Engineer (Backend Focused)", "software_developer")
