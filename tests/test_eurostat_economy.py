@@ -132,3 +132,11 @@ def test_admin_import_auth_and_cors(tmp_path, monkeypatch):
     assert status.startswith("200")
     assert result["import_status"] == "available"
     assert result["indicator"]["value"] == 2.5
+
+
+def test_hicp_2026_uses_coicop_v2_total():
+    spec = eu.SERIES["hicp_annual_change_monthly"]
+    assert spec["dataset"] == "prc_hicp_minr"
+    assert spec["filters"]["coicop"] == "TOTAL"
+    assert spec["filters"]["unit"] == "RCH_A"
+    assert parse_qs(urlparse(eu.source_url("PT", spec)).query)["coicop"] == ["TOTAL"]
