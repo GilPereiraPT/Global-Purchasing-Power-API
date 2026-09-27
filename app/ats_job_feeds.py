@@ -20,13 +20,18 @@ LABELS = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}
 HOSTS = {"greenhouse": {"boards.greenhouse.io", "job-boards.greenhouse.io", "boards-api.greenhouse.io"},
          "lever": {"jobs.lever.co", "jobs.eu.lever.co"},
          "ashby": {"jobs.ashbyhq.com"}}
+COMPANIES = {"icapitalnetwork": "iCapital", "arcesiumllc": "Arcesium", "sambatv": "Samba TV", "jobgether": "Jobgether", "bjakcareer": "Bjak", "pointclickcare": "PointClickCare", "magnetforensics": "Magnet Forensics", "PocketHealth": "PocketHealth", "cscgeneration-2": "CSC Generation", "teamsnap": "TeamSnap", "xsolla": "Xsolla", "zego": "Zego", "dashlane": "Dashlane", "fluxon": "Fluxon", "stripe": "Stripe", "cloudflare": "Cloudflare", "zoox": "Zoox", "finch": "Finch", "truv": "Truv", "integrate": "Integrate", "lever": "Lever", "Ashby": "Ashby"}
 TTL = 6 * 3600
 
 def _url(value, provider):
     if not isinstance(value, str):
         return None
     parsed = urlsplit(value)
-    return value if parsed.scheme == "https" and parsed.hostname in HOSTS[provider] else None
+    allowed = parsed.hostname in HOSTS[provider]
+    # Stripe publishes its Greenhouse postings on its own verified careers domain.
+    if provider == "greenhouse" and parsed.hostname == "stripe.com":
+        allowed = parsed.path.startswith(("/jobs/", "/careers/"))
+    return value if parsed.scheme == "https" and allowed else None
 
 def _iso(value):
     if not isinstance(value, str) or not value:
@@ -45,7 +50,7 @@ def _record(provider, board, row, fetched):
         published = _iso(row.get("updated_at"))
         identity = row.get("id")
         remote = "remote" in str(place).lower()
-        company = board
+        company = COMPANIES.get(board, board)
         employment = None
         pay = None
     elif provider == "lever":
@@ -85,6 +90,7 @@ def _record(provider, board, row, fetched):
             "provider_id": identity, "title": title.strip(), "company": company,
             "candidate_required_location": place, "category": None,
             "salary_text": None, "salary_structured": pay,
+            "salary_display": "Não divulgado", "salary_disclosed": False,
             "employment_type": employment, "published_at": published,
             "publication_date_status": ("last_updated" if provider == "greenhouse" else "reported") if published else "unknown",
             "last_checked_at": fetched, "source": LABELS[provider],
@@ -102,7 +108,7 @@ def _endpoint(provider, board):
 async def feed(provider):
     if provider not in BOARDS:
         raise ValueError("Unknown provider")
-    key = "jobs:ats:" + provider + ":v5"
+    key = "jobs:ats:" + provider + ":v6"
     cached = store.get(key, TTL)
     if cached is not None:
         return cached
@@ -204,7 +210,9 @@ async def search(provider, country, occupation, salary_published=False, limit=20
             "jobs_after_filter": len(found),
             "remote_unverified_total": len(remote_unverified),
             "board_stats": stats,
-            "source_url": _endpoint(provider, BOARDS[provider][0]),
+            "source_url": "https://boards-api.greenhouse.io/" if provider == "greenhouse" else
+                          "https://api.lever.co/" if provider == "lever" else
+                          "https://api.ashbyhq.com/",
             "scope": "Curated employer boards only, not a national vacancy census.",
             "notice": "Check the employer listing for eligibility and availability."}
     if not debug:
