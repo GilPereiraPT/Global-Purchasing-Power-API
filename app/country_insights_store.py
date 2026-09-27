@@ -105,7 +105,11 @@ def read_indicator(db, country, name, year=None, history=False):
         "refresh_status": log[2] if log else "not_imported",
     }
     if name == "health_coverage":
-        result["source"] = "WHO Universal Health Coverage Dataset via World Bank API"
+        result["source"] = "WHO Global Health Observatory, mirrored by World Bank"
+        result["source_url"] = ("https://ghoapi.azureedge.net/api/UHC_INDEX_REPORTED")
+        result["world_bank_mirror_url"] = SOURCE.format(
+            country=ISO3[country], indicator=code)
+        result["who_indicator_code"] = "UHC_INDEX_REPORTED"
         result["sdg_indicator"] = "3.8.1"
         result["methodology"] = UHC_SERIES["methodology"]
         result["methodology_url"] = UHC_SERIES["methodology_url"]
