@@ -6,7 +6,7 @@ from app.ilostat_groups import build_snapshot, group_salary
 def test_group_salaries_are_not_individual_jobs(tmp_path):
     path = tmp_path / "official.csv"
     columns = ["ref_area","source","indicator","sex","classif1",
-               "classif2","time","obs_value"]
+               "classif2","time","obs_value","best_source"]
     with path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=columns)
         writer.writeheader()
@@ -19,7 +19,7 @@ def test_group_salaries_are_not_individual_jobs(tmp_path):
         ]:
             writer.writerow(dict(ref_area="PRT", source="BX:1",
                 indicator="EAR_EMTA_SEX_OCU_CUR_NB",sex="SEX_T",
-                classif1=occupation,classif2=unit,time="2025",obs_value=value))
+                classif1=occupation,classif2=unit,time="2025",obs_value=value,best_source="1"))
     snapshot = build_snapshot(path)
     assert len(snapshot["observations"]) == 3
     target = tmp_path / "snapshot.json"
@@ -32,9 +32,9 @@ def test_group_salaries_are_not_individual_jobs(tmp_path):
 
 def test_multiple_sources_are_ambiguous(tmp_path):
     path = tmp_path / "official.csv"
-    path.write_text("ref_area,source,indicator,sex,classif1,classif2,time,obs_value\n"
-                    "PRT,BX:1,EAR_EMTA_SEX_OCU_CUR_NB,SEX_T,OCU_ISCO08_2,CUR_TYPE_LCU,2025,2000\n"
-                    "PRT,BX:2,EAR_EMTA_SEX_OCU_CUR_NB,SEX_T,OCU_ISCO08_2,CUR_TYPE_LCU,2025,2500\n")
+    path.write_text("ref_area,source,indicator,sex,classif1,classif2,time,obs_value,best_source\n"
+                    "PRT,BX:1,EAR_EMTA_SEX_OCU_CUR_NB,SEX_T,OCU_ISCO08_2,CUR_TYPE_LCU,2025,2000,1\n"
+                    "PRT,BX:2,EAR_EMTA_SEX_OCU_CUR_NB,SEX_T,OCU_ISCO08_2,CUR_TYPE_LCU,2025,2500,1\n")
     target = tmp_path / "snapshot.json"
     target.write_text(json.dumps(build_snapshot(path)))
     assert group_salary("PT","2",target)["values"]["local_currency"]["status"] == "ambiguous"
