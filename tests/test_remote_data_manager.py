@@ -56,3 +56,10 @@ def test_auto_backup_then_bounded_import(monkeypatch):
         "status", "backup", "import", "import"]
     assert all(item["country"] == "PT" and item["mode"] == "missing"
                for route, item in invoked if route == "import")
+
+
+def test_unvalidated_uhc_excluded_only_from_automatic_plan():
+    indicators = ("life_expectancy", "health_coverage", "gdp_per_capita")
+    rows = runner.plan("world_bank", "PT", weekday=0, indicators=indicators)
+    assert [item[2] for item in rows] == ["life_expectancy", "gdp_per_capita"]
+    assert "health_coverage" in runner.PENDING_SOURCE_REVIEW
