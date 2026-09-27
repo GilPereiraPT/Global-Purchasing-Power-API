@@ -461,6 +461,8 @@ internal fun CountryInsightsDashboard(
     spec:IndicatorSpec,codes:List<String>,rows:Map<String,JSONObject>,
     countryName:(String)->String,pt:Boolean
 ){
+    val uri=LocalUriHandler.current
+    var details by remember(spec.key){mutableStateOf(false)}
     Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface),
         modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(16.dp)){
         Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(9.dp)) {
@@ -476,6 +478,19 @@ internal fun CountryInsightsDashboard(
                         if(valid(datum))Text(datum!!.optString("year"),fontSize=10.sp,
                             color=MaterialTheme.colorScheme.onSurface.copy(alpha=.6f))
                     }
+                }
+            }
+            TextButton(onClick={details=!details},contentPadding=PaddingValues(0.dp)){
+                Text(localeText(pt,"Fontes e detalhes","Sources and details")+"  "+
+                    if(details)"▴" else "▾",fontSize=12.sp)
+            }
+            if(details)codes.forEach{code->
+                val obs=rows[code]?.optJSONObject("indicators")?.optJSONObject(spec.key)
+                val source=obs?.optString("source_url").orEmpty()
+                if(source.startsWith("https://"))TextButton(onClick={uri.openUri(source)},
+                    contentPadding=PaddingValues(0.dp)){
+                    Text(flag(code)+" "+countryName(code)+" · "+
+                        localeText(pt,"Consultar fonte ↗","View source ↗"),fontSize=11.sp)
                 }
             }
         }
