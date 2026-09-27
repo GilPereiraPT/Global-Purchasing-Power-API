@@ -3,6 +3,7 @@
 Each API is company-scoped, NOT a searchable global jobs database. Curated
 board identifiers are explicit and expandable after verification. No credentials.
 """
+import asyncio
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
 import httpx
@@ -108,31 +109,34 @@ async def feed(provider):
     fetched = datetime.now(timezone.utc).isoformat()
     jobs = []
     succeeded, failed, board_stats = [], [], {}
+    semaphore = asyncio.Semaphore(5)
     async with httpx.AsyncClient(timeout=25, follow_redirects=True,
                                  headers={"User-Agent": "EarnWage/0.5 (+source attribution)"}) as client:
-        for board in BOARDS[provider]:
-            try:
-                response = await client.get(_endpoint(provider, board),
-                    params={"mode": "json"} if provider == "lever" else
-                           {"includeCompensation": "true"} if provider == "ashby" else None)
-                response.raise_for_status()
-                payload = response.json()
-                rows = payload if provider == "lever" else payload.get("jobs") if isinstance(payload, dict) else None
-                if not isinstance(rows, list):
-                    failed.append(board)
-                    board_stats[board] = {"status": "invalid_response", "jobs_before_filter": 0,
-                                          "jobs_normalized": 0}
-                    continue
-                normalized = [item for row in rows if isinstance(row, dict)
-                              if (item := _record(provider, board, row, fetched)) is not None]
+        async def fetch_board(board):
+            async with semaphore:
+                try:
+                    response = await client.get(_endpoint(provider, board),
+                        params={"mode": "json"} if provider == "lever" else
+                               {"includeCompensation": "true"} if provider == "ashby" else None)
+                    response.raise_for_status()
+                    payload = response.json()
+                    rows = payload if provider == "lever" else payload.get("jobs") if isinstance(payload, dict) else None
+                    if not isinstance(rows, list):
+                        return board, "invalid_response", 0, []
+                    normalized = [item for row in rows if isinstance(row, dict)
+                                  if (item := _record(provider, board, row, fetched)) is not None]
+                    return board, "ok", len(rows), normalized
+                except (httpx.HTTPError, ValueError):
+                    return board, "failed", 0, []
+        for board, status, row_count, normalized in await asyncio.gather(
+                *(fetch_board(board) for board in BOARDS[provider])):
+            if status == "ok":
                 succeeded.append(board)
-                board_stats[board] = {"status": "ok", "jobs_before_filter": len(rows),
-                                      "jobs_normalized": len(normalized)}
                 jobs.extend(normalized)
-            except (httpx.HTTPError, ValueError):
+            else:
                 failed.append(board)
-                board_stats[board] = {"status": "failed", "jobs_before_filter": 0,
-                                      "jobs_normalized": 0}
+            board_stats[board] = {"status": status, "jobs_before_filter": row_count,
+                                  "jobs_normalized": len(normalized)}
     if not succeeded:
         raise UpstreamUnavailable(LABELS[provider] + " boards unavailable")
     result = {"jobs": jobs, "fetched_at": fetched,
