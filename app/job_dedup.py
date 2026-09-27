@@ -54,7 +54,10 @@ def merge_jobs(listings):
         valid_identity = bool(company and title and location)
         target = by_url.get(url_key)
         if target is None and valid_identity:
-            target = by_identity.get(identity)
+            candidate = by_identity.get(identity)
+            # Distinct adverts on the same provider may represent separate openings.
+            if candidate is not None and candidate.get("source") != job.get("source"):
+                target = candidate
         if target is None:
             job["sources"] = [_source(job)]
             results.append(job)
@@ -71,7 +74,7 @@ def merge_jobs(listings):
             if job.get("published_at", "") > target.get("published_at", ""):
                 target["published_at"] = job["published_at"]
         by_url[url_key] = target
-        if valid_identity:
+        if valid_identity and identity not in by_identity:
             by_identity[identity] = target
     results.sort(key=lambda x: x.get("published_at") or "", reverse=True)
     return results
