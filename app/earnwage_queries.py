@@ -10,6 +10,7 @@ from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
 from app.client_config import region_configuration
 from app.tax_components import components as tax_components
+from app.us_state_tax import state_wage_income_tax
 
 JOBS = {job["id"]: job for job in OCCUPATIONS}
 
@@ -97,8 +98,11 @@ def fiscal_context(country, region, annual_gross, tax_year):
         return {"status": "unavailable", "net_income": None,
                 "reason": "Quebec QPP, QPIP and EI require a distinct validated tax model"}
     if country in ("US", "CA"):
-        return tax_components(country, annual_gross, tax_year=tax_year,
-                              province=region if country == "CA" else None)
+        result = tax_components(country, annual_gross, tax_year=tax_year,
+                                province=region if country == "CA" else None)
+        if country == "US":
+            result["state_wage_income_tax"] = state_wage_income_tax(region, tax_year)
+        return result
     return tax_components(country, annual_gross, tax_year=tax_year)
 
 
