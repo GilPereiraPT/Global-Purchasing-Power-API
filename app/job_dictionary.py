@@ -12,7 +12,7 @@ LANGUAGES = ("pt", "en", "es", "de", "fr", "it", "nl")
 EXTRA = {
     "software_developer": {
         "pt": ("programador", "programadora", "engenheiro de software", "engenheira de software", "desenvolvedor de software", "desenvolvedora de software"),
-        "en": ("software engineer", "software developer", "programmer", "backend developer", "frontend developer", "full stack developer", "fullstack engineer", "web developer", "python developer", "python engineer"),
+        "en": ("software engineer", "software developer", "programmer", "backend developer", "frontend developer", "full stack developer", "full-stack developer", "full stack engineer", "full-stack engineer", "fullstack engineer", "web developer", "python developer", "python engineer"),
         "es": ("desarrollador de software", "desarrolladora de software", "programador", "programadora", "ingeniero de software", "ingeniera de software"),
         "de": ("softwareentwickler", "softwareentwicklerin", "software engineer", "software-entwickler", "software-entwicklerin"),
         "fr": ("développeur logiciel", "développeuse logiciel", "ingénieur logiciel", "ingénieure logiciel", "développeur informatique", "développeuse informatique"),
