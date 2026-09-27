@@ -11,9 +11,9 @@ from app.jobs import title_matches, ats_location_matches
 from app.providers import UpstreamUnavailable
 
 BOARDS = {
-    "greenhouse": ("stripe",),
-    "lever": ("lever", "teamsnap", "zoox", "finch", "truv", "sambatv", "integrate"),
-    "ashby": ("Ashby",),
+    "greenhouse": ("stripe", "cloudflare", "fluxon", "arcesiumllc", "icapitalnetwork", "dashlane"),
+    "lever": ("lever", "teamsnap", "zoox", "finch", "truv", "sambatv", "integrate", "jobgether", "xsolla", "PocketHealth", "cscgeneration-2", "magnetforensics", "pointclickcare"),
+    "ashby": ("Ashby", "zego", "bjakcareer"),
 }
 LABELS = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}
 HOSTS = {"greenhouse": {"boards.greenhouse.io", "job-boards.greenhouse.io", "boards-api.greenhouse.io"},
@@ -101,7 +101,7 @@ def _endpoint(provider, board):
 async def feed(provider):
     if provider not in BOARDS:
         raise ValueError("Unknown provider")
-    key = "jobs:ats:" + provider + ":v4"
+    key = "jobs:ats:" + provider + ":v5"
     cached = store.get(key, TTL)
     if cached is not None:
         return cached
