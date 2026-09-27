@@ -167,11 +167,11 @@ def decode_ons_cpi(payload):
         if not isinstance(item, dict):
             continue
         raw = str(item.get("date") or "").strip().upper()
-        match = re.fullmatch(r"(\\d{4})-(\\d{2})(?:-\\d{2})?", raw)
+        match = re.fullmatch(r"(\d{4})-(\d{2})(?:-\d{2})?", raw)
         if match:
             year, month = int(match[1]), int(match[2])
         else:
-            match = re.fullmatch(r"(\\d{4})\\s+([A-Z]{3})", raw)
+            match = re.fullmatch(r"(\d{4})\s+([A-Z]{3})", raw)
             if not match or match[2] not in month_names:
                 continue
             year, month = int(match[1]), month_names[match[2]]
