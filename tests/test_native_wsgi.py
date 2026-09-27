@@ -26,7 +26,7 @@ def test_native_wsgi_health_and_config():
     code, body, headers = request("/v1/health")
     assert code == 200
     assert body["status"] == "ok"
-    assert body["version"] == "0.5.11"
+    assert body["version"] == "0.5.12"
     assert body["runtime"] == "native_wsgi"
     assert headers["Content-Type"].startswith("application/json")
     assert request("/v1/app-config")[1]["product"]["name"] == "EarnWage"
@@ -85,3 +85,23 @@ def test_job_freshness_filters_old_dates_without_faking_unknown_dates():
     assert result["excluded_by_age"] == 1
     assert result["jobs"][1]["age_days"] is None
     assert recent_jobs(sample, 0, 100)["count"] == 3
+
+def test_job_freshness_debug_counts_and_remote_separation():
+    from app.native_wsgi import recent_jobs
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    fresh = (now - timedelta(days=3)).isoformat()
+    old = (now - timedelta(days=250)).isoformat()
+    result = recent_jobs({
+        "jobs": [{"id": "lever:zoox:1", "published_at": fresh},
+                 {"id": "lever:zoox:2", "published_at": old}],
+        "jobs_after_filter": 2,
+        "board_stats": {"zoox": {"jobs_after_filter": 2}},
+        "remote_unverified": [{"id": "lever:teamsnap:3", "published_at": fresh,
+                               "location_match": "unverified_remote"}],
+    }, 180, 100)
+    assert result["jobs_after_country_occupation_filter"] == 2
+    assert result["jobs_after_age_filter"] == result["jobs_after_filter"] == 1
+    assert result["board_stats"]["zoox"]["jobs_after_age_filter"] == 1
+    assert result["remote_unverified_count"] == 1
+    assert result["count"] == 1
