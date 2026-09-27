@@ -84,7 +84,8 @@ def _record(provider, board, row, fetched):
             "provider_id": identity, "title": title.strip(), "company": company,
             "candidate_required_location": place, "category": None,
             "salary_text": None, "salary_structured": pay,
-            "employment_type": employment, "published_at": published or fetched,
+            "employment_type": employment, "published_at": published,
+            "publication_date_status": ("last_updated" if provider == "greenhouse" else "reported") if published else "unknown",
             "last_checked_at": fetched, "source": LABELS[provider],
             "source_url": url, "apply_url": url, "remote": remote,
             "status": "listed_by_source",
@@ -173,7 +174,7 @@ async def search(provider, country, occupation, salary_published=False, limit=20
             continue
         found.append({**item, "destination_country": country, "location_match": scope})
         entry["jobs_after_filter"] += 1
-    found.sort(key=lambda item: item["published_at"], reverse=True)
+    found.sort(key=lambda item: item["published_at"] or "", reverse=True)
     result = {"status": "available" if found else "no_results", "provider": LABELS[provider],
             "country": country, "occupation": occupation, "count": len(found),
             "returned": min(len(found), limit), "jobs": found[:limit],
