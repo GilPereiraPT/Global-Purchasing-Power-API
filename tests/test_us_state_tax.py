@@ -20,6 +20,10 @@ class StateTaxTest(unittest.TestCase):
         r = state_wage_income_tax("NY", 2026, 94750)
         self.assertIsNone(r["state_wage_income_tax"])
         self.assertEqual(r["standard_deduction_single_reference"], 8000)
+        self.assertEqual(r["state_taxable_income_preview"], 86750)
+        self.assertEqual(r["state_income_tax_schedule_before_credits"], 4550.90)
+        self.assertEqual(r["status"], "partial_components")
+        self.assertEqual(region_configuration("US", "NY")["tax_region_model_status"], "partial_components")
 
     def test_unsupported_year(self):
         self.assertEqual(state_wage_income_tax("TX", 2025)["status"], "unavailable")
