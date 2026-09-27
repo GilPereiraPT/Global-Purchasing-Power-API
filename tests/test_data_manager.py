@@ -134,3 +134,34 @@ def test_eurostat_one_series_and_locked_import(monkeypatch, tmp_path):
     assert code == 200 and data["import_status"] == "available"
     assert data["data"]["value"] == 2.5
     assert data["data"]["period"] == "2026-08"
+
+
+def test_backup_reports_existing_sqlite_configuration_without_paths(
+        monkeypatch, tmp_path):
+    secret = setup(monkeypatch, tmp_path)
+    monkeypatch.delenv("GPP_CACHE_DB")
+    status_code, data, _ = request("status", {}, token=secret)
+    assert status_code == 200
+    assert data["manager_version"] == dm.MANAGER_VERSION
+    assert data["backup_readiness"]["databases"]["GPP_CACHE_DB"] == "variable_missing"
+    code, data, _ = request("backup", {}, token=secret)
+    assert code == 409 and data["status"] == "prerequisites_missing"
+    assert data["backup_readiness"]["databases"]["GPP_CACHE_DB"] == "variable_missing"
+    assert str(tmp_path) not in json.dumps(data)
+    monkeypatch.setenv("GPP_CACHE_DB", "relative/cannot/use.sqlite3")
+    code, data, _ = request("backup", {}, token=secret)
+    assert code == 409 and data["status"] == "prerequisites_missing"
+    assert data["backup_readiness"]["databases"]["GPP_CACHE_DB"] == "path_not_absolute"
+
+
+def test_backup_valueerror_reports_safe_operation_error_not_invalid_json(
+        monkeypatch, tmp_path):
+    secret = setup(monkeypatch, tmp_path)
+    from scripts import backup_earnwage_data as backup_module
+    with patch.object(backup_module, "backup",
+                      side_effect=ValueError("Separate insights and wages/cache databases expected")):
+        code, data, _ = request("backup", {}, token=secret)
+    assert code == 409
+    assert data["error"] == "backup_failed"
+    assert data["reason"] == "both_database_variables_point_to_same_file"
+    assert "invalid_manager_request" not in json.dumps(data)
