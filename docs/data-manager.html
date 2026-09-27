@@ -63,6 +63,7 @@ code{word-break:break-word}
 <option value="missing">Completar apenas informação em falta</option>
 <option value="refresh">Voltar a consultar mesmo que haja dados</option></select></div>
 </div>
+<p class="muted"><strong>Nova ronda de dados:</strong> os botões «Novos 16» consultam apenas segurança, corrupção, emprego, saúde e ambiente. São até 16 consultas por país ou 224 nos 14 países, uma de cada vez. Mantém esta página aberta durante a execução. O modo é automaticamente «Completar»; se a importação parar, podes retomá-la sem voltar a consultar observações já guardadas.</p>
 <p class="muted">Cada pedido processa um indicador num país. Os valores anteriores permanecem na base de dados se a fonte falhar. «Completar» não serve para o calendário recorrente: a atualização normal tem de voltar a consultar os dados existentes.</p>
 <p class="muted"><strong>Saúde:</strong> o indicador <code>health_coverage</code> é o índice OMS de cobertura dos serviços essenciais (ODS 3.8.1; metodologia de 2025), de 0 a 100 pontos. Não é a percentagem de habitantes com acesso ao SNS ou a um seguro, nem mede a proteção financeira. A fonte principal desta série é a OMS; o Banco Mundial disponibiliza o espelho oficial <code>SH_UHC_SCI</code>. Importa primeiro Portugal e confirma o ano e as observações antes dos restantes países.</p>
 <div class="actions">
@@ -72,6 +73,8 @@ code{word-break:break-word}
 <button class="secondary" id="essentials">Inflação anual + PPC dos 14 países</button>
 <button class="secondary" id="gdpAll">PIB per capita dos 14 países</button>
 <button class="secondary" id="uhcAll">Índice UHC (OMS) dos 14 países</button>
+<button class="secondary" id="waveCountry">Novos 16 indicadores deste país</button>
+<button class="secondary" id="waveAll">Novos 16 indicadores dos 14 países</button>
 <button class="danger" id="stop" disabled>Parar após o pedido atual</button>
 </div>
 <div class="progress"><div id="bar"></div></div>
@@ -100,6 +103,16 @@ const $=id=>document.getElementById(id);
 const fallbackCountries=["PT","ES","DE","FR","GB","IE","NL","CH","IT","US","CA","BR","IN","PK"];
 const euroCountries=["PT","ES","DE","FR","IE","NL","IT","GB","CH"];
 const wb={
+intentional_homicides:"Homicídios intencionais",intentional_homicides_female:"Homicídios — mulheres",
+intentional_homicides_male:"Homicídios — homens",political_stability:"Estabilidade política",
+rule_of_law:"Estado de direito",battle_related_deaths:"Mortes relacionadas com combates",
+control_of_corruption:"Controlo da corrupção",bribery_incidence_firms:"Empresas confrontadas com subornos",
+tax_official_gifts_firms:"Presentes em contactos fiscais",
+youth_unemployment:"Desemprego jovem",employment_population_ratio:"Taxa de emprego",
+advanced_education_unemployment:"Desemprego com ensino superior",
+physicians:"Médicos por 1 000 habitantes",hospital_beds:"Camas hospitalares por 1 000 habitantes",
+out_of_pocket_health_expenditure:"Despesa de saúde paga diretamente",
+pm25_air_pollution:"Exposição a partículas PM2,5",
 life_expectancy:"Esperança de vida",unemployment:"Desemprego",
 gdp_per_capita:"PIB per capita",gini:"Índice de Gini",
 health_coverage:"Índice de serviços de saúde UHC (OMS, 0–100)",
@@ -108,6 +121,13 @@ electricity_access:"Acesso à eletricidade",safe_drinking_water:"Água potável 
 safe_sanitation:"Saneamento seguro",internet_use:"Utilização da Internet",
 inflation_annual:"Inflação anual",ppp_private_consumption:"PPC do consumo das famílias"
 };
+const OPEN_DATA_WAVE=[
+"intentional_homicides","intentional_homicides_female","intentional_homicides_male",
+"political_stability","rule_of_law","battle_related_deaths",
+"control_of_corruption","bribery_incidence_firms","tax_official_gifts_firms",
+"youth_unemployment","employment_population_ratio","advanced_education_unemployment",
+"physicians","hospital_beds","out_of_pocket_health_expenditure","pm25_air_pollution"
+];
 const eu={hicp_annual_change_monthly:"Inflação homóloga mensal",
 household_price_level_eu27:"Nível de preços das famílias",
 net_annual_earnings_reference:"Salário líquido anual de referência"};
@@ -117,7 +137,7 @@ function report(t){$("status").textContent=t}
 function busy(on){
 working=on;
 for(const id of ["check","inventory","backup","preview","one","countryAll","essentials",
-                 "history","gdpAll","uhcAll","source","country","indicator","mode"])$(id).disabled=on;
+                 "history","gdpAll","uhcAll","waveCountry","waveAll","source","country","indicator","mode"])$(id).disabled=on;
 $("stop").disabled=!on;
 }
 function smallCard(title,value,note){
@@ -243,10 +263,10 @@ finally{busy(false)}
 function selection(country,indicator){
 return {source:$("source").value,country,indicator,mode:$("mode").value};
 }
-async function startBatch(pairs,dryRun){
+async function startBatch(pairs,dryRun,pauseMs=0){
 if(working)return;
 stopped=false;busy(true);
-let available=0,skipped=0,failed=0;
+let available=0,skipped=0,empty=0,failed=0,consecutiveFailures=0;
 try{
 if(!dryRun){
  const gate=await status();
@@ -265,24 +285,28 @@ try{
 const r=await admin("import",{source,country,indicator,
  mode:$("mode").value,dry_run:dryRun});
 const result=r.import_status;
-if(result==="available"||result==="would_import")available++;
-else if(result==="skipped_existing")skipped++;
-else failed++;
+if(result==="available"||result==="would_import"){available++;consecutiveFailures=0;}
+else if(result==="skipped_existing"){skipped++;consecutiveFailures=0;}
+else if(result==="empty"){empty++;consecutiveFailures=0;}
+else{failed++;consecutiveFailures++;}
 log(country+" · "+indicator+" → "+result+
  (r.data?.year?" · "+r.data.year:r.data?.period?" · "+r.data.period:"")+
  (r.observation_count!==undefined?" · "+r.observation_count+" obs.":""));
 }catch(e){
 failed++;log(country+" · "+indicator+" → ERRO: "+e.message);
-if(/unauthorized|admin_not_configured|forbidden_origin|backup_required|Failed to fetch/.test(e.message)){
+consecutiveFailures++;
+if(/unauthorized|admin_not_configured|forbidden_origin|backup_required|Failed to fetch|HTTP 429|HTTP 503|HTTP 504/.test(e.message)){
 stopped=true;break;
 }
 }
+if(consecutiveFailures>=3){stopped=true;log("Interrompida após três falhas consecutivas; verifica a origem antes de retomar.");}
+if(pauseMs && !stopped && i+1<pairs.length)await new Promise(resolve=>setTimeout(resolve,pauseMs));
 }
 report((dryRun?"Pré-visualização":"Importação")+" concluída: "+
-available+" processados, "+skipped+" já existentes, "+failed+" falhas"+
+available+" processados, "+skipped+" já existentes, "+empty+" sem observações, "+failed+" falhas"+
 (stopped?" (interrompida)":"")+".");
 $("progress").textContent=available+" processados · "+skipped+" ignorados · "+
-failed+" erros"+(stopped?" · parada":"");
+empty+" sem dados · "+failed+" erros"+(stopped?" · parada":"");
 if(!stopped)$("bar").style.width="100%";
 try{await status();await publicInventory()}catch(e){log("Estado: "+e.message)}
 }catch(e){report(e.message);log("ERRO · "+e.message)}
@@ -327,6 +351,29 @@ $("source").value="world_bank";updateOptions();
 $("mode").value="missing";
 startBatch(fallbackCountries.map(c=>["world_bank",c,"health_coverage"]),false);
 };
+function startOpenDataWave(countries){
+if(working)return;
+if(!metadata){
+ report("Verifica primeiro o acesso e estado na secção 1, com a chave privada.");
+ return;
+}
+const installed=new Set(metadata.indicators||[]);
+const absent=OPEN_DATA_WAVE.filter(k=>!installed.has(k));
+if(absent.length){
+ report("O Data Manager no servidor ainda não expõe os 16 novos indicadores; verifica a versão da API.");
+ log("INDICADORES NÃO DISPONÍVEIS NO DATA MANAGER: "+absent.join(", "));
+ return;
+}
+if(countries.some(code=>!(metadata.world_bank_countries||fallbackCountries).includes(code))){
+ report("País indisponível na API de produção.");return;
+}
+$("source").value="world_bank";updateOptions();$("mode").value="missing";
+const pairs=countries.flatMap(code=>OPEN_DATA_WAVE.map(key=>["world_bank",code,key]));
+log("A iniciar nova ronda: "+pairs.length+" combinações país–indicador (apenas em falta).");
+startBatch(pairs,false,1000);
+}
+$("waveCountry").onclick=()=>startOpenDataWave([$("country").value]);
+$("waveAll").onclick=()=>startOpenDataWave(metadata?.world_bank_countries||fallbackCountries);
 $("stop").onclick=()=>{stopped=true;report("A interromper após o pedido atual…")};
 $("history").onclick=()=>standalone(status,"A consultar o histórico…");
 updateOptions();
