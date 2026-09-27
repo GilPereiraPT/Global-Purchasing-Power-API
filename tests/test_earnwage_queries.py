@@ -77,6 +77,10 @@ def test_group_context_does_not_replace_exact_profession_wage():
         assert response.status_code == 200
         data = response.json()
         assert data["national_occupation_wage"]["status"] == "unavailable"
+        assert data["annual_presentation"]["status"] == "unavailable"
+        assert data["annual_presentation"]["value"] is None
+        assert data["salary_display"]["status"] == "unavailable"
+        assert data["salary_display"]["major_group_context_available"] is True
         context = data["national_major_group_context"]
         assert context["precision"] == "isco08_major_group"
         assert context["isco08_major_group"] == "2"
@@ -101,3 +105,35 @@ def test_all_40_jobs_have_curated_group_and_fallback_is_explicit():
         assert pt["national_occupation_wage"]["status"] == "unavailable"
         ca = client.get("/v1/earnwage/overview?country=CA&occupation=nurse").json()
         assert ca["salary_display"]["source"] == "exact_occupation"
+
+
+def test_portugal_health_professions_never_inherit_same_group_salary():
+    """An ISCO-08 group is useful context but not a doctor/nurse/psychologist wage."""
+    with TestClient(app) as client:
+        results = {
+            job: client.get("/v1/earnwage/overview",
+                            params={"country": "PT", "occupation": job}).json()
+            for job in ("doctor", "nurse", "psychologist")
+        }
+    assert {x["occupation"]["isco08"] for x in results.values()}
+    for job, result in results.items():
+        assert result["national_occupation_wage"]["status"] == "unavailable", job
+        assert result["annual_presentation"]["status"] == "unavailable", job
+        assert result["annual_presentation"]["value"] is None, job
+        assert result["salary_display"]["status"] == "unavailable", job
+        assert result["salary_display"]["source"] == "isco08_major_group_context", job
+        assert result["national_major_group_context"]["isco08_major_group"] == "2", job
+        assert result["national_major_group_context"]["precision"] == "isco08_major_group", job
+    # The aggregate may be equal, but it must NEVER become the occupation amount.
+    group = [r["national_major_group_context"] for r in results.values()]
+    assert all(r["values"] == group[0]["values"] for r in group)
+
+
+def test_occupation_specific_annual_salary_still_visible_when_verified():
+    with TestClient(app) as client:
+        result = client.get("/v1/earnwage/overview",
+                            params={"country": "US", "occupation": "nurse"}).json()
+    assert result["national_occupation_wage"]["status"] == "available"
+    assert result["annual_presentation"]["status"] == "available"
+    assert result["salary_display"]["status"] == "available"
+    assert result["salary_display"]["source"] == "exact_occupation"

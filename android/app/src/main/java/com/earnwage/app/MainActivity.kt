@@ -715,7 +715,17 @@ private fun parseRegions(data:JSONObject):List<Region> {
     val name=c?.optString("name") ?: code
     val annual=data.optJSONObject("annual_presentation")
     if(annual?.optString("status")!="available") {
-        Metric(countryFlag(code)+" "+name,tr(lang,"nomatch")); return
+        val group = data.optJSONObject("national_major_group_context")
+        val hasGroup = group?.optString("status")=="available"
+        val detail = if(lang=="pt")
+            if(hasGroup) "Não existe salário validado para esta profissão. Há apenas uma média do grande grupo ISCO-08, que não é o salário de médico, enfermeiro ou psicólogo."
+            else "Não existe salário validado para esta profissão neste país."
+        else if(hasGroup) "No verified wage for this occupation. The available ISCO-08 major-group average is not a salary for this specific job."
+        else "No verified occupation-specific wage for this country."
+        Metric(countryFlag(code)+" "+name,
+            if(lang=="pt") "Salário profissional indisponível" else "Occupation wage unavailable",
+            detail)
+        return
     }
     val value=annual.optDouble("value",Double.NaN)
     val local=annual.optString("currency")
