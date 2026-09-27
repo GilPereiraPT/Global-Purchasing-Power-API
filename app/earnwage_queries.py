@@ -145,7 +145,9 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                        "translations": JOBS[occupation]["translations"],
                        "isco08": JOBS[occupation]["isco08"]},
         "region": {"selected": region, "ui": region_configuration(code),
-                   "regional_tax_model_status": "not_implemented" if code in ("US","CA") else "not_applicable"},
+                   "regional_tax_model_status": ("wage_income_tax_only" if code == "US" and region and
+                     state_wage_income_tax(region, tax_year).get("status") == "available"
+                     else "not_implemented" if code in ("US","CA") else "not_applicable")},
         "national_occupation_wage": wage,
         "national_major_group_context": group_context,
         "annual_presentation": annual_presentation(wage, group_context),
