@@ -37,6 +37,11 @@ app = FastAPI(
 async def upstream_error(request, exc):
     return JSONResponse(status_code=503, content={"error": "upstream_unavailable", "detail": str(exc)})
 
+@app.get("/v1/data-inventory")
+def data_inventory():
+    from app.data_inventory import build_inventory
+    return build_inventory()
+
 @app.get("/v1/health")
 def health():
     return {"status": "ok", "version": app.version}
