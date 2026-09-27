@@ -330,3 +330,15 @@ def earnwage_compare(
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/v1/earnwage/history")
+def earnwage_history(country: str, occupation: str,
+                     start_year: int = Query(2015, ge=1900, le=2100),
+                     end_year: int = Query(2025, ge=1900, le=2100)):
+    try:
+        return ew_queries.history(country, occupation, start_year, end_year)
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
