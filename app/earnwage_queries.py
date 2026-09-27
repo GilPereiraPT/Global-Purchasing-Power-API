@@ -6,6 +6,7 @@ They do not trigger Remotive, Eurostat or ECB traffic on every screen render.
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
+from app.ilostat_groups import group_salary
 from app.client_config import region_configuration
 from app.tax_components import components as tax_components
 
@@ -53,6 +54,11 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     region_check(code, region)
     selected = COUNTRY_MAP[code]
     wage = wage_for(code, occupation)
+    isco = JOBS[occupation]["isco08"]
+    major_group = str(isco)[0] if isco and str(isco)[0] in "123456789" else None
+    group_context = (group_salary(code, major_group) if major_group else {
+        "status": "unavailable", "precision": "isco08_major_group",
+        "reason": "No validated ISCO-08 major-group mapping"})
     warnings = []
     if code == "US":
         warnings.append("Federal components only; state and local tax models are not implemented.")
@@ -63,6 +69,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         warnings.append("The wage source reference period is distinct from any 2026 tax scenario.")
     else:
         warnings.append("No matching verified occupational observation; no wage has been inferred.")
+    warnings.append("ILOSTAT major-group earnings are broad occupational context, not the selected profession's salary or a substitute for missing exact wages.")
     warnings.append("Cost-of-living basket and net purchasing-power comparison are not yet available.")
     return {
         "country": {"code": code, "name": selected["name"],
@@ -73,6 +80,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "region": {"selected": region, "ui": region_configuration(code),
                    "regional_tax_model_status": "not_implemented" if code in ("US","CA") else "not_applicable"},
         "national_occupation_wage": wage,
+        "national_major_group_context": group_context,
         "tax_scenario": fiscal_context(code, region, annual_gross, tax_year),
         "capital_cost_of_living": {"status": "unavailable", "value": None},
         "net_purchasing_power": {"status": "unavailable", "value": None},
