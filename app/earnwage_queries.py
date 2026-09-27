@@ -41,19 +41,14 @@ def annual_presentation(wage, group_context):
                     "monthly_optional":wage["value"], "monthly_kind":"reported_monthly",
                     "payments_per_year":None, "payments_verified":False,
                     "note":"Monthly earnings × 12 for comparison only. This is not verified total annual remuneration; extra payments are not assumed."}
-    if group_context.get("status") == "available":
-        v = group_context["values"].get("local_currency", {})
-        if v.get("status") == "available":
-            return {"status":"available", "value":v["value"]*12,
-                    "currency":v["currency"], "unit":"per_year",
-                    "kind":"group_annualized_12_month_equivalent",
-                    "reference_period":group_context["period"], "source":"ILOSTAT",
-                    "monthly_optional":v["value"], "monthly_kind":"reported_group_monthly",
-                    "payments_per_year":None, "payments_verified":False,
-                    "precision":"isco08_major_group",
-                    "note":"Group monthly earnings × 12, not the occupation's annual remuneration. No 13th/14th/15th payment is inferred."}
+    # A major-group average must not enter the profession-specific salary card.
+    # Group data remain accessible independently in national_major_group_context.
     return {"status":"unavailable", "value":None, "unit":"per_year",
-            "reason":"No unambiguous annual or monthly local-currency observation"}
+            "precision":"exact_occupation",
+            "reason":"No verified salary specific to the selected occupation",
+            "major_group_context_available":group_context.get("status") == "available",
+            "note":"The ISCO-08 major-group mean is not a wage for this occupation."}
+
 
 
 def history(country, occupation, start_year, end_year):
@@ -155,7 +150,8 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "annual_presentation": annual_presentation(wage, group_context),
         "salary_display": {
             "source": display_source,
-            "status": "available" if display_source != "unavailable" else "unavailable",
+            "status": "available" if exact_available else "unavailable",
+            "major_group_context_available": group_available,
             "precision": "occupation" if exact_available else
                          "isco08_major_group" if group_available else None,
             "isco08_major_group": major_group,
