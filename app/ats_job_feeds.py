@@ -100,13 +100,13 @@ def _endpoint(provider, board):
 async def feed(provider):
     if provider not in BOARDS:
         raise ValueError("Unknown provider")
-    key = "jobs:ats:" + provider + ":v2"
+    key = "jobs:ats:" + provider + ":v3"
     cached = store.get(key, TTL)
     if cached is not None:
         return cached
     fetched = datetime.now(timezone.utc).isoformat()
     jobs = []
-    success = 0
+    succeeded, failed, board_stats = [], [], {}
     async with httpx.AsyncClient(timeout=25, follow_redirects=True,
                                  headers={"User-Agent": "EarnWage/0.5 (+source attribution)"}) as client:
         for board in BOARDS[provider]:
@@ -118,21 +118,34 @@ async def feed(provider):
                 payload = response.json()
                 rows = payload if provider == "lever" else payload.get("jobs") if isinstance(payload, dict) else None
                 if not isinstance(rows, list):
+                    failed.append(board)
+                    board_stats[board] = {"status": "invalid_response", "jobs_before_filter": 0,
+                                          "jobs_normalized": 0}
                     continue
-                success += 1
-                jobs.extend(item for row in rows if isinstance(row, dict)
-                            if (item := _record(provider, board, row, fetched)) is not None)
+                normalized = [item for row in rows if isinstance(row, dict)
+                              if (item := _record(provider, board, row, fetched)) is not None]
+                succeeded.append(board)
+                board_stats[board] = {"status": "ok", "jobs_before_filter": len(rows),
+                                      "jobs_normalized": len(normalized)}
+                jobs.extend(normalized)
             except (httpx.HTTPError, ValueError):
-                continue
-    if not success:
+                failed.append(board)
+                board_stats[board] = {"status": "failed", "jobs_before_filter": 0,
+                                      "jobs_normalized": 0}
+    if not succeeded:
         raise UpstreamUnavailable(LABELS[provider] + " boards unavailable")
-    result = {"jobs": jobs, "fetched_at": fetched}
+    result = {"jobs": jobs, "fetched_at": fetched,
+              "boards_checked": list(BOARDS[provider]),
+              "boards_succeeded": succeeded, "boards_failed": failed,
+              "board_stats": board_stats}
     store.set_value(key, result)
     return result
 
 async def search(provider, country, occupation, salary_published=False, limit=20):
     data = await feed(provider)
     found = []
+    stats = {board: {**values, "jobs_after_filter": 0}
+             for board, values in data["board_stats"].items()}
     for item in data["jobs"]:
         if not title_matches(item["title"], occupation):
             continue
@@ -140,10 +153,19 @@ async def search(provider, country, occupation, salary_published=False, limit=20
         if not scope or (salary_published and not item["salary_structured"]):
             continue
         found.append({**item, "destination_country": country, "location_match": scope})
+        stats[item["id"].split(":", 2)[1]]["jobs_after_filter"] += 1
     found.sort(key=lambda item: item["published_at"], reverse=True)
     return {"status": "available" if found else "no_results", "provider": LABELS[provider],
             "country": country, "occupation": occupation, "count": len(found),
             "returned": min(len(found), limit), "jobs": found[:limit],
-            "fetched_at": data["fetched_at"], "source_url": _endpoint(provider, BOARDS[provider][0]),
+            "fetched_at": data["fetched_at"],
+            "boards_checked": data["boards_checked"],
+            "boards_succeeded": data["boards_succeeded"],
+            "boards_failed": data["boards_failed"],
+            "jobs_before_filter": sum(v["jobs_before_filter"] for v in stats.values()),
+            "jobs_normalized": len(data["jobs"]),
+            "jobs_after_filter": len(found),
+            "board_stats": stats,
+            "source_url": _endpoint(provider, BOARDS[provider][0]),
             "scope": "Curated employer boards only, not a national vacancy census.",
             "notice": "Check the employer listing for eligibility and availability."}
