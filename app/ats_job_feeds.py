@@ -12,7 +12,7 @@ from app.providers import UpstreamUnavailable
 
 BOARDS = {
     "greenhouse": ("stripe",),
-    "lever": ("lever",),
+    "lever": ("lever", "teamsnap", "zoox", "finch"),
     "ashby": ("Ashby",),
 }
 LABELS = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}
@@ -100,7 +100,7 @@ def _endpoint(provider, board):
 async def feed(provider):
     if provider not in BOARDS:
         raise ValueError("Unknown provider")
-    key = "jobs:ats:" + provider + ":v1"
+    key = "jobs:ats:" + provider + ":v2"
     cached = store.get(key, TTL)
     if cached is not None:
         return cached
