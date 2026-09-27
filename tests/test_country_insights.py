@@ -65,6 +65,59 @@ class CountryInsightsTests(unittest.TestCase):
         self.assertEqual(counts["failed"], len(ci.INDICATORS)-1)
         self.assertEqual(ci.indicator("PT", "life_expectancy")["value"], 82.1)
 
+    def test_uhc_source_is_revised_who_2025_not_legacy(self):
+        self.assertEqual(ci.INDICATORS["health_coverage"],
+                         ("SH_UHC_SCI", "index_0_100"))
+        self.assertEqual(ci.UHC_SERIES["legacy"], "SH.UHC.SRVS.CV.XD")
+        with connect() as db:
+            result = read_indicator(db, "PT", "health_coverage")
+        self.assertEqual(result["indicator_code"], "SH_UHC_SCI")
+        self.assertEqual(result["sdg_indicator"], "3.8.1")
+        self.assertEqual(result["legacy_indicator_code"], "SH.UHC.SRVS.CV.XD")
+        self.assertIn("not the share of people covered", result["note"])
+        self.assertIn("/SH_UHC_SCI?", result["source_url"])
+
+    def test_uhc_mocked_official_json_import_preserves_year(self):
+        from unittest.mock import Mock
+        import json
+        payload = [
+            {"page": 1, "pages": 1, "total": 4},
+            [
+                {"date": "2025", "value": None},
+                {"date": "2023", "value": 81.2},
+                {"date": "2021", "value": 79.1},
+                {"date": "2020", "value": None},
+            ],
+        ]
+
+        class Response:
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def read(self, *args):
+                return json.dumps(payload).encode("utf-8")
+
+        def fake_urlopen(request, timeout):
+            self.assertIn("/indicator/SH_UHC_SCI?", request.full_url)
+            self.assertEqual(timeout, 15)
+            return Response()
+
+        with patch.object(ci, "urlopen", side_effect=fake_urlopen):
+            status, observations, error = ci._fetch("PT", "SH_UHC_SCI")
+        self.assertEqual(status, "available")
+        self.assertIsNone(error)
+        self.assertEqual(observations, [
+            {"year": 2023, "value": 81.2},
+            {"year": 2021, "value": 79.1},
+        ])
+        with connect() as db:
+            save_result(db, "PT", "health_coverage", observations, status)
+            result = read_indicator(db, "PT", "health_coverage")
+        self.assertEqual(result["year"], 2023)
+        self.assertEqual(result["value"], 81.2)
+        self.assertEqual(result["unit"], "index_0_100")
+
     def test_weekly_rotation_and_safety(self):
         self.assertEqual(len(WEEK), 7)
         self.assertEqual(set(sum((list(pair) for pair in WEEK), [])), set(ci.ISO3))
