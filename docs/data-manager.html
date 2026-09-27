@@ -162,6 +162,23 @@ if(r.status===409 && body.status==="prerequisites_missing"){
  throw Error("Cópia não criada: "+problems.join("; ")+
   ". Corrige apenas as definições da aplicação Python no cPanel, sem criar bases vazias.");
 }
+if(action==="backup" && body.error==="backup_failed"){
+const names={
+backup_permission_denied:"Sem permissão para ler a base ou escrever na pasta privada.",
+configured_database_missing:"A variável aponta para um ficheiro de base de dados inexistente.",
+sqlite_integrity_check_failed:"A verificação de integridade SQLite não passou.",
+both_database_variables_point_to_same_file:"As duas variáveis apontam para o mesmo ficheiro.",
+database_variable_missing:"Falta configurar um caminho da base de dados.",
+unsafe_backup_location:"A pasta de backup está numa localização pública e foi recusada.",
+backup_destination_already_exists:"Já existe uma pasta com o mesmo identificador.",
+sqlite_backup_failed:"O SQLite não conseguiu concluir a cópia.",
+backup_preparation_failed:"Falha de preparação. Consulta o error_log do Passenger."
+};
+throw Error("backup_failed · "+(names[body.reason]||body.reason||
+ "Falha na cópia")+". Código: "+(body.reason||"desconhecido"));
+}
+if(action==="backup" && body.error==="invalid_manager_request")
+ throw Error("A API de produção devolveu a mensagem genérica da versão anterior do Data Manager. Atualiza apenas app/data_manager.py através do Gestor de Ficheiros do cPanel e reinicia em Setup Python App. Se persistir, consulta o error_log.");
 throw Error((body.error||body.detail||"HTTP "+r.status)+
  (body.note?" · "+body.note:""));
 }
@@ -170,6 +187,7 @@ return body;
 async function status(){
 const data=await admin("status");
 metadata=data;
+if(!data.manager_version)log("AVISO: O servidor parece executar uma versão antiga de app/data_manager.py; o painel web pode estar mais recente.");
 const ready=data.backup_readiness;
 const missing=Object.entries(ready?.databases||{}).filter(([,state])=>state!=="ready")
  .map(([name,state])=>name+" ("+state+")");
