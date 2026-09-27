@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EarnWage · Comparação económica</title>
+<style>
+:root{font:16px system-ui,sans-serif;background:#f2f7f8;color:#16343c}*{box-sizing:border-box}body{margin:0}header{background:#102d38;color:white;padding:25px max(16px,calc((100vw - 1040px)/2))}header a{color:#b8f4e2}main{max-width:1040px;margin:24px auto;padding:0 16px}section{background:white;border:1px solid #dce7e9;border-radius:15px;padding:20px;margin-bottom:16px}h1{margin:9px 0}p{line-height:1.5;color:#4b626a}label{display:block;font-weight:650;margin:8px 0}select,button{font:inherit;padding:12px;border:1px solid #b9cdd1;border-radius:9px;width:100%;background:white;color:#16343c}button{background:#087c67;color:white;border:0;font-weight:700;cursor:pointer;margin-top:15px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;border-bottom:1px solid #e3eaeb;padding:12px;vertical-align:top}small{color:#58717a}#status{font-weight:650}.notice{background:#f0f8f6;border-left:4px solid #087c67;padding:12px}a{color:#087c67}td strong{white-space:nowrap}
+</style></head><body>
+<header><a href="./">← EarnWage API Lab</a><h1>Comparação económica</h1><p>Salários na mesma moeda, com fonte e ano de referência preservados.</p></header>
+<main><section><div class="grid">
+<div><label for="a">País A</label><select id="a"></select></div>
+<div><label for="b">País B</label><select id="b"></select></div>
+<div><label for="currency">Moeda de apresentação</label><select id="currency"></select></div>
+</div><button id="run">Comparar</button><p id="status" role="status" aria-live="polite"></p></section>
+<section><h2>Indicadores</h2><div class="scroll"><table><thead><tr><th>Indicador</th><th id="headA">País A</th><th id="headB">País B</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<section><h2>Metodologia e câmbio</h2><p id="fx"></p><p class="notice">A conversão cambial não altera o poder de compra. O salário ajustado é uma estimativa indicativa: salário líquido convertido ÷ (índice de preços/100). O índice de preços pode ter um ano diferente do salário. CPI britânico e HICP europeu não são séries perfeitamente equivalentes.</p><p id="sources"></p></section></main>
+<script>
+"use strict";
+const API="https://earnwage-api.policlinicosdesantoandre.com";
+const $=id=>document.getElementById(id);
+const names={PT:"Portugal",ES:"Espanha",DE:"Alemanha",FR:"França",IE:"Irlanda",NL:"Países Baixos",IT:"Itália",GB:"Reino Unido",CH:"Suíça"};
+const currencies={EUR:"Euro",USD:"Dólar americano",GBP:"Libra esterlina",CHF:"Franco suíço",CAD:"Dólar canadiano",BRL:"Real brasileiro",INR:"Rupia indiana",PKR:"Rupia paquistanesa"};
+for(const [code,name] of Object.entries(names))for(const id of ["a","b"])$(id).add(new Option(name,code));
+$("b").value="GB";
+for(const [code,name] of Object.entries(currencies))$("currency").add(new Option(code+" — "+name,code));
+const stored=localStorage.getItem("earnwage_currency");
+if(stored in currencies)$("currency").value=stored;
+$("currency").addEventListener("change",()=>{localStorage.setItem("earnwage_currency",$("currency").value);run()});
+$("a").addEventListener("change",run);$("b").addEventListener("change",run);
+$("run").addEventListener("click",run);
+const get=async path=>{const response=await fetch(API+path,{cache:"no-store"});if(!response.ok)throw Error("API HTTP "+response.status);return response.json()};
+const valid=x=>x&&x.status==="available"&&Number.isFinite(Number(x.value))&&x.value!==null;
+const cell=(row,value,detail)=>{const td=document.createElement("td");const strong=document.createElement("strong");strong.textContent=value;td.append(strong);if(detail){const small=document.createElement("small");small.textContent=detail;td.append(document.createElement("br"),small)}row.append(td)};
+const number=(value,code)=>new Intl.NumberFormat("pt-PT",{style:"currency",currency:code,maximumFractionDigits:2}).format(value);
+const decimal=value=>new Intl.NumberFormat("pt-PT",{maximumFractionDigits:2}).format(value);
+function wageCurrency(observation){if(observation.unit==="GBP_per_year")return "GBP";if(observation.unit==="EUR_per_year")return "EUR";return null}
+async function run(){
+const a=$("a").value,b=$("b").value,target=$("currency").value;
+if(a===b){$("status").textContent="Seleciona dois países diferentes.";return}
+$("status").textContent="A consultar dados e câmbios…";$("rows").replaceChildren();$("fx").textContent="";$("sources").replaceChildren();
+try{
+const comparison=await get("/v1/eurostat/compare?country_a="+a+"&country_b="+b);
+const rows=comparison.countries;
+const sources=new Set();
+const required=new Set([target]);
+for(const c of rows){const w=c.indicators.net_annual_earnings_reference;if(valid(w)){const cur=wageCurrency(w);if(cur)required.add(cur)}}
+required.add("EUR");
+const rates={EUR:{units_per_eur:1,period:null,source:"Identidade"}};
+await Promise.all([...required].filter(x=>x!=="EUR").map(async code=>{try{const response=await get("/v1/exchange-rates/"+code);if(response.status==="available"&&Number.isFinite(Number(response.units_per_eur))&&response.units_per_eur>0)rates[code]=response}catch{}}));
+const convert=(amount,from)=>rates[from]&&rates[target]?amount/rates[from].units_per_eur*rates[target].units_per_eur:null;
+$("headA").textContent=names[a];$("headB").textContent=names[b];
+const definitions=[
+["Salário líquido anual de referência","net_annual_earnings_reference"],
+["Salário ajustado ao nível de preços (indicativo)","adjusted"],
+["Nível de preços (UE27=100)","household_price_level_eu27"],
+["Inflação homóloga","hicp_annual_change_monthly"]];
+for(const [label,key] of definitions){
+const tr=document.createElement("tr");const th=document.createElement("th");th.textContent=label;tr.append(th);
+for(const country of rows){
+const indicators=country.indicators,w=indicators.net_annual_earnings_reference,p=indicators.household_price_level_eu27;
+if(key==="adjusted"){
+const cur=wageCurrency(w),amount=valid(w)&&valid(p)&&cur&&p.value>0?convert(w.value,cur)/ (p.value/100):null;
+cell(tr,amount===null||!Number.isFinite(amount)?"Indisponível":number(amount,target),amount===null?"Câmbio ou indicadores indisponíveis":"Salário "+w.period+" · preços "+p.period+" · estimativa");continue}
+const item=indicators[key];
+if(!valid(item)){cell(tr,"Sem dados","");continue}
+if(item.source_url)sources.add(item.source_url);
+if(key==="net_annual_earnings_reference"){
+const from=wageCurrency(item),amount=from?convert(item.value,from):null;
+cell(tr,amount===null?"Conversão indisponível":number(amount,target),
+"Original: "+(from?number(item.value,from):decimal(item.value)+" "+item.unit)+" · "+item.period+" · "+item.source);
+}else if(key==="household_price_level_eu27"){
+cell(tr,decimal(item.value),"UE27=100 · "+item.period+" · "+item.source);
+}else{
+cell(tr,decimal(item.value)+"% ",item.period+" · "+item.source+(country.country==="GB"?" · CPI (não HICP)":" · HICP"));
+}}
+$("rows").append(tr)}
+$("fx").textContent=[...required].map(code=>rates[code]?
+(code==="EUR"?"EUR: moeda-base":("1 EUR = "+decimal(rates[code].units_per_eur)+" "+code+" · "+(rates[code].period||"sem data")+" · "+rates[code].source)):
+code+": câmbio indisponível").join(" | ")+". Cotações de referência, não taxas comerciais. Os câmbios podem ser de datas diferentes dos salários.";
+for(const url of sources){const link=document.createElement("a");link.href=url;link.target="_blank";link.rel="noopener noreferrer";link.textContent=url;const p=document.createElement("p");p.append(link);$("sources").append(p)}
+$("status").textContent="Comparação apresentada em "+target+".";
+}catch(error){$("status").textContent="Não foi possível comparar: "+error.message}
+}
+run();
+</script></body></html>
