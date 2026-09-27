@@ -26,7 +26,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.11"
+VERSION = "0.5.12"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -134,12 +134,26 @@ def recent_jobs(result, max_age_days, limit):
             continue
         kept.append({**job, "age_days": age,
                      "publication_date_status": job.get("publication_date_status", "reported") if age is not None else "unknown"})
-    return {**result, "jobs": kept[:limit], "count": len(kept),
+    updated = {**result, "jobs": kept[:limit], "count": len(kept),
             "returned": min(len(kept), limit),
             "status": "available" if kept else "no_results",
             "max_age_days": max_age_days,
             "excluded_by_age": excluded,
             "publication_date_note": "Provider-reported dates may be original creation or last update; unknown dates are retained and labelled."}
+    if "jobs_after_filter" in updated:
+        updated["jobs_after_country_occupation_filter"] = result["jobs_after_filter"]
+        updated["jobs_after_filter"] = len(kept)
+        updated["jobs_after_age_filter"] = len(kept)
+        for board, stats in updated.get("board_stats", {}).items():
+            stats["jobs_after_country_occupation_filter"] = stats["jobs_after_filter"]
+            stats["jobs_after_age_filter"] = sum(job["id"].split(":", 2)[1] == board for job in kept)
+            stats["jobs_after_filter"] = stats["jobs_after_age_filter"]
+    if "remote_unverified" in result:
+        remote = recent_jobs({"jobs": result["remote_unverified"]}, max_age_days, limit)
+        updated["remote_unverified"] = remote["jobs"]
+        updated["remote_unverified_count"] = remote["count"]
+        updated["remote_unverified_excluded_by_age"] = remote["excluded_by_age"]
+    return updated
 
 
 def gross(params, name):
