@@ -232,6 +232,8 @@ def dispatch(path, q):
                 continue
             items.append({"id": j["id"], "isco08": j["isco08"],
                           "label": (j["translations"].get(lang) or j["translations"]["en"]),
+                          "isco08_major_group": j["isco08_major_group"],
+                          "group_mapping_caution": j["group_mapping_caution"],
                           "translations": j["translations"],
                           "aliases": j.get("aliases", {})})
         return {"language": lang, "fallback": "en", "count": len(items), "occupations": items}
