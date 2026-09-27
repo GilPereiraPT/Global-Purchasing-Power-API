@@ -8,6 +8,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -56,6 +63,20 @@ private data class Region(val code:String,val name:String)
 
 private fun enc(s:String) = URLEncoder.encode(s,"UTF-8")
 private fun number(n:Double):String = String.format(Locale.getDefault(),"%,.2f",n)
+private fun money(n:Double,c:String):String = number(n)+" "+c
+private fun numeric(raw:String):Double? = raw.trim().replace(" ","").replace(",",".").toDoubleOrNull()
+private val insightsIndicators = listOf("inflation_annual","unemployment","gdp_per_capita","ppp_private_consumption","life_expectancy","gini","internet_use")
+private fun indicatorTitle(code:String,lang:String):String {
+    val pt=mapOf("inflation_annual" to "Inflação","unemployment" to "Desemprego",
+        "gdp_per_capita" to "PIB per capita","ppp_private_consumption" to "PPP — consumo privado",
+        "life_expectancy" to "Esperança de vida","gini" to "Desigualdade (Gini)",
+        "internet_use" to "Utilização da Internet")
+    val en=mapOf("inflation_annual" to "Inflation","unemployment" to "Unemployment",
+        "gdp_per_capita" to "GDP per capita","ppp_private_consumption" to "PPP — private consumption",
+        "life_expectancy" to "Life expectancy","gini" to "Inequality (Gini)",
+        "internet_use" to "Internet usage")
+    return (if(lang=="pt") pt else en)[code] ?: code
+}
 private fun salaryLabel(job:JSONObject,lang:String):String {
     val explicit = job.optString("salary_text","").trim()
     if (explicit.isNotEmpty() && explicit != "null") return explicit
@@ -115,12 +136,26 @@ class MainActivity:ComponentActivity() {
     var fromYear by remember { mutableStateOf("2020") }
     var toYear by remember { mutableStateOf("2026") }
     var request by remember { mutableStateOf("") }
+    var requestId by remember { mutableIntStateOf(0) }
+    var fxFrom by remember { mutableStateOf("EUR") }
+    var fxTo by remember { mutableStateOf("USD") }
+    var fxId by remember { mutableIntStateOf(0) }
+    var fxResult by remember { mutableStateOf<JSONObject?>(null) }
+    var fxError by remember { mutableStateOf("") }
+    var fxLoading by remember { mutableStateOf(false) }
+    var wageFx by remember { mutableStateOf<Map<String,JSONObject>>(emptyMap()) }
+    var insightCountries by remember { mutableStateOf(listOf("PT","ES")) }
+    var insightIndicator by remember { mutableStateOf("inflation_annual") }
+    var insightId by remember { mutableIntStateOf(0) }
+    var insightData by remember { mutableStateOf<JSONObject?>(null) }
+    var insightError by remember { mutableStateOf("") }
+    var insightLoading by remember { mutableStateOf(false) }
     var requestPage by remember { mutableStateOf("") }
     var response by remember { mutableStateOf<JSONObject?>(null) }
     var error by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
-    fun navigate(next:String) { page=next; request=""; response=null; error=""; loading=false }
-    fun search(path:String) { response=null; error=""; requestPage=page; request=path }
+    fun navigate(next:String) { page=next; request=""; requestId++; response=null; error=""; loading=false }
+    fun search(path:String) { response=null; error=""; requestPage=page; request=path; requestId++ }
     val dark=when(appearance) {
         "dark" -> true
         "light" -> false
@@ -164,17 +199,72 @@ class MainActivity:ComponentActivity() {
     }
     LaunchedEffect(currency) { prefs.edit().putString("currency",currency).apply() }
     LaunchedEffect(appearance) { prefs.edit().putString("theme",appearance).apply() }
-    LaunchedEffect(request) {
+    LaunchedEffect(requestId) {
         if(request.isNotBlank()) {
             val target=requestPage
+            val requestPath=request
             loading=true
             try {
-                val data=api(request)
-                if(page==target) response=data
+                val data=api(requestPath)
+                if(page==target && request==requestPath) response=data
             } catch(e:Exception) {
-                if(page==target) error=e.message ?: "Network error"
-            } finally { if(page==target) loading=false }
+                if(e is CancellationException) throw e
+                if(page==target && request==requestPath) error=if(page=="inflation" || page=="power") "Dados de inflação indisponíveis para este período." else "Não foi possível atualizar. Tenta novamente."
+            } finally { if(page==target && request==requestPath) loading=false }
         }
+    }
+    LaunchedEffect(fxId) {
+        if(fxId==0) return@LaunchedEffect
+        val from=fxFrom; val to=fxTo; val initial=numeric(amount)
+        fxResult=null; fxError=""; fxLoading=true
+        try {
+            require(initial!=null && initial>=0) { "Introduz um montante válido." }
+            val first=if(from=="EUR") JSONObject().put("units_per_eur",1.0).put("period","") else api("/v1/exchange-rates/"+from)
+            val second=if(to=="EUR") JSONObject().put("units_per_eur",1.0).put("period","") else api("/v1/exchange-rates/"+to)
+            val a=first.optDouble("units_per_eur",Double.NaN); val b=second.optDouble("units_per_eur",Double.NaN)
+            require(a.isFinite() && b.isFinite() && a>0 && b>0) { "Taxa de câmbio indisponível." }
+            val dateA=first.optString("period"); val dateB=second.optString("period")
+            require(dateA.isBlank() || dateB.isBlank() || dateA==dateB) { "As taxas têm datas diferentes. Tenta novamente." }
+            fxResult=JSONObject().put("from",from).put("to",to).put("value",initial*b/a)
+                .put("rate",b/a).put("period",if(dateB.isNotBlank()) dateB else dateA)
+        } catch(e:Exception) {
+            if(e is CancellationException) throw e
+            fxError=e.message?.takeIf { !it.startsWith("HTTP ") } ?: "Não foi possível obter as taxas. Tenta novamente."
+        } finally { fxLoading=false }
+    }
+    LaunchedEffect(currency,response,page) {
+        wageFx=emptyMap()
+        if(page !in listOf("salary","compare") || response==null) return@LaunchedEffect
+        val sides=if(page=="salary") listOfNotNull(response) else
+            listOfNotNull(response?.optJSONObject("country_a"),response?.optJSONObject("country_b"))
+        val sourceCurrencies=sides.mapNotNull { it.optJSONObject("annual_presentation")
+            ?.takeIf { row -> row.optString("status")=="available" }?.optString("currency") }
+            .filter { it.isNotBlank() && it!=currency }.toSet()
+        if(sourceCurrencies.isEmpty()) return@LaunchedEffect
+        try {
+            val codes=sourceCurrencies+currency
+            val collected=mutableMapOf<String,JSONObject>()
+            for(code in codes) {
+                collected[code]=if(code=="EUR") JSONObject().put("units_per_eur",1.0).put("period","")
+                    else api("/v1/exchange-rates/"+code)
+            }
+            wageFx=collected
+        } catch(e:Exception) { if(e is CancellationException) throw e }
+    }
+    LaunchedEffect(insightId) {
+        if(insightId==0) return@LaunchedEffect
+        val codes=insightCountries.toList(); val indicator=insightIndicator
+        insightData=null; insightError=""; insightLoading=true
+        try {
+            val results=JSONObject()
+            for(code in codes) {
+                results.put(code,api("/v1/countries/"+code+"/indicators/"+indicator+"?history=true"))
+            }
+            insightData=results
+        } catch(e:Exception) {
+            if(e is CancellationException) throw e
+            insightError="Não foi possível consultar os indicadores. Tenta novamente."
+        } finally { insightLoading=false }
     }
     BackHandler(enabled=onboarded && page!="home") { navigate("home") }
     MaterialTheme(colorScheme=palette) {
