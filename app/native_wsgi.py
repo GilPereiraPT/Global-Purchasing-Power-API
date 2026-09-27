@@ -11,6 +11,7 @@ import hmac
 import unicodedata
 import threading
 from pathlib import Path
+from datetime import datetime, timezone
 from urllib.parse import parse_qs
 
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
@@ -25,7 +26,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.10"
+VERSION = "0.5.11"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -112,6 +113,33 @@ def boolean(params, name, default=False):
     if text in ("false", "0", "no"):
         return False
     raise ApiError(422, "Invalid boolean: " + name)
+
+
+
+def recent_jobs(result, max_age_days, limit):
+    """Filter known old publication dates, without mistaking fetch time for age."""
+    now = datetime.now(timezone.utc)
+    kept, excluded = [], 0
+    for job in result["jobs"]:
+        published = job.get("published_at")
+        try:
+            date = datetime.fromisoformat(published.replace("Z", "+00:00"))
+            if date.tzinfo is None:
+                date = date.replace(tzinfo=timezone.utc)
+            age = max(0, (now - date.astimezone(timezone.utc)).days)
+        except (AttributeError, TypeError, ValueError, OverflowError):
+            age = None
+        if max_age_days and age is not None and age > max_age_days:
+            excluded += 1
+            continue
+        kept.append({**job, "age_days": age,
+                     "publication_date_status": "reported" if age is not None else "unknown"})
+    return {**result, "jobs": kept[:limit], "count": len(kept),
+            "returned": min(len(kept), limit),
+            "status": "available" if kept else "no_results",
+            "max_age_days": max_age_days,
+            "excluded_by_age": excluded,
+            "publication_date_note": "Provider-reported dates may be original creation or last update; unknown dates are retained and labelled."}
 
 
 def gross(params, name):
@@ -412,15 +440,19 @@ def dispatch(path, q):
         if provider not in ("all", "remotive", "arbeitnow", "himalayas", "jobicy", "remoteok", "greenhouse", "lever", "ashby"):
             raise ApiError(422, "provider must be all, remotive, arbeitnow, himalayas, jobicy, remoteok, greenhouse, lever or ashby")
         published = boolean(q, "salary_published")
+        debug = boolean(q, "debug")
+        max_age_days = integer(q, "max_age_days", 180)
+        if not 0 <= max_age_days <= 36500:
+            raise ApiError(422, "max_age_days must be between 0 and 36500")
         if provider == "remotive":
-            return run_async(jobs.search(c, job, published, limit))
+            return recent_jobs(run_async(jobs.search(c, job, published, 100)), max_age_days, limit)
         from app import arbeitnow_jobs, remote_job_feeds, ats_job_feeds
         if provider in ("himalayas", "jobicy", "remoteok"):
-            return run_async(remote_job_feeds.search(provider, c, job, published, limit))
+            return recent_jobs(run_async(remote_job_feeds.search(provider, c, job, published, 100)), max_age_days, limit)
         if provider == "arbeitnow":
-            return run_async(arbeitnow_jobs.search(c, job, published, limit))
+            return recent_jobs(run_async(arbeitnow_jobs.search(c, job, published, 100)), max_age_days, limit)
         if provider in ("greenhouse", "lever", "ashby"):
-            return run_async(ats_job_feeds.search(provider, c, job, published, limit))
+            return recent_jobs(run_async(ats_job_feeds.search(provider, c, job, published, 100, debug=debug)), max_age_days, limit)
         results, failures = [], []
         for name, fn in (("Remotive", jobs.search), ("Arbeitnow", arbeitnow_jobs.search),
                          ("Himalayas", lambda *args: remote_job_feeds.search("himalayas", *args)),
@@ -436,12 +468,13 @@ def dispatch(path, q):
         if not results:
             raise UpstreamUnavailable("All job feeds unavailable")
         from app.job_dedup import merge_jobs
-        combined = merge_jobs(listing for result in results for listing in result["jobs"])
+        combined = merge_jobs(listing for result in results for listing in recent_jobs(result, max_age_days, 100)["jobs"])
         return {"status": "available" if combined else "no_results",
                 "provider": "EarnWage", "providers": [x["provider"] for x in results],
                 "failed_providers": failures, "country": c, "occupation": job,
                 "count": len(combined), "returned": min(len(combined), limit),
-                "jobs": combined[:limit],
+                "jobs": combined[:limit], "max_age_days": max_age_days,
+                "publication_date_note": "Provider-reported dates may be original creation or last update; unknown dates are retained and labelled.",
                 "scope": "Eight attributed feeds, including curated employer boards, with conservative geographic matching; not a national vacancy census.",
                 "notice": "Each listing links to its attributed provider. Verify eligibility and availability at source."}
     if len(parts) == 4 and parts[:3] == ["v1", "jobs", "remotive"]:
