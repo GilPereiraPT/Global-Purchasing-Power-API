@@ -17,6 +17,7 @@ from app.ilostat_groups import load_snapshot as load_groups, SOURCE_URL as GROUP
 from app.ilostat_import import init_salary_db
 from app.north_america import init as init_north_america
 from app.pt_occupation_wages import init as init_pt_wages
+from app.es_eaes_groups import catalogue as es_eaes_catalogue, SOURCE_URL as ES_GROUP_SOURCE
 from app.store import connect as cache_connect
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -114,6 +115,7 @@ def build_inventory():
         ensure_tables(economic_db)
         salaries = _wages(wage_db)
         rates = _rates(wage_db)
+        es_groups = es_eaes_catalogue()
         raw_groups = load_groups()
         groups = {}
         for row in raw_groups:
@@ -141,6 +143,13 @@ def build_inventory():
             "ilostat_major_groups": {
                 "observed_pairs": 0, "possible_pairs": len(COUNTRY_MAP) * 9,
                 "stored_observations": 0},
+            "es_ine_eaes_groups": {
+                "country": "ES", "status": es_groups["status"],
+                "published_observations": es_groups.get("published_observations", 0),
+                "high_variability_observations": es_groups.get("high_variability_observations", 0),
+                "suppressed_or_missing": es_groups.get("suppressed_or_missing", 0),
+                "group_count": es_groups.get("group_count", 0),
+                "precision": "cno11_major_group_not_exact_occupation"},
         }
         for country, details in COUNTRY_MAP.items():
             wb = {}
@@ -208,6 +217,7 @@ def build_inventory():
                     "total_catalogue_occupations": len(OCCUPATIONS),
                     "occupations": occupations},
                 "ilostat_major_groups": major_groups,
+                "es_ine_eaes_groups": es_groups if country == "ES" else {"status": "not_applicable"},
             })
 
     return {
@@ -239,6 +249,11 @@ def build_inventory():
                 "source_url": GROUP_SOURCE,
                 "update_mechanism": "validated_local_snapshot",
                 "precision": "ISCO-08 major group, not exact occupation salary"},
+            "es_ine_eaes_groups": {
+                "source": "INE Spain, Encuesta Anual de Estructura Salarial",
+                "source_url": ES_GROUP_SOURCE,
+                "precision": "CNO-11 broad group, never individual profession",
+                "update_mechanism": "committed_official_publication_snapshot"},
             "exchange_rates": {
                 "source": "ECB",
                 "update_mechanism": "24_hour_on_demand_cache",
@@ -253,6 +268,7 @@ def build_inventory():
                 "ilostat_exact": (ROOT / "data" / "salaries_snapshot.json").is_file(),
                 "north_america": (ROOT / "data" / "north_america_wages.json").is_file(),
                 "portugal_ine_gep": (ROOT / "data" / "pt_occupation_wages.json").is_file(),
+                "spain_ine_eaes_groups": (ROOT / "data" / "es_ine_eaes_28186.json").is_file(),
                 "ilostat_major_groups":
                     (ROOT / "data" / "ilostat_group_salaries.json").is_file(),
             },
