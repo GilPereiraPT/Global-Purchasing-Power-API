@@ -417,45 +417,9 @@ class MainActivity:ComponentActivity() {
                             }
                         }
                         "insights" -> {
-                            item {Heading(if(lang=="pt") "Comparar países" else "Country insights")}
-                            item {Caption(if(lang=="pt") "Seleciona entre 2 e 5 países e um indicador." else "Select 2 to 5 countries and an indicator.")}
                             item {
-                                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement=Arrangement.spacedBy(7.dp)) {
-                                    countries.forEach { place ->
-                                        FilterChip(selected=place.code in insightCountries,
-                                            onClick={
-                                                insightCountries=if(place.code in insightCountries)
-                                                    insightCountries.filterNot {it==place.code}.takeIf {it.size>=2} ?: insightCountries
-                                                else if(insightCountries.size<5) insightCountries+place.code else insightCountries
-                                                insightData=null
-                                            },label={Text(countryFlag(place.code)+" "+place.code)})
-                                    }
-                                }
-                            }
-                            item { SelectMenu(if(lang=="pt") "Indicador" else "Indicator",
-                                insightsIndicators,insightIndicator) {insightIndicator=it; insightData=null} }
-                            item {Button(onClick={insightId++},modifier=Modifier.fillMaxWidth()) {
-                                Text(if(lang=="pt") "Comparar indicadores" else "Compare indicators")
-                            }}
-                            if(insightLoading) item {CircularProgressIndicator()}
-                            if(insightError.isNotBlank()) item {Metric(tr(lang,"unavailable"),insightError)}
-                            insightData?.let {data ->
-                                item {Heading(indicatorTitle(insightIndicator,lang),20)}
-                                item {InsightsGraph(data,insightCountries,insightIndicator,countries)}
-                                insightCountries.forEach {code ->
-                                    item {
-                                        val d=data.optJSONObject(code)
-                                        val name=countries.find {it.code==code}?.name ?: code
-                                        val v=d?.optDouble("value",Double.NaN) ?: Double.NaN
-                                        val period=d?.optInt("year",0) ?: 0
-                                        Metric(countryFlag(code)+" "+name,
-                                            if(d?.optString("status")=="available" && v.isFinite())
-                                                number(v)+if(insightIndicator in listOf("inflation_annual","unemployment","internet_use")) " %" else ""
-                                            else tr(lang,"unavailable"),
-                                            if(period>0) period.toString()+" · World Bank" else "")
-                                    }
-                                }
+                                CountryInsightsDashboard(countries.map { it.code to it.name },
+                                    currency, lang)
                             }
                         }
                         "settings" -> {
