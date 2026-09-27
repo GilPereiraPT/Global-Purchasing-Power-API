@@ -83,10 +83,11 @@ WORLDWIDE = re.compile(r"\b(worldwide|anywhere|global|work from anywhere|any loc
 
 
 def title_matches(title: str, occupation: str) -> bool:
+    """Match curated seven-language occupation titles without broad catch-all stems."""
     if occupation not in TITLES or not TITLES[occupation]:
         return False
-    return any(re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", title, re.I)
-               for term in TITLES[occupation])
+    from app.job_dictionary import matches
+    return matches(title, occupation)
 
 
 def location_matches(location: str, country: str) -> str | None:
