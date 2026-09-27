@@ -173,6 +173,11 @@ def dispatch(path, q):
         return configuration()
     if path == "/v1/earnwage/coverage":
         return ew.coverage()
+    if path == "/v1/earnwage/history":
+        return ew.history(country(one(q, "country")),
+                          occupation(one(q, "occupation")),
+                          integer(q, "start_year", 2015),
+                          integer(q, "end_year", 2025))
     if path == "/v1/earnwage/overview":
         return ew.overview(country(one(q, "country")),
                            occupation(one(q, "occupation")),
