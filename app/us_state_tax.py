@@ -45,11 +45,31 @@ def state_wage_income_tax(region, tax_year=2026, annual_gross=None):
                 "state_income_tax_status": "not_implemented",
                 "reason": "California state income-tax liability, credits and deductions are not yet validated; SDI is a separate payroll contribution."}
     if region == "NY":
-        return {"status": "not_implemented", "state": "NY", "tax_year": 2026,
+        taxable = max(0.0, annual_gross - 8000) if annual_gross is not None else None
+        # NY Tax Law 601(c)(1)(B)(vii): 2026 SINGLE schedule only.
+        # For this wage-only scenario AGI < 107,650: no supplemental recapture.
+        brackets = ((8500, 0, .039), (11700, 332, .044),
+                    (13900, 473, .0515), (80650, 586, .054),
+                    (215400, 4191, .059))
+        preview = None
+        if taxable is not None and annual_gross <= 107650:
+            for ceiling, base, rate in brackets:
+                if taxable <= ceiling:
+                    floor = (0 if ceiling == 8500 else
+                             8500 if ceiling == 11700 else
+                             11700 if ceiling == 13900 else
+                             13900 if ceiling == 80650 else 80650)
+                    preview = round(base + (taxable - floor) * rate, 2)
+                    break
+        return {"status": "partial_components" if preview is not None else "not_implemented", "state": "NY", "tax_year": 2026,
                 "state_wage_income_tax": None,
                 "standard_deduction_single_reference": 8000,
+                "state_taxable_income_preview": taxable,
+                "state_income_tax_schedule_before_credits": preview,
+                "schedule_scope": "2026 NY Tax Law 601(c) single resident, wage-only scenario, AGI <= 107650; no NY City or Yonkers tax, no credits",
+                "schedule_source": "https://www.nysenate.gov/legislation/laws/TAX/601",
                 "standard_deduction_source": "https://www.tax.state.ny.us/forms/current-forms/it/it2104i.htm",
-                "reason": "New York 2026 single-filer deduction documented; full state income-tax computation and applicable credits/recapture are not yet validated."}
+                "reason": "Pre-credit NY statutory schedule is a partial illustration; state tax after credits and city/local taxes are not validated."}
     return {"status": "not_implemented", "state": region, "tax_year": tax_year,
             "state_wage_income_tax": None,
             "reason": "State-specific wage-income-tax calculation has not been validated."}
