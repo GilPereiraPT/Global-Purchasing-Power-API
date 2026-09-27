@@ -8,7 +8,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.country_insights import ISO3, INDICATORS, SOURCE
+from app.country_insights import ISO3, INDICATORS, SOURCE, UHC_SERIES
 
 
 def db_path():
@@ -104,6 +104,13 @@ def read_indicator(db, country, name, year=None, history=False):
         "last_successful_refresh": log[1] if log else None,
         "refresh_status": log[2] if log else "not_imported",
     }
+    if name == "health_coverage":
+        result["source"] = "WHO Universal Health Coverage Dataset via World Bank API"
+        result["sdg_indicator"] = "3.8.1"
+        result["methodology"] = UHC_SERIES["methodology"]
+        result["methodology_url"] = UHC_SERIES["methodology_url"]
+        result["legacy_indicator_code"] = UHC_SERIES["legacy"]
+        result["note"] += " " + UHC_SERIES["note"]
     if history:
         result["history"] = matching
     if log and log[3]:
