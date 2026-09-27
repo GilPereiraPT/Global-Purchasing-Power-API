@@ -10,8 +10,8 @@ android {
         applicationId = "com.earnwage.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.7.0"
+        versionCode = 4
+        versionName = "0.7.1"
         buildConfigField("String", "API_BASE_URL", "\"https://earnwage-api.policlinicosdesantoandre.com\"")
     }
     buildTypes {
