@@ -190,6 +190,27 @@ def dispatch(path, q):
                           one(q, "region_a"), one(q, "region_b"),
                           gross(q, "annual_gross_a"), gross(q, "annual_gross_b"),
                           integer(q, "tax_year", 2026))
+    if path == "/v1/economy/coverage":
+        from app.country_insights import ISO3
+        from app.country_insights_store import connect, read_indicator
+        names = ("inflation_annual", "ppp_private_consumption")
+        with connect() as db:
+            rows = []
+            for code in ISO3:
+                metrics = {name: read_indicator(db, code, name) for name in names}
+                rows.append({"country": code, "currency": COUNTRY_MAP[code]["currency"],
+                             "indicators": metrics})
+        return {"countries": rows, "count": len(rows),
+                "note": "Annual CPI inflation and household consumption PPP are distinct measures; observation years may differ."}
+    if path == "/v1/economy/compare":
+        from app.country_insights_store import connect, read_indicator
+        first, second = country(one(q, "country_a")), country(one(q, "country_b"))
+        names = ("inflation_annual", "ppp_private_consumption")
+        with connect() as db:
+            rows = [{"country": code, "currency": COUNTRY_MAP[code]["currency"],
+                     "indicators": {name: read_indicator(db, code, name) for name in names}}
+                    for code in (first, second)]
+        return {"countries": rows, "note": "PPP private consumption is local currency per international dollar. Do not divide two wages without matching years and verified units; this is not a city cost-of-living estimate."}
     if path == "/v1/indicators":
         from app.country_insights import INDICATORS
         return {"indicators": [{"name": name, "code": code, "unit": unit}
