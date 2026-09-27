@@ -23,7 +23,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.4"
+VERSION = "0.5.5"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -190,6 +190,37 @@ def dispatch(path, q):
                           one(q, "region_a"), one(q, "region_b"),
                           gross(q, "annual_gross_a"), gross(q, "annual_gross_b"),
                           integer(q, "tax_year", 2026))
+    if path == "/v1/indicators":
+        from app.country_insights import INDICATORS
+        return {"indicators": [{"name": name, "code": code, "unit": unit}
+                for name, (code, unit) in INDICATORS.items()],
+                "safety": {"name": "Gallup Law and Order Index",
+                           "status": "not_connected",
+                           "alternative_sdg": "16.1.4"}}
+    if path == "/v1/compare/indicators":
+        from app.country_insights import country_insights
+        raw = one(q, "countries")
+        if not raw:
+            raise ApiError(422, "countries is required (e.g. PT,DE,US)")
+        codes = [country(item.strip()) for item in raw.split(",")]
+        if not 2 <= len(codes) <= 5 or len(set(codes)) != len(codes):
+            raise ApiError(422, "Supply 2 to 5 distinct supported countries")
+        return {"countries": [country_insights(code) for code in codes],
+                "note": "Compare matching indicators with their individual reference years; no composite ranking."}
+    parts_insights = [p for p in path.split("/") if p]
+    if len(parts_insights) >= 4 and parts_insights[:2] == ["v1", "countries"] and parts_insights[3] == "indicators":
+        from app.country_insights import country_insights, indicator, safety
+        code = country(parts_insights[2])
+        if len(parts_insights) == 4:
+            return country_insights(code)
+        if len(parts_insights) == 5:
+            if parts_insights[4] == "safety":
+                return safety(code)
+            year_raw = one(q, "year")
+            year = integer(q, "year", None) if year_raw is not None else None
+            return indicator(code, parts_insights[4], year=year,
+                             history=boolean(q, "history", False))
+        raise ApiError(404, "Unknown indicator route")
     if path == "/v1/countries":
         return {"countries": list(COUNTRY_MAP.values()), "count": len(COUNTRY_MAP)}
     if path == "/v1/languages":
