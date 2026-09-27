@@ -57,8 +57,8 @@ def test_inventory_separates_real_sources_and_unimported(monkeypatch, tmp_path):
     assert life["refresh_status"] == "upstream_unavailable"
     assert pt["eurostat_ons_oecd"]["hicp_annual_change_monthly"]["period"] == "2026-08"
     assert es["world_bank"]["life_expectancy"]["status"] == "not_imported"
-    assert "net_annual_earnings_reference" not in response["countries"][-1]["eurostat_ons_oecd"] \
-           if response["countries"][-1]["code"] not in inventory.EUROSTAT_COUNTRIES else True
+    assert next(c for c in response["countries"] if c["code"] == "US")[
+        "eurostat_ons_oecd"] == {}
     assert pt["exact_occupational_wages"]["occupations"]["cook"]["status"] == "available"
     assert pt["exact_occupational_wages"]["occupations"]["cook"]["sources"][0]["latest_period"] == "2025"
     assert pt["exact_occupational_wages"]["occupations"]["nurse"]["status"] == "not_imported"
