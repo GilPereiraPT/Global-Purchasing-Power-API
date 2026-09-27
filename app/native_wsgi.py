@@ -32,7 +32,7 @@ JOBS = {job["id"]: job for job in OCCUPATIONS}
 INITIALIZED = False
 INIT_LOCK = threading.Lock()
 HTTP_STATUS = {
-    200: "200 OK", 400: "400 Bad Request", 404: "404 Not Found",
+    200: "200 OK", 204: "204 No Content", 400: "400 Bad Request", 404: "404 Not Found",
     405: "405 Method Not Allowed", 413: "413 Content Too Large",
     422: "422 Unprocessable Entity", 503: "503 Service Unavailable",
     401: "401 Unauthorized", 403: "403 Forbidden",
@@ -462,6 +462,18 @@ def application(environ, start_response):
     if origin != "https://gilpereirapt.github.io":
         origin = None
     path = environ.get("PATH_INFO", "/")
+    if path.rstrip("/") == "/v1/admin/eurostat/import" and method == "OPTIONS":
+        if origin != "https://gilpereirapt.github.io":
+            return reply(start_response, {"error": "forbidden_origin"}, 403, "OPTIONS", origin)
+        start_response("204 No Content", [
+            ("Access-Control-Allow-Origin", origin),
+            ("Access-Control-Allow-Methods", "POST, OPTIONS"),
+            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token"),
+            ("Access-Control-Max-Age", "600"),
+            ("Vary", "Origin"),
+            ("Cache-Control", "no-store"),
+            ("Content-Length", "0")])
+        return []
     if path.rstrip("/") == "/v1/admin/eurostat/import" and method == "POST":
         return admin_eurostat(environ, start_response, origin)
     if method not in ("GET", "HEAD"):
