@@ -26,7 +26,7 @@ def test_native_wsgi_health_and_config():
     code, body, headers = request("/v1/health")
     assert code == 200
     assert body["status"] == "ok"
-    assert body["version"] == "0.5.13"
+    assert body["version"] == "0.5.14"
     assert body["runtime"] == "native_wsgi"
     assert headers["Content-Type"].startswith("application/json")
     assert request("/v1/app-config")[1]["product"]["name"] == "EarnWage"
