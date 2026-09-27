@@ -59,6 +59,7 @@ CANADA_NOC = {
 }
 # US SOC 2018 detailed units. Avoid conflating related-but-distinct occupations.
 US_SOC = {
+    "accountant": ("13-2011", "Accountants and Auditors"),
     "nurse": ("29-1141", "Registered Nurses"),
     "civil_engineer": ("17-2051", "Civil Engineers"),
     "electrician": ("47-2111", "Electricians"),
