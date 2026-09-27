@@ -479,7 +479,8 @@ class MainActivity:ComponentActivity() {
                     }
                     if(loading) item { CircularProgressIndicator() }
                     if(error.isNotBlank()) item {
-                        Metric(tr(lang,"unavailable"),error,tr(lang,"retry"))
+                        Metric(tr(lang,"unavailable"),error)
+                        TextButton(onClick={requestId++}) {Text(if(lang=="pt") "Tentar novamente" else "Retry")}
                     }
                     response?.let { data ->
                         if(page=="jobs") {
@@ -494,7 +495,7 @@ class MainActivity:ComponentActivity() {
                                 Caption("Showing first "+arr.length()+" results; refine filters to narrow the search.")
                             }
                         } else if(page in listOf("salary","compare","inflation","power","exchange")) {
-                            item { ApiResult(page,data,lang,country,fromYear,toYear,previous.toDoubleOrNull(),current.toDoubleOrNull(),amount.toDoubleOrNull()) }
+                            item { ApiResult(page,data,lang,country,fromYear,toYear,numeric(previous),numeric(current),numeric(amount),currency,wageFx) }
                         }
                     }
                 }
@@ -679,13 +680,12 @@ private fun parseRegions(data:JSONObject):List<Region> {
     }
 }
 @Composable private fun ApiResult(page:String,data:JSONObject,lang:String,origin:String,
-    start:String,end:String,previous:Double?,current:Double?,amount:Double?) {
+    start:String,end:String,previous:Double?,current:Double?,amount:Double?,currency:String,fx:Map<String,JSONObject>) {
     when(page) {
-        "salary" -> WageCard(data,lang)
+        "salary" -> WageCard(data,lang,currency,fx)
         "compare" -> {
-            data.optJSONObject("country_a")?.let {WageCard(it,lang)}
-            data.optJSONObject("country_b")?.let {WageCard(it,lang)}
-            Caption(tr(lang,"nethint"))
+            data.optJSONObject("country_a")?.let {WageCard(it,lang,currency,fx)}
+            data.optJSONObject("country_b")?.let {WageCard(it,lang,currency,fx)}
         }
         "exchange" -> {
             val rate=data.optDouble("units_per_eur",Double.NaN)
@@ -698,43 +698,81 @@ private fun parseRegions(data:JSONObject):List<Region> {
             } else Metric(tr(lang,"unavailable"),tr(lang,"nomatch"))
         }
         "inflation","power" -> {
-            val arr=data.optJSONArray("series") ?: JSONArray()
-            val observations=(0 until arr.length()).mapNotNull{arr.optJSONObject(it)}
-            val first=observations.firstOrNull{it.optString("period").startsWith(start)}
-            val last=observations.lastOrNull{it.optString("period").startsWith(end)}
-            val a=first?.optDouble("index",Double.NaN) ?: Double.NaN
-            val b=last?.optDouble("index",Double.NaN) ?: Double.NaN
-            if(a.isFinite() && b.isFinite() && a>0 && b>0 &&
-                first!!.optString("period")<last!!.optString("period")) {
-                val factor=b/a
+            val arr=data.optJSONArray("history") ?: JSONArray()
+            val byYear=(0 until arr.length()).mapNotNull {arr.optJSONObject(it)}.associateBy {it.optInt("year")}
+            val first=start.toIntOrNull() ?: 0
+            val last=end.toIntOrNull() ?: 0
+            val annual=if(last>first && last-first<=100) (first+1..last).map { y ->
+                byYear[y]?.optDouble("value",Double.NaN) ?: Double.NaN
+            } else emptyList()
+            if(annual.isNotEmpty() && annual.all {it.isFinite() && it>-100}) {
+                val factor=annual.fold(1.0){acc,n -> acc*(1+n/100)}
                 Metric(tr(lang,"inflation"),number((factor-1)*100)+" %",
-                    first.optString("period")+" → "+last.optString("period")+" · "+data.optString("source"))
+                    start+" → "+end+" · World Bank")
                 if(page=="power" && previous!=null && previous>0) {
                     val needed=previous*factor
-                    Metric("Income required",number(needed),"Verified national inflation · original income units")
-                    if(current!=null && current>=0) Metric("Real income change",
-                        number((current/needed-1)*100)+" %","Based on national inflation, not city costs")
+                    Metric(if(lang=="pt") "Salário necessário" else "Required salary",
+                        money(needed,currency),if(lang=="pt") "Para manter o poder de compra" else "To maintain purchasing power")
+                    Metric(if(lang=="pt") "Aumento necessário" else "Required increase",
+                        money(needed-previous,currency))
+                    if(current!=null && current>=0 && needed>0) Metric(
+                        if(lang=="pt") "Variação real do salário" else "Real salary change",
+                        number((current/needed-1)*100)+" %")
                 }
-            } else Metric(tr(lang,"unavailable"),tr(lang,"nomatch"),tr(lang,"powernote"))
+            } else Metric(tr(lang,"unavailable"),
+                if(lang=="pt") "Não existem dados verificados para todos os anos selecionados." else "Verified data are missing for some selected years.")
         }
     }
 }
-@Composable private fun WageCard(data:JSONObject,lang:String) {
+@Composable private fun InsightsGraph(data:JSONObject,codes:List<String>,indicator:String,places:List<Place>) {
+    val samples=codes.mapNotNull {code ->
+        val item=data.optJSONObject(code) ?: return@mapNotNull null
+        val v=item.optDouble("value",Double.NaN)
+        if(item.optString("status")=="available" && v.isFinite() && v>=0) code to v else null
+    }
+    if(samples.isEmpty()) return
+    val max=samples.maxOf {it.second}.coerceAtLeast(1.0)
+    val colors=listOf(Color(0xFFF1D28C),Color(0xFF60CCB2),Color(0xFF8BABF0),Color(0xFFDAA1D3),Color(0xFFFF9D80))
+    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+        samples.forEachIndexed {i,(code,v) ->
+            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                Text(countryFlag(code)+" "+code,modifier=Modifier.width(58.dp),fontSize=12.sp)
+                LinearProgressIndicator(progress={ (v/max).toFloat().coerceIn(0f,1f) },
+                    modifier=Modifier.weight(1f).height(12.dp),
+                    color=colors[i%colors.size],trackColor=MaterialTheme.colorScheme.surface)
+                Text(number(v),fontSize=12.sp)
+            }
+        }
+    }
+}
+@Composable private fun WageCard(data:JSONObject,lang:String,preferred:String,fx:Map<String,JSONObject>) {
     val c=data.optJSONObject("country")
-    val name=(c?.optString("code") ?: "")+" · "+(c?.optString("name") ?: "")
+    val code=c?.optString("code") ?: ""
+    val name=c?.optString("name") ?: code
     val annual=data.optJSONObject("annual_presentation")
-    val exact=data.optJSONObject("national_occupation_wage")?.optString("status")=="available"
-    val valid=annual?.optString("status")=="available"
-    if(valid) {
-        val value=annual!!.optDouble("value",Double.NaN)
-        if(value.isFinite()) {
-            Metric(countryFlag(c?.optString("code") ?: "")+" "+name,
-                number(value)+" "+annual.optString("currency")+
-                    (if(annual.optString("unit")=="per_year") " / year" else ""),
-                (if(exact) tr(lang,"profession") else "ISCO-08 major-group context (NOT profession salary)")+
-                    " · "+annual.optString("reference_period")+" · "+annual.optString("source"))
-            Caption(annual.optString("note"))
-        } else Metric(name,tr(lang,"nomatch"))
-    } else Metric(name,tr(lang,"nomatch"))
-    Caption(tr(lang,"wagesnote"))
+    if(annual?.optString("status")!="available") {
+        Metric(countryFlag(code)+" "+name,tr(lang,"nomatch")); return
+    }
+    val value=annual.optDouble("value",Double.NaN)
+    val local=annual.optString("currency")
+    if(!value.isFinite() || local.isBlank()) {
+        Metric(countryFlag(code)+" "+name,tr(lang,"nomatch")); return
+    }
+    val a=if(local=="EUR") 1.0 else fx[local]?.optDouble("units_per_eur",Double.NaN) ?: Double.NaN
+    val b=if(preferred=="EUR") 1.0 else fx[preferred]?.optDouble("units_per_eur",Double.NaN) ?: Double.NaN
+    val dateA=fx[local]?.optString("period").orEmpty()
+    val dateB=fx[preferred]?.optString("period").orEmpty()
+    val canConvert=local==preferred || (a.isFinite() && b.isFinite() && a>0 && b>0 &&
+        (dateA.isBlank() || dateB.isBlank() || dateA==dateB))
+    val suffix=if(annual.optString("unit")=="per_year") if(lang=="pt") " / ano" else " / year" else ""
+    val displayed=if(local==preferred) value else value*b/a
+    val label=if(data.optJSONObject("national_occupation_wage")?.optString("status")=="available")
+        if(lang=="pt") "Salário profissional" else "Occupation wage"
+    else if(lang=="pt") "Referência do grupo profissional" else "Occupational group reference"
+    val source=annual.optString("reference_period")+" · "+annual.optString("source")
+    if(canConvert) Metric(countryFlag(code)+" "+name,money(displayed,preferred)+suffix,
+        label+" · "+source+
+        (if(local!=preferred) "\n"+(if(lang=="pt") "Moeda local: " else "Local currency: ")+money(value,local)+suffix else ""))
+    else Metric(countryFlag(code)+" "+name,money(value,local)+suffix,
+        source+" · "+(if(lang=="pt") "Conversão indisponível" else "Conversion unavailable"))
 }
