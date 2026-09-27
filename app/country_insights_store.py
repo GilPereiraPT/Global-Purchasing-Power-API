@@ -8,7 +8,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.country_insights import ISO3, INDICATORS, SOURCE, UHC_SERIES
+from app.country_insights import ISO3, INDICATORS, INDICATOR_METADATA, SOURCE, UHC_SERIES
 
 
 def db_path():
@@ -104,6 +104,17 @@ def read_indicator(db, country, name, year=None, history=False):
         "last_successful_refresh": log[1] if log else None,
         "refresh_status": log[2] if log else "not_imported",
     }
+    metadata = INDICATOR_METADATA.get(name)
+    if metadata:
+        result["family"], result["underlying_source"] = metadata
+        if name in ("political_stability", "rule_of_law", "control_of_corruption"):
+            result["note"] += " Revised WGI perception-based governance score, not a percentage of people or a crime count."
+        elif name in ("bribery_incidence_firms", "tax_official_gifts_firms"):
+            result["note"] += " Enterprise Survey sample; not an annual census or a measure of all households."
+        elif name == "battle_related_deaths":
+            result["note"] += " Absolute conflict-related deaths; no record must never be interpreted as zero."
+        elif name == "pm25_air_pollution":
+            result["note"] += " Estimated national population-weighted PM2.5 exposure; not a city air-quality reading."
     if name == "health_coverage":
         result["source"] = "WHO Global Health Observatory, mirrored by World Bank"
         result["source_url"] = ("https://ghoapi.azureedge.net/api/UHC_INDEX_REPORTED")

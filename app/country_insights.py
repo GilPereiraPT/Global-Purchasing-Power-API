@@ -30,6 +30,47 @@ INDICATORS = {
     "internet_use": ("IT.NET.USER.ZS", "percent_of_population"),
     "inflation_annual": ("FP.CPI.TOTL.ZG", "annual_percent"),
     "ppp_private_consumption": ("PA.NUS.PRVT.PP", "local_currency_units_per_international_dollar"),
+    # Public World Bank WDI series (source licence: CC BY 4.0 on each indicator page).
+    # Safety: national observations; no claim about city-level security.
+    "intentional_homicides": ("VC.IHR.PSRC.P5", "per_100000_people"),
+    "intentional_homicides_female": ("VC.IHR.PSRC.FE.P5", "per_100000_female"),
+    "intentional_homicides_male": ("VC.IHR.PSRC.MA.P5", "per_100000_male"),
+    "political_stability": ("GOV_WGI_PV_SC", "governance_score_0_100"),
+    "rule_of_law": ("GOV_WGI_RL_SC", "governance_score_0_100"),
+    "battle_related_deaths": ("VC.BTL.DETH", "persons"),
+    # Governance perceptions and sampled Enterprise Surveys (not annual censuses).
+    "control_of_corruption": ("GOV_WGI_CC_SC", "governance_score_0_100"),
+    "bribery_incidence_firms": ("IC.FRM.BRIB.ZS", "percent_of_firms"),
+    "tax_official_gifts_firms": ("IC.TAX.GIFT.ZS", "percent_of_firms"),
+    # Work, health-system resources and the environment.
+    "youth_unemployment": ("SL.UEM.1524.ZS", "percent_of_labor_force_ages_15_24"),
+    "employment_population_ratio": ("SL.EMP.TOTL.SP.ZS", "percent_of_population_ages_15_plus"),
+    "advanced_education_unemployment": ("SL.UEM.ADVN.ZS", "percent_of_advanced_education_labor_force"),
+    "physicians": ("SH.MED.PHYS.ZS", "per_1000_people"),
+    "hospital_beds": ("SH.MED.BEDS.ZS", "per_1000_people"),
+    "out_of_pocket_health_expenditure": ("SH.XPD.OOPC.CH.ZS", "percent_of_current_health_expenditure"),
+    "pm25_air_pollution": ("EN.ATM.PM25.MC.M3", "micrograms_per_cubic_meter"),
+}
+# Attribution is additive: the public data distributor remains the World Bank WDI.
+# Do not turn perception scores, business survey samples or battle death counts
+# into city-crime rates, annual censuses or implicit zeroes for missing countries.
+INDICATOR_METADATA = {
+    "intentional_homicides": ("safety", "UNODC"),
+    "intentional_homicides_female": ("safety", "UNODC"),
+    "intentional_homicides_male": ("safety", "UNODC"),
+    "political_stability": ("safety", "World Bank Worldwide Governance Indicators"),
+    "rule_of_law": ("safety", "World Bank Worldwide Governance Indicators"),
+    "battle_related_deaths": ("safety", "Uppsala Conflict Data Program"),
+    "control_of_corruption": ("corruption", "World Bank Worldwide Governance Indicators"),
+    "bribery_incidence_firms": ("corruption", "World Bank Enterprise Surveys"),
+    "tax_official_gifts_firms": ("corruption", "World Bank Enterprise Surveys"),
+    "youth_unemployment": ("employment", "ILOSTAT ILO modelled estimates"),
+    "employment_population_ratio": ("employment", "ILOSTAT ILO modelled estimates"),
+    "advanced_education_unemployment": ("employment", "ILOSTAT Education and Mismatch Indicators"),
+    "physicians": ("health", "WHO Global Health Workforce Statistics"),
+    "hospital_beds": ("health", "WHO and country health statistics"),
+    "out_of_pocket_health_expenditure": ("health", "WHO Global Health Expenditure Database"),
+    "pm25_air_pollution": ("environment", "Global Burden of Disease air pollution estimates"),
 }
 # SH.UHC.SRVS.CV.XD is the archived 2000-2021 WHO index. The official
 # revised SDG 3.8.1 indicator is SH_UHC_SCI (2025 methodology; available
