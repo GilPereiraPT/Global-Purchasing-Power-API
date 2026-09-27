@@ -16,6 +16,7 @@ from app.eurostat_economy import EUROSTAT_COUNTRIES, SERIES, ensure_tables, read
 from app.ilostat_groups import load_snapshot as load_groups, SOURCE_URL as GROUP_SOURCE
 from app.ilostat_import import init_salary_db
 from app.north_america import init as init_north_america
+from app.pt_occupation_wages import init as init_pt_wages
 from app.store import connect as cache_connect
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -52,6 +53,7 @@ def _observation(item, history):
 def _wages(db):
     init_salary_db(db)
     init_north_america(db)
+    init_pt_wages(db)
     ilo = db.execute(
         """SELECT country,occupation,COUNT(*),MAX(period)
            FROM salary_observations GROUP BY country,occupation"""
@@ -60,7 +62,11 @@ def _wages(db):
         """SELECT country,occupation,COUNT(*),MAX(reference_period)
            FROM north_america_wages GROUP BY country,occupation"""
     ).fetchall()
+    pt = db.execute("""SELECT country,occupation,COUNT(*),MAX(period)
+         FROM pt_occupation_wages GROUP BY country,occupation""").fetchall()
     return {
+        "INE_GEP": {(country, occupation): (count, str(period))
+                    for country, occupation, count, period in pt},
         "ILOSTAT": {(country, occupation): (count, str(period))
                     for country, occupation, count, period in ilo},
         "BLS_Canada_Job_Bank": {
@@ -131,7 +137,7 @@ def build_inventory():
                 "observed_pairs": 0,
                 "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
                 "stored_observations": 0,
-                "by_source_observations": {"ILOSTAT": 0, "BLS_Canada_Job_Bank": 0}},
+                "by_source_observations": {"ILOSTAT": 0, "BLS_Canada_Job_Bank": 0, "INE_GEP": 0}},
             "ilostat_major_groups": {
                 "observed_pairs": 0, "possible_pairs": len(COUNTRY_MAP) * 9,
                 "stored_observations": 0},
@@ -224,8 +230,9 @@ def build_inventory():
                 "importer": "app/eurostat_economy.py",
                 "update_mechanism": "explicit_import_not_http_request"},
             "exact_occupational_wages": {
-                "source": "ILOSTAT, BLS, Canada Job Bank",
-                "importers": ["app/ilostat_import.py", "app/north_america.py"],
+                "source": "ILOSTAT, BLS, Canada Job Bank, INE/GEP Quadros de Pessoal",
+                "importers": ["app/ilostat_import.py", "app/north_america.py",
+                              "app/pt_occupation_wages.py"],
                 "update_mechanism": "validated_import_and_startup_snapshot"},
             "ilostat_major_groups": {
                 "source": "ILOSTAT",
@@ -245,6 +252,7 @@ def build_inventory():
             "source_snapshots_on_server": {
                 "ilostat_exact": (ROOT / "data" / "salaries_snapshot.json").is_file(),
                 "north_america": (ROOT / "data" / "north_america_wages.json").is_file(),
+                "portugal_ine_gep": (ROOT / "data" / "pt_occupation_wages.json").is_file(),
                 "ilostat_major_groups":
                     (ROOT / "data" / "ilostat_group_salaries.json").is_file(),
             },

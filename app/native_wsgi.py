@@ -59,6 +59,8 @@ def initialize():
             pass
         load_snapshot(ROOT / "data" / "salaries_snapshot.json")
         na.load_snapshot(ROOT / "data" / "north_america_wages.json")
+        from app.pt_occupation_wages import load_snapshot as load_pt_wages
+        load_pt_wages()
         INITIALIZED = True
 
 
