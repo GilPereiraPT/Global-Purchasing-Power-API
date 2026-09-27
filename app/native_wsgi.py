@@ -23,7 +23,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.3"
+VERSION = "0.5.4"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -273,6 +273,9 @@ def dispatch(path, q):
         return {"currency": currency, "status": "unavailable",
                 "reason": "No ECB reference series for this currency"} if value is None else {
                     "status": "available", **value}
+    if len(parts) == 5 and parts[:3] == ["v1", "salaries", "groups"]:
+        from app.ilostat_groups import group_salary
+        return group_salary(country(parts[3]), parts[4])
     if len(parts) == 4 and parts[:2] == ["v1", "salaries"]:
         c, job = country(parts[2]), occupation(parts[3])
         return ew.wage_for(c, job)
