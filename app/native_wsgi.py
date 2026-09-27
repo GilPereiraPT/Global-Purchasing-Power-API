@@ -190,6 +190,40 @@ def dispatch(path, q):
                           one(q, "region_a"), one(q, "region_b"),
                           gross(q, "annual_gross_a"), gross(q, "annual_gross_b"),
                           integer(q, "tax_year", 2026))
+    if path == "/v1/eurostat/coverage":
+        from app.eurostat_economy import EUROSTAT_COUNTRIES, SERIES, ensure_tables, read
+        from app.country_insights_store import connect as insights_connect
+        with insights_connect() as db:
+            ensure_tables(db)
+            rows = [{"country": code,
+                     "indicators": {name: read(db, code, name) for name in SERIES}}
+                    for code in EUROSTAT_COUNTRIES]
+        return {"countries": rows, "count": len(rows),
+                "note": "Coverage is per dataset, not a guarantee of a current observation."}
+    if path == "/v1/eurostat/compare":
+        from app.eurostat_economy import EUROSTAT_COUNTRIES, SERIES, ensure_tables, read
+        from app.country_insights_store import connect as insights_connect
+        a, b = country(one(q, "country_a")), country(one(q, "country_b"))
+        if a not in EUROSTAT_COUNTRIES or b not in EUROSTAT_COUNTRIES:
+            raise ApiError(422, "Eurostat country not supported")
+        if a == b:
+            raise ApiError(422, "Supply two different countries")
+        with insights_connect() as db:
+            ensure_tables(db)
+            rows = [{"country": code,
+                     "indicators": {name: read(db, code, name) for name in SERIES}}
+                    for code in (a, b)]
+        return {"countries": rows, "note": "Compare matching periods and identical indicator definitions; net earnings are a reference scenario, not a personal net salary."}
+    if path.startswith("/v1/eurostat/") and len(path.split("/")) == 5:
+        from app.eurostat_economy import EUROSTAT_COUNTRIES, SERIES, ensure_tables, read
+        from app.country_insights_store import connect as insights_connect
+        parts_eu = path.split("/")
+        code, name = country(parts_eu[3]), parts_eu[4]
+        if code not in EUROSTAT_COUNTRIES or name not in SERIES:
+            raise ApiError(404, "Unknown Eurostat country or indicator")
+        with insights_connect() as db:
+            ensure_tables(db)
+            return read(db, code, name)
     if path == "/v1/economy/coverage":
         from app.country_insights import ISO3
         from app.country_insights_store import connect, read_indicator
