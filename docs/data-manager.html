@@ -64,6 +64,7 @@ code{word-break:break-word}
 <option value="refresh">Voltar a consultar mesmo que haja dados</option></select></div>
 </div>
 <p class="muted">Cada pedido processa um indicador num país. Os valores anteriores permanecem na base de dados se a fonte falhar. «Completar» não serve para o calendário recorrente: a atualização normal tem de voltar a consultar os dados existentes.</p>
+<p class="muted"><strong>Saúde:</strong> o indicador <code>health_coverage</code> é o índice OMS de cobertura dos serviços essenciais (ODS 3.8.1; metodologia de 2025), de 0 a 100 pontos. Não é a percentagem de habitantes com acesso ao SNS ou a um seguro, nem mede a proteção financeira. A fonte principal desta série é a OMS; o Banco Mundial disponibiliza o espelho oficial <code>SH_UHC_SCI</code>. Importa primeiro Portugal e confirma o ano e as observações antes dos restantes países.</p>
 <div class="actions">
 <button class="secondary" id="preview">Pré-visualizar seleção</button>
 <button id="one">Importar indicador selecionado</button>
@@ -100,7 +101,7 @@ const euroCountries=["PT","ES","DE","FR","IE","NL","IT","GB","CH"];
 const wb={
 life_expectancy:"Esperança de vida",unemployment:"Desemprego",
 gdp_per_capita:"PIB per capita",gini:"Índice de Gini",
-health_coverage:"Cobertura universal de saúde",
+health_coverage:"Índice de serviços de saúde UHC (OMS, 0–100)",
 primary_completion:"Conclusão do ensino primário",adult_literacy:"Alfabetização",
 electricity_access:"Acesso à eletricidade",safe_drinking_water:"Água potável segura",
 safe_sanitation:"Saneamento seguro",internet_use:"Utilização da Internet",
