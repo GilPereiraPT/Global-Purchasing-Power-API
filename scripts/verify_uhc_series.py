@@ -1,15 +1,18 @@
-"""Read-only live source check for EarnWage's revised WHO UHC index.
+"""Read-only live-source check for WHO's revised UHC Service Coverage Index.
 
-Run in the GitHub Actions hosted runner, not on the user's cPanel terminal.
-Does not require an admin token and NEVER writes to the production database.
+Checks WHO's official OData source (and separately documents World Bank's
+published SH_UHC_SCI mirror). GitHub-hosted: no cPanel terminal, no DB writes.
 """
 import json
 import sys
 import time
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from app.country_insights import INDICATORS, ISO3, UHC_SERIES, SOURCE
+from app.country_insights import INDICATORS, ISO3, UHC_SERIES
+
+WHO_SOURCE = "https://ghoapi.azureedge.net/api/UHC_INDEX_REPORTED"
 
 
 def verify(country="PT"):
@@ -17,7 +20,11 @@ def verify(country="PT"):
     code, unit = INDICATORS["health_coverage"]
     assert code == UHC_SERIES["current"] == "SH_UHC_SCI"
     assert unit == "index_0_100"
-    url = SOURCE.format(country=ISO3[country], indicator=code)
+    url = WHO_SOURCE + "?" + urlencode({
+        "$filter": "SpatialDim eq '" + ISO3[country] + "'",
+        "$top": "1000",
+        "$select": "SpatialDim,TimeDim,NumericValue,SpatialDimType",
+    })
     request = Request(url, headers={
         "User-Agent": "EarnWage-UHC-Source-Validation/1.0",
         "Accept": "application/json"})
@@ -27,28 +34,29 @@ def verify(country="PT"):
                 payload = json.load(response)
             break
         except (HTTPError, URLError, TimeoutError, ValueError) as exc:
-            print("WHO UHC provider attempt", attempt, type(exc).__name__, flush=True)
+            print("WHO provider attempt", attempt, type(exc).__name__, flush=True)
             if attempt == 2:
                 raise
             time.sleep(2)
-    if not isinstance(payload, list) or len(payload) != 2 \
-            or not isinstance(payload[1], list):
-        raise ValueError("WHO UHC provider returned unexpected format")
+    if not isinstance(payload, dict) or not isinstance(payload.get("value"), list):
+        raise ValueError("WHO source returned unexpected format")
     records = [
-        {"year": int(row["date"]), "value": float(row["value"])}
-        for row in payload[1]
-        if isinstance(row, dict) and row.get("value") is not None
-        and str(row.get("date", "")).isdigit()
+        {"year": int(row["TimeDim"]), "value": float(row["NumericValue"])}
+        for row in payload["value"]
+        if isinstance(row, dict) and row.get("NumericValue") is not None
+        and str(row.get("TimeDim", "")).isdigit()
+        and row.get("SpatialDim") == ISO3[country]
+        and row.get("SpatialDimType") in (None, "COUNTRY")
     ]
     if not records:
-        raise ValueError("Official source has zero non-null UHC records for " + country)
+        raise ValueError("WHO source has no non-null UHC records for " + country)
     if any(not 0 <= row["value"] <= 100 for row in records):
         raise ValueError("Official UHC index outside 0-100")
     newest = max(row["year"] for row in records)
     if newest < 2023:
-        raise ValueError("Unexpected last UHC year; inspect dataset metadata")
-    print("VALIDATED official WHO/World Bank revised UHC source",
-          country, code, len(records), "observations;",
+        raise ValueError("Unexpected last UHC year; inspect WHO dataset methodology")
+    print("VALIDATED WHO OData UHC_INDEX_REPORTED / World Bank SH_UHC_SCI",
+          country, len(records), "observations;",
           "latest published year:", newest,
           "latest index:", next(row["value"] for row in records
                                  if row["year"] == newest),
