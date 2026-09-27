@@ -27,6 +27,8 @@ INDICATORS = {
     "safe_drinking_water": ("SH.H2O.SMDW.ZS", "percent_of_population"),
     "safe_sanitation": ("SH.STA.SMSS.ZS", "percent_of_population"),
     "internet_use": ("IT.NET.USER.ZS", "percent_of_population"),
+    "inflation_annual": ("FP.CPI.TOTL.ZG", "annual_percent"),
+    "ppp_private_consumption": ("PA.NUS.PRVT.PP", "local_currency_units_per_international_dollar"),
 }
 SOURCE = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}?format=json&per_page=1000"
 CACHE_SECONDS = 86400
