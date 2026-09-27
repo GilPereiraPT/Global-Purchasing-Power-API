@@ -214,6 +214,25 @@ def sources():
                  "role": "national wages and taxing wages", "status": "planned"},
     }
 
+@app.get("/v1/es/earnings/groups")
+def es_eaes_group_catalogue():
+    """Spanish INE CNO-11 major groups A–Q, NOT individual job wages."""
+    from app.es_eaes_groups import catalogue
+    return catalogue()
+
+
+@app.get("/v1/es/earnings/groups/{group}")
+def es_eaes_group_history(group: str, sex: str = Query("both", pattern="^(both|women|men)$"),
+                          start_year: int = Query(2008, ge=2008, le=2024),
+                          end_year: int = Query(2024, ge=2008, le=2024)):
+    """Historical gross annual national earnings by broad CNO group and sex."""
+    from app.es_eaes_groups import group_history
+    try:
+        return group_history(group, sex, start_year, end_year)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 @app.get("/v1/salaries/availability/matrix")
 def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za-z]{2})?$")):
     base = lang.split("-")[0].lower()
