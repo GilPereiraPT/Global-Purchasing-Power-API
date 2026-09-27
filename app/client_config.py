@@ -84,7 +84,7 @@ def configuration():
     }
 
 
-def region_configuration(country):
+def region_configuration(country, region=None, tax_year=2026):
     country = country.upper()
     if country not in COUNTRY_MAP:
         return None
@@ -92,10 +92,17 @@ def region_configuration(country):
         return {"country": country, "visible": False, "region_type": None,
                 "options": [], "status": "not_required_for_current_ui"}
     data = REGIONS[country]
+    state_status = None
+    if country == "US" and region:
+        from app.us_state_tax import state_wage_income_tax
+        state_status = state_wage_income_tax(region, tax_year)["status"]
+    coverage = ("wage_income_tax_only" if state_status == "available" else
+                "partial_components" if state_status == "partial_components" else
+                "not_implemented")
     return {
         "country": country, "visible": True, "required_for_initial_comparison": False,
         "region_type": data["kind"], "label": data["label"], "note": data["note"],
         "options": [{"code": code, "name": name} for code, name in data["options"]],
-        "tax_region_model_status": "not_implemented",
-        "warning": "National tax components may be available; regional taxation is not yet computed.",
+        "tax_region_model_status": coverage,
+        "warning": "State components are incomplete; this is not take-home pay.",
     }
