@@ -6,6 +6,8 @@ occupation codes to a snapshot. No network on production request paths.
 import argparse
 import json
 import re
+import sys
+import time
 import unicodedata
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -26,6 +28,10 @@ FIELDS = ("country","occupation","period","classification","job_title",
           "geography","measure","salary_concept","unit","currency","value",
           "source","source_url","licence")
 MAX_BYTES = 30 * 1024 * 1024
+CONNECT_TIMEOUT_SECONDS = 18.0
+READ_TIMEOUT_SECONDS = 75.0
+NETWORK_ATTEMPTS = 3
+RETRY_PAUSES_SECONDS = (3, 8)
 
 
 def fold(s):
@@ -249,16 +255,45 @@ def wages(country,occupation):
 
 
 def fetch():
-    with httpx.Client(timeout=70,follow_redirects=True) as client:
-        with client.stream("GET",URL) as response:
-            response.raise_for_status()
-            pieces,size=[],0
-            for part in response.iter_bytes():
-                size+=len(part)
-                if size>MAX_BYTES:
-                    raise ValueError("Official INE payload exceeds size limit")
-                pieces.append(part)
-    return json.loads(b"".join(pieces).decode("utf-8-sig"))
+    """Attempt only bounded retries for transient INE network/server faults.
+
+    HTTP 4xx (except 429), invalid JSON and unexpected schema MUST NOT be
+    retried or treated as salary data. Nothing is stored on failed inspection.
+    """
+    timeout=httpx.Timeout(connect=CONNECT_TIMEOUT_SECONDS,
+                          read=READ_TIMEOUT_SECONDS,write=20.0,pool=20.0)
+    for attempt in range(1,NETWORK_ATTEMPTS+1):
+        try:
+            with httpx.Client(timeout=timeout,follow_redirects=True,
+                              trust_env=True) as client:
+                with client.stream("GET",URL) as response:
+                    response.raise_for_status()
+                    pieces,size=[],0
+                    for part in response.iter_bytes():
+                        size+=len(part)
+                        if size>MAX_BYTES:
+                            raise ValueError("Official INE payload exceeds size limit")
+                        pieces.append(part)
+            return json.loads(b"".join(pieces).decode("utf-8-sig"))
+        except (httpx.ConnectTimeout,httpx.ReadTimeout,httpx.ConnectError,
+                httpx.ReadError,httpx.RemoteProtocolError) as exc:
+            reason=type(exc).__name__
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code not in (429,500,502,503,504):
+                raise
+            reason="HTTP "+str(exc.response.status_code)
+        if attempt==NETWORK_ATTEMPTS:
+            raise RuntimeError(
+                "INE official source unreachable after 3 bounded attempts ("
+                +reason+"). No data were imported. Download its JSON manually "
+                "and run --source FILE --inspect; see PT_WAGE_IMPORT_RUNBOOK.md."
+            ) from None
+        pause=RETRY_PAUSES_SECONDS[attempt-1]
+        print("INE request attempt "+str(attempt)+"/"+
+              str(NETWORK_ATTEMPTS)+" failed ("+reason+
+              "); retrying after "+str(pause)+"s.",file=sys.stderr,flush=True)
+        time.sleep(pause)
+    raise AssertionError("Unreachable retry state")
 
 
 def main(argv=None):
@@ -271,7 +306,11 @@ def main(argv=None):
     mode.add_argument("--export",type=Path,help="New vetted JSON snapshot")
     parser.add_argument("--mapping",type=Path,help="Manually approved CPP codes/labels")
     args=parser.parse_args(argv)
-    payload=fetch() if args.fetch else json.loads(args.source.read_text(encoding="utf-8-sig"))
+    try:
+        payload=fetch() if args.fetch else json.loads(args.source.read_text(encoding="utf-8-sig"))
+    except RuntimeError as exc:
+        print("INE inspection not completed: "+str(exc),file=sys.stderr)
+        return 2
     if args.inspect:
         print(json.dumps(inspect(payload),ensure_ascii=False,indent=2))
         return 0
