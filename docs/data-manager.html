@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>EarnWage · Data Manager</title>
+<style>
+:root{font:15px system-ui,Segoe UI,Arial,sans-serif;background:#f2f7f8;color:#15353c}
+*{box-sizing:border-box}body{margin:0}header{background:#102d38;color:white;padding:26px max(17px,calc((100vw - 1030px)/2))}
+header a{color:#a4e8d2;text-decoration:none}header p{max-width:730px;color:#b9d5d5}
+h1{font-size:clamp(1.7rem,4vw,2.3rem);margin:9px 0}h2{margin:0 0 12px;font-size:1.17rem}
+main{max-width:1030px;margin:auto;padding:20px 15px 55px}
+section{background:white;border:1px solid #d9e8ea;border-radius:15px;padding:19px;margin:0 0 16px;box-shadow:0 2px 10px #15333b08}
+p{line-height:1.5}.muted{color:#5e737a}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:11px}
+label{display:block;font-weight:650;margin:10px 0 5px}
+input,select,button{width:100%;font:inherit;padding:11px;border:1px solid #b8cbd0;border-radius:9px;background:white;color:#15353c}
+button{background:#087d67;color:white;border:0;font-weight:700;cursor:pointer}
+button.secondary{background:#e4f4ed;color:#075b4d}
+button.danger{background:#fff0df;color:#914a18}button:disabled{opacity:.54;cursor:wait}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}.actions button{width:auto}
+.notice{border-left:4px solid #d2a953;background:#fff9ec;padding:12px;border-radius:6px}
+.good{border-left:4px solid #16a34a;background:#ebf9ef;padding:12px;border-radius:6px}
+#log{background:#102d38;color:#dbefe9;min-height:120px;max-height:320px;overflow:auto;
+ white-space:pre-wrap;overflow-wrap:anywhere;padding:15px;border-radius:12px;line-height:1.5}
+.scroll{overflow:auto;max-height:430px}table{min-width:750px;width:100%;border-collapse:collapse}
+th,td{text-align:left;border-bottom:1px solid #e4eded;padding:9px;font-size:.85rem;vertical-align:top}
+th{background:#eef6f3;position:sticky;top:0}small{color:#61767b}
+.card{background:#eff8f5;border:1px solid #d4e9df;padding:13px;border-radius:12px}
+.card strong{display:block;font-size:1.5rem;color:#087d67}
+.progress{height:9px;border-radius:9px;overflow:hidden;background:#e6eeee}
+.progress>div{height:100%;width:0;background:#168c75;transition:width .2s}
+code{word-break:break-word}
+</style>
+</head>
+<body>
+<header><a href="./">← EarnWage API Lab</a><h1>Data Manager</h1>
+<p>Consolidação e atualização dos dados oficiais por navegador, com cópia de segurança privada, pré-visualização, importação incremental e registo de operações.</p></header>
+<main>
+<section>
+<h2>1. Estado e acesso</h2>
+<p>O painel utiliza apenas a API EarnWage em produção. As operações de escrita exigem a chave de administração já configurada no servidor como <code>EARNWAGE_ADMIN_TOKEN</code> (mínimo 32 caracteres). A chave não é guardada em ficheiros, cookies ou localStorage. Não a coloques no GitHub nem a envies por mensagem.</p>
+<label for="token">Chave privada da API — apenas na memória desta página</label>
+<input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="Chave de administração">
+<div class="actions"><button id="check">Verificar acesso e estado</button><button class="secondary" id="inventory">Consultar dados existentes</button></div>
+<p id="status" class="muted" role="status" aria-live="polite">A aguardar consulta.</p>
+<div id="counts" class="grid"></div>
+</section>
+<section>
+<h2>2. Proteger a informação existente</h2>
+<p class="notice"><strong>Antes da primeira importação:</strong> cria uma cópia privada das bases SQLite efetivamente utilizadas pelo Passenger. A operação não elimina nem substitui quaisquer observações.</p>
+<div class="actions"><button id="backup">Criar e verificar cópia de segurança</button></div>
+<p id="backupResult" class="muted">Por executar. Sem uma cópia verificada, o Data Manager recusa novas importações.</p>
+</section>
+<section>
+<h2>3. Escolher o que atualizar</h2>
+<div class="grid">
+<div><label for="source">Fonte</label><select id="source">
+<option value="world_bank">Banco Mundial · WDI</option>
+<option value="eurostat">Eurostat / ONS / OCDE</option></select></div>
+<div><label for="country">País</label><select id="country"></select></div>
+<div><label for="indicator">Indicador</label><select id="indicator"></select></div>
+<div><label for="mode">Tipo de atualização</label><select id="mode">
+<option value="missing">Completar apenas informação em falta</option>
+<option value="refresh">Voltar a consultar mesmo que haja dados</option></select></div>
+</div>
+<p class="muted">Cada pedido processa um indicador num país. Os valores anteriores permanecem na base de dados se a fonte falhar. «Completar» não serve para o calendário recorrente: a atualização normal tem de voltar a consultar os dados existentes.</p>
+<div class="actions">
+<button class="secondary" id="preview">Pré-visualizar seleção</button>
+<button id="one">Importar indicador selecionado</button>
+<button class="secondary" id="countryAll">Todos os indicadores deste país</button>
+<button class="secondary" id="essentials">Inflação anual + PPC dos 14 países</button>
+<button class="danger" id="stop" disabled>Parar após o pedido atual</button>
+</div>
+<div class="progress"><div id="bar"></div></div>
+<p id="progress" class="muted">Nenhum pedido em curso.</p>
+<pre id="log" aria-live="polite">O painel está pronto.</pre>
+</section>
+<section>
+<h2>4. Histórico das operações</h2>
+<p>Mostra apenas operações realizadas através deste Data Manager. O inventário económico completo mantém os registos das importações feitas por outros mecanismos.</p>
+<div class="actions"><button class="secondary" id="history">Atualizar histórico</button>
+<a href="./data-inventory.html">Abrir inventário completo ↗</a></div>
+<p id="historyMeta" class="muted"></p>
+<div class="scroll"><table>
+<thead><tr><th>Data UTC</th><th>Fonte</th><th>País</th><th>Indicador</th><th>Modo</th><th>Resultado</th><th>Observações</th></tr></thead>
+<tbody id="historyRows"></tbody></table></div>
+</section>
+<section><h2>5. Atualização automática</h2>
+<p>A rotina automática é preparada no GitHub Actions e comunica com esta mesma API protegida. Para a ativar, é necessário configurar uma única vez a chave em <strong>GitHub → Settings → Secrets and variables → Actions</strong> e autorizar o agendamento. Sem essa configuração, as importações automáticas não devem ser consideradas ativas.</p>
+<p class="muted">As tarefas automáticas devem fazer consultas pequenas, manter os períodos e fontes originais e nunca inventar salários ou trocar médias de grandes grupos por valores de profissões específicas.</p>
+</section>
+</main>
+<script>
+"use strict";
+const API="https://earnwage-api.policlinicosdesantoandre.com";
+const $=id=>document.getElementById(id);
+const fallbackCountries=["PT","ES","DE","FR","GB","IE","NL","CH","IT","US","CA","BR","IN","PK"];
+const euroCountries=["PT","ES","DE","FR","IE","NL","IT","GB","CH"];
+const wb={
+life_expectancy:"Esperança de vida",unemployment:"Desemprego",
+gdp_per_capita:"PIB per capita",gini:"Índice de Gini",
+health_coverage:"Cobertura universal de saúde",
+primary_completion:"Conclusão do ensino primário",adult_literacy:"Alfabetização",
+electricity_access:"Acesso à eletricidade",safe_drinking_water:"Água potável segura",
+safe_sanitation:"Saneamento seguro",internet_use:"Utilização da Internet",
+inflation_annual:"Inflação anual",ppp_private_consumption:"PPC do consumo das famílias"
+};
+const eu={hicp_annual_change_monthly:"Inflação homóloga mensal",
+household_price_level_eu27:"Nível de preços das famílias",
+net_annual_earnings_reference:"Salário líquido anual de referência"};
+let inventory=null,metadata=null,working=false,stopped=false;
+function log(t){const el=$("log");el.textContent+= "\n"+t;el.scrollTop=el.scrollHeight}
+function report(t){$("status").textContent=t}
+function busy(on){
+working=on;
+for(const id of ["check","inventory","backup","preview","one","countryAll","essentials",
+                 "history","source","country","indicator","mode"])$(id).disabled=on;
+$("stop").disabled=!on;
+}
+function smallCard(title,value,note){
+const box=document.createElement("div");box.className="card";
+const cap=document.createElement("small");cap.textContent=title;
+const strong=document.createElement("strong");strong.textContent=value;
+const help=document.createElement("small");help.textContent=note;
+box.append(cap,strong,help);return box;
+}
+async function publicInventory(){
+const r=await fetch(API+"/v1/data-inventory",{cache:"no-store"});
+if(!r.ok)throw Error("Inventário HTTP "+r.status);
+const data=await r.json();
+if(!data.summary||!Array.isArray(data.countries))throw Error("Resposta de inventário inválida");
+inventory=data;const s=data.summary;
+$("counts").replaceChildren(
+smallCard("Banco Mundial",s.world_bank.available+" / "+s.world_bank.possible,"Células com dados"),
+smallCard("Eurostat / ONS / OCDE",s.eurostat_ons_oecd.available+" / "+s.eurostat_ons_oecd.possible,"Células com dados"),
+smallCard("Salários exatos",s.exact_occupational_wages.observed_pairs+" / "+
+s.exact_occupational_wages.possible_pairs,"País × profissão"),
+smallCard("Grupos ILOSTAT",s.ilostat_major_groups.observed_pairs+" / "+
+s.ilostat_major_groups.possible_pairs,"País × grupo"));
+report("Inventário lido da API: "+data.country_count+" países. "+
+new Date(data.generated_at).toLocaleString("pt-PT"));
+return data;
+}
+async function admin(action,payload={}){
+const token=$("token").value;
+if(token.length<32)throw Error("Introduz a chave de administração configurada no servidor.");
+const r=await fetch(API+"/v1/admin/data-manager/"+action,{
+method:"POST",mode:"cors",cache:"no-store",
+headers:{"Content-Type":"application/json","X-EarnWage-Admin-Token":token},
+body:JSON.stringify(payload)});
+let body;
+try{body=await r.json()}catch{throw Error("Resposta HTTP "+r.status+" inválida");}
+if(!r.ok)throw Error((body.error||body.detail||"HTTP "+r.status)+
+ (body.note?" · "+body.note:""));
+return body;
+}
+async function status(){
+const data=await admin("status");
+metadata=data;
+$("backupResult").textContent=data.backups.length?
+"Existem "+data.backups.length+" cópias privadas listadas. Última: "+data.backups[0]:
+"Não foi encontrada nenhuma cópia privada do Data Manager.";
+drawHistory(data);
+updateOptions();
+return data;
+}
+function drawHistory(data){
+$("historyRows").replaceChildren();
+const frag=document.createDocumentFragment();
+for(const item of data.history||[]){
+const tr=document.createElement("tr");
+for(const v of [item.attempted_at?.replace("T"," ").slice(0,19)||"",
+item.source,item.country,item.indicator,item.mode,item.status,
+item.observations]){const td=document.createElement("td");td.textContent=String(v??"");tr.append(td);}
+frag.append(tr);
+}
+$("historyRows").append(frag);
+$("historyMeta").textContent=(data.history||[]).length+
+" operações recentes · "+(data.backups||[]).length+" cópias privadas listadas.";
+}
+function updateOptions(){
+const source=$("source").value;
+const cc=source==="world_bank"?
+(metadata?.world_bank_countries||fallbackCountries):
+(metadata?.eurostat_countries||euroCountries);
+const labels=source==="world_bank"?wb:eu;
+const keys=source==="world_bank"?
+(metadata?.indicators||Object.keys(wb)):
+(metadata?.eurostat_indicators||Object.keys(eu));
+const previousCountry=$("country").value,previousIndicator=$("indicator").value;
+$("country").replaceChildren(...cc.map(x=>new Option(x,x)));
+$("indicator").replaceChildren(...keys.map(x=>new Option(labels[x]||x,x)));
+if(cc.includes(previousCountry))$("country").value=previousCountry;
+if(keys.includes(previousIndicator))$("indicator").value=previousIndicator;
+}
+async function standalone(work,label){
+if(working)return;busy(true);report(label);
+try{await work()}catch(e){log("ERRO · "+e.message);report("Erro: "+e.message)}
+finally{busy(false)}
+}
+function selection(country,indicator){
+return {source:$("source").value,country,indicator,mode:$("mode").value};
+}
+async function startBatch(pairs,dryRun){
+if(working)return;
+stopped=false;busy(true);
+let available=0,skipped=0,failed=0;
+try{
+for(let i=0;i<pairs.length;i++){
+if(stopped)break;
+const [source,country,indicator]=pairs[i];
+$("progress").textContent=(i+1)+"/"+pairs.length+" · "+country+" · "+indicator;
+$("bar").style.width=(i/pairs.length*100).toFixed(1)+"%";
+try{
+const r=await admin("import",{source,country,indicator,
+ mode:$("mode").value,dry_run:dryRun});
+const result=r.import_status;
+if(result==="available"||result==="would_import")available++;
+else if(result==="skipped_existing")skipped++;
+else failed++;
+log(country+" · "+indicator+" → "+result+
+ (r.data?.year?" · "+r.data.year:r.data?.period?" · "+r.data.period:"")+
+ (r.observation_count!==undefined?" · "+r.observation_count+" obs.":""));
+}catch(e){
+failed++;log(country+" · "+indicator+" → ERRO: "+e.message);
+if(/unauthorized|admin_not_configured|forbidden_origin|backup_required|Failed to fetch/.test(e.message)){
+stopped=true;break;
+}
+}
+}
+report((dryRun?"Pré-visualização":"Importação")+" concluída: "+
+available+" processados, "+skipped+" já existentes, "+failed+" falhas"+
+(stopped?" (interrompida)":"")+".");
+$("progress").textContent=available+" processados · "+skipped+" ignorados · "+
+failed+" erros"+(stopped?" · parada":"");
+if(!stopped)$("bar").style.width="100%";
+try{await status();await publicInventory()}catch(e){log("Estado: "+e.message)}
+}catch(e){report(e.message);log("ERRO · "+e.message)}
+finally{busy(false)}
+}
+$("source").onchange=updateOptions;
+$("inventory").onclick=()=>standalone(publicInventory,"A consultar base de dados...");
+$("check").onclick=()=>standalone(async()=>{
+await publicInventory();await status();report("Ligação protegida verificada · Data Manager disponível.");
+},"A verificar acesso protegido...");
+$("backup").onclick=()=>standalone(async()=>{
+const r=await admin("backup");
+$("backupResult").textContent="Cópia verificada: "+r.backup_id+
+" · bases: "+Object.keys(r.databases).join(", ")+".";
+log("Cópia de segurança concluída: "+r.backup_id);
+await status();report("Cópia privada criada e verificada.");
+},"A fazer cópia SQLite segura…");
+$("preview").onclick=()=>startBatch([[$("source").value,$("country").value,
+ $("indicator").value]],true);
+$("one").onclick=()=>startBatch([[$("source").value,$("country").value,
+ $("indicator").value]],false);
+$("countryAll").onclick=()=>startBatch(
+Array.from($("indicator").options,x=>[$("source").value,$("country").value,x.value]),false);
+$("essentials").onclick=async()=>{
+$("source").value="world_bank";updateOptions();
+$("mode").value="missing";
+startBatch(fallbackCountries.flatMap(c=>[
+["world_bank",c,"inflation_annual"],["world_bank",c,"ppp_private_consumption"]]),false);
+};
+$("stop").onclick=()=>{stopped=true;report("A interromper após o pedido atual…")};
+$("history").onclick=()=>standalone(status,"A consultar o histórico…");
+updateOptions();
+publicInventory().catch(e=>report("A API ainda não devolveu o inventário: "+e.message));
+</script>
+</body></html>
