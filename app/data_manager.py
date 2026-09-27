@@ -96,6 +96,46 @@ def _record(db, source, country, indicator, mode, status, count, error=None):
     db.commit()
 
 
+def _backup_readiness():
+    """Return safe diagnostic labels, not private filesystem paths or secrets."""
+    from app.country_insights_store import db_path as insights_db_path
+    from app.store import DB_PATH as active_cache_db
+    expected = {
+        "EARNWAGE_INSIGHTS_DB": insights_db_path(),
+        "GPP_CACHE_DB": Path(active_cache_db),
+    }
+    sources = {}
+    for variable, active_path in expected.items():
+        configured = os.environ.get(variable, "")
+        if not configured:
+            state = "variable_missing"
+        else:
+            path = Path(configured).expanduser()
+            if not path.is_absolute():
+                state = "path_not_absolute"
+            elif path.resolve() != active_path.expanduser().resolve():
+                state = "path_differs_from_active_database"
+            elif not path.is_file():
+                state = "configured_database_missing"
+            else:
+                state = "ready"
+        sources[variable] = state
+    root = BACKUP_DIR.resolve()
+    if "public_html" in root.parts:
+        destination = "unsafe_public_directory"
+    elif not BACKUP_DIR.exists() and not BACKUP_DIR.parent.is_dir():
+        destination = "parent_missing"
+    else:
+        destination = "ready_for_attempt"
+    return {
+        "ready": all(v == "ready" for v in sources.values())
+                 and destination == "ready_for_attempt",
+        "databases": sources,
+        "destination": destination,
+        "note": "No database paths or private credentials are returned.",
+    }
+
+
 def _backups():
     if not BACKUP_DIR.is_dir():
         return []
@@ -108,6 +148,11 @@ def _backups():
 def _backup(payload):
     if payload:
         raise ValueError("Backup does not accept user parameters")
+    readiness = _backup_readiness()
+    if not readiness["ready"]:
+        return {"status": "prerequisites_missing",
+                "backup_readiness": readiness,
+                "note": "Check the indicated variables in cPanel Setup Python App. Do not create new empty databases."}
     from scripts.backup_earnwage_data import backup
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     destination = BACKUP_DIR / ("backup-" + stamp)
@@ -142,7 +187,8 @@ def _status(payload):
                "mode", "status", "observations", "error_type")
     return {"status": "ok", "history": [
         dict(zip(columns, row)) for row in rows],
-        "backups": _backups(), "indicators": list(INDICATORS),
+        "backups": _backups(), "backup_readiness": _backup_readiness(),
+        "indicators": list(INDICATORS),
         "world_bank_countries": list(ISO3),
         "eurostat_countries": list(EUROSTAT_COUNTRIES),
         "eurostat_indicators": list(SERIES),
@@ -246,7 +292,8 @@ def handle(environ, start_response, origin, action, reply):
         else:
             with _exclusive_operation():
                 result = _backup(payload) if action == "backup" else _import_one(payload)
-        code = 409 if result.get("import_status") == "backup_required" else 200
+        code = (409 if result.get("import_status") == "backup_required"
+                or result.get("status") == "prerequisites_missing" else 200)
         return _response(reply, start_response, origin, code, result)
     except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError):
         return _response(reply, start_response, origin, 422,
