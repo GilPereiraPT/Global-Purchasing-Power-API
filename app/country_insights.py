@@ -21,7 +21,7 @@ INDICATORS = {
     "unemployment": ("SL.UEM.TOTL.ZS", "percent_of_labor_force"),
     "gdp_per_capita": ("NY.GDP.PCAP.CD", "USD_current_per_person"),
     "gini": ("SI.POV.GINI", "index_0_100"),
-    "health_coverage": ("SH.UHC.SRVS.CV.XD", "index_0_100"),
+    "health_coverage": ("SH_UHC_SCI", "index_0_100"),
     "primary_completion": ("SE.PRM.CMPT.ZS", "percent_of_relevant_age_group"),
     "adult_literacy": ("SE.ADT.LITR.ZS", "percent_of_adults_15_plus"),
     "electricity_access": ("EG.ELC.ACCS.ZS", "percent_of_population"),
@@ -30,6 +30,22 @@ INDICATORS = {
     "internet_use": ("IT.NET.USER.ZS", "percent_of_population"),
     "inflation_annual": ("FP.CPI.TOTL.ZG", "annual_percent"),
     "ppp_private_consumption": ("PA.NUS.PRVT.PP", "local_currency_units_per_international_dollar"),
+}
+# SH.UHC.SRVS.CV.XD is the archived 2000-2021 WHO index. The official
+# revised SDG 3.8.1 indicator is SH_UHC_SCI (2025 methodology; available
+# years include 2000-2023). It is not a population coverage percentage.
+# Existing production inventory (2026-09-27) had zero observations under
+# health_coverage, so the new source must be imported afresh, not spliced
+# onto records calculated under the previous methodology.
+UHC_SERIES = {
+    "current": "SH_UHC_SCI",
+    "legacy": "SH.UHC.SRVS.CV.XD",
+    "methodology": "WHO 2025 revised SDG 3.8.1 Service Coverage Index",
+    "methodology_url":
+        "https://blogs.worldbank.org/en/opendata/tracking-universal-health-coverage-with-updated-indicators-in-th0",
+    "note": ("Index 0-100 of essential health service coverage (2025 WHO methodology); "
+             "not the share of people covered or a guarantee of financial protection. "
+             "Compare years and methodologies before making time-trend claims."),
 }
 SOURCE = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}?format=json&per_page=1000"
 CACHE_SECONDS = 86400
