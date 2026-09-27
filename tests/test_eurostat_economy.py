@@ -154,11 +154,24 @@ def test_uk_cpi_metadata_and_missing_other_series(tmp_path, monkeypatch):
     monkeypatch.setenv("EARNWAGE_INSIGHTS_DB", str(tmp_path / "ons.sqlite3"))
     monkeypatch.setattr(eu, "fetch_ons_cpi", lambda: [("2026-08", 3.1)])
     assert eu.fetch("GB", eu.SERIES["hicp_annual_change_monthly"]) == [("2026-08", 3.1)]
-    assert eu.fetch("GB", eu.SERIES["household_price_level_eu27"]) == []
-    assert eu.fetch("GB", eu.SERIES["net_annual_earnings_reference"]) == []
+    assert eu.fetch("GB", eu.SERIES["net_annual_earnings_reference"]) == [("2024", 41074.0), ("2025", 43027.0)]
+    assert "prc_ppp_ind" in eu.source_url("GB", eu.SERIES["household_price_level_eu27"])
     with store.connect() as db:
         eu.ensure_tables(db)
         eu.save(db, "GB", "hicp_annual_change_monthly", [("2026-08", 3.1)], "available")
         row = eu.read(db, "GB", "hicp_annual_change_monthly")
     assert row["source"] == "ONS" and row["dataset"] == "MM23/D7G7"
     assert row["value"] == 3.1 and row["period"] == "2026-08"
+
+
+def test_uk_oecd_net_earnings_provenance(tmp_path, monkeypatch):
+    from app import country_insights_store as store
+    monkeypatch.setenv("EARNWAGE_INSIGHTS_DB", str(tmp_path / "uk.sqlite3"))
+    with store.connect() as db:
+        eu.ensure_tables(db)
+        eu.save(db, "GB", "net_annual_earnings_reference",
+                eu.fetch("GB", eu.SERIES["net_annual_earnings_reference"]), "available")
+        row = eu.read(db, "GB", "net_annual_earnings_reference")
+    assert row["value"] == 43027.0 and row["period"] == "2025"
+    assert row["unit"] == "GBP_per_year" and row["source"] == "OECD"
+    assert "Table 6.26" in row["dataset"]
