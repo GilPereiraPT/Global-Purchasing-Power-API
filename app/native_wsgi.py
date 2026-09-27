@@ -25,7 +25,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.9"
+VERSION = "0.5.10"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -435,15 +435,8 @@ def dispatch(path, q):
                 failures.append(name)
         if not results:
             raise UpstreamUnavailable("All job feeds unavailable")
-        combined = []
-        seen = set()
-        for result in results:
-            for listing in result["jobs"]:
-                key = listing["source_url"].rstrip("/")
-                if key not in seen:
-                    seen.add(key)
-                    combined.append(listing)
-        combined.sort(key=lambda x: x["published_at"], reverse=True)
+        from app.job_dedup import merge_jobs
+        combined = merge_jobs(listing for result in results for listing in result["jobs"])
         return {"status": "available" if combined else "no_results",
                 "provider": "EarnWage", "providers": [x["provider"] for x in results],
                 "failed_providers": failures, "country": c, "occupation": job,
