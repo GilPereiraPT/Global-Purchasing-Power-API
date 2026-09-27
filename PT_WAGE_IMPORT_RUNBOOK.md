@@ -1,6 +1,42 @@
 # Portugal: importing verified salaries by CPP occupation
 
 Status: **importer prepared, NO official PT profession wage snapshot imported**.
+
+## Source audit — actual official JSON captured on 27 September 2026
+
+The official INE JSON 0010385 was downloaded through a user's local
+browser, overcoming GitHub Actions' three `ConnectTimeout` failures.
+**This particular official indicator CANNOT fill an exact profession wage
+cell**. Verified structural facts of the *full* response:
+
+- `IndicadorCod=0010385`; source is GEP Quadros de Pessoal.
+- `UltimoPref=2022`; just one year (`Dados.2022`); 3,440 records.
+- 344 distinct geography codes, including `PT` = `Portugal`.
+- `dim_3` contains only codes `1` through `9` and `T` (total),
+  each with 344 rows. **No CPP four-digit occupation appears at all.**
+- National category `2` (all intellectual and scientific specialists)
+  has published mean monthly gain EUR 2,094.56 for 2022. **Not the wage
+  of doctor, nurse, psychologist, nor any particular specialist.**
+
+Do NOT feed this JSON into the exact-occupation exporter. It correctly
+rejects 1-digit profession mappings. Do NOT rerun GitHub inspection for
+this indicator in the hope of generating 4-digit observations; a successful
+download will have the same aggregate-only scope until INE changes the
+published indicator's dimensions. The complete raw JSON was **not**
+committed into repository or imported to production.
+
+### Next source research
+
+Seek a separately published, legitimately reusable dataset with four-digit
+CPP/ISCO occupational gain and nationally identified coverage. GEP Quadros de
+Pessoal 2014–2024 public tables are chiefly aggregated (1 and 2 digits).
+DGAEP SRAP offers **public statutory career/category/pay-position scales**,
+which can be collected separately with its official version and pay concept;
+they are not national observed profession means. UK ONS ASHE four-digit SOC
+is a separate official source candidate for GB; do not relabel ONS figures
+as Portuguese earnings.
+
+
 No salary is asserted here unless the INE 0010385 raw JSON was actually
 inspected and its individual four-digit CPP-2010 category confirmed.
 
