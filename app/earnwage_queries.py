@@ -144,11 +144,11 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "occupation": {"id": occupation, "label": JOBS[occupation]["translations"]["en"],
                        "translations": JOBS[occupation]["translations"],
                        "isco08": JOBS[occupation]["isco08"]},
-        "region": {"selected": region, "ui": region_configuration(code, region, tax_year),
+        "region": {"selected": region, "ui": region_configuration(code, region, tax_year, annual_gross),
                    "regional_tax_model_status": ("wage_income_tax_only" if code == "US" and region and
-                     state_wage_income_tax(region, tax_year).get("status") == "available"
+                     state_wage_income_tax(region, tax_year, annual_gross).get("status") == "available"
                      else "partial_components" if code == "US" and region and
-                     state_wage_income_tax(region, tax_year).get("status") == "partial_components"
+                     state_wage_income_tax(region, tax_year, annual_gross).get("status") == "partial_components"
                      else "not_implemented" if code in ("US","CA") else "not_applicable")},
         "national_occupation_wage": wage,
         "national_major_group_context": group_context,
