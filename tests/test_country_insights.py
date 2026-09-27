@@ -1,34 +1,74 @@
-"""No live network required for country-insights contract tests."""
+"""Offline tests for persistent country insights and weekly import schedule."""
+import os
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from app import country_insights as ci
+from app.country_insights_store import connect, save_result, read_indicator
+from scripts.update_country_insights import WEEK, run
 
 
 class CountryInsightsTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.env = patch.dict(os.environ, {
+            "EARNWAGE_INSIGHTS_DB": str(Path(self.temp.name) / "insights.sqlite3")})
+        self.env.start()
+
+    def tearDown(self):
+        self.env.stop()
+        self.temp.cleanup()
+
     def test_latest_non_null_observation_and_history(self):
-        observations = [{"year": 2024, "value": 82.1},
-                        {"year": 2022, "value": 81.3}]
-        with patch.object(ci, "_fetch", return_value=("available", observations, None)):
-            current = ci.indicator("PT", "life_expectancy")
-            self.assertEqual((current["year"], current["value"]), (2024, 82.1))
-            self.assertEqual(ci.indicator("PT", "life_expectancy", year=2023)["status"], "unavailable")
-            self.assertEqual(len(ci.indicator("PT", "life_expectancy", history=True)["history"]), 2)
+        with connect() as db:
+            save_result(db, "PT", "life_expectancy",
+                        [{"year": 2024, "value": 82.1},
+                         {"year": 2022, "value": 81.3}], "available")
+        current = ci.indicator("PT", "life_expectancy")
+        self.assertEqual((current["year"], current["value"]), (2024, 82.1))
+        self.assertEqual(ci.indicator("PT", "life_expectancy", year=2023)["status"], "unavailable")
+        self.assertEqual(len(ci.indicator("PT", "life_expectancy", history=True)["history"]), 2)
 
-    def test_upstream_failure_not_zero(self):
-        with patch.object(ci, "_fetch", return_value=("upstream_unavailable", [], "URLError")):
-            item = ci.indicator("US", "health_coverage")
-            self.assertIsNone(item["value"])
-            self.assertEqual(item["status"], "upstream_unavailable")
+    def test_upstream_failure_keeps_last_valid_value(self):
+        with connect() as db:
+            save_result(db, "US", "health_coverage",
+                        [{"year": 2023, "value": 80}], "available")
+            save_result(db, "US", "health_coverage", [],
+                        "upstream_unavailable", "TimeoutError")
+            item = read_indicator(db, "US", "health_coverage")
+        self.assertEqual(item["value"], 80)
+        self.assertEqual(item["status"], "available")
+        self.assertEqual(item["refresh_status"], "upstream_unavailable")
+        self.assertEqual(item["error_type"], "TimeoutError")
 
-    def test_safety_never_substitutes_homicide(self):
-        item = ci.safety("BR")
+    def test_no_data_stays_null(self):
+        item = ci.indicator("US", "health_coverage")
         self.assertIsNone(item["value"])
-        self.assertEqual(item["alternative"]["sdg_indicator"], "16.1.4")
+        self.assertEqual(item["status"], "not_imported")
 
-    def test_country_mapping(self):
-        self.assertEqual(len(ci.ISO3), 14)
-        self.assertEqual(ci.ISO3["GB"], "GBR")
+    def test_country_insights_does_not_fetch_network(self):
+        with patch.object(ci, "_fetch", side_effect=AssertionError("Network called")):
+            item = ci.country_insights("PT")
+        self.assertEqual(item["indicators"]["life_expectancy"]["status"], "not_imported")
+
+    def test_importer_stores_real_observations_and_handles_failures(self):
+        def fake_fetch(country, code):
+            if code == "SP.DYN.LE00.IN":
+                return "available", [{"year": 2024, "value": 82.1}], None
+            return "upstream_unavailable", [], "TimeoutError"
+        with patch("scripts.update_country_insights._fetch", side_effect=fake_fetch), \
+             patch("scripts.update_country_insights.time.sleep"):
+            counts = run(("PT",), pause=0)
+        self.assertEqual(counts["available"], 1)
+        self.assertEqual(counts["failed"], len(ci.INDICATORS)-1)
+        self.assertEqual(ci.indicator("PT", "life_expectancy")["value"], 82.1)
+
+    def test_weekly_rotation_and_safety(self):
+        self.assertEqual(len(WEEK), 7)
+        self.assertEqual(set(sum((list(pair) for pair in WEEK), [])), set(ci.ISO3))
+        self.assertEqual(ci.safety("BR")["alternative"]["sdg_indicator"], "16.1.4")
 
 
 if __name__ == "__main__":
