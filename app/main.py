@@ -24,6 +24,8 @@ async def lifespan(app: FastAPI):
     from pathlib import Path
     load_snapshot(Path(__file__).resolve().parent.parent / "data" / "salaries_snapshot.json")
     na_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "north_america_wages.json")
+    from app.pt_occupation_wages import load_snapshot as load_pt_wages
+    load_pt_wages()
     yield
 
 app = FastAPI(
