@@ -1,5 +1,9 @@
 # EarnWage Country Insights — weekly offline import
 
+# Safe first-time consolidation
+
+For a server with existing data, follow [DATA_CONSOLIDATION.md](DATA_CONSOLIDATION.md) FIRST: verify the exact active database paths, take a verified private SQLite backup, dry-run the missing-only plan, and backfill at most two countries per invocation. Never repoint an existing application to a new empty SQLite database. The production inventory exported on 2026-09-27 had a 12-indicator catalogue; this repository has 13 including GDP per capita, so the coverage denominator changes from 168 to 182 on deployment.
+
 The public endpoints now read **only SQLite**. They do not contact the World
 Bank on a user request. Import observations first, or they will correctly show
 `not_imported`. The Gallup safety index remains unconnected until reuse rights
