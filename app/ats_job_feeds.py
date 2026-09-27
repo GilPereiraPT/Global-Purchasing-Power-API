@@ -141,7 +141,7 @@ async def feed(provider):
     store.set_value(key, result)
     return result
 
-async def search(provider, country, occupation, salary_published=False, limit=20):
+async def search(provider, country, occupation, salary_published=False, limit=20, debug=False):
     data = await feed(provider)
     found = []
     stats = {board: {**values, "jobs_matching_occupation": 0,
@@ -174,7 +174,7 @@ async def search(provider, country, occupation, salary_published=False, limit=20
         found.append({**item, "destination_country": country, "location_match": scope})
         entry["jobs_after_filter"] += 1
     found.sort(key=lambda item: item["published_at"], reverse=True)
-    return {"status": "available" if found else "no_results", "provider": LABELS[provider],
+    result = {"status": "available" if found else "no_results", "provider": LABELS[provider],
             "country": country, "occupation": occupation, "count": len(found),
             "returned": min(len(found), limit), "jobs": found[:limit],
             "fetched_at": data["fetched_at"],
@@ -191,3 +191,10 @@ async def search(provider, country, occupation, salary_published=False, limit=20
             "source_url": _endpoint(provider, BOARDS[provider][0]),
             "scope": "Curated employer boards only, not a national vacancy census.",
             "notice": "Check the employer listing for eligibility and availability."}
+    if not debug:
+        for field in ("boards_checked", "boards_succeeded", "boards_failed",
+                      "jobs_before_filter", "jobs_normalized", "jobs_matching_occupation",
+                      "jobs_matching_country", "jobs_matching_both", "jobs_after_filter",
+                      "board_stats"):
+            result.pop(field, None)
+    return result
