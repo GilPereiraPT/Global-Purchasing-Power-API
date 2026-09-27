@@ -55,13 +55,48 @@ occupation tables are primarily major CNO-11 groupings.
 https://www.ine.es/dyngs/INEbase/operacion.htm?c=Estadistica_C&cid=1254736177025&idp=1254735976596&menu=resultados
 
 INE *Encuesta cuatrienal de estructura salarial 2022* definitive,
-published 23 September 2024, supplies **free anonymised microdata**:
-from the official results page select **Microdatos → Año 2022 →
-Ficheros de Microdatos**. The package includes CSV/TXT variants and a
-variable-dictionary/design file. This source contains employee records;
-it is NOT a ready-made 4-digit occupation wage table. Whether the free
-anonymised data contain CNO-11 4-digit detail remains unverified until
-the actual archive and dictionary are inspected.
+published 23 September 2024, supplies **free anonymised microdata**. The
+**actual complete package `datos_2022.zip` was inspected on 27 September
+2026**, directly from the official public files: no need to ask for it
+again. Its `Leeme.txt` documents TAB, fixed-width TXT, R, SAS, SPSS,
+Stata and parquet versions and a JSON/XLSX variable design. **The
+TAB contains 240,490 employee records, but only major-group `CNO1`,
+encoded `A0` through `Q0`, not individual 4-digit CNO-11 occupations.**
+The source dictionary `dr_EES_2022.json` explicitly states `CNO1`
+is `GRUPO PRINCIPAL CNO-11`, length two. The SAS `TCNO` codelist
+confirms A0–Q0. Therefore, *this public microdata package cannot
+deliver doctor/nurse/psychologist-specific wages*; intersecting `B0`
+and CNAE healthcare is only a broad healthcare-sector specialist cohort,
+not a single profession. Never commit the individual-level microdata.
+
+### Official annual wage formula successfully replicated
+
+The archive contains a methodological Word document, *EES22 Obtención
+de los resultados publicados a partir de los microdatos web.doc*,
+which describes derived variables:
+```text
+DIASRELABA = min(365, DRELABAM * 30.42 + DRELABAD)
+DIASANO = DIASRELABA - DSIESPA2 - DSIESPA4
+SALANUAL = 365 / DIASANO *
+           (RETRINOIN + RETRIIN + VESPNOIN + VESPIN)
+national_weighted_mean =
+   sum(SALANUAL * FACTOTAL) / sum(FACTOTAL)
+```
+Computed on all **240,490** rows without excluded/invalid cases:
+`26948.865124103464 EUR/year`, rounding to the INE published 2022
+`26,948.87 EUR/year` national gross annual mean:
+https://www.ine.es/dyngs/Prensa/EES2022.htm
+Published 2022 group B salary EUR 37,456.34/year was also reproduced
+(EUR 37,456.34 rounded). This validates the salary-variable use,
+annualisation and supplied `FACTOTAL` weights, but **cannot resolve
+the occupation category suppression**. The INE warns that disclosure
+masking may cause small rounded discrepancies in subgroups; don't
+claim exact equivalence for every sex/region cell. No raw microdata
+were uploaded to the public repository.
+
+Public sources with four-digit occupation salary data still need
+research, or an INE request for further anonymised detail on the
+applicable terms.
 
 INE explicitly offers requests for **more detailed anonymised data**
 subject to review, terms and possible payment where the public file
@@ -97,7 +132,8 @@ py -m scripts.inspect_es_earnings_2022 --zip "C:\\Users\\USER\\Downloads\\offici
 ```
 
 Only the **inspection JSON** (not row-level microdata) should be shared
-for review. The inspector outputs archive filenames, variable
+for review. The full official package has already been checked; this is
+retained for reproducibility and any future revised datasets. The inspector outputs archive filenames, variable
 dictionary matches, source column headings, salary/occupation/
 weight candidates, and a capped sample of categorical occupation
 codes. It does not print individual salary values or create a wage
@@ -131,5 +167,6 @@ interpreted using the source-provided dictionary, not guessed.
 - Only **validated derived aggregate wage observations** (never
   individual records) would enter the future EarnWage SQLite snapshot.
 
-**Current production count for this new Spanish source: zero.** This
-PR is schema investigation tooling, not a verified salary import.
+**Exact occupation salary count from Spanish microdata: zero.** The
+independent source-backed INE EAES 2008–2024 GROUP context snapshot is
+already committed separately as `data/es_ine_eaes_28186.json`.
