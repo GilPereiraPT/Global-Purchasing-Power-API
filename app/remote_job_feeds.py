@@ -98,7 +98,7 @@ def normalize(provider,row,fetched):
         return None
     return base(provider,row.get("id"),row.get("position"),row.get("company"),
                 url,location,iso(row.get("date")) or iso(row.get("epoch")),fetched,
-                salary(row.get("salary_min"),row.get("salary_max"),"USD","annual"),
+                None,  # Remote OK feed does not guarantee a currency/period for every record.
                 None,"country_mentioned")
 
 async def feed(provider):
