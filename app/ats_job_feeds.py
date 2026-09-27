@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlsplit
 import httpx
 from app import store
-from app.jobs import title_matches, location_matches
+from app.jobs import title_matches, ats_location_matches
 from app.providers import UpstreamUnavailable
 
 BOARDS = {
@@ -152,7 +152,7 @@ async def search(provider, country, occupation, salary_published=False, limit=20
         board = item["id"].split(":", 2)[1]
         entry = stats[board]
         matches_title = title_matches(item["title"], occupation)
-        scope = location_matches(item["candidate_required_location"], country)
+        scope = ats_location_matches(item["candidate_required_location"], country)
         matches_country = bool(scope)
         if matches_title:
             entry["jobs_matching_occupation"] += 1
