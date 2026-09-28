@@ -15,44 +15,58 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Extract CBS 2025 detailed occupation medians
+      - name: Extract latest CBS medians for EarnWage candidate mappings
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, re, urllib.request
+          import json, urllib.request
           base="https://datasets.cbs.nl/odata/v1/CBS/86355NED"
           headers={"User-Agent":"EarnWage/1.0"}
-          def get_url(url):
+          candidates={
+            "accountant":"A000194","financial_analyst":"A000195",
+            "psychologist":"A000294","physiotherapist":"A000291",
+            "preschool_teacher":"A059350","software_developer":"A059354",
+            "it_technician":"A000278","architect":"A000244",
+            "administrative_assistant":"A000204","receptionist":"A000206",
+            "sales_assistant":"A000189","truck_driver":"A000321",
+            "bus_driver":"A000320","electrician":"A000267",
+            "plumber":"A000253","cook":"A000308","waiter":"A000309",
+            "cleaner":"A000314","security_guard":"A000237",
+            "lawyer":"A000233","healthcare_assistant":"A000304",
+            "cybersecurity_specialist":"A000276","secondary_teacher":"A000165",
+            "warehouse_operator":"A059355","industrial_operator":"A000269",
+            "welder":"A000257","automotive_mechanic":"A000258",
+            "agricultural_worker":"A000286",
+          }
+          def get(url):
               return json.loads(urllib.request.urlopen(
                   urllib.request.Request(url,headers=headers),timeout=45).read())
-          jobs=get_url(base+"/BeroepCodes")["value"]
-          obs=[]
-          url=base+"/Observations?$filter=Perioden%20eq%20%272025JJ00%27"
+          jobs={r["Identifier"]:r for r in get(base+"/BeroepCodes")["value"]}
+          observations=[]
+          url=base+"/Observations"
           while url:
-              page=get_url(url)
-              obs.extend(page.get("value",[]))
+              page=get(url)
+              observations.extend(page.get("value",[]))
               url=page.get("@odata.nextLink")
-          by_key={(r["Beroep"],r["Measure"]):r for r in obs}
-          detail=[]
-          for job in jobs:
-              title=job["Title"]
-              if not re.match(r"^\d{4}\s", title):
-                  continue
-              ident=job["Identifier"]
-              workers=by_key.get((ident,"A045285"))
-              median=by_key.get((ident,"A043068"))
-              detail.append({
+          index={(r["Beroep"],r["Perioden"],r["Measure"]):r for r in observations}
+          for occupation,ident in candidates.items():
+              series=[]
+              for year in ("2025","2024"):
+                  period=year+"JJ00"
+                  med=index.get((ident,period,"A043068"))
+                  workers=index.get((ident,period,"A045285"))
+                  series.append({
+                      "year":year,
+                      "median": med.get("Value") if med else None,
+                      "median_attr":med.get("ValueAttribute") if med else None,
+                      "employees_thousand":workers.get("Value") if workers else None,
+                  })
+              print("CANDIDATE",json.dumps({
+                  "occupation":occupation,
                   "identifier":ident,
-                  "title":title,
-                  "description":job.get("Description",""),
-                  "employees_thousand": workers.get("Value") if workers else None,
-                  "employees_attr": workers.get("ValueAttribute") if workers else None,
-                  "median_gross_hourly_eur": median.get("Value") if median else None,
-                  "median_attr": median.get("ValueAttribute") if median else None,
-              })
-          print("DETAIL_COUNT",len(detail))
-          print("PUBLISHED_MEDIANS",sum(r["median_gross_hourly_eur"] is not None for r in detail))
-          for row in detail:
-              print("ROW",json.dumps(row,ensure_ascii=False,sort_keys=True))
+                  "title":jobs[ident]["Title"],
+                  "description":jobs[ident].get("Description",""),
+                  "series":series,
+              },ensure_ascii=False,sort_keys=True))
           PY
