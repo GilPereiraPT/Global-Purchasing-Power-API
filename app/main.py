@@ -26,11 +26,13 @@ async def lifespan(app: FastAPI):
     na_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "north_america_wages.json")
     from app.pt_occupation_wages import load_snapshot as load_pt_wages
     load_pt_wages()
+    from app.uk_ashe_wages import load_snapshot as load_uk_wages
+    load_uk_wages()
     yield
 
 app = FastAPI(
     title="EarnWage — Global Purchasing Power API",
-    version="0.5.2",
+    version="0.5.15",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -244,11 +246,16 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
     for cell in result["cells"]:
         cell["occupation_label"] = labels[cell["occupation"]]
     na = na_wages.observed_coverage()
+    from app import uk_ashe_wages
+    uk = uk_ashe_wages.observed_coverage()
     for cell in result["cells"]:
         key = (cell["country"], cell["occupation"])
         if key in na:
             cell.update({"status": "available", "latest_period": na[key],
                          "source_family": "north_america_official_wages"})
+        elif cell["country"] == "GB" and cell["occupation"] in uk:
+            cell.update({"status": "available", "latest_period": uk[cell["occupation"]][1],
+                         "source_family": "ons_ashe_soc2020"})
     result["available_cells"] = sum(x["status"] == "available" for x in result["cells"])
     return result
 
@@ -260,7 +267,7 @@ def occupation_salary(code: str, occupation: str):
         raise HTTPException(404, "Unknown country")
     if occupation not in {x["id"] for x in OCCUPATIONS}:
         raise HTTPException(422, "Unknown occupation")
-    return na_wages.wages(country, occupation) if country in ("US", "CA") else salary(country, occupation)
+    return ew_queries.wage_for(country, occupation)
 
 
 @app.get("/v1/salaries/groups/coverage")
