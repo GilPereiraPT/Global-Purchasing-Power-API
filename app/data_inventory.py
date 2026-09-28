@@ -22,6 +22,7 @@ from app.de_entgeltatlas_wages import init as init_de_entgeltatlas, HELP_URL as 
 from app.fr_insee_wages import init as init_fr_insee, DATASET_PAGE as FR_INSEE_SOURCE
 from app.nl_cbs_wages import init as init_nl_cbs, SOURCE_PAGE as NL_CBS_SOURCE
 from app.es_eaes_groups import catalogue as es_eaes_catalogue, SOURCE_URL as ES_GROUP_SOURCE
+from app.occupation_source_audits import OCCUPATION_SOURCE_AUDITS, source_audit
 from app.store import connect as cache_connect
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -184,6 +185,13 @@ def build_inventory():
                 "stored_observations": sum(v[0] for v in salaries["CBS_NL_BRC"].values()),
                 "status": "available" if salaries["CBS_NL_BRC"] else "not_imported",
                 "precision": "approved_direct_brc_occupational_group"},
+            "occupation_source_audits": {
+                "audited_countries": sorted(OCCUPATION_SOURCE_AUDITS),
+                "official_sources_audited": len(OCCUPATION_SOURCE_AUDITS),
+                "exact_occupation_sources_accepted": sum(
+                    1 for item in OCCUPATION_SOURCE_AUDITS.values()
+                    if item["exact_occupation_accepted"]),
+            },
             "ilostat_major_groups": {
                 "observed_pairs": 0, "possible_pairs": len(COUNTRY_MAP) * 9,
                 "stored_observations": 0},
@@ -261,6 +269,7 @@ def build_inventory():
                     "total_catalogue_occupations": len(OCCUPATIONS),
                     "occupations": occupations},
                 "ilostat_major_groups": major_groups,
+                "occupation_wage_source_audit": source_audit(country),
                 "es_ine_eaes_groups": es_groups if country == "ES" else {"status": "not_applicable"},
             })
 
@@ -312,6 +321,11 @@ def build_inventory():
                 "precision": "BRC 2014 edition 2025 approved occupational-group mappings",
                 "measure": "median gross hourly wage",
                 "update_mechanism": "validated_official_snapshot"},
+            "occupation_source_audits": {
+                "source": "FSO Switzerland and Istat Italy official wage publications",
+                "countries": sorted(OCCUPATION_SOURCE_AUDITS),
+                "precision": "audited official group data; excluded from exact occupation coverage",
+                "update_mechanism": "read_only_source_audit"},
             "ilostat_major_groups": {
                 "source": "ILOSTAT",
                 "source_url": GROUP_SOURCE,
@@ -353,6 +367,7 @@ def build_inventory():
             "Latest source observation year differs from the database refresh date.",
             "Eurostat/ONS/OECD and World Bank inflation are distinct series.",
             "Exact occupation wages are separate from ISCO-08 major-group wages.",
+            "CH and IT official wage sources are audited separately and do not increase exact coverage while only broad occupation groups are published.",
             "Missing means no row found here; it is not a claim the official source has no data.",
             "Public inventory contains no personal accounts, credentials or server paths.",
         ],
