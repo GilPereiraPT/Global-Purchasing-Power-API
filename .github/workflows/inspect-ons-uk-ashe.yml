@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/inspect-ons-uk-ashe.yml'
+      - 'app/uk_ashe_wages.py'
   workflow_dispatch:
 
 permissions:
@@ -33,6 +34,26 @@ jobs:
           print(json.dumps(names, indent=2))
           print("ZIP_FILES_END")
           PY
+      - name: Build vetted EarnWage UK snapshot
+        run: |
+          python -m pip install --quiet -r requirements.txt
+          python -m app.uk_ashe_wages --source-zip ashe14.zip --export uk_ashe_wages.json
+          python - <<'PY'
+          import json
+          x=json.load(open("uk_ashe_wages.json",encoding="utf-8"))
+          print("SNAPSHOT_SUMMARY",json.dumps({
+              "records":len(x["records"]),
+              "occupations":len({r["occupation"] for r in x["records"]}),
+              "rejected":len(x["rejected"]),
+              "jobs":sorted({r["occupation"] for r in x["records"]})
+          },ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uk-ashe-wages-2025
+          path: uk_ashe_wages.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Inspect workbook sheets and annual-pay candidates
         shell: bash
         run: |
