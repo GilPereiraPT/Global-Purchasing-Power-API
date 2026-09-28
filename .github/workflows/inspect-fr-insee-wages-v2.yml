@@ -1,0 +1,40 @@
+name: Inspect France INSEE raw wages v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-fr-insee-wages-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download official INSEE 2024 CSV and inspect raw format
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import urllib.request
+          url="https://api.insee.fr/melodi/file/DS_DERA_PRIVE_ANNUEL/DS_DERA_PRIVE_ANNUEL_2024_CSV_FR"
+          req=urllib.request.Request(url,headers={"User-Agent":"EarnWage/1.0"})
+          raw=urllib.request.urlopen(req,timeout=45).read()
+          print("BYTES",len(raw))
+          print("HEAD_BYTES",repr(raw[:120]))
+          for enc in ("utf-8-sig","utf-8","latin-1"):
+              try:
+                  text=raw.decode(enc)
+                  print("ENCODING",enc)
+                  break
+              except UnicodeDecodeError:
+                  pass
+          lines=text.splitlines()
+          print("LINE_COUNT",len(lines))
+          for i,line in enumerate(lines[:40]):
+              print("LINE",i,repr(line[:1500]))
+          PY
