@@ -1,0 +1,35 @@
+name: Inspect Netherlands CBS occupation wages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-nl-cbs-wages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Inspect official CBS OData dataset 86355NED
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, urllib.request
+          base="https://datasets.cbs.nl/odata/v1/CBS/86355NED"
+          headers={"User-Agent":"EarnWage/1.0"}
+          for suffix in ("","/Properties","/MeasureCodes","/MeasureGroups","/Dimensions"):
+              url=base+suffix
+              try:
+                  raw=urllib.request.urlopen(
+                      urllib.request.Request(url,headers=headers),timeout=30).read()
+                  print("\nURL",url,"BYTES",len(raw))
+                  print(raw[:8000].decode("utf-8","replace"))
+              except Exception as exc:
+                  print("\nFAIL",url,type(exc).__name__,str(exc))
+          PY
