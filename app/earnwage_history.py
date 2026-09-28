@@ -1,6 +1,7 @@
 """Observed exact-occupation annual history; never substitute ISCO major groups."""
 from app.store import connect
 from app import north_america as na
+from app import uk_ashe_wages as uk
 from app.ilostat_import import init_salary_db
 
 
@@ -24,6 +25,25 @@ def exact_history(country, occupation, start_year, end_year):
                                 "currency":currency, "measure":measure, "unit":unit,
                                 "value":value, "source":source, "source_url":url,
                                 "classification":classification})
+    elif country == "GB":
+        with connect() as db:
+            uk.init(db)
+            rows = db.execute(
+                """SELECT reference_period,published_year,currency,measure,unit,
+                          value,source,source_url,classification
+                   FROM uk_ashe_wages WHERE country='GB' AND occupation=?""",
+                (occupation,)).fetchall()
+        entries = []
+        for period,published,currency,measure,unit,value,source,url,classification in rows:
+            try:
+                year=int(str(period)[:4])
+            except ValueError:
+                continue
+            if start_year <= year <= end_year:
+                entries.append({"year":year,"published_year":published,
+                                "currency":currency,"measure":measure,"unit":unit,
+                                "value":value,"source":source,"source_url":url,
+                                "classification":classification})
     else:
         with connect() as db:
             init_salary_db(db)
@@ -42,7 +62,8 @@ def exact_history(country, occupation, start_year, end_year):
         annual = [e for e in candidates if e["unit"] == e["currency"]+"/year"]
         monthly = [e for e in candidates if e["unit"] == e["currency"]+"/month"]
         selected = annual if annual else monthly
-        preferred = [e for e in selected if e["measure"] == "mean"]
+        preferred_measure = "median" if country == "GB" else "mean"
+        preferred = [e for e in selected if e["measure"] == preferred_measure]
         if preferred:
             selected = preferred
         if len(selected) == 1:

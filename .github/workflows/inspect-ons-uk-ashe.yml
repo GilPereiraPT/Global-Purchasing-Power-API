@@ -1,0 +1,100 @@
+name: Inspect ONS ASHE 4-digit SOC source
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download corrected 2025 provisional ASHE Table 14
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://www.ons.gov.uk/file?uri=%2Femploymentandlabourmarket%2Fpeopleinwork%2Fearningsandworkinghours%2Fdatasets%2Foccupation4digitsoc2010ashetable14%2F2025provisional%2Fashetable142025provisional.zip'
+          curl --fail --location --retry 3 --retry-delay 3 --connect-timeout 20 --max-time 180 "$url" -o ashe14.zip
+          test "$(stat -c%s ashe14.zip)" -gt 1000000
+          unzip -tq ashe14.zip
+          python - <<'PY'
+          import zipfile, json
+          with zipfile.ZipFile("ashe14.zip") as z:
+              names=[x.filename for x in z.infolist() if not x.is_dir()]
+          print("ZIP_FILES_START")
+          print(json.dumps(names, indent=2))
+          print("ZIP_FILES_END")
+          PY
+      - name: Build vetted EarnWage UK snapshot
+        run: |
+          python -m pip install --quiet -r requirements.txt
+          python -m app.uk_ashe_wages --source-zip ashe14.zip --export uk_ashe_wages.json
+          python - <<'PY'
+          import json
+          x=json.load(open("uk_ashe_wages.json",encoding="utf-8"))
+          print("SNAPSHOT_SUMMARY",json.dumps({
+              "records":len(x["records"]),
+              "occupations":len({r["occupation"] for r in x["records"]}),
+              "rejected":len(x["rejected"]),
+              "jobs":sorted({r["occupation"] for r in x["records"]})
+          },ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uk-ashe-wages-2025
+          path: uk_ashe_wages.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Inspect workbook sheets and annual-pay candidates
+        shell: bash
+        run: |
+          python -m pip install --quiet openpyxl xlrd
+          python - <<'PY'
+          import io, json, re, zipfile
+          from pathlib import PurePosixPath
+          import openpyxl, xlrd
+
+          def compact(v):
+              if v is None: return None
+              s=str(v)
+              return s[:180]
+
+          with zipfile.ZipFile("ashe14.zip") as z:
+              for info in z.infolist():
+                  name=info.filename
+                  lower=name.lower()
+                  if info.is_dir() or not lower.endswith((".xlsx",".xls")):
+                      continue
+                  if not re.search(r'14[._ -]?7|annual|year', lower):
+                      continue
+                  raw=z.read(info)
+                  print("WORKBOOK",name,"BYTES",len(raw))
+                  if lower.endswith(".xlsx"):
+                      wb=openpyxl.load_workbook(io.BytesIO(raw),read_only=True,data_only=True)
+                      try:
+                          print("SHEETS",json.dumps(wb.sheetnames))
+                          for ws in wb.worksheets[:8]:
+                              rows=[]
+                              for row in ws.iter_rows(min_row=1,max_row=22,max_col=12,values_only=True):
+                                  rows.append([compact(x) for x in row])
+                              print("SHEET_SAMPLE",ws.title,json.dumps(rows,ensure_ascii=False))
+                      finally:
+                          wb.close()
+                  else:
+                      wb=xlrd.open_workbook(file_contents=raw,on_demand=True)
+                      try:
+                          print("SHEETS",json.dumps(wb.sheet_names()))
+                          for sn in wb.sheet_names()[:8]:
+                              ws=wb.sheet_by_name(sn)
+                              rows=[]
+                              for r in range(min(ws.nrows,22)):
+                                  rows.append([compact(ws.cell_value(r,c)) for c in range(min(ws.ncols,12))])
+                              print("SHEET_SAMPLE",sn,json.dumps(rows,ensure_ascii=False))
+                      finally:
+                          wb.release_resources()
+          PY
