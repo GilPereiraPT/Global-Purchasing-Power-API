@@ -1,0 +1,62 @@
+name: Inspect France INSEE parsed wages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-fr-insee-wages-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download and parse official INSEE 2024 archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv, io, json, urllib.request, zipfile
+          url="https://api.insee.fr/melodi/file/DS_DERA_PRIVE_ANNUEL/DS_DERA_PRIVE_ANNUEL_2024_CSV_FR"
+          req=urllib.request.Request(url,headers={"User-Agent":"EarnWage/1.0"})
+          raw=urllib.request.urlopen(req,timeout=45).read()
+          z=zipfile.ZipFile(io.BytesIO(raw))
+          print("MEMBERS",json.dumps(z.namelist(),ensure_ascii=False))
+          for name in z.namelist():
+              data=z.read(name)
+              print("MEMBER",name,"BYTES",len(data),"HEAD",repr(data[:120]))
+              for enc in ("utf-8-sig","utf-8","latin-1"):
+                  try:
+                      text=data.decode(enc); print("ENC",name,enc); break
+                  except UnicodeDecodeError:
+                      pass
+              lines=text.splitlines()
+              print("LINES",name,len(lines))
+              for i,line in enumerate(lines[:12]):
+                  print("LINE",name,i,repr(line[:2000]))
+              if "metadata" not in name.lower():
+                  for sep in (";","	",","):
+                      try:
+                          reader=csv.DictReader(io.StringIO(text,newline=""),delimiter=sep)
+                          rows=list(reader)
+                          if rows and len(rows[0])>3:
+                              print("SEP",repr(sep))
+                              print("FIELDS",json.dumps(list(rows[0]),ensure_ascii=False))
+                              print("ROW_COUNT",len(rows))
+                              for k in rows[0]:
+                                  vals=[]
+                                  seen=set()
+                                  for r in rows:
+                                      v=r.get(k,"")
+                                      if v not in seen:
+                                          seen.add(v); vals.append(v)
+                                      if len(vals)>=25: break
+                                  print("UNIQUE",k,json.dumps(vals,ensure_ascii=False))
+                              break
+                      except Exception as exc:
+                          print("PARSE_FAIL",repr(sep),type(exc).__name__,str(exc)[:100])
+          PY
