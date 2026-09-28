@@ -34,7 +34,7 @@ code{word-break:break-word}
 </head>
 <body>
 <header><a href="./">← EarnWage API Lab</a><h1>Data Manager</h1>
-<p>Consolidação e atualização dos dados oficiais por navegador, com cópia de segurança privada, pré-visualização, importação incremental e registo de operações.</p></header>
+<p>Atualização da API e consolidação dos dados oficiais por navegador, com cópia de segurança privada, validação do GitHub, importação incremental e registo de operações.</p></header>
 <main>
 <section>
 <h2>1. Estado e acesso</h2>
@@ -45,14 +45,21 @@ code{word-break:break-word}
 <p id="status" class="muted" role="status" aria-live="polite">A aguardar consulta.</p>
 <div id="counts" class="grid"></div>
 </section>
+<section id="deploy">
+<h2>2. Atualizar a API a partir do GitHub</h2>
+<p>Atualiza o servidor com a versão <code>main</code> do repositório EarnWage. O servidor só aceita a atualização quando os <strong>API tests</strong> dessa versão terminaram com sucesso.</p>
+<p class="notice"><strong>Proteção:</strong> são atualizados apenas <code>app/*.py</code>, <code>data/*.json</code>, <code>scripts/*.py</code>, <code>passenger_wsgi.py</code> e <code>requirements.txt</code>. Bases SQLite, <code>.htaccess</code>, variáveis privadas e backups nunca são substituídos.</p>
+<div class="actions"><button id="deployApi">Atualizar API com a versão testada do GitHub</button></div>
+<p id="deployResult" class="muted">Por executar. Esta operação cria primeiro uma cópia do código atual e pede o reinício do Passenger.</p>
+</section>
 <section>
-<h2>2. Proteger a informação existente</h2>
+<h2>3. Proteger a informação existente</h2>
 <p class="notice"><strong>Antes da primeira importação:</strong> cria uma cópia privada das bases SQLite efetivamente utilizadas pelo Passenger. A operação não elimina nem substitui quaisquer observações.</p>
 <div class="actions"><button id="backup">Criar e verificar cópia de segurança</button></div>
 <p id="backupResult" class="muted">Por executar. Sem uma cópia verificada, o Data Manager recusa novas importações.</p>
 </section>
 <section>
-<h2>3. Escolher o que atualizar</h2>
+<h2>4. Escolher o que atualizar</h2>
 <div class="grid">
 <div><label for="source">Fonte</label><select id="source">
 <option value="world_bank">Banco Mundial · WDI</option>
@@ -82,7 +89,7 @@ code{word-break:break-word}
 <pre id="log" aria-live="polite">O painel está pronto.</pre>
 </section>
 <section>
-<h2>4. Histórico das operações</h2>
+<h2>5. Histórico das operações</h2>
 <p>Mostra apenas operações realizadas através deste Data Manager. O inventário económico completo mantém os registos das importações feitas por outros mecanismos.</p>
 <div class="actions"><button class="secondary" id="history">Atualizar histórico</button>
 <a href="./data-inventory.html">Abrir inventário completo ↗</a></div>
@@ -91,7 +98,7 @@ code{word-break:break-word}
 <thead><tr><th>Data UTC</th><th>Fonte</th><th>País</th><th>Indicador</th><th>Modo</th><th>Resultado</th><th>Observações</th></tr></thead>
 <tbody id="historyRows"></tbody></table></div>
 </section>
-<section><h2>5. Atualização automática</h2>
+<section><h2>6. Atualização automática</h2>
 <p>A rotina automática é preparada no GitHub Actions e comunica com esta mesma API protegida. Para a ativar, é necessário configurar uma única vez a chave em <strong>GitHub → Settings → Secrets and variables → Actions</strong> e autorizar o agendamento. Sem essa configuração, as importações automáticas não devem ser consideradas ativas.</p>
 <p class="muted">As tarefas automáticas devem fazer consultas pequenas, manter os períodos e fontes originais e nunca inventar salários ou trocar médias de grandes grupos por valores de profissões específicas.</p>
 </section>
@@ -175,7 +182,7 @@ let body;
 try{body=await r.json()}catch{throw Error("Resposta HTTP "+r.status+" inválida");}
 if(!r.ok){
 if(r.status===409 && body.import_status==="backup_required")
- throw Error("backup_required · Antes de importar, utiliza a secção 2 para criar e verificar uma cópia de segurança.");
+ throw Error("backup_required · Antes de importar, utiliza a secção 3 para criar e verificar uma cópia de segurança.");
 if(r.status===409 && body.status==="prerequisites_missing"){
  const problems=Object.entries(body.backup_readiness?.databases||{})
   .filter(([,state])=>state!=="ready")
@@ -202,6 +209,8 @@ throw Error("backup_failed · "+(names[body.reason]||body.reason||
 }
 if(action==="backup" && body.error==="invalid_manager_request")
  throw Error("A API de produção devolveu a mensagem genérica da versão anterior do Data Manager. Atualiza apenas app/data_manager.py através do Gestor de Ficheiros do cPanel e reinicia em Setup Python App. Se persistir, consulta o error_log.");
+if(action==="deploy" && body.error==="github_tests_not_green")
+ throw Error("A versão mais recente do GitHub ainda não tem os API tests verdes. Aguarda a conclusão dos testes e tenta novamente.");
 throw Error((body.error||body.detail||"HTTP "+r.status)+
  (body.note?" · "+body.note:""));
 }
@@ -317,6 +326,33 @@ $("inventory").onclick=()=>standalone(publicInventory,"A consultar base de dados
 $("check").onclick=()=>standalone(async()=>{
 await publicInventory();await status();report("Ligação protegida verificada · Data Manager disponível.");
 },"A verificar acesso protegido...");
+$("deployApi").onclick=()=>standalone(async()=>{
+if(!confirm("Atualizar agora a API de produção com a última versão testada do GitHub?"))return;
+$("deployResult").textContent="A descarregar, validar e instalar a versão testada…";
+const r=await admin("deploy",{confirm:"deploy_tested_main"});
+$("deployResult").textContent="Atualização instalada · versão "+r.version+
+" · "+r.files_updated+" ficheiros · backup "+r.backup_id+". A confirmar reinício…";
+log("Deploy GitHub concluído: "+r.commit+" · versão "+r.version+
+" · "+r.files_updated+" ficheiros.");
+let ready=false,last="";
+for(let attempt=1;attempt<=12;attempt++){
+ await new Promise(resolve=>setTimeout(resolve,3000));
+ try{
+  const response=await fetch(API+"/v1/health",{cache:"no-store"});
+  const health=await response.json();
+  last=health.version||"";
+  if(response.ok && last===r.version){ready=true;break;}
+ }catch{}
+}
+if(!ready)throw Error("Os ficheiros foram instalados, mas /v1/health ainda não confirmou a versão "+r.version+
+". Versão observada: "+(last||"sem resposta")+". Verifica o Passenger.");
+$("deployResult").textContent="API atualizada com sucesso · versão "+r.version+
+" · commit "+r.commit.slice(0,8)+".";
+await publicInventory();
+await status();
+report("API de produção atualizada e reiniciada · versão "+r.version+".");
+},"A atualizar a API a partir do GitHub…");
+
 $("backup").onclick=()=>standalone(async()=>{
 try{
 const r=await admin("backup");
