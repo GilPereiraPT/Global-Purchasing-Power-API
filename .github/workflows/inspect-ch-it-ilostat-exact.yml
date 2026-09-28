@@ -1,0 +1,75 @@
+name: Inspect CH and IT exact ILOSTAT occupation wages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-ch-it-ilostat-exact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: any::Rilostat
+      - name: Inspect official CH and IT exact occupation observations
+        shell: Rscript {0}
+        run: |
+          suppressPackageStartupMessages(library(Rilostat))
+          dataset <- "EAR_EMTA_SEX_OCU_CUR_NB_A"
+          wanted <- c(
+            accountant="2411", nurse="2221", civil_engineer="2142",
+            electrician="7411", software_developer="2514", cleaner="9112",
+            dentist="2261", secondary_teacher="2330", welder="7212",
+            automotive_mechanic="7231"
+          )
+          dat <- get_ilostat(
+            id=dataset, segment="indicator", type="code",
+            best_source="all", time_format="raw",
+            filters=list(ref_area=c("CHE","ITA"), timefrom="2018"),
+            cache=FALSE, quiet=FALSE
+          )
+          if (is.null(dat) || !nrow(dat)) stop("Official ILOSTAT dataset returned no CH/IT rows")
+          d <- as.data.frame(dat)
+          cat("ROWS", nrow(d), "\n")
+          cat("COLUMNS", paste(names(d), collapse="|"), "\n")
+          exact <- grepl("^OCU_ISCO08_[0-9]{4}$", d$classif1)
+          cat("EXACT4_ROWS", sum(exact, na.rm=TRUE), "\n")
+          for (country in c("CHE","ITA")) {
+            z <- d[d$ref_area == country, , drop=FALSE]
+            e <- z[grepl("^OCU_ISCO08_[0-9]{4}$", z$classif1), , drop=FALSE]
+            cat("COUNTRY", country, "ROWS", nrow(z), "EXACT4", nrow(e),
+                "EXACT4_CODES", length(unique(e$classif1)), "\n")
+            for (job in names(wanted)) {
+              code <- paste0("OCU_ISCO08_", wanted[[job]])
+              x <- z[z$classif1 == code & z$sex == "SEX_T", , drop=FALSE]
+              if ("best_source" %in% names(x)) x <- x[x$best_source == 1, , drop=FALSE]
+              if ("classif2" %in% names(x)) {
+                local <- x[x$classif2 %in% c("CUR_TYPE_LCU","CUR_LCU","CUR_NCU"), , drop=FALSE]
+                if (nrow(local)) x <- local
+              }
+              if (nrow(x)) {
+                x <- x[order(as.character(x$time), decreasing=TRUE), , drop=FALSE]
+                row <- x[1, , drop=FALSE]
+                cat("MATCH", country, job, code,
+                    "time", as.character(row$time),
+                    "value", as.character(row$obs_value),
+                    "classif2", if ("classif2" %in% names(row)) as.character(row$classif2) else "",
+                    "source", as.character(row$source),
+                    "best", if ("best_source" %in% names(row)) as.character(row$best_source) else "",
+                    "\n")
+              } else {
+                cat("MISS", country, job, code, "\n")
+              }
+            }
+          }
