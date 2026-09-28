@@ -138,10 +138,10 @@ def recent_jobs(result, max_age_days, limit):
             continue
         salary = job.get("salary_text")
         structured = job.get("salary_structured")
-        salary_display = salary.strip() if isinstance(salary, str) and salary.strip() else "Não divulgado"
+        salary_display = salary.strip() if isinstance(salary, str) and salary.strip() else "N\u00e3o divulgado"
         kept.append({**job, "age_days": age,
                      "salary_display": salary_display,
-                     "salary_disclosed": bool(salary_display != "Não divulgado" or structured),
+                     "salary_disclosed": bool(salary_display != "N\u00e3o divulgado" or structured),
                      "publication_date_status": job.get("publication_date_status", "reported") if age is not None else "unknown"})
     updated = {**result, "jobs": kept[:limit], "count": len(kept),
             "returned": min(len(kept), limit),
