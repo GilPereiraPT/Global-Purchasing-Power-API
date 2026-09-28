@@ -45,7 +45,7 @@ def exact_history(country, occupation, start_year, end_year):
                                 "currency":currency,"measure":measure,"unit":unit,
                                 "value":value,"source":source,"source_url":url,
                                 "classification":classification})
-    elif country == "DE":
+    elif country == "DE" and occupation in de.APPROVED:
         with connect() as db:
             de.init(db)
             rows = db.execute(
