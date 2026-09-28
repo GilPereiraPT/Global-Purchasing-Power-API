@@ -26,7 +26,7 @@ def test_native_wsgi_health_and_config():
     code, body, headers = request("/v1/health")
     assert code == 200
     assert body["status"] == "ok"
-    assert body["version"] == "0.5.16"
+    assert body["version"] == "0.5.17"
     assert body["runtime"] == "native_wsgi"
     assert headers["Content-Type"].startswith("application/json")
     assert request("/v1/app-config")[1]["product"]["name"] == "EarnWage"
@@ -41,10 +41,15 @@ def test_native_wsgi_health_and_config():
 def test_native_wsgi_official_wages_and_comparison():
     status, data, _ = request("/v1/earnwage/coverage")
     assert status == 200 and data["possible_pairs"] == 560
-    assert data["observed_pairs"] == 91
+    assert data["observed_pairs"] == 114
     code, wage, _ = request("/v1/salaries/US/nurse")
     assert code == 200 and wage["status"] == "available"
     assert wage["observations"][0]["unit"] == "USD/year"
+    code, fr_wage, _ = request("/v1/salaries/FR/nurse")
+    assert code == 200 and fr_wage["status"] == "available"
+    assert fr_wage["value"] == 2715.2
+    assert fr_wage["measure"] == "mean"
+    assert fr_wage["source_unit"] == "EUR/month"
     code, item, _ = request("/v1/earnwage/overview", {
         "country": "CA", "occupation": "nurse", "region": "ON"})
     assert code == 200
