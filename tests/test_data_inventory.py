@@ -67,6 +67,14 @@ def test_inventory_separates_real_sources_and_unimported(monkeypatch, tmp_path):
     assert response["summary"]["world_bank"]["available"] == 1
     assert response["summary"]["eurostat_ons_oecd"]["available"] == 1
     assert response["summary"]["exact_occupational_wages"]["observed_pairs"] == 1
+    assert response["summary"]["occupation_source_audits"]["audited_countries"] == ["CH", "IT"]
+    assert response["summary"]["occupation_source_audits"]["exact_occupation_sources_accepted"] == 0
+    ch = next(c for c in response["countries"] if c["code"] == "CH")
+    it = next(c for c in response["countries"] if c["code"] == "IT")
+    assert ch["occupation_wage_source_audit"]["status"] == "official_group_data_only"
+    assert ch["occupation_wage_source_audit"]["ilostat_exact_isco08_4digit_rows"] == 0
+    assert it["occupation_wage_source_audit"]["status"] == "official_group_data_only"
+    assert it["occupation_wage_source_audit"]["ilostat_exact_isco08_4digit_rows"] == 0
     assert response["summary"]["ilostat_major_groups"]["observed_pairs"] == 1
     assert response["deployment"]["cron_running"] == "not_verifiable_from_http"
     assert "database_path" not in response
