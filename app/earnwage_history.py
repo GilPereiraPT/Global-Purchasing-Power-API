@@ -3,6 +3,7 @@ from app.store import connect
 from app import north_america as na
 from app import uk_ashe_wages as uk
 from app import de_entgeltatlas_wages as de
+from app import fr_insee_wages as fr
 from app.ilostat_import import init_salary_db
 
 
@@ -65,6 +66,26 @@ def exact_history(country, occupation, start_year, end_year):
                                 "measure":measure, "unit":unit, "value":value,
                                 "source":source, "source_url":url,
                                 "classification":"BA-Entgeltatlas:"+page_id})
+    elif country == "FR" and occupation in fr.APPROVED:
+        with connect() as db:
+            fr.init(db)
+            rows = db.execute(
+                """SELECT reference_period,currency,measure,unit,value,source,
+                          source_url,pcs_ese
+                   FROM fr_insee_wages
+                   WHERE country='FR' AND occupation=?""",
+                (occupation,)).fetchall()
+        entries = []
+        for period,currency,measure,unit,value,source,url,pcs in rows:
+            try:
+                year = int(str(period)[:4])
+            except ValueError:
+                continue
+            if start_year <= year <= end_year:
+                entries.append({"year":year, "currency":currency,
+                                "measure":measure, "unit":unit, "value":value,
+                                "source":source, "source_url":url,
+                                "classification":"PCS-ESE 2003:"+pcs})
     else:
         with connect() as db:
             init_salary_db(db)
