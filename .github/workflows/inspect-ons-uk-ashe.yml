@@ -1,9 +1,5 @@
 name: Inspect ONS ASHE 4-digit SOC source
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/inspect-ons-uk-ashe.yml'
-      - 'app/uk_ashe_wages.py'
   workflow_dispatch:
 
 permissions:
