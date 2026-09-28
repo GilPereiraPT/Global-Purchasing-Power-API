@@ -33,3 +33,11 @@ def test_wave_is_authenticated_serial_and_resumable():
     assert "if(consecutiveFailures>=3)" in page
     assert 'if(stopped)break;' in page
     assert 'headers:{"Content-Type":"application/json","X-EarnWage-Admin-Token":token}' in page
+
+
+def test_browser_exposes_protected_tested_deploy_button():
+    page = HTML.read_text(encoding="utf-8")
+    assert 'id="deployApi"' in page
+    assert 'admin("deploy",{confirm:"deploy_tested_main"})' in page
+    assert "github_tests_not_green" in page
+    assert 'API+"/v1/health"' in page
