@@ -34,8 +34,9 @@ def workbook(value_rows, cv=False):
 
 def source_zip(path, *, median=42000, mean=47000, cv_median=4.0, cv_mean=6.0):
     code,title=uk.SOC2020["civil_engineer"]
-    pay={code:(title,median,mean)}
-    cvs={code:(title,cv_median,cv_mean)}
+    fallback_code,fallback_title=uk.SOC2020["accountant"]
+    pay={code:(title,median,mean), fallback_code:(fallback_title,40000,45000)}
+    cvs={code:(title,cv_median,cv_mean), fallback_code:(fallback_title,3.0,4.0)}
     with zipfile.ZipFile(path,"w",zipfile.ZIP_DEFLATED) as z:
         z.writestr("PROV Table 14.7a Annual pay - Gross 2025.xlsx",workbook(pay))
         z.writestr("PROV Table 14.7b Annual pay - Gross 2025 CV.xlsx",workbook(cvs,cv=True))
@@ -67,8 +68,13 @@ def test_title_mismatch_fails_mapping_closed(tmp_path):
     p=tmp_path/"ashe.zip"
     code,_=uk.SOC2020["civil_engineer"]
     with zipfile.ZipFile(p,"w",zipfile.ZIP_DEFLATED) as z:
-        z.writestr("Table 14.7a.xlsx",workbook({code:("Wrong profession",42000,47000)}))
-        z.writestr("Table 14.7b.xlsx",workbook({code:("Wrong profession",4,6)},cv=True))
+        fallback_code,fallback_title=uk.SOC2020["accountant"]
+        z.writestr("Table 14.7a.xlsx",workbook({
+            code:("Wrong profession",42000,47000),
+            fallback_code:(fallback_title,40000,45000)}))
+        z.writestr("Table 14.7b.xlsx",workbook({
+            code:("Wrong profession",4,6),
+            fallback_code:(fallback_title,3,4)},cv=True))
     obj=uk.build_snapshot(p)
     assert not [r for r in obj["records"] if r["occupation"]=="civil_engineer"]
     assert any(r["occupation"]=="civil_engineer" and r["reason"]=="missing_or_title_mismatch"
