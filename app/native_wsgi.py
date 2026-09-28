@@ -595,6 +595,7 @@ def application(environ, start_response):
         "/v1/admin/data-manager/status": "status",
         "/v1/admin/data-manager/backup": "backup",
         "/v1/admin/data-manager/import": "import",
+        "/v1/admin/data-manager/deploy": "deploy",
     }
     if normalized in data_manager_actions and method == "OPTIONS":
         if origin != "https://gilpereirapt.github.io":
