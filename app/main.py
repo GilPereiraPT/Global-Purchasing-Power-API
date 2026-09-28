@@ -28,11 +28,13 @@ async def lifespan(app: FastAPI):
     load_pt_wages()
     from app.uk_ashe_wages import load_snapshot as load_uk_wages
     load_uk_wages()
+    from app.de_entgeltatlas_wages import load_snapshot as load_de_wages
+    load_de_wages()
     yield
 
 app = FastAPI(
     title="EarnWage — Global Purchasing Power API",
-    version="0.5.15",
+    version="0.5.16",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -164,9 +166,8 @@ async def compare(country_a: str, country_b: str, occupation: str | None = None)
     import asyncio
     async def side(code):
         item = COUNTRY_MAP[code].copy()
-        item["salary"] = (
-            na_wages.wages(code, occupation) if code in ("US", "CA") else salary(code, occupation)
-        ) if occupation else {"status": "unavailable", "reason": "Select an occupation"}
+        item["salary"] = (ew_queries.wage_for(code, occupation) if occupation else
+                          {"status": "unavailable", "reason": "Select an occupation"})
         item["tax"] = {"status": "unavailable", "reason": "Country-specific model not validated"}
         item["capital_cost_of_living"] = {"status": "unavailable", "reason": "No verified capital-level series"}
         if item["inflation_provider"] == "eurostat":
@@ -206,6 +207,9 @@ def sources():
         "ilostat": {"url": "https://webapps.ilo.org/ilostat-files/WEB_bulk_download/indicator/",
                     "role": "ISCO-08 occupation-specific annual employee earnings",
                     "status": "offline importer implemented; import required"},
+        "ba_entgeltatlas": {"url": "https://www.arbeitsagentur.de/hilfe-entgeltatlas",
+                            "role": "Germany national 2025 occupation-specific monthly median gross remuneration",
+                            "status": "27 approved direct Berufsgattung mappings imported"},
         "eurostat_hicp": {"url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr",
                           "role": "monthly harmonized national inflation", "status": "implemented"},
         "ecb_exr": {"url": "https://data-api.ecb.europa.eu/service/data/EXR",
@@ -246,8 +250,9 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
     for cell in result["cells"]:
         cell["occupation_label"] = labels[cell["occupation"]]
     na = na_wages.observed_coverage()
-    from app import uk_ashe_wages
+    from app import uk_ashe_wages, de_entgeltatlas_wages
     uk = uk_ashe_wages.observed_coverage()
+    de = de_entgeltatlas_wages.observed_coverage()
     for cell in result["cells"]:
         key = (cell["country"], cell["occupation"])
         if key in na:
@@ -256,6 +261,9 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
         elif cell["country"] == "GB" and cell["occupation"] in uk:
             cell.update({"status": "available", "latest_period": uk[cell["occupation"]][1],
                          "source_family": "ons_ashe_soc2020"})
+        elif cell["country"] == "DE" and cell["occupation"] in de:
+            cell.update({"status": "available", "latest_period": de[cell["occupation"]][1],
+                         "source_family": "ba_entgeltatlas_kldb"})
     result["available_cells"] = sum(x["status"] == "available" for x in result["cells"])
     return result
 
