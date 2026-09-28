@@ -6,6 +6,7 @@ They do not trigger Remotive, Eurostat or ECB traffic on every screen render.
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
 from app import pt_occupation_wages as pt_wages
+from app import uk_ashe_wages as uk_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -22,8 +23,14 @@ def annual_presentation(wage, group_context):
     if wage.get("status") == "available":
         observations = wage.get("observations")
         if observations:
-            preferred = next((o for o in observations if o.get("measure") == "mean"
-                              and o.get("unit", "").endswith("/year")), None)
+            requested_measure = wage.get("preferred_measure")
+            preferred = (next((o for o in observations
+                               if o.get("measure") == requested_measure
+                               and o.get("unit", "").endswith("/year")), None)
+                         if requested_measure else None)
+            if preferred is None:
+                preferred = next((o for o in observations if o.get("measure") == "mean"
+                                  and o.get("unit", "").endswith("/year")), None)
             if preferred is None:
                 preferred = next((o for o in observations if o.get("unit", "").endswith("/year")), None)
             if preferred is not None:
@@ -84,6 +91,10 @@ def wage_for(country, occupation):
         return na.wages(country, occupation)
     if country == "PT":
         official = pt_wages.wages(country, occupation)
+        if official.get("status") != "unavailable":
+            return official
+    if country == "GB":
+        official = uk_wages.wages(country, occupation)
         if official.get("status") != "unavailable":
             return official
     return ilostat_salary(country, occupation)
@@ -201,6 +212,8 @@ def coverage():
     observed.update(na.observed_coverage())
     observed.update({key: period for key, (_count, period)
                      in pt_wages.observed_coverage().items()})
+    observed.update({("GB", key): period for key, (_count, period)
+                     in uk_wages.observed_coverage().items()})
     return {
         "countries": len(COUNTRY_MAP), "occupations": len(OCCUPATIONS),
         "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
