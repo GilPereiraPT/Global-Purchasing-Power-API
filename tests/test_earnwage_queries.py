@@ -59,11 +59,12 @@ def test_real_coverage_and_invalid_region():
     with TestClient(app) as client:
         data = client.get("/v1/earnwage/coverage").json()
         assert data["possible_pairs"] == 560
-        assert data["observed_pairs"] == 91
+        assert data["observed_pairs"] == 114
         country = {x["code"]: x for x in data["by_country"]}
         assert country["CA"]["observed_occupations"] == 28
         assert country["US"]["observed_occupations"] == 10
         assert country["DE"]["observed_occupations"] == 27
+        assert country["FR"]["observed_occupations"] == 23
         assert country["PT"]["observed_occupations"] == 0
         assert client.get("/v1/earnwage/overview?country=PT&occupation=nurse&region=TX").status_code == 422
         assert client.get("/v1/earnwage/overview?country=US&occupation=nurse&region=QC").status_code == 422
