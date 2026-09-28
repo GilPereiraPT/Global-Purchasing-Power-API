@@ -1,0 +1,58 @@
+name: Inspect France INSEE national occupations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-fr-insee-national.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Extract national detailed PCS-ESE wages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv, io, json, urllib.request, zipfile
+          url="https://api.insee.fr/melodi/file/DS_DERA_PRIVE_ANNUEL/DS_DERA_PRIVE_ANNUEL_2024_CSV_FR"
+          raw=urllib.request.urlopen(
+              urllib.request.Request(url,headers={"User-Agent":"EarnWage/1.0"}),
+              timeout=45).read()
+          z=zipfile.ZipFile(io.BytesIO(raw))
+          meta_name=next(n for n in z.namelist() if "metadata" in n.lower())
+          data_name=next(n for n in z.namelist() if "data.csv" in n.lower())
+          meta=list(csv.DictReader(
+              io.StringIO(z.read(meta_name).decode("utf-8-sig"),newline=""),
+              delimiter=";"))
+          rows=list(csv.DictReader(
+              io.StringIO(z.read(data_name).decode("utf-8-sig"),newline=""),
+              delimiter=";"))
+          labels={r["COD_MOD"]:r["LIB_MOD"] for r in meta if r["COD_VAR"]=="PCS_ESE"}
+          print("PCS_LABEL_COUNT",len(labels))
+          salary={}
+          counts={}
+          for r in rows:
+              if not (r["ACTIVITY"]==r["AGE"]==r["NUMBER_EMPL"]==r["SEX"]==
+                      r["WKTIME"]==r["QUANTILE"]=="_T"):
+                  continue
+              code=r["PCS_ESE"]
+              if r["DERA_MEASURE"]=="SALAIRE_NET_EQTP_MENSUEL_MOYENNE":
+                  salary[code]=float(r["OBS_VALUE"])
+              elif r["DERA_MEASURE"]=="EFFECTIFS_EQTP":
+                  counts[code]=float(r["OBS_VALUE"])
+          print("NATIONAL_CODES",len(salary))
+          for code in sorted(salary):
+              print(json.dumps({
+                  "code":code,
+                  "label":labels.get(code),
+                  "net_monthly_mean_eqtp":salary[code],
+                  "fte":counts.get(code),
+              },ensure_ascii=False,sort_keys=True))
+          PY
