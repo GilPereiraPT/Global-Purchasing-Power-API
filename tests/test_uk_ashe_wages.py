@@ -18,9 +18,10 @@ def workbook(value_rows, cv=False):
         ws.cell(5,c,v)
     r=6
     # >300 four-digit rows are required by the parser.
-    for i in range(1000,1310):
-        title=f"Synthetic occupation {i}"
-        code=str(i)
+    codes=[str(i) for i in range(1000,1310)]
+    codes.extend(code for code in value_rows if code not in codes)
+    for code in codes:
+        title=f"Synthetic occupation {code}"
         med=30000
         mean=35000
         if code in value_rows:
