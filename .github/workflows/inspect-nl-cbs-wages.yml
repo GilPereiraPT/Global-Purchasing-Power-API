@@ -15,21 +15,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Inspect official CBS OData dataset 86355NED
+      - name: Inspect official CBS occupation codes and observations
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, urllib.request
+          import json, urllib.parse, urllib.request
           base="https://datasets.cbs.nl/odata/v1/CBS/86355NED"
           headers={"User-Agent":"EarnWage/1.0"}
-          for suffix in ("","/Properties","/MeasureCodes","/MeasureGroups","/Dimensions"):
-              url=base+suffix
-              try:
-                  raw=urllib.request.urlopen(
-                      urllib.request.Request(url,headers=headers),timeout=30).read()
-                  print("\nURL",url,"BYTES",len(raw))
-                  print(raw[:8000].decode("utf-8","replace"))
-              except Exception as exc:
-                  print("\nFAIL",url,type(exc).__name__,str(exc))
+          def get(path):
+              req=urllib.request.Request(base+path,headers=headers)
+              return json.loads(urllib.request.urlopen(req,timeout=30).read())
+          jobs=get("/BeroepCodes")["value"]
+          periods=get("/PeriodenCodes")["value"]
+          print("JOB_COUNT",len(jobs))
+          print("PERIODS",json.dumps(periods,ensure_ascii=False))
+          for row in jobs:
+              print("JOB",json.dumps(row,ensure_ascii=False,sort_keys=True))
+          obs=get("/Observations?$top=40")["value"]
+          print("OBS_SAMPLE_COUNT",len(obs))
+          for row in obs:
+              print("OBS",json.dumps(row,ensure_ascii=False,sort_keys=True))
           PY
