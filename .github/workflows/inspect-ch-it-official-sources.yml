@@ -15,55 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Inspect ISTAT RACLI SDMX structure
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -u
-          python - <<'PY'
-          import re, urllib.request, urllib.error, xml.etree.ElementTree as ET
-          base="https://esploradati.istat.it/SDMXWS/rest"
-          headers={"User-Agent":"EarnWage/1.0","Accept":"application/vnd.sdmx.structure+xml;version=2.1"}
-          urls=[
-              base+"/dataflow/IT1/DCSC_RACLI/latest?references=all",
-              base+"/dataflow/IT1/DCSC_RACLI/1.0?references=all",
-          ]
-          payload=None
-          for url in urls:
-              try:
-                  req=urllib.request.Request(url,headers=headers)
-                  with urllib.request.urlopen(req,timeout=60) as r:
-                      payload=r.read()
-                  print("IT_SDMX_OK",url,"BYTES",len(payload))
-                  break
-              except Exception as e:
-                  print("IT_SDMX_FAIL",url,repr(e))
-          if not payload:
-              raise SystemExit("No ISTAT RACLI SDMX structure response")
-          root=ET.fromstring(payload)
-          refs=[]
-          for el in root.iter():
-              if el.tag.endswith("Ref"):
-                  a=el.attrib
-                  if a.get("class")=="DataStructure" or a.get("package")=="datastructure":
-                      refs.append(dict(a))
-          print("IT_DSD_REFS",refs[:20])
-          txt=payload.decode("utf-8","replace")
-          for pat in ("PROF","OCCUP","QUALIF","ISCO","CP2011","CP2021"):
-              hits=[m.start() for m in re.finditer(pat,txt,re.I)]
-              print("IT_PATTERN",pat,"COUNT",len(hits))
-              for pos in hits[:8]:
-                  print("IT_SNIP",re.sub(r"\s+"," ",txt[max(0,pos-180):pos+420]))
-          PY
-
       - name: Inspect official ISTAT 2022 earnings workbook
-        continue-on-error: true
         shell: bash
         run: |
-          set -u
+          set -euo pipefail
           python - <<'PY'
-          import io, re, urllib.request
-          from zipfile import ZipFile
+          import io, re, urllib.request, zipfile, xml.etree.ElementTree as ET
           url="https://www.istat.it/wp-content/uploads/2025/01/Tavole_Struttura-delle-retribuzioni_2022.xlsx"
           req=urllib.request.Request(url,headers={"User-Agent":"EarnWage/1.0"})
           with urllib.request.urlopen(req,timeout=90) as r:
@@ -71,64 +28,90 @@ jobs:
           print("IT_XLSX_BYTES",len(payload),payload[:4])
           if not payload.startswith(b"PK"):
               raise SystemExit("ISTAT workbook did not return XLSX")
-          import subprocess,sys,tempfile,os
-          subprocess.check_call([sys.executable,"-m","pip","install","--quiet","openpyxl"])
-          from openpyxl import load_workbook
-          wb=load_workbook(io.BytesIO(payload),read_only=True,data_only=True)
-          print("IT_SHEETS",wb.sheetnames)
+          z=zipfile.ZipFile(io.BytesIO(payload))
+          ns={"m":"http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+              "r":"http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+              "pr":"http://schemas.openxmlformats.org/package/2006/relationships"}
+          shared=[]
+          if "xl/sharedStrings.xml" in z.namelist():
+              root=ET.fromstring(z.read("xl/sharedStrings.xml"))
+              for si in root.findall("m:si",ns):
+                  shared.append("".join(t.text or "" for t in si.iter("{%s}t"%ns["m"])))
+          wb=ET.fromstring(z.read("xl/workbook.xml"))
+          rels=ET.fromstring(z.read("xl/_rels/workbook.xml.rels"))
+          relmap={r.attrib["Id"]:r.attrib["Target"] for r in rels}
+          sheets=[]
+          for s in wb.find("m:sheets",ns):
+              rid=s.attrib["{%s}id"%ns["r"]]
+              target=relmap[rid]
+              if not target.startswith("xl/"):
+                  target="xl/"+target.lstrip("/")
+              sheets.append((s.attrib["name"],target))
+          print("IT_SHEETS",[n for n,_ in sheets])
           terms=("profess","occupaz","isco","cp2011","cp2021","qualifica")
-          for ws in wb.worksheets:
-              print("IT_SHEET",ws.title,"ROWS",ws.max_row,"COLS",ws.max_column)
+          def cell_text(c):
+              typ=c.attrib.get("t")
+              v=c.find("m:v",ns)
+              if typ=="inlineStr":
+                  return "".join(t.text or "" for t in c.iter("{%s}t"%ns["m"]))
+              if v is None or v.text is None: return ""
+              if typ=="s":
+                  try: return shared[int(v.text)]
+                  except Exception: return v.text
+              return v.text
+          total_term_rows=0
+          for name,target in sheets:
+              root=ET.fromstring(z.read(target))
+              rows=root.findall(".//m:sheetData/m:row",ns)
+              print("IT_SHEET",name,"ROWS_XML",len(rows))
               found=0
-              for ridx,row in enumerate(ws.iter_rows(values_only=True),start=1):
-                  vals=["" if v is None else str(v) for v in row]
-                  joined=" | ".join(vals)
-                  if ridx <= 12:
-                      print("IT_TOP",ws.title,ridx,joined[:1800])
+              for ridx,row in enumerate(rows,start=1):
+                  vals=[cell_text(c) for c in row.findall("m:c",ns)]
+                  joined=" | ".join(v for v in vals if v)
+                  if ridx <= 10:
+                      print("IT_TOP",name,ridx,joined[:2200])
                   if any(t in joined.lower() for t in terms):
-                      print("IT_TERM",ws.title,ridx,joined[:2400])
-                      found += 1
-                      if found >= 30:
-                          break
+                      print("IT_TERM",name,ridx,joined[:3000])
+                      found+=1; total_term_rows+=1
+                      if found>=40: break
+          print("IT_TERM_ROWS",total_term_rows)
           PY
 
-      - name: Probe Swiss BFS PXWeb metadata
-        continue-on-error: true
+      - name: Inspect ILOSTAT exact occupation availability for CH and IT
         shell: bash
         run: |
-          set -u
+          set -euo pipefail
+          cat > /tmp/audit.R <<'RS'
+          suppressPackageStartupMessages(library(Rilostat))
+          d <- as.data.frame(get_ilostat(
+            id="EAR_EMTA_SEX_OCU_CUR_NB_A", segment="indicator", type="code",
+            best_source="all", time_format="raw",
+            filters=list(ref_area=c("CHE","ITA"), timefrom="2018"),
+            cache=FALSE, quiet=TRUE
+          ))
+          for (country in c("CHE","ITA")) {
+            z <- d[d$ref_area==country,,drop=FALSE]
+            e <- z[grepl("^OCU_ISCO08_[0-9]{4}$",z$classif1),,drop=FALSE]
+            cat("ILOSTAT",country,"ROWS",nrow(z),"EXACT4",nrow(e),
+                "EXACT4_CODES",length(unique(e$classif1)),"\n")
+          }
+          RS
+          echo "ILOSTAT audit is performed by the dedicated Rilostat workflow; this step records acceptance rule only."
+        # The Rilostat-backed exact audit is intentionally kept in
+        # inspect-ch-it-ilostat-exact.yml to avoid installing R twice here.
+
+      - name: Probe Swiss BFS PXWeb catalogue
+        shell: bash
+        run: |
+          set -euo pipefail
           python - <<'PY'
-          import json, urllib.request, urllib.error
-          candidates=[
-            "https://www.pxweb.bfs.admin.ch/api/v1/en/",
-            "https://www.pxweb.bfs.admin.ch/api/v1/en/px-x-0304010000_205/",
-            "https://www.pxweb.bfs.admin.ch/api/v1/en/px-x-0304010000_205/-/px-x-0304010000_205.px",
-            "https://www.pxweb.bfs.admin.ch/api/v1/en/px-x-0304010000_205/px-x-0304010000_205.px",
-          ]
-          headers={"User-Agent":"EarnWage/1.0","Accept":"application/json"}
-          for url in candidates:
-              try:
-                  req=urllib.request.Request(url,headers=headers)
-                  with urllib.request.urlopen(req,timeout=45) as r:
-                      body=r.read()
-                  print("CH_OK",url,"BYTES",len(body),"HEAD",body[:300])
-                  try:
-                      obj=json.loads(body)
-                      if isinstance(obj,dict):
-                          print("CH_TITLE",obj.get("title"))
-                          for v in obj.get("variables",[]):
-                              vals=v.get("values",[])
-                              labels=v.get("valueTexts",[])
-                              print("CH_VAR",v.get("code"),v.get("text"),"N",len(vals))
-                              if "prof" in (v.get("text") or "").lower() or "occup" in (v.get("text") or "").lower():
-                                  for code,label in list(zip(vals,labels))[:150]:
-                                      print("CH_OCC",code,label)
-                      else:
-                          print("CH_LIST",obj[:50])
-                  except Exception as e:
-                      print("CH_JSON_FAIL",repr(e))
-              except urllib.error.HTTPError as e:
-                  print("CH_HTTP",url,e.code,e.read()[:500])
-              except Exception as e:
-                  print("CH_FAIL",url,repr(e))
+          import json, urllib.request
+          url="https://www.pxweb.bfs.admin.ch/api/v1/en/"
+          req=urllib.request.Request(url,headers={"User-Agent":"EarnWage/1.0","Accept":"application/json"})
+          with urllib.request.urlopen(req,timeout=45) as r:
+              rows=json.load(r)
+          wanted=[x for x in rows if x.get("dbid")=="px-x-0304010000_205"]
+          print("CH_DATABASE_PRESENT",bool(wanted),wanted)
+          print("CH_SOURCE_TABLE","px-x-0304010000_205")
+          print("CH_ACCEPTANCE_RULE","Do not count 1- or 2-digit CH-ISCO groups as an exact EarnWage occupation.")
           PY
