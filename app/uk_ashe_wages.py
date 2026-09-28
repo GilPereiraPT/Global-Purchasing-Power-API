@@ -46,7 +46,8 @@ SOC2020 = {
     "truck_driver": ("8211", "Large goods vehicle drivers"),
     "bus_driver": ("8212", "Bus and coach drivers"),
     "electrician": ("5241", "Electricians and electrical fitters"),
-    "plumber": ("5315", "Plumbers and heating and ventilating installers and repairers"),
+    # ASHE workbook uses "&"; SOC 2020 classification page spells the same unit group with "and".
+    "plumber": ("5315", "Plumbers & heating and ventilating installers and repairers"),
     "cook": ("5435", "Cooks"),
     "waiter": ("9264", "Waiters and waitresses"),
     "cleaner": ("9223", "Cleaners and domestics"),
