@@ -135,13 +135,21 @@ def exact_history(country, occupation, start_year, end_year):
             is_hourly = e["unit"].endswith("/hour")
             is_annual = e["unit"].endswith("/year")
             if is_hourly:
-                observations.append({"year":year, "status":"available",
-                                     "value":e["value"], "currency":e["currency"],
-                                     "unit":"per_hour", "kind":"reported_hourly",
-                                     "reference_period":str(year), "source":e["source"],
-                                     "measure":e["measure"],
-                                     "precision":"exact_occupation",
-                                     "note":"Published hourly wage; monthly/annual pay is not inferred."})
+                observations.append({
+                    "year":year, "status":"available",
+                    "annual_presentation":{
+                        "status":"unavailable", "value":None, "unit":"per_year",
+                        "reason":"Only a verified hourly wage is available; annual working hours are not assumed."
+                    },
+                    "reported_hourly":{
+                        "status":"available", "value":e["value"],
+                        "currency":e["currency"], "unit":"per_hour",
+                        "kind":"reported_hourly", "reference_period":str(year),
+                        "source":e["source"], "measure":e["measure"],
+                        "precision":"exact_occupation"
+                    },
+                    "source_observations":candidates,
+                })
                 continue
             value = e["value"] if is_annual else round(e["value"]*12, 6)
             display = {"status":"available", "value":value,
