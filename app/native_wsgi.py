@@ -26,7 +26,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.15"
+VERSION = "0.5.16"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -63,6 +63,8 @@ def initialize():
         load_pt_wages()
         from app.uk_ashe_wages import load_snapshot as load_uk_wages
         load_uk_wages()
+        from app.de_entgeltatlas_wages import load_snapshot as load_de_wages
+        load_de_wages()
         INITIALIZED = True
 
 
@@ -207,6 +209,9 @@ def sources():
             "role": "Remote-only attributed job listings", "status": "integrated"},
         "ilostat": {"url": TOC, "role": "Official occupation earnings",
             "status": "offline importer; source availability not guaranteed"},
+        "ba_entgeltatlas": {"url": "https://www.arbeitsagentur.de/hilfe-entgeltatlas",
+            "role": "Germany national 2025 occupation-specific monthly median gross remuneration",
+            "status": "27 approved direct Berufsgattung mappings imported"},
         "eurostat_hicp": {
             "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr",
             "role": "National monthly inflation", "status": "integrated"},
@@ -357,8 +362,9 @@ def dispatch(path, q):
         for cell in result["cells"]:
             cell["occupation_label"] = labels[cell["occupation"]]
         observations = na.observed_coverage()
-        from app import uk_ashe_wages
+        from app import uk_ashe_wages, de_entgeltatlas_wages
         uk = uk_ashe_wages.observed_coverage()
+        de = de_entgeltatlas_wages.observed_coverage()
         for cell in result["cells"]:
             period = observations.get((cell["country"], cell["occupation"]))
             if period is not None:
@@ -367,6 +373,9 @@ def dispatch(path, q):
             elif cell["country"] == "GB" and cell["occupation"] in uk:
                 cell.update(status="available", latest_period=uk[cell["occupation"]][1],
                             source_family="ons_ashe_soc2020")
+            elif cell["country"] == "DE" and cell["occupation"] in de:
+                cell.update(status="available", latest_period=de[cell["occupation"]][1],
+                            source_family="ba_entgeltatlas_kldb")
         result["available_cells"] = sum(c["status"] == "available" for c in result["cells"])
         return result
     if path == "/v1/occupations":
