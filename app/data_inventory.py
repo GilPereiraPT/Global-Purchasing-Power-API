@@ -147,10 +147,10 @@ def build_inventory():
                 "stored_observations": 0,
                 "by_source_observations": {"ILOSTAT": 0, "BLS_Canada_Job_Bank": 0, "INE_GEP": 0, "ONS_ASHE": 0}},
             "uk_ons_ashe": {
-                "source": "ONS Annual Survey of Hours and Earnings, Table 14",
-                "source_url": UK_ASHE_SOURCE,
-                "precision": "SOC 2020 four-digit unit group; approved one-to-one mappings only",
-                "update_mechanism": "validated_official_snapshot"},
+                "observed_occupations": len(salaries["ONS_ASHE"]),
+                "stored_observations": sum(v[0] for v in salaries["ONS_ASHE"].values()),
+                "status": "available" if salaries["ONS_ASHE"] else "not_imported",
+                "precision": "soc2020_4digit_approved_one_to_one"},
             "ilostat_major_groups": {
                 "observed_pairs": 0, "possible_pairs": len(COUNTRY_MAP) * 9,
                 "stored_observations": 0},
@@ -255,6 +255,11 @@ def build_inventory():
                 "importers": ["app/ilostat_import.py", "app/north_america.py",
                               "app/pt_occupation_wages.py", "app/uk_ashe_wages.py"],
                 "update_mechanism": "validated_import_and_startup_snapshot"},
+            "uk_ons_ashe": {
+                "source": "ONS Annual Survey of Hours and Earnings, Table 14",
+                "source_url": UK_ASHE_SOURCE,
+                "precision": "SOC 2020 four-digit unit group; approved one-to-one mappings only",
+                "update_mechanism": "validated_official_snapshot"},
             "ilostat_major_groups": {
                 "source": "ILOSTAT",
                 "source_url": GROUP_SOURCE,
