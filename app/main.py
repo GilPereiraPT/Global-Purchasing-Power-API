@@ -30,11 +30,13 @@ async def lifespan(app: FastAPI):
     load_uk_wages()
     from app.de_entgeltatlas_wages import load_snapshot as load_de_wages
     load_de_wages()
+    from app.fr_insee_wages import load_snapshot as load_fr_wages
+    load_fr_wages()
     yield
 
 app = FastAPI(
     title="EarnWage — Global Purchasing Power API",
-    version="0.5.16",
+    version="0.5.17",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -210,6 +212,9 @@ def sources():
         "ba_entgeltatlas": {"url": "https://www.arbeitsagentur.de/hilfe-entgeltatlas",
                             "role": "Germany national 2025 occupation-specific monthly median gross remuneration",
                             "status": "27 approved direct Berufsgattung mappings imported"},
+        "insee_fr_detailed_wages": {"url": "https://www.data.gouv.fr/datasets/salaires-dans-le-secteur-prive-par-categorie-socioprofessionnelle-detaillee",
+                                    "role": "France 2024 detailed PCS-ESE mean net monthly EQTP salaries for private employees",
+                                    "status": "23 approved direct PCS-ESE mappings imported"},
         "eurostat_hicp": {"url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr",
                           "role": "monthly harmonized national inflation", "status": "implemented"},
         "ecb_exr": {"url": "https://data-api.ecb.europa.eu/service/data/EXR",
@@ -250,9 +255,10 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
     for cell in result["cells"]:
         cell["occupation_label"] = labels[cell["occupation"]]
     na = na_wages.observed_coverage()
-    from app import uk_ashe_wages, de_entgeltatlas_wages
+    from app import uk_ashe_wages, de_entgeltatlas_wages, fr_insee_wages
     uk = uk_ashe_wages.observed_coverage()
     de = de_entgeltatlas_wages.observed_coverage()
+    fr = fr_insee_wages.observed_coverage()
     for cell in result["cells"]:
         key = (cell["country"], cell["occupation"])
         if key in na:
@@ -264,6 +270,9 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
         elif cell["country"] == "DE" and cell["occupation"] in de:
             cell.update({"status": "available", "latest_period": de[cell["occupation"]][1],
                          "source_family": "ba_entgeltatlas_kldb"})
+        elif cell["country"] == "FR" and cell["occupation"] in fr:
+            cell.update({"status": "available", "latest_period": fr[cell["occupation"]][1],
+                         "source_family": "insee_pcs_ese_private"})
     result["available_cells"] = sum(x["status"] == "available" for x in result["cells"])
     return result
 
