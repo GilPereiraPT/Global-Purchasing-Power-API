@@ -1,0 +1,177 @@
+name: Deploy production API
+
+on:
+  workflow_run:
+    workflows: ["API tests"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: earnwage-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >
+      ${{
+        vars.EARNWAGE_DEPLOY_ENABLED == 'true' &&
+        (
+          github.event_name == 'workflow_dispatch' ||
+          (
+            github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.head_branch == 'main'
+          )
+        )
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APP_ROOT: /home3/policli1/api-earnwage
+      API_HEALTH_URL: https://earnwage-api.policlinicosdesantoandre.com/v1/health
+
+    steps:
+      - name: Resolve tested commit
+        id: ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.sha }}
+          fetch-depth: 1
+
+      - name: Validate deployment secrets
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.EARNWAGE_SSH_HOST }}
+          SSH_USER: ${{ secrets.EARNWAGE_SSH_USER }}
+          SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.EARNWAGE_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SSH_HOST" || { echo "::error::Missing EARNWAGE_SSH_HOST"; exit 1; }
+          test -n "$SSH_USER" || { echo "::error::Missing EARNWAGE_SSH_USER"; exit 1; }
+          test -n "$SSH_PORT" || { echo "::error::Missing EARNWAGE_SSH_PORT"; exit 1; }
+          test -n "$SSH_PRIVATE_KEY" || { echo "::error::Missing EARNWAGE_SSH_PRIVATE_KEY"; exit 1; }
+
+      - name: Build allow-listed runtime bundle
+        id: bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files \
+            'app/*.py' \
+            'data/*.json' \
+            'passenger_wsgi.py' \
+            'requirements.txt' \
+            > /tmp/earnwage-deploy-files.txt
+
+          test -s /tmp/earnwage-deploy-files.txt
+
+          if grep -E '(^|/)(\.env|\.htaccess|.*\.sqlite3?|_earnwage_backups)(/|$)' /tmp/earnwage-deploy-files.txt; then
+            echo "::error::Unsafe file found in deploy allow-list"
+            exit 1
+          fi
+
+          tar -czf /tmp/earnwage-runtime.tgz -T /tmp/earnwage-deploy-files.txt
+
+          EXPECTED_VERSION="$(python - <<'PY'
+          import re
+          from pathlib import Path
+          text = Path("app/native_wsgi.py").read_text(encoding="utf-8")
+          match = re.search(r'^VERSION\s*=\s*"([^"]+)"', text, re.M)
+          if not match:
+              raise SystemExit("VERSION not found in app/native_wsgi.py")
+          print(match.group(1))
+          PY
+          )"
+          echo "version=$EXPECTED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Deploying $(wc -l < /tmp/earnwage-deploy-files.txt) tracked runtime files, version $EXPECTED_VERSION"
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.EARNWAGE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.EARNWAGE_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/earnwage_deploy
+          chmod 600 ~/.ssh/earnwage_deploy
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload runtime bundle
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.EARNWAGE_SSH_HOST }}
+          SSH_USER: ${{ secrets.EARNWAGE_SSH_USER }}
+          SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
+        run: |
+          set -euo pipefail
+          REMOTE_ARCHIVE=".earnwage-deploy-${{ steps.ref.outputs.sha }}.tgz"
+          scp -P "$SSH_PORT" -i ~/.ssh/earnwage_deploy \
+            /tmp/earnwage-runtime.tgz \
+            "$SSH_USER@$SSH_HOST:$APP_ROOT/$REMOTE_ARCHIVE"
+
+      - name: Install files and restart Passenger
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.EARNWAGE_SSH_HOST }}
+          SSH_USER: ${{ secrets.EARNWAGE_SSH_USER }}
+          SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
+        run: |
+          set -euo pipefail
+          REMOTE_ARCHIVE=".earnwage-deploy-${{ steps.ref.outputs.sha }}.tgz"
+
+          ssh -p "$SSH_PORT" -i ~/.ssh/earnwage_deploy "$SSH_USER@$SSH_HOST" \
+            "APP_ROOT='$APP_ROOT' REMOTE_ARCHIVE='$REMOTE_ARCHIVE' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$APP_ROOT"
+
+          test -f "$REMOTE_ARCHIVE"
+
+          mkdir -p _earnwage_backups
+          tar -czf _earnwage_backups/code-predeploy-latest.tgz \
+            --ignore-failed-read \
+            app data passenger_wsgi.py requirements.txt 2>/dev/null || true
+
+          tar -xzf "$REMOTE_ARCHIVE"
+          rm -f "$REMOTE_ARCHIVE"
+
+          mkdir -p tmp
+          touch tmp/restart.txt
+          REMOTE
+
+      - name: Verify production health and version
+        shell: bash
+        env:
+          EXPECTED_VERSION: ${{ steps.bundle.outputs.version }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if BODY="$(curl -fsS --max-time 15 "$API_HEALTH_URL" 2>/dev/null)"; then
+              ACTUAL_VERSION="$(python -c 'import json,sys; print(json.load(sys.stdin).get("version",""))' <<<"$BODY")"
+              if [ "$ACTUAL_VERSION" = "$EXPECTED_VERSION" ]; then
+                echo "Production API is healthy on version $ACTUAL_VERSION"
+                exit 0
+              fi
+              echo "Attempt $attempt: health responded with version '$ACTUAL_VERSION', expected '$EXPECTED_VERSION'"
+            else
+              echo "Attempt $attempt: health endpoint not ready"
+            fi
+            sleep 6
+          done
+          echo "::error::Production health/version verification failed"
+          exit 1
