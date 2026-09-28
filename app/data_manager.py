@@ -3,15 +3,24 @@
 Every operation is one HTTP request. Never offer an unauthenticated importer or
 allow arbitrary source URLs, SQL, filesystem paths, batches or commands.
 """
+import ast
 import fcntl
 import hmac
+import io
 import json
 import logging
 import os
+import re
+import shutil
 import sqlite3
+import tarfile
+import tempfile
+import zipfile
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+
+import httpx
 
 from app.country_insights import INDICATORS, ISO3, _fetch
 from app.country_insights_store import connect as economic_connect, read_indicator, save_result
@@ -23,11 +32,18 @@ from app.eurostat_economy import (
 LOG = logging.getLogger("earnwage.data_manager")
 ROOT = Path(__file__).resolve().parent.parent
 ALLOW_ORIGIN = "https://gilpereirapt.github.io"
-MANAGER_VERSION = "0.2.1"
+MANAGER_VERSION = "0.3.0"
 BACKUP_DIR = ROOT / "_earnwage_backups"
 
-ALLOWED_ACTIONS = ("backup", "import", "status")
+ALLOWED_ACTIONS = ("backup", "import", "status", "deploy")
 ALLOWED_SOURCES = ("world_bank", "eurostat")
+GITHUB_REPOSITORY = "GilPereiraPT/Global-Purchasing-Power-API"
+GITHUB_API = "https://api.github.com/repos/" + GITHUB_REPOSITORY
+MAX_DEPLOY_ARCHIVE_BYTES = 20 * 1024 * 1024
+DEPLOY_REQUIRED = {
+    "app/native_wsgi.py", "app/data_manager.py",
+    "passenger_wsgi.py", "requirements.txt",
+}
 
 
 def _response(reply, start_response, origin, code, body):
@@ -280,6 +296,160 @@ def _import_one(payload):
     }
 
 
+
+def _deploy_allowed(path):
+    """Closed runtime allow-list; never deploy server-private or executable extras."""
+    item = PurePosixPath(path)
+    if ".." in item.parts or path.startswith("/") or any(part.startswith(".") for part in item.parts):
+        return False
+    if len(item.parts) == 2 and item.parts[0] == "app" and item.suffix == ".py":
+        return True
+    if len(item.parts) == 2 and item.parts[0] == "data" and item.suffix == ".json":
+        return True
+    if len(item.parts) == 2 and item.parts[0] == "scripts" and item.suffix == ".py":
+        return True
+    return path in ("passenger_wsgi.py", "requirements.txt")
+
+
+def _github_json(url):
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "EarnWage-Production-Data-Manager",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    response = httpx.get(url, headers=headers, timeout=20, follow_redirects=True)
+    response.raise_for_status()
+    if len(response.content) > 2_000_000:
+        raise ValueError("Unexpected GitHub metadata size")
+    return response.json()
+
+
+def _tested_main_commit():
+    commit = _github_json(GITHUB_API + "/commits/main")
+    sha = commit.get("sha") if isinstance(commit, dict) else None
+    if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha):
+        raise ValueError("Invalid GitHub main commit")
+    runs = _github_json(GITHUB_API + "/actions/runs?head_sha=" + sha + "&per_page=20")
+    candidates = [
+        run for run in runs.get("workflow_runs", [])
+        if run.get("name") == "API tests" and run.get("head_sha") == sha
+        and run.get("event") == "push"
+    ]
+    if not any(run.get("status") == "completed" and run.get("conclusion") == "success"
+               for run in candidates):
+        raise RuntimeError("github_tests_not_green")
+    return sha
+
+
+def _runtime_members(archive):
+    members = {}
+    for info in archive.infolist():
+        if info.is_dir():
+            continue
+        parts = PurePosixPath(info.filename).parts
+        if len(parts) < 2:
+            continue
+        relative = "/".join(parts[1:])
+        if not _deploy_allowed(relative):
+            continue
+        if info.file_size > 5_000_000:
+            raise ValueError("Unexpected runtime file size")
+        members[relative] = info
+    missing = sorted(DEPLOY_REQUIRED - set(members))
+    if missing:
+        raise ValueError("GitHub runtime bundle missing required files")
+    return members
+
+
+def _validate_staged_runtime(staging, paths):
+    version = None
+    for relative in paths:
+        file_path = staging / relative
+        if relative.endswith(".py"):
+            ast.parse(file_path.read_text(encoding="utf-8"), filename=relative)
+        elif relative.startswith("data/") and relative.endswith(".json"):
+            json.loads(file_path.read_text(encoding="utf-8"))
+    native = (staging / "app" / "native_wsgi.py").read_text(encoding="utf-8")
+    match = re.search(r'^VERSION\s*=\s*"([^"]+)"', native, re.M)
+    if not match:
+        raise ValueError("VERSION missing from staged native_wsgi.py")
+    version = match.group(1)
+    return version
+
+
+def _code_backup(paths):
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    destination = BACKUP_DIR / ("code-predeploy-" + stamp + ".tar.gz")
+    with tarfile.open(destination, "w:gz") as archive:
+        for relative in paths:
+            source = ROOT / relative
+            if source.is_file():
+                archive.add(source, arcname=relative, recursive=False)
+    backups = sorted(BACKUP_DIR.glob("code-predeploy-*.tar.gz"), reverse=True)
+    for old in backups[5:]:
+        try:
+            old.unlink()
+        except OSError:
+            LOG.warning("Could not prune old code backup")
+    return destination.name
+
+
+def _deploy(payload):
+    if payload != {"confirm": "deploy_tested_main"}:
+        raise ValueError("Explicit deploy confirmation required")
+
+    sha = _tested_main_commit()
+    archive_url = (
+        "https://github.com/" + GITHUB_REPOSITORY + "/archive/" + sha + ".zip"
+    )
+    response = httpx.get(
+        archive_url,
+        headers={"User-Agent": "EarnWage-Production-Data-Manager"},
+        timeout=45,
+        follow_redirects=True,
+    )
+    response.raise_for_status()
+    if not response.content or len(response.content) > MAX_DEPLOY_ARCHIVE_BYTES:
+        raise ValueError("Unexpected GitHub deployment archive size")
+
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        members = _runtime_members(archive)
+        with tempfile.TemporaryDirectory(prefix=".earnwage-stage-", dir=ROOT) as temp:
+            staging = Path(temp)
+            for relative, info in members.items():
+                target = staging / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(info) as src, target.open("wb") as dst:
+                    shutil.copyfileobj(src, dst)
+            version = _validate_staged_runtime(staging, members)
+
+            backup_id = _code_backup(members)
+            for relative in sorted(members):
+                source = staging / relative
+                target = ROOT / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                temporary = target.with_name(target.name + ".deploy-tmp")
+                shutil.copy2(source, temporary)
+                os.replace(temporary, target)
+
+    restart = ROOT / "tmp" / "restart.txt"
+    restart.parent.mkdir(parents=True, exist_ok=True)
+    restart.touch()
+
+    return {
+        "status": "deployed",
+        "commit": sha,
+        "version": version,
+        "files_updated": len(members),
+        "backup_id": backup_id,
+        "restart_requested": True,
+        "note": (
+            "Validated GitHub main deployed from a successful API tests run. "
+            "Passenger restart requested; poll /v1/health for the new version."
+        ),
+    }
+
 def _safe_backup_failure(exc):
     """Classify known backup issues without revealing paths or internals."""
     reason = str(exc)
@@ -318,7 +488,12 @@ def handle(environ, start_response, origin, action, reply):
             result = _status(payload)
         else:
             with _exclusive_operation():
-                result = _backup(payload) if action == "backup" else _import_one(payload)
+                if action == "backup":
+                    result = _backup(payload)
+                elif action == "deploy":
+                    result = _deploy(payload)
+                else:
+                    result = _import_one(payload)
         code = (409 if result.get("import_status") == "backup_required"
                 or result.get("status") == "prerequisites_missing" else 200)
         return _response(reply, start_response, origin, code, result)
@@ -337,6 +512,12 @@ def handle(environ, start_response, origin, action, reply):
         if str(exc) == "another_import_is_running":
             return _response(reply, start_response, origin, 409,
                              {"error": "another_import_is_running"})
+        if str(exc) == "github_tests_not_green":
+            return _response(reply, start_response, origin, 409, {
+                "error": "github_tests_not_green",
+                "note": "The latest main commit is not deployable until API tests complete successfully.",
+                "manager_version": MANAGER_VERSION,
+            })
         LOG.exception("Data Manager runtime failure")
     except (sqlite3.Error, OSError) as exc:
         LOG.exception("Data Manager storage or source failure")
