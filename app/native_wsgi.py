@@ -26,7 +26,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.14"
+VERSION = "0.5.15"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -61,6 +61,8 @@ def initialize():
         na.load_snapshot(ROOT / "data" / "north_america_wages.json")
         from app.pt_occupation_wages import load_snapshot as load_pt_wages
         load_pt_wages()
+        from app.uk_ashe_wages import load_snapshot as load_uk_wages
+        load_uk_wages()
         INITIALIZED = True
 
 
@@ -355,11 +357,16 @@ def dispatch(path, q):
         for cell in result["cells"]:
             cell["occupation_label"] = labels[cell["occupation"]]
         observations = na.observed_coverage()
+        from app import uk_ashe_wages
+        uk = uk_ashe_wages.observed_coverage()
         for cell in result["cells"]:
             period = observations.get((cell["country"], cell["occupation"]))
             if period is not None:
                 cell.update(status="available", latest_period=period,
                             source_family="north_america_official_wages")
+            elif cell["country"] == "GB" and cell["occupation"] in uk:
+                cell.update(status="available", latest_period=uk[cell["occupation"]][1],
+                            source_family="ons_ashe_soc2020")
         result["available_cells"] = sum(c["status"] == "available" for c in result["cells"])
         return result
     if path == "/v1/occupations":
