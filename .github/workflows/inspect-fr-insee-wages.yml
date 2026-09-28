@@ -1,0 +1,53 @@
+name: Inspect France INSEE detailed wages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-fr-insee-wages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official INSEE 2024 CSV and inspect schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv, io, json, urllib.request
+          url="https://api.insee.fr/melodi/file/DS_DERA_PRIVE_ANNUEL/DS_DERA_PRIVE_ANNUEL_2024_CSV_FR"
+          req=urllib.request.Request(url,headers={"User-Agent":"EarnWage/1.0"})
+          raw=urllib.request.urlopen(req,timeout=45).read()
+          print("BYTES",len(raw))
+          text=None
+          for enc in ("utf-8-sig","utf-8","latin-1"):
+              try:
+                  text=raw.decode(enc); print("ENCODING",enc); break
+              except UnicodeDecodeError:
+                  pass
+          if text is None: raise SystemExit("decode failed")
+          sample=text[:10000]
+          dialect=csv.Sniffer().sniff(sample,delimiters=";,\t,")
+          rows=list(csv.DictReader(io.StringIO(text),dialect=dialect))
+          print("FIELDS",json.dumps(rows[0].keys().__iter__().__next__() if False else list(rows[0].keys()),ensure_ascii=False))
+          print("ROW_COUNT",len(rows))
+          for k in rows[0]:
+              vals=[]
+              seen=set()
+              for r in rows:
+                  v=r.get(k,"")
+                  if v not in seen:
+                      seen.add(v); vals.append(v)
+                  if len(vals)>=30: break
+              print("COLUMN",k,"UNIQUE_SAMPLE",json.dumps(vals,ensure_ascii=False))
+          print("FIRST_ROWS")
+          for r in rows[:20]:
+              print(json.dumps(r,ensure_ascii=False,sort_keys=True))
+          PY
