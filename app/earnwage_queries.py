@@ -52,6 +52,18 @@ def annual_presentation(wage, group_context):
                     "monthly_optional":wage["value"], "monthly_kind":"reported_monthly",
                     "payments_per_year":None, "payments_verified":False,
                     "note":"Monthly earnings × 12 for comparison only. This is not verified total annual remuneration; extra payments are not assumed."}
+        if (wage.get("source_unit", "").endswith("/hour") or
+                "hourly" in wage.get("unit", "").lower()):
+            return {"status":"unavailable", "value":None,
+                    "currency":wage["currency"], "unit":"per_year",
+                    "kind":"hourly_source_not_annualized",
+                    "reference_period":wage["period"], "source":wage["source"],
+                    "hourly_optional":wage["value"],
+                    "hourly_kind":"reported_hourly",
+                    "payments_per_year":None, "payments_verified":False,
+                    "precision":wage.get("precision"),
+                    "reason":"Verified source wage is hourly; annual working hours are not assumed.",
+                    "note":"The published hourly wage remains available in national_occupation_wage."}
     # A major-group average must not enter the profession-specific salary card.
     # Group data remain accessible independently in national_major_group_context.
     return {"status":"unavailable", "value":None, "unit":"per_year",
