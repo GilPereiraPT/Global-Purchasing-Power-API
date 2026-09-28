@@ -127,7 +127,10 @@ def build_snapshot(zip_path):
         p=pay.get(code)
         q=cv.get(code)
         if not p or not q or p["title"] != expected or q["title"] != expected:
-            rejected.append({"occupation":job,"soc2020":code,"reason":"missing_or_title_mismatch"})
+            rejected.append({"occupation":job,"soc2020":code,
+                             "reason":"missing_or_title_mismatch",
+                             "source_pay_title":p.get("title") if p else None,
+                             "source_cv_title":q.get("title") if q else None})
             continue
         for measure in ("median","mean"):
             value=_number(p[measure])
