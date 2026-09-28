@@ -32,11 +32,13 @@ async def lifespan(app: FastAPI):
     load_de_wages()
     from app.fr_insee_wages import load_snapshot as load_fr_wages
     load_fr_wages()
+    from app.nl_cbs_wages import load_snapshot as load_nl_wages
+    load_nl_wages()
     yield
 
 app = FastAPI(
     title="EarnWage — Global Purchasing Power API",
-    version="0.5.17",
+    version="0.5.18",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -215,6 +217,9 @@ def sources():
         "insee_fr_detailed_wages": {"url": "https://www.data.gouv.fr/datasets/salaires-dans-le-secteur-prive-par-categorie-socioprofessionnelle-detaillee",
                                     "role": "France 2024 detailed PCS-ESE mean net monthly EQTP salaries for private employees",
                                     "status": "23 approved direct PCS-ESE mappings imported"},
+        "cbs_nl_occupation_wages": {"url": "https://www.cbs.nl/nl-nl/cijfers/detail/86355NED",
+                                    "role": "Netherlands employee median gross hourly wage by BRC occupational group",
+                                    "status": "21 approved BRC mappings imported; 2025 provisional where published, otherwise 2024 definitive"},
         "eurostat_hicp": {"url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr",
                           "role": "monthly harmonized national inflation", "status": "implemented"},
         "ecb_exr": {"url": "https://data-api.ecb.europa.eu/service/data/EXR",
@@ -255,10 +260,11 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
     for cell in result["cells"]:
         cell["occupation_label"] = labels[cell["occupation"]]
     na = na_wages.observed_coverage()
-    from app import uk_ashe_wages, de_entgeltatlas_wages, fr_insee_wages
+    from app import uk_ashe_wages, de_entgeltatlas_wages, fr_insee_wages, nl_cbs_wages
     uk = uk_ashe_wages.observed_coverage()
     de = de_entgeltatlas_wages.observed_coverage()
     fr = fr_insee_wages.observed_coverage()
+    nl = nl_cbs_wages.observed_coverage()
     for cell in result["cells"]:
         key = (cell["country"], cell["occupation"])
         if key in na:
@@ -273,6 +279,9 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
         elif cell["country"] == "FR" and cell["occupation"] in fr:
             cell.update({"status": "available", "latest_period": fr[cell["occupation"]][1],
                          "source_family": "insee_pcs_ese_private"})
+        elif cell["country"] == "NL" and cell["occupation"] in nl:
+            cell.update({"status": "available", "latest_period": nl[cell["occupation"]][1],
+                         "source_family": "cbs_brc_hourly_median"})
     result["available_cells"] = sum(x["status"] == "available" for x in result["cells"])
     return result
 
