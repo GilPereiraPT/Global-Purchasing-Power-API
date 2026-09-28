@@ -26,7 +26,7 @@ def test_native_wsgi_health_and_config():
     code, body, headers = request("/v1/health")
     assert code == 200
     assert body["status"] == "ok"
-    assert body["version"] == "0.5.17"
+    assert body["version"] == "0.5.18"
     assert body["runtime"] == "native_wsgi"
     assert headers["Content-Type"].startswith("application/json")
     assert request("/v1/app-config")[1]["product"]["name"] == "EarnWage"
@@ -41,7 +41,7 @@ def test_native_wsgi_health_and_config():
 def test_native_wsgi_official_wages_and_comparison():
     status, data, _ = request("/v1/earnwage/coverage")
     assert status == 200 and data["possible_pairs"] == 560
-    assert data["observed_pairs"] == 114
+    assert data["observed_pairs"] == 135
     code, wage, _ = request("/v1/salaries/US/nurse")
     assert code == 200 and wage["status"] == "available"
     assert wage["observations"][0]["unit"] == "USD/year"
@@ -50,6 +50,12 @@ def test_native_wsgi_official_wages_and_comparison():
     assert fr_wage["value"] == 2715.2
     assert fr_wage["measure"] == "mean"
     assert fr_wage["source_unit"] == "EUR/month"
+    code, nl_wage, _ = request("/v1/salaries/NL/software_developer")
+    assert code == 200 and nl_wage["status"] == "available"
+    assert nl_wage["value"] == 34.5
+    assert nl_wage["measure"] == "median"
+    assert nl_wage["source_unit"] == "EUR/hour"
+    assert nl_wage["publication_status"] == "provisional"
     code, item, _ = request("/v1/earnwage/overview", {
         "country": "CA", "occupation": "nurse", "region": "ON"})
     assert code == 200
