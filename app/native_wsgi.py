@@ -26,7 +26,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.16"
+VERSION = "0.5.17"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -65,6 +65,8 @@ def initialize():
         load_uk_wages()
         from app.de_entgeltatlas_wages import load_snapshot as load_de_wages
         load_de_wages()
+        from app.fr_insee_wages import load_snapshot as load_fr_wages
+        load_fr_wages()
         INITIALIZED = True
 
 
@@ -212,6 +214,9 @@ def sources():
         "ba_entgeltatlas": {"url": "https://www.arbeitsagentur.de/hilfe-entgeltatlas",
             "role": "Germany national 2025 occupation-specific monthly median gross remuneration",
             "status": "27 approved direct Berufsgattung mappings imported"},
+        "insee_fr_detailed_wages": {"url": "https://www.data.gouv.fr/datasets/salaires-dans-le-secteur-prive-par-categorie-socioprofessionnelle-detaillee",
+            "role": "France 2024 detailed PCS-ESE mean net monthly EQTP salaries for private employees",
+            "status": "23 approved direct PCS-ESE mappings imported"},
         "eurostat_hicp": {
             "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr",
             "role": "National monthly inflation", "status": "integrated"},
@@ -362,9 +367,10 @@ def dispatch(path, q):
         for cell in result["cells"]:
             cell["occupation_label"] = labels[cell["occupation"]]
         observations = na.observed_coverage()
-        from app import uk_ashe_wages, de_entgeltatlas_wages
+        from app import uk_ashe_wages, de_entgeltatlas_wages, fr_insee_wages
         uk = uk_ashe_wages.observed_coverage()
         de = de_entgeltatlas_wages.observed_coverage()
+        fr = fr_insee_wages.observed_coverage()
         for cell in result["cells"]:
             period = observations.get((cell["country"], cell["occupation"]))
             if period is not None:
@@ -376,6 +382,9 @@ def dispatch(path, q):
             elif cell["country"] == "DE" and cell["occupation"] in de:
                 cell.update(status="available", latest_period=de[cell["occupation"]][1],
                             source_family="ba_entgeltatlas_kldb")
+            elif cell["country"] == "FR" and cell["occupation"] in fr:
+                cell.update(status="available", latest_period=fr[cell["occupation"]][1],
+                            source_family="insee_pcs_ese_private")
         result["available_cells"] = sum(c["status"] == "available" for c in result["cells"])
         return result
     if path == "/v1/occupations":
