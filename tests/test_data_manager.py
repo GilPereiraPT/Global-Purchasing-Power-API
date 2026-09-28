@@ -165,3 +165,28 @@ def test_backup_valueerror_reports_safe_operation_error_not_invalid_json(
     assert data["error"] == "backup_failed"
     assert data["reason"] == "both_database_variables_point_to_same_file"
     assert "invalid_manager_request" not in json.dumps(data)
+
+
+def test_deploy_route_is_authenticated_and_closed_to_arbitrary_paths(monkeypatch, tmp_path):
+    secret = setup(monkeypatch, tmp_path)
+    assert dm._deploy_allowed("app/native_wsgi.py") is True
+    assert dm._deploy_allowed("data/de_entgeltatlas_wages.json") is True
+    assert dm._deploy_allowed("scripts/backup_earnwage_data.py") is True
+    assert dm._deploy_allowed("passenger_wsgi.py") is True
+    assert dm._deploy_allowed(".htaccess") is False
+    assert dm._deploy_allowed("../outside.py") is False
+    assert dm._deploy_allowed("private.sqlite3") is False
+
+    result = {
+        "status": "deployed", "commit": "a" * 40, "version": "0.5.16",
+        "files_updated": 12, "backup_id": "code-predeploy-test.tar.gz",
+        "restart_requested": True,
+    }
+    with patch.object(dm, "_deploy", return_value=result) as deploy:
+        code, data, headers = request(
+            "deploy", {"confirm": "deploy_tested_main"}, token=secret,
+            origin=dm.ALLOW_ORIGIN)
+    assert code == 200
+    assert data["status"] == "deployed"
+    assert headers["Access-Control-Allow-Origin"] == dm.ALLOW_ORIGIN
+    deploy.assert_called_once_with({"confirm": "deploy_tested_main"})
