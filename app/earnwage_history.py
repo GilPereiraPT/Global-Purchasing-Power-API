@@ -4,6 +4,7 @@ from app import north_america as na
 from app import uk_ashe_wages as uk
 from app import de_entgeltatlas_wages as de
 from app import fr_insee_wages as fr
+from app import nl_cbs_wages as nl
 from app.ilostat_import import init_salary_db
 
 
@@ -86,6 +87,26 @@ def exact_history(country, occupation, start_year, end_year):
                                 "measure":measure, "unit":unit, "value":value,
                                 "source":source, "source_url":url,
                                 "classification":"PCS-ESE 2003:"+pcs})
+    elif country == "NL" and occupation in nl.APPROVED:
+        with connect() as db:
+            nl.init(db)
+            rows = db.execute(
+                """SELECT reference_period,currency,measure,unit,value,source,
+                          source_url,brc_code
+                   FROM nl_cbs_wages
+                   WHERE country='NL' AND occupation=?""",
+                (occupation,)).fetchall()
+        entries = []
+        for period,currency,measure,unit,value,source,url,brc_code in rows:
+            try:
+                year = int(str(period)[:4])
+            except ValueError:
+                continue
+            if start_year <= year <= end_year:
+                entries.append({"year":year, "currency":currency,
+                                "measure":measure, "unit":unit, "value":value,
+                                "source":source, "source_url":url,
+                                "classification":"BRC 2014 editie 2025:"+brc_code})
     else:
         with connect() as db:
             init_salary_db(db)
@@ -103,14 +124,25 @@ def exact_history(country, occupation, start_year, end_year):
         candidates = [e for e in entries if e["year"] == year]
         annual = [e for e in candidates if e["unit"] == e["currency"]+"/year"]
         monthly = [e for e in candidates if e["unit"] == e["currency"]+"/month"]
-        selected = annual if annual else monthly
-        preferred_measure = "median" if country in ("GB", "DE") else "mean"
+        hourly = [e for e in candidates if e["unit"] == e["currency"]+"/hour"]
+        selected = annual if annual else monthly if monthly else hourly
+        preferred_measure = "median" if country in ("GB", "DE", "NL") else "mean"
         preferred = [e for e in selected if e["measure"] == preferred_measure]
         if preferred:
             selected = preferred
         if len(selected) == 1:
             e = selected[0]
+            is_hourly = e["unit"].endswith("/hour")
             is_annual = e["unit"].endswith("/year")
+            if is_hourly:
+                observations.append({"year":year, "status":"available",
+                                     "value":e["value"], "currency":e["currency"],
+                                     "unit":"per_hour", "kind":"reported_hourly",
+                                     "reference_period":str(year), "source":e["source"],
+                                     "measure":e["measure"],
+                                     "precision":"exact_occupation",
+                                     "note":"Published hourly wage; monthly/annual pay is not inferred."})
+                continue
             value = e["value"] if is_annual else round(e["value"]*12, 6)
             display = {"status":"available", "value":value,
                        "currency":e["currency"], "unit":"per_year",
