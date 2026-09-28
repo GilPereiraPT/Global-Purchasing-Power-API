@@ -18,6 +18,7 @@ from app.ilostat_import import init_salary_db
 from app.north_america import init as init_north_america
 from app.pt_occupation_wages import init as init_pt_wages
 from app.uk_ashe_wages import init as init_uk_ashe, SOURCE_PAGE as UK_ASHE_SOURCE
+from app.de_entgeltatlas_wages import init as init_de_entgeltatlas, HELP_URL as DE_ENTGELTATLAS_SOURCE
 from app.es_eaes_groups import catalogue as es_eaes_catalogue, SOURCE_URL as ES_GROUP_SOURCE
 from app.store import connect as cache_connect
 
@@ -57,6 +58,7 @@ def _wages(db):
     init_north_america(db)
     init_pt_wages(db)
     init_uk_ashe(db)
+    init_de_entgeltatlas(db)
     ilo = db.execute(
         """SELECT country,occupation,COUNT(*),MAX(period)
            FROM salary_observations GROUP BY country,occupation"""
@@ -69,6 +71,8 @@ def _wages(db):
          FROM pt_occupation_wages GROUP BY country,occupation""").fetchall()
     uk = db.execute("""SELECT country,occupation,COUNT(*),MAX(reference_period)
          FROM uk_ashe_wages GROUP BY country,occupation""").fetchall()
+    de = db.execute("""SELECT country,occupation,COUNT(*),MAX(reference_period)
+         FROM de_entgeltatlas_wages GROUP BY country,occupation""").fetchall()
     return {
         "INE_GEP": {(country, occupation): (count, str(period))
                     for country, occupation, count, period in pt},
@@ -79,6 +83,8 @@ def _wages(db):
             for country, occupation, count, period in na},
         "ONS_ASHE": {(country, occupation): (count, str(period))
                      for country, occupation, count, period in uk},
+        "BA_ENTGELTATLAS": {(country, occupation): (count, str(period))
+                            for country, occupation, count, period in de},
     }
 
 
@@ -145,12 +151,17 @@ def build_inventory():
                 "observed_pairs": 0,
                 "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
                 "stored_observations": 0,
-                "by_source_observations": {"ILOSTAT": 0, "BLS_Canada_Job_Bank": 0, "INE_GEP": 0, "ONS_ASHE": 0}},
+                "by_source_observations": {"ILOSTAT": 0, "BLS_Canada_Job_Bank": 0, "INE_GEP": 0, "ONS_ASHE": 0, "BA_ENTGELTATLAS": 0}},
             "uk_ons_ashe": {
                 "observed_occupations": len(salaries["ONS_ASHE"]),
                 "stored_observations": sum(v[0] for v in salaries["ONS_ASHE"].values()),
                 "status": "available" if salaries["ONS_ASHE"] else "not_imported",
                 "precision": "soc2020_4digit_approved_one_to_one"},
+            "de_ba_entgeltatlas": {
+                "observed_occupations": len(salaries["BA_ENTGELTATLAS"]),
+                "stored_observations": sum(v[0] for v in salaries["BA_ENTGELTATLAS"].values()),
+                "status": "available" if salaries["BA_ENTGELTATLAS"] else "not_imported",
+                "precision": "kldb_berufsgattung_direct_no_fallback"},
             "ilostat_major_groups": {
                 "observed_pairs": 0, "possible_pairs": len(COUNTRY_MAP) * 9,
                 "stored_observations": 0},
@@ -251,14 +262,20 @@ def build_inventory():
                 "importer": "app/eurostat_economy.py",
                 "update_mechanism": "explicit_import_not_http_request"},
             "exact_occupational_wages": {
-                "source": "ILOSTAT, BLS, Canada Job Bank, INE/GEP Quadros de Pessoal, ONS ASHE",
+                "source": "ILOSTAT, BLS, Canada Job Bank, INE/GEP Quadros de Pessoal, ONS ASHE, BA Entgeltatlas",
                 "importers": ["app/ilostat_import.py", "app/north_america.py",
-                              "app/pt_occupation_wages.py", "app/uk_ashe_wages.py"],
+                              "app/pt_occupation_wages.py", "app/uk_ashe_wages.py",
+                              "app/de_entgeltatlas_wages.py"],
                 "update_mechanism": "validated_import_and_startup_snapshot"},
             "uk_ons_ashe": {
                 "source": "ONS Annual Survey of Hours and Earnings, Table 14",
                 "source_url": UK_ASHE_SOURCE,
                 "precision": "SOC 2020 four-digit unit group; approved one-to-one mappings only",
+                "update_mechanism": "validated_official_snapshot"},
+            "de_ba_entgeltatlas": {
+                "source": "Statistik der Bundesagentur fuer Arbeit, Entgeltatlas 2025",
+                "source_url": DE_ENTGELTATLAS_SOURCE,
+                "precision": "KldB Berufsgattung direct mapping; broader Berufsgruppe fallback rejected",
                 "update_mechanism": "validated_official_snapshot"},
             "ilostat_major_groups": {
                 "source": "ILOSTAT",
@@ -285,6 +302,7 @@ def build_inventory():
                 "north_america": (ROOT / "data" / "north_america_wages.json").is_file(),
                 "portugal_ine_gep": (ROOT / "data" / "pt_occupation_wages.json").is_file(),
                 "uk_ons_ashe": (ROOT / "data" / "uk_ashe_wages.json").is_file(),
+                "germany_ba_entgeltatlas": (ROOT / "data" / "de_entgeltatlas_wages.json").is_file(),
                 "spain_ine_eaes_groups": (ROOT / "data" / "es_ine_eaes_28186.json").is_file(),
                 "ilostat_major_groups":
                     (ROOT / "data" / "ilostat_group_salaries.json").is_file(),
