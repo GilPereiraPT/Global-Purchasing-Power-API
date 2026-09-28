@@ -7,6 +7,7 @@ from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
 from app import pt_occupation_wages as pt_wages
 from app import uk_ashe_wages as uk_wages
+from app import de_entgeltatlas_wages as de_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -95,6 +96,10 @@ def wage_for(country, occupation):
             return official
     if country == "GB":
         official = uk_wages.wages(country, occupation)
+        if official.get("status") != "unavailable":
+            return official
+    if country == "DE":
+        official = de_wages.wages(country, occupation)
         if official.get("status") != "unavailable":
             return official
     return ilostat_salary(country, occupation)
@@ -214,6 +219,8 @@ def coverage():
                      in pt_wages.observed_coverage().items()})
     observed.update({("GB", key): period for key, (_count, period)
                      in uk_wages.observed_coverage().items()})
+    observed.update({("DE", key): period for key, (_count, period)
+                     in de_wages.observed_coverage().items()})
     return {
         "countries": len(COUNTRY_MAP), "occupations": len(OCCUPATIONS),
         "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
