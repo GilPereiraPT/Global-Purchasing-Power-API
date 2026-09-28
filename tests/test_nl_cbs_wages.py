@@ -62,6 +62,7 @@ def test_hourly_cbs_value_is_never_annualized(tmp_path, monkeypatch):
     result = history.exact_history("NL", "software_developer", 2025, 2025)
     item = result["observations"][0]
     assert item["status"] == "available"
-    assert item["unit"] == "per_hour"
-    assert item["kind"] == "reported_hourly"
-    assert item["value"] == 34.5
+    assert item["annual_presentation"]["status"] == "unavailable"
+    assert item["reported_hourly"]["unit"] == "per_hour"
+    assert item["reported_hourly"]["kind"] == "reported_hourly"
+    assert item["reported_hourly"]["value"] == 34.5
