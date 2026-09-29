@@ -10,6 +10,7 @@ from app import uk_ashe_wages as uk_wages
 from app import de_entgeltatlas_wages as de_wages
 from app import fr_insee_wages as fr_wages
 from app import nl_cbs_wages as nl_wages
+from app import ch_bfs_wages as ch_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -161,6 +162,8 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     group_context = (group_salary(code, major_group) if major_group else {
         "status": "unavailable", "precision": "isco08_major_group",
         "reason": "No validated ISCO-08 major-group mapping"})
+    swiss_context = (ch_wages.context(occupation) if code == "CH" else
+                     {"status":"not_applicable"})
     exact_available = wage.get("status") == "available"
     group_available = (group_context.get("status") == "available" and
                        any(v.get("status") == "available" for v in group_context.get("values", {}).values()))
@@ -192,6 +195,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                      else "not_implemented" if code in ("US","CA") else "not_applicable")},
         "national_occupation_wage": wage,
         "national_major_group_context": group_context,
+        "swiss_ch_isco19_submajor_context": swiss_context,
         "annual_presentation": annual_presentation(wage, group_context),
         "salary_display": {
             "source": display_source,
