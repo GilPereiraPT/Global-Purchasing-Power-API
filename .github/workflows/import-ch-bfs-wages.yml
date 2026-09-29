@@ -27,6 +27,24 @@ jobs:
           # BFS exposes this table below the '-' node, mirroring its public PXWeb URL.
           api=root+dbid+"/-/"+dbid+".px"
           print("FSO_TABLE_ENDPOINT",api)
+          def request(method, payload=None):
+              data=None if payload is None else json.dumps(payload).encode("utf-8")
+              headers={"User-Agent":"EarnWage/1.0 (+GitHub Actions)","Accept":"application/json"}
+              if data is not None:
+                  headers["Content-Type"]="application/json"
+              req=urllib.request.Request(api,data=data,headers=headers,method=method)
+              for attempt in range(6):
+                  try:
+                      with urllib.request.urlopen(req,timeout=60) as response:
+                          return json.load(response)
+                  except urllib.error.HTTPError as exc:
+                      body=exc.read().decode("utf-8","replace")
+                      print(f"FSO HTTP {exc.code}: {body[:2000]}")
+                      if exc.code != 429 or attempt == 5:
+                          raise
+                      retry=exc.headers.get("Retry-After")
+                      wait=float(retry) if retry and retry.isdigit() else min(60,5*(2**attempt))
+                      time.sleep(wait+random.random()*2)
           meta=request("GET")
           vars=meta["variables"]
           def find(*needles):
