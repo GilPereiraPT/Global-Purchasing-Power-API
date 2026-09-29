@@ -11,6 +11,7 @@ from app import de_entgeltatlas_wages as de_wages
 from app import fr_insee_wages as fr_wages
 from app import nl_cbs_wages as nl_wages
 from app import ch_bfs_wages as ch_wages
+from app import it_istat_wages as it_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -164,6 +165,10 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "reason": "No validated ISCO-08 major-group mapping"})
     swiss_context = (ch_wages.context(occupation) if code == "CH" else
                      {"status":"not_applicable"})
+    italy_context = (it_wages.context(
+        occupation, major_group,
+        JOBS[occupation].get("major_group_caution")
+    ) if code == "IT" else {"status":"not_applicable"})
     exact_available = wage.get("status") == "available"
     group_available = (group_context.get("status") == "available" and
                        any(v.get("status") == "available" for v in group_context.get("values", {}).values()))
@@ -196,6 +201,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "national_occupation_wage": wage,
         "national_major_group_context": group_context,
         "swiss_ch_isco19_submajor_context": swiss_context,
+            "italy_cp2021_major_group_context": italy_context,
         "annual_presentation": annual_presentation(wage, group_context),
         "salary_display": {
             "source": display_source,
