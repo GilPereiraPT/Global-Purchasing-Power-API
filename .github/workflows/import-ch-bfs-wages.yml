@@ -16,15 +16,27 @@ jobs:
       - name: Download national CH-ISCO-19 group wages from FSO PXWeb
         run: |
           python - <<'PY'
-          import json, urllib.request
+          import json, urllib.request, urllib.error, time, random
           from pathlib import Path
           api="https://www.pxweb.bfs.admin.ch/api/v1/en/px-x-0304010000_205/px-x-0304010000_205.px"
           def request(method,payload=None):
               data=None if payload is None else json.dumps(payload).encode()
-              req=urllib.request.Request(api,data=data,method=method,
-                  headers={"User-Agent":"EarnWage/1.0","Accept":"application/json",
-                           "Content-Type":"application/json"})
-              with urllib.request.urlopen(req,timeout=90) as r: return json.load(r)
+              headers={"User-Agent":"EarnWage/1.0 (+https://github.com/GilPereiraPT/Global-Purchasing-Power-API)",
+                       "Accept":"application/json","Content-Type":"application/json"}
+              for attempt in range(6):
+                  req=urllib.request.Request(api,data=data,method=method,headers=headers)
+                  try:
+                      with urllib.request.urlopen(req,timeout=90) as r:
+                          return json.load(r)
+                  except urllib.error.HTTPError as exc:
+                      if exc.code != 429 or attempt == 5:
+                          raise
+                      retry=exc.headers.get("Retry-After")
+                      wait=float(retry) if retry and retry.isdigit() else min(60, 5*(2**attempt))
+                      wait += random.uniform(0,2)
+                      print(f"FSO rate limited request; retry {attempt+1}/5 in {wait:.1f}s")
+                      time.sleep(wait)
+              raise RuntimeError("FSO request retries exhausted")
           meta=request("GET")
           vars=meta["variables"]
           def find(*needles):
