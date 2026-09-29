@@ -22,7 +22,9 @@ jobs:
           python - <<'PY'
           import json, urllib.request, urllib.error, time, random
           from pathlib import Path
-          api="https://www.pxweb.bfs.admin.ch/api/v1/en/px-x-0304010000_205/px-x-0304010000_205.px"
+          root="https://www.pxweb.bfs.admin.ch/api/v1/en/"
+          dbid="px-x-0304010000_205"
+          api=root+dbid
           def request(method,payload=None):
               data=None if payload is None else json.dumps(payload).encode()
               headers={"User-Agent":"EarnWage/1.0 (+https://github.com/GilPereiraPT/Global-Purchasing-Power-API)",
@@ -41,6 +43,14 @@ jobs:
                       print(f"FSO rate limited request; retry {attempt+1}/5 in {wait:.1f}s")
                       time.sleep(wait)
               raise RuntimeError("FSO request retries exhausted")
+          catalog=request("GET")
+          if isinstance(catalog,list):
+              files=[x for x in catalog if x.get("type")=="t" or str(x.get("id","")).endswith(".px")]
+              if not files:
+                  raise RuntimeError(f"No PX table found in {dbid}: {catalog}")
+              table=next((x for x in files if dbid in str(x.get("id",""))),files[0])
+              api=api.rstrip("/")+"/"+table["id"]
+              print("FSO_TABLE_ENDPOINT",api)
           meta=request("GET")
           vars=meta["variables"]
           def find(*needles):
