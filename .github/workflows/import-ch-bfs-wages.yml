@@ -2,6 +2,10 @@ name: Import Swiss FSO ESS wages
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/import-ch-bfs-wages.yml'
   schedule:
     - cron: '17 7 1 5 *'
 
@@ -60,7 +64,7 @@ jobs:
           for v,vals in ((year,[latest]),(region,[total(region)]),(occ,groups),
                          (age,[total(age)]),(sex,[total(sex)]),(pct,pct["values"])):
               query.append({"code":v["code"],"selection":{"filter":"item","values":vals}})
-          out=request("POST",{"query":query,"response":{"format":"json-stat2"}})
+          out=request("POST",{"query":query,"response":{"format":"json-stat"}})
           dims=out["id"]; sizes=out["size"]; values=out["value"]
           dim=out["dimension"]
           def cats(code):
