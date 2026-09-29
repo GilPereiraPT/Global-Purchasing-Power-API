@@ -25,7 +25,33 @@ jobs:
           root="https://www.pxweb.bfs.admin.ch/api/v1/en/"
           dbid="px-x-0304010000_205"
           # BFS exposes this table below the '-' node, mirroring its public PXWeb URL.
-          api=root+dbid+"/-/"+dbid+".px"
+          # The BFS API root is a catalogue. Discover the exact table URL instead of
+          # assuming the web UI path is also valid under /api/v1.
+          catalogue_url=root
+          def raw_get(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"EarnWage/1.0 (+GitHub Actions)","Accept":"application/json"})
+              with urllib.request.urlopen(req,timeout=60) as response:
+                  return json.load(response)
+          root_items=raw_get(catalogue_url)
+          print("FSO_API_ROOT_ITEMS",root_items)
+          def walk(url, depth=0):
+              if depth>4: return None
+              items=raw_get(url)
+              if isinstance(items,dict) and "variables" in items: return url
+              if not isinstance(items,list): return None
+              for item in items:
+                  ident=str(item.get("id",""))
+                  text=str(item.get("text",""))
+                  if dbid in ident or dbid in text:
+                      child=url.rstrip("/")+"/"+urllib.parse.quote(ident,safe="-_.")
+                      if ident.endswith(".px"): return child
+                      found=walk(child,depth+1)
+                      if found: return found
+              return None
+          import urllib.parse
+          api=walk(root)
+          if not api:
+              raise RuntimeError("Could not discover BFS API table "+dbid)
           print("FSO_TABLE_ENDPOINT",api)
           def request(method, payload=None):
               data=None if payload is None else json.dumps(payload).encode("utf-8")
