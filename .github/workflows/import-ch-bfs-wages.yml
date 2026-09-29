@@ -20,7 +20,7 @@ jobs:
       - name: Download national CH-ISCO-19 group wages from FSO PXWeb
         run: |
           python - <<'PY'
-          import json, urllib.request, urllib.error, time, random
+          import json, urllib.request, urllib.error, urllib.parse, time, random
           from pathlib import Path
           root="https://www.pxweb.bfs.admin.ch/api/v1/en/"
           dbid="px-x-0304010000_205"
@@ -37,8 +37,25 @@ jobs:
           match=next((item for item in root_items if item.get("dbid")==dbid),None)
           if not match:
               raise RuntimeError("BFS API database not found: "+dbid)
-          # In the BFS API v1 catalogue, dbid is the database endpoint itself.
-          api=root+urllib.parse.quote(match["dbid"],safe="-_.")
+          # BFS root entries are databases. Query the database catalogue first;
+          # it returns the actual table entries/endpoints.
+          db_url=root+urllib.parse.quote(match["dbid"],safe="-_.")+"/"
+          print("FSO_DATABASE_ENDPOINT",db_url)
+          db_items=raw_get(db_url)
+          print("FSO_DATABASE_ITEMS",db_items)
+          table=next((item for item in db_items
+                      if dbid in str(item.get("id",""))
+                      or dbid in str(item.get("text",""))
+                      or dbid in str(item.get("dbid",""))),None)
+          if not table:
+              if len(db_items)==1:
+                  table=db_items[0]
+              else:
+                  raise RuntimeError("Could not identify BFS table inside database "+dbid)
+          table_id=table.get("id") or table.get("dbid")
+          if not table_id:
+              raise RuntimeError("BFS table catalogue item has no id: "+repr(table))
+          api=db_url+urllib.parse.quote(str(table_id),safe="-_.")
           print("FSO_TABLE_ENDPOINT",api)
           def request(method, payload=None):
               data=None if payload is None else json.dumps(payload).encode("utf-8")
