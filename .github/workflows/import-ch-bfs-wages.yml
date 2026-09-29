@@ -1,0 +1,93 @@
+name: Import Swiss FSO ESS wages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 7 1 5 *'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download national CH-ISCO-19 group wages from FSO PXWeb
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          from pathlib import Path
+          api="https://www.pxweb.bfs.admin.ch/api/v1/en/px-x-0304010000_205/px-x-0304010000_205.px"
+          def request(method,payload=None):
+              data=None if payload is None else json.dumps(payload).encode()
+              req=urllib.request.Request(api,data=data,method=method,
+                  headers={"User-Agent":"EarnWage/1.0","Accept":"application/json",
+                           "Content-Type":"application/json"})
+              with urllib.request.urlopen(req,timeout=90) as r: return json.load(r)
+          meta=request("GET")
+          vars=meta["variables"]
+          def find(*needles):
+              for v in vars:
+                  text=(v.get("text","")+" "+v.get("code","")).lower()
+                  if all(n.lower() in text for n in needles): return v
+              raise RuntimeError("Variable not found: "+repr(needles))
+          year=find("year"); region=find("region"); occ=find("profession")
+          age=find("age"); sex=find("sex")
+          pct=next(v for v in vars if "percent" in (v.get("text","")+" "+v.get("code","")).lower()
+                   or "central" in (v.get("text","")+" "+v.get("code","")).lower())
+          def label(v,val): return v["valueTexts"][v["values"].index(val)]
+          latest=max(year["values"],key=lambda x:int(x))
+          def total(v):
+              for val,txt in zip(v["values"],v["valueTexts"]):
+                  if "total" in txt.lower() or "switzerland"==txt.lower().strip(): return val
+              return v["values"][0]
+          groups=[v for v,t in zip(occ["values"],occ["valueTexts"])
+                  if len(''.join(c for c in t.lstrip('> ').split(' ',1)[0] if c.isdigit()))==2]
+          query=[]
+          for v,vals in ((year,[latest]),(region,[total(region)]),(occ,groups),
+                         (age,[total(age)]),(sex,[total(sex)]),(pct,pct["values"])):
+              query.append({"code":v["code"],"selection":{"filter":"item","values":vals}})
+          out=request("POST",{"query":query,"response":{"format":"json-stat2"}})
+          dims=out["id"]; sizes=out["size"]; values=out["value"]
+          dim=out["dimension"]
+          def cats(code):
+              cat=dim[code]["category"]; idx=cat["index"]
+              ordered=sorted(idx,key=idx.get) if isinstance(idx,dict) else list(cat.get("label",{}))
+              labels=cat.get("label",{})
+              return [(x,labels.get(x,x)) for x in ordered]
+          cats_by=[cats(d) for d in dims]
+          import itertools
+          observations=[]
+          for flat,combo in enumerate(itertools.product(*cats_by)):
+              val=values[flat] if flat<len(values) else None
+              d={dims[i]:combo[i] for i in range(len(dims))}
+              occ_code,occ_label=d[occ["code"]]
+              digits=''.join(c for c in occ_label.lstrip('> ').split(' ',1)[0] if c.isdigit())
+              pct_label=d[pct["code"]][1].lower()
+              pname=("median" if "median" in pct_label or "central" in pct_label else
+                     "p25" if "25" in pct_label or "q1" in pct_label else
+                     "p75" if "75" in pct_label or "q3" in pct_label else
+                     "p10" if "10" in pct_label else "p90" if "90" in pct_label else pct_label)
+              observations.append({"period":str(latest),"geography":"Switzerland",
+                "ch_isco19_submajor_group":digits,"group_label":occ_label,
+                "age":"total","sex":"total","percentile":pname,"value":val})
+          payload={"schema_version":1,"source":"Swiss Federal Statistical Office (FSO), Earnings Structure Survey (ESS)",
+                   "table":"px-x-0304010000_205","observations":observations}
+          Path("data/ch_bfs_wages.json").write_text(json.dumps(payload,ensure_ascii=False,indent=2)+"\n")
+          print("observations",len(observations),"year",latest,"groups",len(groups))
+          PY
+      - name: Validate and commit
+        run: |
+          python - <<'PY'
+          from app.ch_bfs_wages import load_snapshot
+          rows=load_snapshot()
+          assert rows, "empty Swiss snapshot"
+          assert any(r["percentile"]=="median" for r in rows)
+          print("validated",len(rows))
+          PY
+          git config user.name "earnwage-data-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/ch_bfs_wages.json
+          git diff --cached --quiet || git commit -m "data: refresh Swiss FSO ESS occupation groups"
+          git push
