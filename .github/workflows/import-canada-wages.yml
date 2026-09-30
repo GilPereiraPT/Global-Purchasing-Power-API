@@ -28,7 +28,7 @@ jobs:
           python -m app.north_america --canada
           python -m app.north_america --export
           # Validate the freshly generated snapshot before committing it.
-          python -c "from app.north_america import load_snapshot, observed_coverage; load_snapshot('data/north_america_wages.json'); c=observed_coverage(); assert c.get('CA') == 37, c"
+          python -c "from app.north_america import load_snapshot, observed_coverage; load_snapshot('data/north_america_wages.json'); c=observed_coverage(); ca={occupation for (country, occupation) in c if country == 'CA'}; assert len(ca) == 37, sorted(ca)"
       - name: Save verified observations
         run: |
           git add data/north_america_wages.json
