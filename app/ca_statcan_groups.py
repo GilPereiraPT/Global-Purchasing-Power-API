@@ -91,11 +91,23 @@ def build_snapshot(zip_path, year=YEAR):
                     continue
                 title = row[noc_col].strip()
                 filtered_titles.add(title)
-                # Table 14-10-0417-01 exposes the NOC hierarchy as labels,
-                # without the numeric NOC code. Match only the ten official
-                # broad-category labels so lower-level occupations cannot leak
-                # into the group context.
-                group = next((g for g, label in BROAD.items() if title == label), None)
+                # Table 14-10-0417-01 appends the official NOC hierarchy
+                # code/range in brackets. Match the ten broad aggregates by
+                # those codes, never by a lower-level occupation title.
+                broad_suffixes = {
+                    "0": "[00, 10, 20, 30, 40, 50, 60, 70, 80, 90]",
+                    "1": "[11-14]",
+                    "2": "[21-22]",
+                    "3": "[31-33]",
+                    "4": "[41-45]",
+                    "5": "[51-55]",
+                    "6": "[62-65]",
+                    "7": "[72-75]",
+                    "8": "[82-85]",
+                    "9": "[92-95]",
+                }
+                group = next((g for g, suffix in broad_suffixes.items()
+                              if title.endswith(suffix)), None)
                 metric = _metric(row["Wages"])
                 if group is None or metric is None:
                     continue
