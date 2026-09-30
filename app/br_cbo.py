@@ -42,7 +42,7 @@ CBO={
  "receptionist":{"code":"422105","title":"Recepcionista, em geral"},
  "truck_driver":{"code":"782510","title":"Motorista de caminhão (rotas regionais e internacionais)"},
  "electrician":{"code":"715615","title":"Eletricista de instalações"},
- "plumber":{"code":"724110","title":"Encanador"},
+ "plumber":{"code":"724115","title":"Instalador de tubulações"},
  "cook":{"code":"513205","title":"Cozinheiro geral"},
  "waiter":{"code":"513405","title":"Garçom"},
  "cleaner":{"code":"514320","title":"Faxineiro"},
