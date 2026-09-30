@@ -22,5 +22,9 @@ def wage(occupation):
  source = EDUCATION_SOURCE if occupation in ("teacher","secondary_teacher") else SOURCE
  source_url = EDUCATION_URL if occupation in ("teacher","secondary_teacher") else SOURCE_URL
  return {"status":"available","country":"IE","occupation":occupation,"period":PERIOD,"value":row["value"],"currency":"EUR","unit":"gross/year","measure":"public_sector_entry_salary","precision":"public_sector_entry","source_label":row["label"],"grade_code":row["grade_code"],"source":source,"source_url":source_url,"note":"Official Irish public-sector entry point. This is not a national occupation mean or median."}
-def observed_coverage():
+def public_sector_coverage():
  return {occupation: PERIOD for occupation in ENTRY}
+
+# Backward-compatible alias; entries are public-sector benchmarks, not observed national wages.
+def observed_coverage():
+ return public_sector_coverage()
