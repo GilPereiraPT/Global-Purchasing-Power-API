@@ -32,13 +32,16 @@ def context(occupation, major_group, caution=None):
 # Profession-specific initial RAL from Excelsior 2025, based on INPS
 # Sistema Informativo Professioni data for 2023. Only explicit matches are used.
 EXCELSIOR_SOURCE="Unioncamere-ANPAL Sistema Informativo Excelsior, Laureati e lavoro 2025"
-EXCELSIOR_SOURCE_URL="https://excelsior.unioncamere.net/sites/default/files/documenti/allegato_retribuzioni_laureati_2025.pdf"
+EXCELSIOR_SOURCE_URL="https://excelsior.unioncamere.net/sites/default/files/pubblicazioni/2025/Lavoro_dopo_studi.pdf"
 INITIAL_RAL={
     "lawyer":{"value":46800,"cp2021":"2.5.2.1.0","label":"Avvocati"},
     "psychologist":{"value":36400,"cp2021":"2.5.3.3.1","label":"Psicologi clinici e psicoterapeuti"},
     "data_analyst":{"value":34300,"cp2021":"2.1.1.3.2","label":"Statistici e analisti di dati"},
     "preschool_teacher":{"value":24800,"cp2021":None,"label":"Docenti di scuola pre-primaria"},
     "secondary_teacher":{"value":30300,"cp2021":None,"label":"Docenti di scienze letterarie, artistiche, storiche, filosofiche, pedagogiche e psicologiche nella scuola secondaria superiore"},
+    "security_guard":{"value":20800,"cp2021":None,"label":"Guardie private di sicurezza"},
+    "administrative_assistant":{"value":24500,"cp2021":None,"label":"Addetti a funzioni di segreteria"},
+    "welder":{"value":26600,"cp2021":"6.2.1.2.0","label":"Saldatori e tagliatori a fiamma"},
 }
 def occupation_wage(occupation):
     row=INITIAL_RAL.get(occupation)
