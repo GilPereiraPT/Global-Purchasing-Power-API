@@ -254,31 +254,44 @@ def compare(country_a, country_b, occupation, region_a=None, region_b=None,
 
 
 def coverage():
-    """A compact derived summary of real observations, not fictitious coverage."""
+    """Coverage by independent salary layer: occupation, group context and public-sector entry."""
     observed = {(c["country"], c["occupation"]): c["latest_period"]
                 for c in ilostat_availability()["cells"] if c["status"] == "available"}
     observed.update(na.observed_coverage())
-    observed.update({key: period for key, (_count, period)
-                     in pt_wages.observed_coverage().items()})
-    observed.update({("GB", key): period for key, (_count, period)
-                     in uk_wages.observed_coverage().items()})
-    observed.update({("DE", key): period for key, (_count, period)
-                     in de_wages.observed_coverage().items()})
-    observed.update({("FR", key): period for key, (_count, period)
-                     in fr_wages.observed_coverage().items()})
-    observed.update({("NL", key): period for key, (_count, period)
-                     in nl_wages.observed_coverage().items()})
-    observed.update({("IT", key): period
-                     for key, period in it_wages.observed_coverage().items()})
+    observed.update({key: period for key, (_count, period) in pt_wages.observed_coverage().items()})
+    observed.update({("GB", key): period for key, (_count, period) in uk_wages.observed_coverage().items()})
+    observed.update({("DE", key): period for key, (_count, period) in de_wages.observed_coverage().items()})
+    observed.update({("FR", key): period for key, (_count, period) in fr_wages.observed_coverage().items()})
+    observed.update({("NL", key): period for key, (_count, period) in nl_wages.observed_coverage().items()})
+    observed.update({("IT", key): period for key, period in it_wages.observed_coverage().items()})
+
+    public_ie = ie_wages.public_sector_coverage()
+    rows = []
+    for code in COUNTRY_MAP:
+        exact_count = sum(country == code for country, _occupation in observed)
+        group_count = 0
+        for occupation, job in JOBS.items():
+            major = job["isco08_major_group"]
+            if not major:
+                continue
+            context = (ie_groups.context(occupation, major) if code == "IE"
+                       else group_salary(code, major))
+            if context.get("status") == "available":
+                group_count += 1
+        public_count = len(public_ie) if code == "IE" else 0
+        rows.append({
+            "code": code,
+            "observed_occupations": exact_count,
+            "group_context_occupations": group_count,
+            "public_sector_entry_occupations": public_count,
+            "possible_occupations": len(OCCUPATIONS),
+            "status": "partial" if (exact_count or group_count or public_count) else "unavailable",
+        })
     return {
         "countries": len(COUNTRY_MAP), "occupations": len(OCCUPATIONS),
         "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
         "observed_pairs": len(observed),
-        "by_country": [
-            {"code": code, "observed_occupations": sum(c == code for c, _ in observed),
-             "possible_occupations": len(OCCUPATIONS),
-             "status": "partial" if any(c == code for c, _ in observed) else "unavailable"}
-            for code in COUNTRY_MAP
-        ],
-        "note": "Counts only actually imported occupation-country observations; never market-wide coverage.",
+        "layers": ["observed_occupation", "observed_group", "public_sector_entry"],
+        "by_country": rows,
+        "note": "The three layers are independent. Group and public-sector values never count as exact occupation observations.",
     }
