@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="EarnWage — Global Purchasing Power API",
-    version="0.5.18",
+    version="0.5.19",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -266,7 +266,7 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
     fr = fr_insee_wages.observed_coverage()
     nl = nl_cbs_wages.observed_coverage()
     it = it_istat_wages.observed_coverage()
-    ie_public = ie_public_wages.observed_coverage()
+    ie_public = ie_public_wages.public_sector_coverage()
     for cell in result["cells"]:
         key = (cell["country"], cell["occupation"])
         if key in na:
