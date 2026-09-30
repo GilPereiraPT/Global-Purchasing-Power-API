@@ -27,6 +27,13 @@ BLS_TABLE = "https://www.bls.gov/oes/tables.htm"
 BLS_NEWS_TABLE = "https://www.bls.gov/news.release/ocwage.t01.htm"
 # Verified matches to NOC 2021 unit groups. Broad/ambiguous job names stay absent.
 CANADA_NOC = {
+    "accountant": ("11100", "Financial auditors and accountants"),
+    "auditor": ("11100", "Financial auditors and accountants"),
+    "doctor": ("31102", "General practitioners and family physicians"),
+    "it_technician": ("22221", "User support technicians"),
+    "data_analyst": ("21223", "Database analysts and data administrators"),
+    "warehouse_operator": ("75101", "Material handlers"),
+    "automotive_mechanic": ("72410", "Automotive service technicians"),
     "nurse": ("31301", "Registered nurses"),
     "civil_engineer": ("21300", "Civil engineers"),
     "electrician": ("72200", "Electricians"),
