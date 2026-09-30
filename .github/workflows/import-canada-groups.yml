@@ -1,4 +1,5 @@
 name: Import Canada broad occupational groups
+# Parser refresh: broad NOC categories are selected by official one-digit codes.
 
 on:
   push:
