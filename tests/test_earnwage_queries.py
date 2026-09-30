@@ -62,6 +62,8 @@ def test_real_coverage_and_invalid_region():
         assert data["observed_pairs"] >= 135
         country = {x["code"]: x for x in data["by_country"]}
         assert country["CA"]["observed_occupations"] == 38
+        assert country["CA"]["group_context_occupations"] == 40
+        assert country["CA"]["public_sector_entry_occupations"] == 0
         assert country["US"]["observed_occupations"] == 10
         assert country["DE"]["observed_occupations"] == 27
         assert country["FR"]["observed_occupations"] == 23
@@ -152,3 +154,24 @@ def test_ireland_public_sector_entry_is_separate_from_national_wage():
     assert entry["precision"] == "public_sector_entry"
     assert entry["period"] == "2026-06-01"
     assert result["annual_presentation"].get("kind") != "public_sector_entry_salary"
+
+
+def test_canada_statcan_group_context_is_independent_from_exact_wage():
+    with TestClient(app) as client:
+        manager = client.get("/v1/earnwage/overview?country=CA&occupation=manager").json()
+        assert manager["national_occupation_wage"]["status"] == "unavailable"
+        assert manager["national_major_group_context"]["status"] == "available"
+        assert manager["national_major_group_context"]["precision"] == "noc2021_broad_category"
+        assert manager["national_major_group_context"]["noc2021_broad_category"] == "0"
+        assert manager["national_major_group_context"]["reference_period"] == "2025"
+        assert manager["salary_display"]["status"] == "unavailable"
+        assert manager["salary_display"]["source"] == "occupational_group_context"
+        assert manager["salary_display"]["major_group_context_available"] is True
+        assert manager["salary_display"]["precision"] == "noc2021_broad_category"
+        assert manager["annual_presentation"]["status"] == "unavailable"
+
+        nurse = client.get("/v1/earnwage/overview?country=CA&occupation=nurse").json()
+        assert nurse["national_occupation_wage"]["status"] == "available"
+        assert nurse["national_major_group_context"]["status"] == "available"
+        assert nurse["national_major_group_context"]["precision"] == "noc2021_broad_category"
+        assert nurse["salary_display"]["source"] == "exact_occupation"
