@@ -16,6 +16,11 @@ PRECISION = "occupation_cbo2002_6_digit"
 POPULATION = "active formal employment links on 31/12/2025, contracted 40-44 hours/week"
 
 # occupation: (median BRL/month, employment links, evidence slug)
+COMPOSITES = {
+    "manager": {"value": 4602, "links": 532048, "source_label": "Gerentes — composto ponderado", "codes": ["142105","142305","141205"], "evidence_url": "https://99k.com.br/maiores-salarios/gerentes"},
+    "secondary_teacher": {"value": 6006, "links": 296918, "source_label": "Professores do ensino médio — família CBO 2321", "codes": ["232105","232110","232115","232120","232125","232130","232135","232140","232145","232150","232155","232160","232165","232170"], "evidence_url": "https://99k.com.br/carreiras/familia/professores-do-ensino-medio"},
+}
+
 OBSERVATIONS = {
     "accountant": (5749, 145518, "contador"),
     "financial_analyst": (5003, 79895, "analista-financeiro-instituicoes-financeiras"),
@@ -60,6 +65,20 @@ def wages(country, occupation):
     if country != "BR":
         return {"status":"unavailable","country":country,"occupation":occupation,
                 "reason":"RAIS CBO integration applies only to Brazil"}
+    composite = COMPOSITES.get(occupation)
+    if composite is not None:
+        return {
+            "status":"available","country":"BR","occupation":occupation,
+            "geography":"national","period":PERIOD,"reference_period":PERIOD,
+            "value":composite["value"],"currency":"BRL","unit":"monthly remuneration, December 2025",
+            "source_unit":"BRL/month","measure":"weighted_mean_of_occupation_medians",
+            "salary_concept":"december_remuneration","source":SOURCE,"source_url":SOURCE_URL,
+            "derived_aggregation":AGGREGATOR,"evidence_url":composite["evidence_url"],
+            "cbo_codes":composite["codes"],"source_label":composite["source_label"],
+            "employment_links":composite["links"],"population":POPULATION,
+            "precision":"composite_occupation","nominal":True,
+            "note":"EarnWage composite: employment-link-weighted mean of published CBO occupation medians; it is not a directly published RAIS median for the combined category.",
+        }
     row = OBSERVATIONS.get(occupation)
     cbo = br_cbo.CBO.get(occupation)
     if row is None or cbo is None:
@@ -85,4 +104,4 @@ def wages(country, occupation):
     }
 
 def observed_coverage():
-    return {("BR", occupation): PERIOD for occupation in OBSERVATIONS}
+    return {("BR", occupation): PERIOD for occupation in set(OBSERVATIONS) | set(COMPOSITES)}
