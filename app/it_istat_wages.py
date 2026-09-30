@@ -42,6 +42,9 @@ INITIAL_RAL={
     "security_guard":{"value":20800,"cp2021":None,"label":"Guardie private di sicurezza"},
     "administrative_assistant":{"value":24500,"cp2021":None,"label":"Addetti a funzioni di segreteria"},
     "welder":{"value":26600,"cp2021":"6.2.1.2.0","label":"Saldatori e tagliatori a fiamma"},
+    "electrician":{"value":23600,"cp2021":None,"label":"Elettricisti nelle costruzioni civili"},
+    "plumber":{"value":27400,"cp2021":None,"label":"Idraulici e posatori di tubazioni idrauliche e di gas"},
+    "truck_driver":{"value":30500,"cp2021":None,"label":"Conduttori di mezzi pesanti e camion"},
 }
 def occupation_wage(occupation):
     row=INITIAL_RAL.get(occupation)
