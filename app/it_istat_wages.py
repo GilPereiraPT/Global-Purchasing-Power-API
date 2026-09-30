@@ -45,6 +45,8 @@ INITIAL_RAL={
     "electrician":{"value":23600,"cp2021":None,"label":"Elettricisti nelle costruzioni civili"},
     "plumber":{"value":27400,"cp2021":None,"label":"Idraulici e posatori di tubazioni idrauliche e di gas"},
     "truck_driver":{"value":30500,"cp2021":None,"label":"Conduttori di mezzi pesanti e camion"},
+    "cook":{"min_value":24500,"max_value":25000,"cp2021":"5.2.2.1.0","label":"Cuochi in alberghi e ristoranti"},
+    "automotive_mechanic":{"min_value":21600,"max_value":24400,"cp2021":"6.2.3.1.1","label":"Meccanici artigianali, riparatori e manutentori di automobili"},
 }
 def occupation_wage(occupation):
     row=INITIAL_RAL.get(occupation)
@@ -52,12 +54,20 @@ def occupation_wage(occupation):
         return {"status":"unavailable","country":"IT","occupation":occupation,
                 "precision":"exact_profession_initial_salary",
                 "reason":"No explicit profession-level initial RAL verified in the current Excelsior/INPS table"}
-    return {"status":"available","country":"IT","occupation":occupation,"period":"2023",
-            "value":row["value"],"currency":"EUR","unit":"gross/year",
+    result={"status":"available","country":"IT","occupation":occupation,"period":"2023",
+            "currency":"EUR","unit":"gross/year",
             "measure":"initial_gross_annual_salary","precision":"profession_specific",
             "cp2021":row["cp2021"],"source_label":row["label"],
             "source":EXCELSIOR_SOURCE,"source_url":EXCELSIOR_SOURCE_URL,
             "note":"Initial gross annual remuneration (RAL), not national mean salary. INPS data supplied within Sistema Informativo Professioni and published in Excelsior 2025."}
+    if "value" in row:
+        result["value"]=row["value"]
+    else:
+        result["min_value"]=row["min_value"]
+        result["max_value"]=row["max_value"]
+        result["value_type"]="range"
+        result["note"]+=" The source publishes a minimum/maximum range across the professional units composing this profession; no midpoint is inferred."
+    return result
 
 
 def observed_coverage():
