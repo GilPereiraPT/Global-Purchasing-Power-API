@@ -14,6 +14,7 @@ from app import ch_bfs_wages as ch_wages
 from app import it_istat_wages as it_wages
 from app import ie_public_wages as ie_wages
 from app import ie_cso_groups as ie_groups
+from app import ca_statcan_groups as ca_groups
 from app import br_cbo
 from app import br_rais_wages
 from app import br_public_wages
@@ -173,9 +174,14 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     selected = COUNTRY_MAP[code]
     wage = wage_for(code, occupation)
     major_group = JOBS[occupation]["isco08_major_group"]
-    group_context = (group_salary(code, major_group) if major_group else {
-        "status": "unavailable", "precision": "isco08_major_group",
-        "reason": "No validated ISCO-08 major-group mapping"})
+    group_context = (
+        ca_groups.context(occupation) if code == "CA" else
+        ie_groups.context(occupation, major_group) if code == "IE" else
+        group_salary(code, major_group) if major_group else {
+            "status": "unavailable", "precision": "isco08_major_group",
+            "reason": "No validated occupational-group mapping"
+        }
+    )
     swiss_context = (ch_wages.context(occupation) if code == "CH" else
                      {"status":"not_applicable"})
     italy_context = (it_wages.context(
@@ -188,10 +194,16 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     brazil_cbo = br_cbo.mapping(occupation) if code == "BR" else {"status":"not_applicable"}
     brazil_public_entry = br_public_wages.wage(occupation) if code == "BR" else {"status":"not_applicable"}
     exact_available = wage.get("status") == "available"
-    group_available = (group_context.get("status") == "available" and
-                       any(v.get("status") == "available" for v in group_context.get("values", {}).values()))
+    group_available = (
+        group_context.get("status") == "available" and (
+            any(v.get("status") == "available"
+                for v in group_context.get("values", {}).values())
+            if group_context.get("values") is not None
+            else bool(group_context.get("observations"))
+        )
+    )
     display_source = ("exact_occupation" if exact_available else
-                      "isco08_major_group_context" if group_available else "unavailable")
+                      "occupational_group_context" if group_available else "unavailable")
     warnings = []
     if code == "US":
         warnings.append("Federal components and selected state wage/payroll components only; complete state and local tax models are not implemented.")
@@ -202,7 +214,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         warnings.append("The wage source reference period is distinct from any 2026 tax scenario.")
     else:
         warnings.append("No matching verified occupational observation; no wage has been inferred.")
-    warnings.append("ILOSTAT major-group earnings are broad occupational context, not the selected profession's salary or a substitute for missing exact wages.")
+    warnings.append("Broad occupational-group earnings are contextual only, not the selected profession's salary or a substitute for missing exact wages.")
     warnings.append("Cost-of-living basket and net purchasing-power comparison are not yet available.")
     return {
         "country": {"code": code, "name": selected["name"],
@@ -230,11 +242,11 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
             "status": "available" if exact_available else "unavailable",
             "major_group_context_available": group_available,
             "precision": "occupation" if exact_available else
-                         "isco08_major_group" if group_available else None,
+                         group_context.get("precision") if group_available else None,
             "isco08_major_group": major_group,
             "group_mapping_caution": JOBS[occupation]["group_mapping_caution"],
             "note": ("Group earnings are context only, not the salary of this occupation."
-                     if display_source == "isco08_major_group_context" else
+                     if display_source == "occupational_group_context" else
                      "Exact occupation observation shown; group context remains separate."
                      if exact_available else "No validated earnings available."),
         },
@@ -289,6 +301,7 @@ def coverage():
             if not major:
                 continue
             context = (ie_groups.context(occupation, major) if code == "IE"
+                       else ca_groups.context(occupation) if code == "CA"
                        else group_salary(code, major))
             if context.get("status") == "available":
                 group_count += 1
