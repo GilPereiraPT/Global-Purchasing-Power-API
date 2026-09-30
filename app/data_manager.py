@@ -333,7 +333,7 @@ def _tested_main_commit():
     candidates = [
         run for run in runs.get("workflow_runs", [])
         if run.get("name") == "API tests" and run.get("head_sha") == sha
-        and run.get("event") == "push"
+        and run.get("event") in ("push", "workflow_run")
     ]
     if not any(run.get("status") == "completed" and run.get("conclusion") == "success"
                for run in candidates):
