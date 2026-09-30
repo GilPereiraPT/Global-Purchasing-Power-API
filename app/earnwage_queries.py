@@ -202,8 +202,12 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
             else bool(group_context.get("observations"))
         )
     )
-    display_source = ("exact_occupation" if exact_available else
-                      "occupational_group_context" if group_available else "unavailable")
+    display_source = (
+        "exact_occupation" if exact_available else
+        "occupational_group_context" if group_available and code == "CA" else
+        "isco08_major_group_context" if group_available else
+        "unavailable"
+    )
     warnings = []
     if code == "US":
         warnings.append("Federal components and selected state wage/payroll components only; complete state and local tax models are not implemented.")
@@ -246,7 +250,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
             "isco08_major_group": major_group,
             "group_mapping_caution": JOBS[occupation]["group_mapping_caution"],
             "note": ("Group earnings are context only, not the salary of this occupation."
-                     if display_source == "occupational_group_context" else
+                     if display_source in ("occupational_group_context", "isco08_major_group_context") else
                      "Exact occupation observation shown; group context remains separate."
                      if exact_available else "No validated earnings available."),
         },
