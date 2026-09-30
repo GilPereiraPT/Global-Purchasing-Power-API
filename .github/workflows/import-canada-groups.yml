@@ -1,0 +1,38 @@
+name: Import Canada broad occupational groups
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-canada-groups.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download official Statistics Canada table
+        run: curl --fail --location --retry 3 -o "$RUNNER_TEMP/statcan.zip" "https://www150.statcan.gc.ca/n1/en/tbl/csv/14100417-eng.zip"
+      - name: Build and validate broad NOC snapshot
+        run: |
+          python -m app.ca_statcan_groups "$RUNNER_TEMP/statcan.zip"
+          python -c "from app.ca_statcan_groups import load_snapshot; rows=load_snapshot(); groups={r['noc2021_broad_category'] for r in rows}; assert groups == set('0123456789'), groups"
+      - name: Save verified observations
+        run: |
+          git add data/ca_statcan_groups.json
+          if git diff --cached --quiet; then
+            echo "No new data"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: import official Canada broad occupational wages"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
