@@ -10,6 +10,7 @@ ENTRY={
  "healthcare_assistant":{"value":36288,"label":"Health Care Assistant","grade_code":"6075"},
  "teacher":{"value":45379,"label":"Primary Teacher - new entrant","grade_code":"DEY-0004-2026"},
  "secondary_teacher":{"value":46948,"label":"Post-Primary Teacher - new entrant","grade_code":"DEY-0005-2026"},
+ "dentist":{"value":74821,"label":"General Dental Surgeon","grade_code":"1597"},
 }
 EDUCATION_SOURCE="Department of Education and Youth, Circulars 0004/2026 and 0005/2026"
 EDUCATION_URL="https://www.gov.ie/en/department-of-education/circulars/"
