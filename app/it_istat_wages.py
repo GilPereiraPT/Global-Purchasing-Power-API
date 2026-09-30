@@ -27,3 +27,27 @@ def context(occupation, major_group, caution=None):
             "unit":"gross_hourly_mean","values":{"female":row["female"],"male":row["male"]},
             "source":SOURCE,"source_url":SOURCE_URL,"mapping_caution":caution,
             "note":"Official ISTAT CP2021 broad-group context, not an individual occupation wage. Values are average gross hourly earnings by sex for October 2022."}
+
+
+# Profession-specific initial RAL from Excelsior 2025, based on INPS
+# Sistema Informativo Professioni data for 2023. Only explicit matches are used.
+EXCELSIOR_SOURCE="Unioncamere-ANPAL Sistema Informativo Excelsior, Laureati e lavoro 2025"
+EXCELSIOR_SOURCE_URL="https://excelsior.unioncamere.net/sites/default/files/documenti/allegato_retribuzioni_laureati_2025.pdf"
+INITIAL_RAL={
+    "lawyer":{"value":46800,"cp2021":"2.5.2.1.0","label":"Avvocati"},
+    "psychologist":{"value":36400,"cp2021":"2.5.3.3.1","label":"Psicologi clinici e psicoterapeuti"},
+    "data_analyst":{"value":34300,"cp2021":"2.1.1.3.2","label":"Statistici e analisti di dati"},
+    "preschool_teacher":{"value":24800,"cp2021":None,"label":"Docenti di scuola pre-primaria"},
+}
+def occupation_wage(occupation):
+    row=INITIAL_RAL.get(occupation)
+    if not row:
+        return {"status":"unavailable","country":"IT","occupation":occupation,
+                "precision":"exact_profession_initial_salary",
+                "reason":"No explicit profession-level initial RAL verified in the current Excelsior/INPS table"}
+    return {"status":"available","country":"IT","occupation":occupation,"period":"2023",
+            "value":row["value"],"currency":"EUR","unit":"gross/year",
+            "measure":"initial_gross_annual_salary","precision":"profession_specific",
+            "cp2021":row["cp2021"],"source_label":row["label"],
+            "source":EXCELSIOR_SOURCE,"source_url":EXCELSIOR_SOURCE_URL,
+            "note":"Initial gross annual remuneration (RAL), not national mean salary. INPS data supplied within Sistema Informativo Professioni and published in Excelsior 2025."}
