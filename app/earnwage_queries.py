@@ -16,6 +16,7 @@ from app import ie_public_wages as ie_wages
 from app import ie_cso_groups as ie_groups
 from app import br_cbo
 from app import br_rais_wages
+from app import br_public_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -185,6 +186,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                             {"status":"not_applicable"})
     ireland_group_context = ie_groups.context(occupation, major_group) if code == "IE" else {"status":"not_applicable"}
     brazil_cbo = br_cbo.mapping(occupation) if code == "BR" else {"status":"not_applicable"}
+    brazil_public_entry = br_public_wages.wage(occupation) if code == "BR" else {"status":"not_applicable"}
     exact_available = wage.get("status") == "available"
     group_available = (group_context.get("status") == "available" and
                        any(v.get("status") == "available" for v in group_context.get("values", {}).values()))
@@ -221,6 +223,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "ireland_public_sector_entry": ireland_public_entry,
         "ireland_cso_occupational_group_context": ireland_group_context,
         "brazil_cbo_occupation": brazil_cbo,
+        "brazil_public_sector_entry": brazil_public_entry,
         "annual_presentation": annual_presentation(wage, group_context),
         "salary_display": {
             "source": display_source,
@@ -276,6 +279,7 @@ def coverage():
     observed.update(br_rais_wages.observed_coverage())
 
     public_ie = ie_wages.public_sector_coverage()
+    public_br = br_public_wages.public_sector_coverage()
     rows = []
     for code in COUNTRY_MAP:
         exact_count = sum(country == code for country, _occupation in observed)
@@ -288,7 +292,8 @@ def coverage():
                        else group_salary(code, major))
             if context.get("status") == "available":
                 group_count += 1
-        public_count = len(public_ie) if code == "IE" else 0
+        public_count = (len(public_ie) if code == "IE" else
+                        len(public_br) if code == "BR" else 0)
         rows.append({
             "code": code,
             "observed_occupations": exact_count,
