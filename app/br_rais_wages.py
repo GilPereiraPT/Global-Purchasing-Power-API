@@ -26,6 +26,8 @@ OBSERVATIONS = {
     "supermarket_worker": (2018, 825829, "operador-de-caixa"),
     "bus_driver": (3907, 183628, "motorista-de-onibus-urbano"),
     "industrial_operator": (2881, 181442, "operador-de-maquinas-fixas-em-geral"),
+    "construction_worker": (1987, 533677, "servente-de-obras"),
+    "cybersecurity_specialist": (9000, 13368, "administrador-em-seguranca-da-informacao"),
     "agricultural_worker": (2103, 309909, "trabalhador-agropecuario-em-geral"),
     "auditor": (12612, 31392, "auditor-contadores-e-afins"),
     "doctor": (13201, 67274, "medico-clinico"),
