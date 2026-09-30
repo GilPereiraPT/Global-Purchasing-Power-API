@@ -22,6 +22,8 @@ CBO={
  "supermarket_worker":{"code":"421125","title":"Operador de caixa"},
  "bus_driver":{"code":"782410","title":"Motorista de ônibus urbano"},
  "industrial_operator":{"code":"862150","title":"Operador de máquinas fixas, em geral"},
+ "construction_worker":{"code":"717020","title":"Servente de obras"},
+ "cybersecurity_specialist":{"code":"212320","title":"Administrador em segurança da informação"},
  "agricultural_worker":{"code":"621005","title":"Trabalhador agropecuário em geral"},
  "auditor":{"code":"252205","title":"Auditor (contadores e afins)"},
  "doctor":{"code":"225125","title":"Médico clínico"},
