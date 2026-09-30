@@ -51,6 +51,7 @@ OBSERVATIONS = {
     "receptionist": (1920, 477787, "recepcionista-em-geral"),
     "truck_driver": (3413, 974526, "motorista-de-caminhao-rotas-regionais-e-internacionais"),
     "electrician": (3068, 106544, "eletricista-de-instalacoes"),
+    "plumber": (3524, 16423, "instalador-de-tubulacoes"),
     "cook": (2131, 465253, "cozinheiro-geral"),
     "waiter": (2190, 161339, "garcom"),
     "cleaner": (1851, 1569330, "faxineiro"),
