@@ -1,7 +1,7 @@
 """Irish public-sector entry salary benchmarks; not national occupation averages."""
 HSE_SOURCE="HSE, Consolidated Salary Scales, 1 June 2026"
 HSE_URL="https://healthservice.hse.ie/documents/10686/1_June_2026_pay_scales.pdf"
-EDUCATION_SOURCE="Department of Education and Youth, Circulars 0004/2026 and 0005/2026"
+EDUCATION_SOURCE="Department of Education and Youth, Circulars 0055/2026 and 0056/2026"
 EDUCATION_URL="https://www.gov.ie/en/department-of-education/circulars/"
 PUBLICJOBS_SOURCE="PublicJobs.ie / Office of the Comptroller and Auditor General"
 PUBLICJOBS_AUDITOR_URL="https://www.publicjobs.ie/en/information-hub/latest-news-and-events/1125-now-open-trainee-auditor"
