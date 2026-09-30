@@ -1,5 +1,5 @@
 name: Import Canada broad occupational groups
-# Parser refresh: official StatCan wage labels and full-year scan.
+# Parser refresh: official StatCan broad-category labels without numeric prefixes.
 
 on:
   push:
