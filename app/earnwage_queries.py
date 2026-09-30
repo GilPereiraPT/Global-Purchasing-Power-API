@@ -261,6 +261,8 @@ def coverage():
                      in fr_wages.observed_coverage().items()})
     observed.update({("NL", key): period for key, (_count, period)
                      in nl_wages.observed_coverage().items()})
+    observed.update({("IT", key): period
+                     for key, period in it_wages.observed_coverage().items()})
     return {
         "countries": len(COUNTRY_MAP), "occupations": len(OCCUPATIONS),
         "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
