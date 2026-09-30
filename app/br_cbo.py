@@ -14,6 +14,11 @@ RAIS_URL="https://www.gov.br/trabalho-e-emprego/pt-br/assuntos/estatisticas-trab
 # part of the provenance and may be narrower than the EarnWage label.
 CBO={
  "accountant":{"code":"252210","title":"Contador"},
+ "financial_analyst":{"code":"252545","title":"Analista financeiro (instituições financeiras)"},
+ "teacher":{"code":"231210","title":"Professor de nível superior do ensino fundamental (primeira a quarta série)"},
+ "preschool_teacher":{"code":"231105","title":"Professor de nível superior na educação infantil (quatro a seis anos)"},
+ "warehouse_operator":{"code":"414110","title":"Armazenista"},
+ "agricultural_worker":{"code":"621005","title":"Trabalhador agropecuário em geral"},
  "auditor":{"code":"252205","title":"Auditor (contadores e afins)"},
  "doctor":{"code":"225125","title":"Médico clínico"},
  "nurse":{"code":"223505","title":"Enfermeiro"},
