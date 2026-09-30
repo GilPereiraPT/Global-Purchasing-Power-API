@@ -13,6 +13,7 @@ from app import nl_cbs_wages as nl_wages
 from app import ch_bfs_wages as ch_wages
 from app import it_istat_wages as it_wages
 from app import ie_public_wages as ie_wages
+from app import ie_cso_groups as ie_groups
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -176,6 +177,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     ) if code == "IT" else {"status":"not_applicable"})
     ireland_public_entry = (ie_wages.wage(occupation) if code == "IE" else
                             {"status":"not_applicable"})
+    ireland_group_context = ie_groups.context(occupation, major_group) if code == "IE" else {"status":"not_applicable"}
     exact_available = wage.get("status") == "available"
     group_available = (group_context.get("status") == "available" and
                        any(v.get("status") == "available" for v in group_context.get("values", {}).values()))
@@ -210,6 +212,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "swiss_ch_isco19_submajor_context": swiss_context,
             "italy_cp2021_major_group_context": italy_context,
         "ireland_public_sector_entry": ireland_public_entry,
+        "ireland_cso_occupational_group_context": ireland_group_context,
         "annual_presentation": annual_presentation(wage, group_context),
         "salary_display": {
             "source": display_source,
