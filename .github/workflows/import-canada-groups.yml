@@ -1,5 +1,5 @@
 name: Import Canada broad occupational groups
-# Parser refresh: broad NOC categories are selected by official one-digit codes.
+# Parser refresh: official StatCan wage labels and full-year scan.
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
               if len(seen[k])<12: seen[k].add(row.get(k,""))
             if noc and len(samples)<20 and row.get("REF_DATE")=="2025":
               samples.append(row.get(noc,""))
-            if i>200000: break
+            if i>3000000: break
           print("VALUES:", {k:sorted(v) for k,v in seen.items()})
           print("NOC SAMPLES:", samples)
           PY
