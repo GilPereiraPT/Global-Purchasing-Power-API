@@ -57,8 +57,16 @@ def test_us_national_only(tmp_path):
 
 def test_expanded_canada_noc_matches_official_titles():
     from app.north_america import CANADA_NOC
-    assert len(CANADA_NOC) == 28
-    assert len({code for code, _ in CANADA_NOC.values()}) == len(CANADA_NOC)
+    assert len(CANADA_NOC) == 35
+    # Accountant and auditor intentionally share official NOC 11100.
+    assert len({code for code, _ in CANADA_NOC.values()}) == 34
+    assert CANADA_NOC["accountant"][0] == "11100"
+    assert CANADA_NOC["auditor"][0] == "11100"
+    assert CANADA_NOC["doctor"][0] == "31102"
+    assert CANADA_NOC["it_technician"][0] == "22221"
+    assert CANADA_NOC["data_analyst"][0] == "21223"
+    assert CANADA_NOC["warehouse_operator"][0] == "75101"
+    assert CANADA_NOC["automotive_mechanic"][0] == "72410"
     header = HEAD
     sample = (
         "NOC_21232,Software developers and programmers,NAT,ER00,48.08,50.12,0,2023-2024\n"
