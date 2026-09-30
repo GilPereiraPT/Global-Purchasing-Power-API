@@ -5,6 +5,8 @@ EDUCATION_SOURCE="Department of Education and Youth, Circulars 0004/2026 and 000
 EDUCATION_URL="https://www.gov.ie/en/department-of-education/circulars/"
 PUBLICJOBS_SOURCE="PublicJobs.ie / Office of the Comptroller and Auditor General"
 PUBLICJOBS_AUDITOR_URL="https://www.publicjobs.ie/en/information-hub/latest-news-and-events/1125-now-open-trainee-auditor"
+PUBLICJOBS_ICT_URL="https://www.publicjobs.ie/en/information-hub/latest-news-and-events/1076-now-live-infrastructure-and-operations-ict-specialist-eo-in-the-civil-service"
+PUBLICJOBS_CYBER_URL="https://publicjobs.ie/en/information-hub/latest-news-and-events/1061-new-opportunities-networks-and-cyber-security-senior-ict-specialist-heo-in-the-civil-service"
 
 ENTRY={
  "nurse":{"value":38166,"label":"Staff Nurse","grade_code":"2135","period":"2026-06-01"},
@@ -23,6 +25,12 @@ ENTRY={
  "cleaner":{"value":35433,"label":"Cleaner","grade_code":"4113","period":"2026-06-01"},
  "administrative_assistant":{"value":31934,"label":"Clerical Officer Grade","grade_code":"0609","period":"2026-06-01",
                              "note":"Clerical Officer is used as the direct public-service clerical/administrative entry benchmark."},
+ "it_technician":{"value":38419,"label":"Infrastructure and Operations - ICT Specialist (Executive Officer)","grade_code":"EO-ICT-INFRA","period":"2026",
+                  "source":"PublicJobs.ie / Civil Service","source_url":PUBLICJOBS_ICT_URL,
+                  "note":"Public Civil Service ICT role explicitly covering end-user technical support and ICT infrastructure."},
+ "cybersecurity_specialist":{"value":59435,"label":"Networks and Cyber Security - Senior ICT Specialist (HEO)","grade_code":"HEO-ICT-CYBER","period":"2026",
+                             "source":"PublicJobs.ie / Civil Service","source_url":PUBLICJOBS_CYBER_URL,
+                             "note":"Public Civil Service specialist role explicitly dedicated to networks and cyber security."},
  "auditor":{"value":42541,"label":"Trainee Auditor","grade_code":"C&AG-TRAINEE-AUDITOR-2026","period":"2026",
             "source":PUBLICJOBS_SOURCE,"source_url":PUBLICJOBS_AUDITOR_URL,
             "note":"Current 2026 public recruitment starting salary for Trainee Auditor."},
