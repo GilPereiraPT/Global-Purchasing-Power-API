@@ -260,12 +260,13 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
     for cell in result["cells"]:
         cell["occupation_label"] = labels[cell["occupation"]]
     na = na_wages.observed_coverage()
-    from app import uk_ashe_wages, de_entgeltatlas_wages, fr_insee_wages, nl_cbs_wages, it_istat_wages
+    from app import uk_ashe_wages, de_entgeltatlas_wages, fr_insee_wages, nl_cbs_wages, it_istat_wages, ie_public_wages
     uk = uk_ashe_wages.observed_coverage()
     de = de_entgeltatlas_wages.observed_coverage()
     fr = fr_insee_wages.observed_coverage()
     nl = nl_cbs_wages.observed_coverage()
     it = it_istat_wages.observed_coverage()
+    ie_public = ie_public_wages.observed_coverage()
     for cell in result["cells"]:
         key = (cell["country"], cell["occupation"])
         if key in na:
@@ -286,6 +287,11 @@ def salary_availability_matrix(lang: str = Query("en", pattern="^[a-z]{2}(-[A-Za
         elif cell["country"] == "IT" and cell["occupation"] in it:
             cell.update({"status": "available", "latest_period": it[cell["occupation"]],
                          "source_family": "excelsior_inps_initial_ral"})
+        elif cell["country"] == "IE" and cell["occupation"] in ie_public:
+            cell.update({"status": "available", "latest_period": ie_public[cell["occupation"]],
+                         "source_family": "hse_public_sector_entry",
+                         "benchmark_type": "public_sector_entry",
+                         "observed_national_occupation_wage": False})
     result["available_cells"] = sum(x["status"] == "available" for x in result["cells"])
     return result
 
