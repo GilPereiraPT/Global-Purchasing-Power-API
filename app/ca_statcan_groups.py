@@ -20,7 +20,7 @@ YEAR = "2025"
 
 BROAD = {
     "0": "Management occupations",
-    "1": "Business, finance and administration occupations",
+    "1": "Business, finance and administration occupations, except management",
     "2": "Natural and applied sciences and related occupations",
     "3": "Health occupations",
     "4": "Occupations in education, law and social, community and government services",
@@ -83,15 +83,11 @@ def build_snapshot(zip_path, year=YEAR):
                     row["Age group"] != "15 years and over"):
                     continue
                 title = row[noc_col].strip()
-                # StatCan prefixes NOC hierarchy labels with their classification
-                # code (for example "0 Management occupations"). Select only the
-                # ten one-digit broad categories rather than depending on exact
-                # English label wording.
-                import re
-                # Broad categories can be rendered as "0 Management..." or
-                # "0 - Management..." depending on the table vintage.
-                match = re.match(r"^([0-9])(?:\\s+|\\s*-\\s*)", title)
-                group = match.group(1) if match else None
+                # Table 14-10-0417-01 exposes the NOC hierarchy as labels,
+                # without the numeric NOC code. Match only the ten official
+                # broad-category labels so lower-level occupations cannot leak
+                # into the group context.
+                group = next((g for g, label in BROAD.items() if title == label), None)
                 metric = _metric(row["Wages"])
                 if group is None or metric is None:
                     continue
