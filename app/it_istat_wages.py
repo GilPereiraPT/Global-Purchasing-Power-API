@@ -38,6 +38,7 @@ INITIAL_RAL={
     "psychologist":{"value":36400,"cp2021":"2.5.3.3.1","label":"Psicologi clinici e psicoterapeuti"},
     "data_analyst":{"value":34300,"cp2021":"2.1.1.3.2","label":"Statistici e analisti di dati"},
     "preschool_teacher":{"value":24800,"cp2021":None,"label":"Docenti di scuola pre-primaria"},
+    "secondary_teacher":{"value":30300,"cp2021":None,"label":"Docenti di scienze letterarie, artistiche, storiche, filosofiche, pedagogiche e psicologiche nella scuola secondaria superiore"},
 }
 def occupation_wage(occupation):
     row=INITIAL_RAL.get(occupation)
@@ -55,4 +56,4 @@ def occupation_wage(occupation):
 
 def observed_coverage():
     """Profession-level coverage only; broad CP2021 context is deliberately excluded."""
-    return {occupation: PERIOD for occupation in INITIAL_RAL}
+    return {occupation: "2023" for occupation in INITIAL_RAL}
