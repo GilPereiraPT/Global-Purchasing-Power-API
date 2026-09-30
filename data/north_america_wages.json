@@ -3,6 +3,36 @@
   "records": [
     {
       "country": "CA",
+      "occupation": "accountant",
+      "geography": "national",
+      "classification": "NOC2021:11100",
+      "job_title": "Financial auditors and accountants",
+      "reference_period": "2023-2024",
+      "published_year": 2025,
+      "currency": "CAD",
+      "measure": "mean",
+      "unit": "CAD/hour",
+      "value": 44.67,
+      "source": "Job Bank 2025 Wages (published 2025-11-19)",
+      "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
+    },
+    {
+      "country": "CA",
+      "occupation": "accountant",
+      "geography": "national",
+      "classification": "NOC2021:11100",
+      "job_title": "Financial auditors and accountants",
+      "reference_period": "2023-2024",
+      "published_year": 2025,
+      "currency": "CAD",
+      "measure": "median",
+      "unit": "CAD/hour",
+      "value": 40.36,
+      "source": "Job Bank 2025 Wages (published 2025-11-19)",
+      "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
+    },
+    {
+      "country": "CA",
       "occupation": "administrative_assistant",
       "geography": "national",
       "classification": "NOC2021:13110",
