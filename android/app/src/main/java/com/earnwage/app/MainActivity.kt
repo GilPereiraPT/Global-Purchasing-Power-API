@@ -144,6 +144,11 @@ class MainActivity:ComponentActivity() {
     var fxError by remember { mutableStateOf("") }
     var fxLoading by remember { mutableStateOf(false) }
     var wageFx by remember { mutableStateOf<Map<String,JSONObject>>(emptyMap()) }
+    var globalId by remember { mutableIntStateOf(0) }
+    var globalResults by remember { mutableStateOf<List<Pair<Place,JSONObject>>>(emptyList()) }
+    var globalFx by remember { mutableStateOf<Map<String,JSONObject>>(emptyMap()) }
+    var globalLoading by remember { mutableStateOf(false) }
+    var globalError by remember { mutableStateOf("") }
     var insightCountries by remember { mutableStateOf(listOf("PT","ES")) }
     var insightIndicator by remember { mutableStateOf("inflation_annual") }
     var insightId by remember { mutableIntStateOf(0) }
@@ -251,6 +256,26 @@ class MainActivity:ComponentActivity() {
             wageFx=collected
         } catch(e:Exception) { if(e is CancellationException) throw e }
     }
+    LaunchedEffect(globalId) {
+        if(globalId==0) return@LaunchedEffect
+        globalLoading=true; globalError=""; globalResults=emptyList(); globalFx=emptyMap()
+        try {
+            val rows=mutableListOf<Pair<Place,JSONObject>>()
+            for(place in countries) {
+                try { rows += place to api("/v1/earnwage/overview?country="+place.code+"&occupation="+enc(occupation)) }
+                catch (_:Exception) { }
+            }
+            globalResults=rows
+            val needed=(rows.flatMap { (_,d) -> salaryCurrencies(d) } + currency).filter { it.isNotBlank() }.toSet()
+            val rates=mutableMapOf<String,JSONObject>()
+            for(code in needed) rates[code]=if(code=="EUR") JSONObject().put("units_per_eur",1.0).put("period","")
+                else api("/v1/exchange-rates/"+code)
+            globalFx=rates
+        } catch(e:Exception) {
+            if(e is CancellationException) throw e
+            globalError=if(lang=="pt") "Não foi possível concluir a pesquisa global." else "Could not complete global search."
+        } finally { globalLoading=false }
+    }
     LaunchedEffect(insightId) {
         if(insightId==0) return@LaunchedEffect
         val codes=insightCountries.toList(); val indicator=insightIndicator
@@ -322,10 +347,32 @@ class MainActivity:ComponentActivity() {
                             item { Feature("⇄",tr(lang,"compare"),tr(lang,"salary")) {navigate("compare")} }
                             item { Feature("▥",if(lang=="pt") "Comparar países" else "Country insights",if(lang=="pt") "Gráficos e indicadores económicos" else "Economic charts and indicators") {navigate("insights")} }
                             item { Feature("▣",tr(lang,"jobs"),tr(lang,"jobnote")) {navigate("jobs")} }
+                            item { Feature("◎",if(lang=="pt") "Salários pelo mundo" else "Global salaries",if(lang=="pt") "Pesquisa uma profissão nos 14 países" else "Search one occupation across 14 countries") {navigate("global")} }
                             item { Feature("◈",tr(lang,"salary"),tr(lang,"official")) {navigate("salary")} }
                             item { Feature("⊕",tr(lang,"tools"),tr(lang,"more")) {navigate("tools")} }
                             item { Caption(countryFlag(country)+" "+(countries.find { it.code==country }?.name ?: country)+
                                 " · "+tr(lang,"currency")+": "+currency+" · API "+apiVersion) }
+                        }
+                        "global" -> {
+                            item { Heading(if(lang=="pt") "Salários pelo mundo" else "Global salaries") }
+                            item { Caption(if(lang=="pt") "Pesquisa uma profissão e compara as três camadas oficiais disponíveis em cada país." else "Search an occupation and compare the three official salary layers available in each country.") }
+                            item { ProfessionMenu(tr(lang,"profession"),professions,occupation,lang) {occupation=it} }
+                            item { CurrencyMenu(lang,currency) {currency=it} }
+                            item {
+                                Button(onClick={globalId++},enabled=professions.isNotEmpty()&&!globalLoading,
+                                    modifier=Modifier.fillMaxWidth()) {
+                                    Text(if(lang=="pt") "Pesquisar nos 14 países" else "Search 14 countries")
+                                }
+                            }
+                            item { SalaryLegend(lang) }
+                            if(globalLoading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+                            if(globalError.isNotBlank()) item { Metric(tr(lang,"unavailable"),globalError) }
+                            if(globalResults.isNotEmpty()) {
+                                item { Caption((if(lang=="pt") "Resultados: " else "Results: ")+globalResults.size+" · "+currency) }
+                                items(globalResults,key={it.first.code}) { (place,data) ->
+                                    GlobalSalaryCard(place,data,lang,currency,globalFx)
+                                }
+                            }
                         }
                         "compare","salary" -> {
                             item { Heading(tr(lang,if(page=="compare") "compare" else "salary")) }
@@ -709,6 +756,92 @@ private fun parseRegions(data:JSONObject):List<Region> {
         }
     }
 }
+private fun salaryCurrencies(data:JSONObject):List<String> {
+    val out=mutableListOf<String>()
+    val wage=data.optJSONObject("national_occupation_wage")
+    wage?.optJSONArray("observations")?.let { a -> for(i in 0 until a.length()) a.optJSONObject(i)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
+    data.optJSONObject("national_major_group_context")?.optJSONArray("observations")?.let { a -> for(i in 0 until a.length()) a.optJSONObject(i)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
+    listOf("brazil_public_sector_entry","ireland_public_sector_entry","public_sector_entry").forEach { data.optJSONObject(it)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
+    return out
+}
+private fun preferredObservation(data:JSONObject?):JSONObject? {
+    if(data?.optString("status")!="available") return null
+    val a=data.optJSONArray("observations")
+    if(a!=null && a.length()>0) {
+        val rows=(0 until a.length()).mapNotNull{a.optJSONObject(it)}
+        return rows.firstOrNull{it.optString("measure")=="median"} ?:
+            rows.firstOrNull{it.optString("measure")=="median_hourly"} ?:
+            rows.firstOrNull{it.optString("measure")=="mean"} ?:
+            rows.firstOrNull{it.optString("measure")=="mean_hourly"} ?: rows.firstOrNull()
+    }
+    return data.takeIf{it.has("value")}
+}
+private fun groupObservation(data:JSONObject?):JSONObject? {
+    if(data?.optString("status")!="available") return null
+    preferredObservation(data)?.let{return it}
+    val values=data.optJSONObject("values") ?: return null
+    val keys=values.keys()
+    while(keys.hasNext()) {
+        val row=values.optJSONObject(keys.next())
+        if(row?.optString("status")=="available" && row.has("value")) return row
+    }
+    return null
+}
+private fun publicObservation(data:JSONObject):JSONObject? =
+    listOf("brazil_public_sector_entry","ireland_public_sector_entry","public_sector_entry")
+        .mapNotNull{data.optJSONObject(it)}.firstOrNull{it.optString("status")=="available"}
+private fun unitSuffix(unit:String,pt:Boolean)=when {
+    unit.contains("/hour") -> if(pt)" / h" else " / h"
+    unit.contains("/week") -> if(pt)" / sem" else " / wk"
+    unit.contains("/month") || unit.contains("monthly") -> if(pt)" / mês" else " / mo"
+    unit.contains("/year") || unit=="per_year" -> if(pt)" / ano" else " / yr"
+    else -> ""
+}
+private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONObject>):Pair<String,String>? {
+    if(row==null) return null
+    val value=row.optDouble("value",Double.NaN); val source=row.optString("currency")
+    if(!value.isFinite() || source.isBlank()) return null
+    val a=if(source=="EUR")1.0 else fx[source]?.optDouble("units_per_eur",Double.NaN)?:Double.NaN
+    val b=if(preferred=="EUR")1.0 else fx[preferred]?.optDouble("units_per_eur",Double.NaN)?:Double.NaN
+    if(source!=preferred && (!a.isFinite()||!b.isFinite()||a<=0||b<=0)) return null
+    val shown=if(source==preferred)value else value*b/a
+    val suffix=unitSuffix(row.optString("unit"),true)
+    val original=if(source==preferred) "" else number(value)+" "+source+suffix
+    return (number(shown)+" "+preferred+suffix) to original
+}
+@Composable private fun SalaryLegend(lang:String) {
+    Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
+        Caption(if(lang=="pt") "🟢 Profissão — observação oficial específica" else "🟢 Occupation — specific official observation")
+        Caption(if(lang=="pt") "🟡 Grupo — referência ocupacional ampla" else "🟡 Group — broad occupational reference")
+        Caption(if(lang=="pt") "🔵 Público — salário oficial de entrada" else "🔵 Public — official entry salary")
+    }
+}
+@Composable private fun SalaryLayer(title:String,row:JSONObject?,preferred:String,fx:Map<String,JSONObject>,tint:Color,lang:String) {
+    val converted=convertedSalary(row,preferred,fx)
+    Surface(color=tint.copy(alpha=.13f),shape=RoundedCornerShape(12.dp),modifier=Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(11.dp),verticalArrangement=Arrangement.spacedBy(3.dp)) {
+            Text(title,fontSize=11.sp,fontWeight=FontWeight.Bold,color=tint)
+            Text(converted?.first ?: "—",fontSize=17.sp,fontWeight=FontWeight.Bold)
+            if(!converted?.second.isNullOrBlank()) Caption((if(lang=="pt")"Original: " else "Original: ")+converted!!.second)
+            val period=row?.optString("reference_period")?.takeIf{it.isNotBlank()} ?: row?.optString("period").orEmpty()
+            if(period.isNotBlank()) Caption(period)
+        }
+    }
+}
+@Composable private fun GlobalSalaryCard(place:Place,data:JSONObject,lang:String,preferred:String,fx:Map<String,JSONObject>) {
+    val exact=preferredObservation(data.optJSONObject("national_occupation_wage"))
+    val group=groupObservation(data.optJSONObject("national_major_group_context"))
+    val public=publicObservation(data)
+    Card(shape=RoundedCornerShape(18.dp),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            Text(countryFlag(place.code)+" "+place.name,fontSize=17.sp,fontWeight=FontWeight.Bold)
+            SalaryLayer(if(lang=="pt")"🟢 Profissão" else "🟢 Occupation",exact,preferred,fx,Color(0xFF087B62),lang)
+            SalaryLayer(if(lang=="pt")"🟡 Grupo" else "🟡 Group",group,preferred,fx,Color(0xFF9A6A00),lang)
+            SalaryLayer(if(lang=="pt")"🔵 Setor público" else "🔵 Public sector",public,preferred,fx,Color(0xFF1769A6),lang)
+        }
+    }
+}
+
 @Composable private fun WageCard(data:JSONObject,lang:String,preferred:String,fx:Map<String,JSONObject>) {
     val c=data.optJSONObject("country")
     val code=c?.optString("code") ?: ""
