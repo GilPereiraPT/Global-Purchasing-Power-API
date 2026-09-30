@@ -147,7 +147,8 @@ def test_ireland_public_sector_entry_is_separate_from_national_wage():
         result = client.get("/v1/earnwage/overview?country=IE&occupation=nurse").json()
     entry = result["ireland_public_sector_entry"]
     assert entry["status"] == "available"
-    assert entry["value"] == 37788
+    assert entry["value"] == 38166
     assert entry["measure"] == "public_sector_entry_salary"
     assert entry["precision"] == "public_sector_entry"
+    assert entry["period"] == "2026-06-01"
     assert result["annual_presentation"].get("kind") != "public_sector_entry_salary"
