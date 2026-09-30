@@ -40,9 +40,9 @@ ENTRY={
  "auditor":{"value":42541,"label":"Trainee Auditor","grade_code":"C&AG-TRAINEE-AUDITOR-2026","period":"2026",
             "source":PUBLICJOBS_SOURCE,"source_url":PUBLICJOBS_AUDITOR_URL,
             "note":"Current 2026 public recruitment starting salary for Trainee Auditor."},
- "teacher":{"value":45379,"label":"Primary Teacher - new entrant","grade_code":"DEY-0004-2026","period":"2026-02-01",
+ "teacher":{"value":45833,"label":"Primary Teacher - new entrant","grade_code":"DEY-0055-2026","period":"2026-06-01",
             "source":EDUCATION_SOURCE,"source_url":EDUCATION_URL},
- "secondary_teacher":{"value":46948,"label":"Post-Primary Teacher - new entrant","grade_code":"DEY-0005-2026","period":"2026-02-01",
+ "secondary_teacher":{"value":47417,"label":"Post-Primary Teacher - new entrant","grade_code":"DEY-0056-2026","period":"2026-06-01",
                       "source":EDUCATION_SOURCE,"source_url":EDUCATION_URL},
 }
 
