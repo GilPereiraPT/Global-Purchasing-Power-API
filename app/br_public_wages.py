@@ -11,6 +11,11 @@ PERIOD = "2026-04"
 ENTRIES = {
     "auditor": (22921.71, "Auditor-Fiscal da Receita Federal do Brasil", "Segunda", "I"),
     "doctor": (9446.07, "Médico - jornada de 40 horas", "A", "I"),
+    "nurse": (2377.53, "Enfermeiro", "A", "I"),
+    "pharmacist": (2377.53, "Farmacêutico", "A", "I"),
+    "psychologist": (2377.53, "Psicólogo", "A", "I"),
+    "physiotherapist": (2377.53, "Fisioterapeuta", "A", "I"),
+    "dentist": (2377.53, "Odontólogo", "A", "I"),
     "architect": (5733.36, "Arquiteto", "A", "I"),
     "civil_engineer": (5733.36, "Engenheiro", "A", "I"),
     "mechanical_engineer": (5733.36, "Engenheiro", "A", "I"),
