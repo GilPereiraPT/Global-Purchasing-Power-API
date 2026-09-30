@@ -1,5 +1,5 @@
 name: Import Canada broad occupational groups
-# Parser refresh: importer now reports actual 2025 Canada NOC labels after filters.
+# Parser refresh: broad aggregates selected by official StatCan NOC bracket ranges.
 
 on:
   push:
