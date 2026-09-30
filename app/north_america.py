@@ -110,15 +110,14 @@ def canada_records(text):
     }
     if not required <= set(reader.fieldnames or []):
         raise ValueError("Unexpected official Canada wage CSV schema")
-    mapped = {f"NOC_{code}": (key, title) for key, (code, title) in CANADA_NOC.items()}
+    mapped = {}
+    for key, (noc, title) in CANADA_NOC.items():
+        mapped.setdefault(f"NOC_{noc}", []).append((key, title))
     count = 0
     for row in reader:
         code = row["NOC_CNP"]
         if code not in mapped or row["prov"] != "NAT" or row["ER_Code_Code_RE"] != "ER00":
             continue
-        key, expected = mapped[code]
-        if not row["NOC_Title_eng"].casefold().startswith(expected.casefold()):
-            raise ValueError(f"NOC title drift for {code}: {row['NOC_Title_eng']}")
         period = row["Reference_Period"]
         if not period or period.upper() in ("NA", "N/A"):
             continue
@@ -126,17 +125,20 @@ def canada_records(text):
         if flag not in ("0", "1"):
             continue
         unit = "CAD/year" if flag == "1" else "CAD/hour"
-        for measure, column in (
-            ("median", "Median_Wage_Salaire_Median"),
-            ("mean", "Average_Wage_Salaire_Moyen"),
-        ):
-            value = number(row[column])
-            if value is None:
-                continue
-            count += 1
-            yield ("CA", key, "national", f"NOC2021:{code.removeprefix('NOC_')}", row["NOC_Title_eng"],
-                   period, 2025, "CAD", measure, unit, value,
-                   CANADA_DATASET, CANADA_URL)
+        for key, expected in mapped[code]:
+            if not row["NOC_Title_eng"].casefold().startswith(expected.casefold()):
+                raise ValueError(f"NOC title drift for {code}: {row['NOC_Title_eng']}")
+            for measure, column in (
+                ("median", "Median_Wage_Salaire_Median"),
+                ("mean", "Average_Wage_Salaire_Moyen"),
+            ):
+                value = number(row[column])
+                if value is None:
+                    continue
+                count += 1
+                yield ("CA", key, "national", f"NOC2021:{code.removeprefix('NOC_')}", row["NOC_Title_eng"],
+                       period, 2025, "CAD", measure, unit, value,
+                       CANADA_DATASET, CANADA_URL)
     if count == 0:
         raise ValueError("No eligible national occupation wages in Canadian CSV")
 
