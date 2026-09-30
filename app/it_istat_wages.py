@@ -51,3 +51,8 @@ def occupation_wage(occupation):
             "cp2021":row["cp2021"],"source_label":row["label"],
             "source":EXCELSIOR_SOURCE,"source_url":EXCELSIOR_SOURCE_URL,
             "note":"Initial gross annual remuneration (RAL), not national mean salary. INPS data supplied within Sistema Informativo Professioni and published in Excelsior 2025."}
+
+
+def observed_coverage():
+    """Profession-level coverage only; broad CP2021 context is deliberately excluded."""
+    return {occupation: PERIOD for occupation in INITIAL_RAL}
