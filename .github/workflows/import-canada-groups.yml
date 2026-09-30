@@ -23,8 +23,8 @@ jobs:
       - name: Inspect official Statistics Canada schema
         run: |
           python - <<'PY'
-          import csv, io, zipfile
-          z=zipfile.ZipFile("$RUNNER_TEMP/statcan.zip")
+          import csv, io, os, zipfile
+          z=zipfile.ZipFile(os.path.join(os.environ["RUNNER_TEMP"], "statcan.zip"))
           names=[n for n in z.namelist() if n.lower().endswith(".csv") and "metadata" not in n.lower()]
           name=max(names,key=lambda n:z.getinfo(n).file_size)
           r=csv.DictReader(io.TextIOWrapper(z.open(name),encoding="utf-8-sig"))
