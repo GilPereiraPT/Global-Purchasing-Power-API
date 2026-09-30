@@ -15,6 +15,7 @@ from app import it_istat_wages as it_wages
 from app import ie_public_wages as ie_wages
 from app import ie_cso_groups as ie_groups
 from app import br_cbo
+from app import br_rais_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -107,6 +108,10 @@ def region_check(country, region):
 
 
 def wage_for(country, occupation):
+    if country == "BR":
+        official = br_rais_wages.wages(country, occupation)
+        if official.get("status") != "unavailable":
+            return official
     if country in ("US", "CA"):
         return na.wages(country, occupation)
     if country == "PT":
@@ -267,6 +272,8 @@ def coverage():
     observed.update({("FR", key): period for key, (_count, period) in fr_wages.observed_coverage().items()})
     observed.update({("NL", key): period for key, (_count, period) in nl_wages.observed_coverage().items()})
     observed.update({("IT", key): period for key, period in it_wages.observed_coverage().items()})
+
+    observed.update(br_rais_wages.observed_coverage())
 
     public_ie = ie_wages.public_sector_coverage()
     rows = []
