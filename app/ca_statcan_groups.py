@@ -59,6 +59,9 @@ def _metric(label):
 
 def build_snapshot(zip_path, year=YEAR):
     records = {}
+    filtered_titles = set()
+    year_rows = 0
+    canada_rows = 0
     with zipfile.ZipFile(zip_path) as archive:
         names = [n for n in archive.namelist() if n.lower().endswith(".csv")
                  and "metadata" not in n.lower()]
@@ -77,12 +80,17 @@ def build_snapshot(zip_path, year=YEAR):
             if not required.issubset(fields):
                 raise ValueError("Unexpected Statistics Canada table schema")
             for row in reader:
+                if row["REF_DATE"] == str(year):
+                    year_rows += 1
+                    if row["GEO"] == "Canada":
+                        canada_rows += 1
                 if (row["REF_DATE"] != str(year) or row["GEO"] != "Canada" or
                     row["Type of work"] != "Both full- and part-time employees" or
                     row["Gender"] != "Total - Gender" or
                     row["Age group"] != "15 years and over"):
                     continue
                 title = row[noc_col].strip()
+                filtered_titles.add(title)
                 # Table 14-10-0417-01 exposes the NOC hierarchy as labels,
                 # without the numeric NOC code. Match only the ten official
                 # broad-category labels so lower-level occupations cannot leak
@@ -117,7 +125,12 @@ def build_snapshot(zip_path, year=YEAR):
                 }
     missing = [g for g in BROAD if not any(k[0] == g for k in records)]
     if missing:
-        raise ValueError("Missing broad NOC categories: " + ",".join(missing))
+        sample = sorted(filtered_titles)[:80]
+        raise ValueError(
+            "Missing broad NOC categories: " + ",".join(missing) +
+            f"; year_rows={year_rows}; canada_rows={canada_rows}; " +
+            f"filtered_titles={sample!r}"
+        )
     observations = sorted(records.values(), key=lambda r:(r["noc2021_broad_category"], r["measure"]))
     return {"schema_version": 1, "source": SOURCE, "table": TABLE,
             "reference_period": str(year), "observations": observations}
