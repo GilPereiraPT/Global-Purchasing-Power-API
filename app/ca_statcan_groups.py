@@ -83,7 +83,13 @@ def build_snapshot(zip_path, year=YEAR):
                     row["Age group"] != "15 years and over"):
                     continue
                 title = row[noc_col].strip()
-                group = next((g for g, expected in BROAD.items() if title == expected), None)
+                # StatCan prefixes NOC hierarchy labels with their classification
+                # code (for example "0 Management occupations"). Select only the
+                # ten one-digit broad categories rather than depending on exact
+                # English label wording.
+                import re
+                match = re.match(r"^([0-9])(?:\\s|\\s*-\\s*)", title)
+                group = match.group(1) if match else None
                 metric = _metric(row["Wages"])
                 if group is None or metric is None:
                     continue
