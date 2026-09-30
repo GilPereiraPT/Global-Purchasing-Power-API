@@ -126,6 +126,10 @@ def wage_for(country, occupation):
         official = nl_wages.wages(country, occupation)
         if official.get("status") != "unavailable":
             return official
+    if country == "IT":
+        official = it_wages.occupation_wage(occupation)
+        if official.get("status") != "unavailable":
+            return official
     return ilostat_salary(country, occupation)
 
 
