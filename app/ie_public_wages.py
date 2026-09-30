@@ -20,6 +20,7 @@ ENTRY={
  "cook":{"value":42486,"label":"Chef II with qualification","grade_code":"4529","period":"2026-06-01",
          "note":"Closest qualified HSE cooking grade; the separate Cook, Trainee grade is not used."},
  "security_guard":{"value":36651,"label":"Security Guard","grade_code":"4106","period":"2026-06-01"},
+ "cleaner":{"value":35433,"label":"Cleaner","grade_code":"4113","period":"2026-06-01"},
  "administrative_assistant":{"value":31934,"label":"Clerical Officer Grade","grade_code":"0609","period":"2026-06-01",
                              "note":"Clerical Officer is used as the direct public-service clerical/administrative entry benchmark."},
  "auditor":{"value":42541,"label":"Trainee Auditor","grade_code":"C&AG-TRAINEE-AUDITOR-2026","period":"2026",
