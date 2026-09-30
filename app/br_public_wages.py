@@ -16,6 +16,8 @@ ENTRIES = {
     "psychologist": (2377.53, "Psicólogo", "A", "I"),
     "physiotherapist": (2377.53, "Fisioterapeuta", "A", "I"),
     "dentist": (2377.53, "Odontólogo", "A", "I"),
+    "manager": (2377.53, "Administrador", "A", "I"),
+    "administrative_assistant": (2182.59, "Agente Administrativo", "A", "I"),
     "architect": (5733.36, "Arquiteto", "A", "I"),
     "civil_engineer": (5733.36, "Engenheiro", "A", "I"),
     "mechanical_engineer": (5733.36, "Engenheiro", "A", "I"),
