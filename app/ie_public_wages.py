@@ -1,33 +1,51 @@
 """Irish public-sector entry salary benchmarks; not national occupation averages."""
-SOURCE="HSE, Consolidated Salary Scales, 1 February 2026"
-SOURCE_URL="https://assets.hse.ie/media/documents/February_2026_pay_scales.pdf"
-PERIOD="2026-02-01"
-ENTRY={
- "nurse":{"value":37788,"label":"Staff Nurse","grade_code":"2135"},
- "pharmacist":{"value":49985,"label":"Pharmacist","grade_code":"3247"},
- "physiotherapist":{"value":45063,"label":"Physiotherapist","grade_code":"314X"},
- "psychologist":{"value":62596,"label":"Psychologist, Clinical","grade_code":"3689"},
- "healthcare_assistant":{"value":36288,"label":"Health Care Assistant","grade_code":"6075"},
- "teacher":{"value":45379,"label":"Primary Teacher - new entrant","grade_code":"DEY-0004-2026"},
- "secondary_teacher":{"value":46948,"label":"Post-Primary Teacher - new entrant","grade_code":"DEY-0005-2026"},
- "dentist":{"value":74821,"label":"General Dental Surgeon","grade_code":"1597"},
- "doctor":{"value":46660,"label":"Intern","grade_code":"1554"},
- "electrician":{"value":42065,"label":"Electrician","grade_code":"5096"},
- "plumber":{"value":42065,"label":"Plumber","grade_code":"5134"},
- "cook":{"value":42065,"label":"Chef II with qualification","grade_code":"4529"},
-}
+HSE_SOURCE="HSE, Consolidated Salary Scales, 1 June 2026"
+HSE_URL="https://healthservice.hse.ie/documents/10686/1_June_2026_pay_scales.pdf"
 EDUCATION_SOURCE="Department of Education and Youth, Circulars 0004/2026 and 0005/2026"
 EDUCATION_URL="https://www.gov.ie/en/department-of-education/circulars/"
+PUBLICJOBS_SOURCE="PublicJobs.ie / Office of the Comptroller and Auditor General"
+PUBLICJOBS_AUDITOR_URL="https://www.publicjobs.ie/en/information-hub/latest-news-and-events/1125-now-open-trainee-auditor"
+
+ENTRY={
+ "nurse":{"value":38166,"label":"Staff Nurse","grade_code":"2135","period":"2026-06-01"},
+ "pharmacist":{"value":50485,"label":"Pharmacist","grade_code":"3247","period":"2026-06-01"},
+ "physiotherapist":{"value":45514,"label":"Physiotherapist","grade_code":"314X","period":"2026-06-01"},
+ "psychologist":{"value":63222,"label":"Psychologist, Clinical","grade_code":"3689","period":"2026-06-01"},
+ "healthcare_assistant":{"value":36651,"label":"Health Care Assistant","grade_code":"6075","period":"2026-06-01"},
+ "dentist":{"value":75569,"label":"General Dental Surgeon","grade_code":"1597","period":"2026-06-01"},
+ "doctor":{"value":47127,"label":"Intern","grade_code":"1554","period":"2026-06-01",
+           "note":"Intern is used as the first HSE medical career entry point; it is not an experienced-doctor salary."},
+ "electrician":{"value":42486,"label":"Electrician","grade_code":"5096","period":"2026-06-01"},
+ "plumber":{"value":42486,"label":"Plumber","grade_code":"5134","period":"2026-06-01"},
+ "cook":{"value":42486,"label":"Chef II with qualification","grade_code":"4529","period":"2026-06-01",
+         "note":"Closest qualified HSE cooking grade; the separate Cook, Trainee grade is not used."},
+ "security_guard":{"value":36651,"label":"Security Guard","grade_code":"4106","period":"2026-06-01"},
+ "administrative_assistant":{"value":31934,"label":"Clerical Officer Grade","grade_code":"0609","period":"2026-06-01",
+                             "note":"Clerical Officer is used as the direct public-service clerical/administrative entry benchmark."},
+ "auditor":{"value":42541,"label":"Trainee Auditor","grade_code":"C&AG-TRAINEE-AUDITOR-2026","period":"2026",
+            "source":PUBLICJOBS_SOURCE,"source_url":PUBLICJOBS_AUDITOR_URL,
+            "note":"Current 2026 public recruitment starting salary for Trainee Auditor."},
+ "teacher":{"value":45379,"label":"Primary Teacher - new entrant","grade_code":"DEY-0004-2026","period":"2026-02-01",
+            "source":EDUCATION_SOURCE,"source_url":EDUCATION_URL},
+ "secondary_teacher":{"value":46948,"label":"Post-Primary Teacher - new entrant","grade_code":"DEY-0005-2026","period":"2026-02-01",
+                      "source":EDUCATION_SOURCE,"source_url":EDUCATION_URL},
+}
 
 def wage(occupation):
  row=ENTRY.get(occupation)
  if not row:
-  return {"status":"unavailable","country":"IE","occupation":occupation,"precision":"public_sector_entry","reason":"No direct Irish public-sector entry scale mapped for this occupation"}
- source = EDUCATION_SOURCE if occupation in ("teacher","secondary_teacher") else SOURCE
- source_url = EDUCATION_URL if occupation in ("teacher","secondary_teacher") else SOURCE_URL
- return {"status":"available","country":"IE","occupation":occupation,"period":PERIOD,"value":row["value"],"currency":"EUR","unit":"gross/year","measure":"public_sector_entry_salary","precision":"public_sector_entry","source_label":row["label"],"grade_code":row["grade_code"],"source":source,"source_url":source_url,"note":"Official Irish public-sector entry point. This is not a national occupation mean or median."}
+  return {"status":"unavailable","country":"IE","occupation":occupation,"precision":"public_sector_entry",
+          "reason":"No direct Irish public-sector entry scale mapped for this occupation"}
+ source=row.get("source",HSE_SOURCE)
+ source_url=row.get("source_url",HSE_URL)
+ note=row.get("note","Official Irish public-sector entry point. This is not a national occupation mean or median.")
+ return {"status":"available","country":"IE","occupation":occupation,"period":row["period"],"value":row["value"],
+         "currency":"EUR","unit":"gross/year","measure":"public_sector_entry_salary",
+         "precision":"public_sector_entry","source_label":row["label"],"grade_code":row["grade_code"],
+         "source":source,"source_url":source_url,"note":note}
+
 def public_sector_coverage():
- return {occupation: PERIOD for occupation in ENTRY}
+ return {occupation: row["period"] for occupation,row in ENTRY.items()}
 
 # Backward-compatible alias; entries are public-sector benchmarks, not observed national wages.
 def observed_coverage():
