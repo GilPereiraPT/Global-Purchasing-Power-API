@@ -18,6 +18,11 @@ POPULATION = "active formal employment links on 31/12/2025, contracted 40-44 hou
 # occupation: (median BRL/month, employment links, evidence slug)
 OBSERVATIONS = {
     "accountant": (5749, 145518, "contador"),
+    "financial_analyst": (5003, 79895, "analista-financeiro-instituicoes-financeiras"),
+    "teacher": (5560, 414687, "professor-de-nivel-superior-do-ensino-fundamental-primeira-a-quarta-serie"),
+    "preschool_teacher": (4985, 88125, "professor-de-nivel-superior-na-educacao-infantil-quatro-a-seis-anos"),
+    "warehouse_operator": (2113, 167148, "armazenista"),
+    "agricultural_worker": (2103, 309909, "trabalhador-agropecuario-em-geral"),
     "auditor": (12612, 31392, "auditor-contadores-e-afins"),
     "doctor": (13201, 67274, "medico-clinico"),
     "nurse": (6195, 236101, "enfermeiro"),
