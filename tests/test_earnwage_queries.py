@@ -140,3 +140,14 @@ def test_occupation_specific_annual_salary_still_visible_when_verified():
     assert result["annual_presentation"]["status"] == "available"
     assert result["salary_display"]["status"] == "available"
     assert result["salary_display"]["source"] == "exact_occupation"
+
+
+def test_ireland_public_sector_entry_is_separate_from_national_wage():
+    with TestClient(app) as client:
+        result = client.get("/v1/earnwage/overview?country=IE&occupation=nurse").json()
+    entry = result["ireland_public_sector_entry"]
+    assert entry["status"] == "available"
+    assert entry["value"] == 37788
+    assert entry["measure"] == "public_sector_entry_salary"
+    assert entry["precision"] == "public_sector_entry"
+    assert result["annual_presentation"].get("kind") != "public_sector_entry_salary"
