@@ -20,6 +20,27 @@ jobs:
           python-version: '3.12'
       - name: Download official Statistics Canada table
         run: curl --fail --location --retry 3 -o "$RUNNER_TEMP/statcan.zip" "https://www150.statcan.gc.ca/n1/en/tbl/csv/14100417-eng.zip"
+      - name: Inspect official Statistics Canada schema
+        run: |
+          python - <<'PY'
+          import csv, io, zipfile
+          z=zipfile.ZipFile("$RUNNER_TEMP/statcan.zip")
+          names=[n for n in z.namelist() if n.lower().endswith(".csv") and "metadata" not in n.lower()]
+          name=max(names,key=lambda n:z.getinfo(n).file_size)
+          r=csv.DictReader(io.TextIOWrapper(z.open(name),encoding="utf-8-sig"))
+          print("FIELDS:", r.fieldnames)
+          seen={k:set() for k in ["REF_DATE","GEO","Wages","Type of work","Gender","Age group"]}
+          noc=next((x for x in r.fieldnames if x.startswith("National Occupational Classification")),None)
+          samples=[]
+          for i,row in enumerate(r):
+            for k in seen:
+              if len(seen[k])<12: seen[k].add(row.get(k,""))
+            if noc and len(samples)<20 and row.get("REF_DATE")=="2025":
+              samples.append(row.get(noc,""))
+            if i>200000: break
+          print("VALUES:", {k:sorted(v) for k,v in seen.items()})
+          print("NOC SAMPLES:", samples)
+          PY
       - name: Build and validate broad NOC snapshot
         run: |
           python -m app.ca_statcan_groups "$RUNNER_TEMP/statcan.zip"
