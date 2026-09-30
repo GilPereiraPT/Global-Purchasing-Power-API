@@ -46,13 +46,13 @@ def occupation_groups():
 
 def _metric(label):
     value = label.strip().lower()
-    if "average" in value and "hourly" in value and "wage" in value:
+    if value == "average hourly wage rate":
         return "mean_hourly"
-    if "median" in value and "hourly" in value and "wage" in value:
+    if value == "median hourly wage rate":
         return "median_hourly"
-    if "average" in value and "weekly" in value and "wage" in value:
+    if value == "average weekly wage rate":
         return "mean_weekly"
-    if "median" in value and "weekly" in value and "wage" in value:
+    if value == "median weekly wage rate":
         return "median_weekly"
     return None
 
@@ -88,7 +88,9 @@ def build_snapshot(zip_path, year=YEAR):
                 # ten one-digit broad categories rather than depending on exact
                 # English label wording.
                 import re
-                match = re.match(r"^([0-9])(?:\\s|\\s*-\\s*)", title)
+                # Broad categories can be rendered as "0 Management..." or
+                # "0 - Management..." depending on the table vintage.
+                match = re.match(r"^([0-9])(?:\\s+|\\s*-\\s*)", title)
                 group = match.group(1) if match else None
                 metric = _metric(row["Wages"])
                 if group is None or metric is None:
