@@ -891,6 +891,21 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
     val code=c?.optString("code") ?: ""
     val name=c?.optString("name") ?: code
     RegionalWageCard(data,lang)
+    if(code=="IN") {
+        val plfs=data.optJSONObject("india_plfs_employee_earnings_context")
+        if(plfs?.optString("status")=="available") {
+            val monthly=plfs.optDouble("national_average",Double.NaN)
+            if(monthly.isFinite() && monthly>0) {
+                Metric(
+                    if(lang=="pt") "Índia · contexto nacional PLFS" else "India · national PLFS context",
+                    money(monthly,"INR")+(if(lang=="pt") " / mês" else " / month"),
+                    if(lang=="pt")
+                        "Média de todos os trabalhadores assalariados regulares (2025). Não representa o salário desta profissão nem o salário líquido."
+                    else "Average for all regular wage/salaried workers (2025). Not this occupation's pay or take-home income."
+                )
+            }
+        }
+    }
     val annual=data.optJSONObject("annual_presentation")
     if(annual?.optString("status")!="available") {
         val group = data.optJSONObject("national_major_group_context")
