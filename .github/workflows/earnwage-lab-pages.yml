@@ -26,12 +26,14 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-          text = Path("docs/index.html").read_text(encoding="utf-8")
-          blocks = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", text)
-          assert blocks, "No inline API Lab script found"
-          Path("/tmp/earnwage-lab.js").write_text("\n".join(blocks), encoding="utf-8")
+          for filename in ("index", "india"):
+              text = Path(f"docs/{filename}.html").read_text(encoding="utf-8")
+              blocks = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", text)
+              assert blocks, f"No inline script in {filename}.html"
+              Path(f"/tmp/earnwage-{filename}.js").write_text("\n".join(blocks), encoding="utf-8")
           PY
-          node --check /tmp/earnwage-lab.js
+          node --check /tmp/earnwage-index.js
+          node --check /tmp/earnwage-india.js
       - uses: actions/configure-pages@v5
         with:
           enablement: true
