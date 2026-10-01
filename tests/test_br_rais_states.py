@@ -1,11 +1,12 @@
 """Brazil 2025 regional RAIS: source-specific CBO/UF observations only."""
 from fastapi.testclient import TestClient
 
-from app.br_rais_states import coverage, wage
+from app.br_rais_states import coverage, wage, load
 from app.main import app
 
 
 def test_2025_brazil_state_import_and_provenance():
+    assert load() == 993
     c = coverage()
     assert c["status"] == "available"
     assert c["observed_occupations"] == 38
