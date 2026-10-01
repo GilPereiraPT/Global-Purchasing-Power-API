@@ -425,6 +425,9 @@ def coverage():
             "observed_occupations": exact_count,
             "group_context_occupations": group_count,
             "public_sector_entry_occupations": public_count,
+            "public_sector_direct_career_occupations": len(pt_public_wages.DIRECT) if code == "PT" else None,
+            "public_sector_conditional_career_occupations": len(pt_public_wages.CONDITIONAL) if code == "PT" else None,
+            "group_context_precision": "isco08_major_group_context_not_specific_job",
             "possible_occupations": len(OCCUPATIONS),
             "regional_salary_coverage": regional_salary_coverage(code),
             "status": "partial" if (exact_count or group_count or public_count) else "unavailable",
@@ -435,5 +438,5 @@ def coverage():
         "observed_pairs": len(observed),
         "layers": ["observed_occupation", "observed_group", "public_sector_entry"],
         "by_country": rows,
-        "note": "The three layers are independent. Group and public-sector values never count as exact occupation observations.",
+        "note": "Observed profession wages, broad-group context and public entry are independent. PT public-entry benchmarks split into direct versus conditional career matches and never inflate exact national wage coverage.",
     }
