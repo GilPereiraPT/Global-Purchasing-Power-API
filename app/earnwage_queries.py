@@ -5,6 +5,7 @@ They do not trigger Remotive, Eurostat or ECB traffic on every screen render.
 """
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
+from app import in_plfs
 from app import ca_province_wages as ca_province
 from app import pt_occupation_wages as pt_wages
 from app import uk_ashe_wages as uk_wages
@@ -224,6 +225,8 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     else:
         warnings.append("No matching verified occupational observation; no wage has been inferred.")
     warnings.append("Broad occupational-group earnings are contextual only, not the selected profession's salary or a substitute for missing exact wages.")
+    if code == "IN":
+        warnings.append("PLFS 2025 employee earnings are all-occupation context only, not a wage for the selected occupation or state.")
     warnings.append("Cost-of-living basket and net purchasing-power comparison are not yet available.")
     return {
         "country": {"code": code, "name": selected["name"],
@@ -238,6 +241,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                      state_wage_income_tax(region, tax_year, annual_gross).get("status") == "partial_components"
                      else "not_implemented" if code in ("US","CA") else "not_applicable")},
         "national_occupation_wage": wage,
+        "india_plfs_employee_earnings_context": (in_plfs.earnings() if code == "IN" else {"status": "not_applicable"}),
         "regional_occupation_wage": regional_wage,
         "national_major_group_context": group_context,
         "swiss_ch_isco19_submajor_context": swiss_context,
