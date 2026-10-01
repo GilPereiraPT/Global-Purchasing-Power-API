@@ -362,6 +362,56 @@ def wages(soc: str, state: str | None = None, area: str | None = None, year: int
     }
 
 
+def curated_national(soc: str):
+    """Return the latest national cross-industry detailed row for one SOC code."""
+    if not re.fullmatch(r"\d{2}-\d{4}", soc):
+        raise ValueError("Invalid SOC code")
+    with connect() as db:
+        init(db)
+        row = db.execute(
+            f"""SELECT {','.join(DB_COLUMNS)} FROM us_oews
+                WHERE occ_code=? AND o_group='detailed'
+                  AND (area IN ('99','99.0') OR area_title='U.S.')
+                  AND (naics IN ('000000','0','') OR naics_title IN ('Cross-industry','All Industries',''))
+                ORDER BY published_year DESC LIMIT 1""",
+            (soc,),
+        ).fetchone()
+    return dict(zip(DB_COLUMNS, row)) if row else None
+
+
+def curated_wage_observations(soc: str):
+    """Convert one OEWS national row to the stable EarnWage observation shape."""
+    row = curated_national(soc)
+    if not row:
+        return []
+    result = []
+    for measure, annual, hourly in (
+        ("mean", "a_mean", "h_mean"),
+        ("median", "a_median", "h_median"),
+    ):
+        value = row.get(annual)
+        unit = "USD/year"
+        if value is None:
+            value = row.get(hourly)
+            unit = "USD/hour"
+        if value is None:
+            continue
+        result.append({
+            "geography": "national",
+            "classification": f"SOC2018:{soc}",
+            "job_title": row["occ_title"],
+            "reference_period": row["reference_period"],
+            "published_year": row["published_year"],
+            "currency": "USD",
+            "measure": measure,
+            "unit": unit,
+            "value": value,
+            "source": f"BLS {row['reference_period']} OEWS national",
+            "source_url": row["source_url"],
+        })
+    return result
+
+
 def coverage():
     with connect() as db:
         init(db)
