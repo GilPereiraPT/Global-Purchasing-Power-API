@@ -187,20 +187,31 @@ DB_COLUMNS = (
 
 
 def persist(records: Iterable[dict], replace_year: int | None = None) -> int:
-    rows = list(records)
-    if not rows:
+    """Stream normalized OEWS rows into SQLite without retaining the release in RAM."""
+    iterator = iter(records)
+    try:
+        first = next(iterator)
+    except StopIteration:
         raise ValueError("No OEWS observations; refusing empty import")
     with connect() as db:
         init(db)
         if replace_year is not None:
             db.execute("DELETE FROM us_oews WHERE published_year=?", (replace_year,))
         placeholders = ",".join("?" for _ in DB_COLUMNS)
-        db.executemany(
-            f"INSERT OR REPLACE INTO us_oews ({','.join(DB_COLUMNS)}) VALUES ({placeholders})",
-            [tuple(row.get(column) for column in DB_COLUMNS) for row in rows],
-        )
+        sql = f"INSERT OR REPLACE INTO us_oews ({','.join(DB_COLUMNS)}) VALUES ({placeholders})"
+        count = 0
+        batch = []
+        for row in (item for pair in ((first,), iterator) for item in pair):
+            batch.append(tuple(row.get(column) for column in DB_COLUMNS))
+            if len(batch) >= 5000:
+                db.executemany(sql, batch)
+                count += len(batch)
+                batch.clear()
+        if batch:
+            db.executemany(sql, batch)
+            count += len(batch)
         db.commit()
-    return len(rows)
+    return count
 
 
 def _safe_zip_members(zf: zipfile.ZipFile):
@@ -219,12 +230,13 @@ def _safe_zip_members(zf: zipfile.ZipFile):
 
 
 def import_zip(path: str | Path, year: int = DEFAULT_YEAR, replace_year: bool = True) -> dict:
-    """Import all compatible XLSX members from the official OEWS All-data ZIP."""
+    """Import every compatible XLSX member from the official OEWS All-data ZIP."""
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(path)
-    all_records = []
     imported_files = []
+    count = 0
+    replaced = False
     with zipfile.ZipFile(path) as zf, tempfile.TemporaryDirectory(prefix="earnwage-oews-") as tmp:
         members = list(_safe_zip_members(zf))
         if not members:
@@ -234,14 +246,18 @@ def import_zip(path: str | Path, year: int = DEFAULT_YEAR, replace_year: bool = 
             with zf.open(info) as src, target.open("wb") as dst:
                 while chunk := src.read(1024 * 1024):
                     dst.write(chunk)
+            records = workbook_records(target, year)
             try:
-                records = list(workbook_records(target, year))
-            except ValueError:
-                continue
-            if records:
-                all_records.extend(records)
-                imported_files.append(info.filename)
-    count = persist(all_records, year if replace_year else None)
+                imported = persist(records, year if replace_year and not replaced else None)
+            except ValueError as exc:
+                if "No compatible detailed OEWS rows" in str(exc) or "No OEWS observations" in str(exc):
+                    continue
+                raise
+            count += imported
+            replaced = replaced or replace_year
+            imported_files.append(info.filename)
+    if count == 0:
+        raise ValueError("No compatible OEWS workbooks found in ZIP")
     return {
         "status": "imported",
         "published_year": year,
