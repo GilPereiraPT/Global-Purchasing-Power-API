@@ -73,3 +73,34 @@ def test_pt_public_web_snapshot_has_exactly_the_documented_source_mappings():
     assert 'fetch("./data/pt-public-entry-2026.json"' in page
     assert 'href="./portugal.html?occupation=nurse"' in main
     assert "não são uma média salarial portuguesa" in page.lower()
+
+def test_pt_40_profession_audit_reports_missing_without_imputation():
+    from app.pt_public_wages import occupation_matrix
+    matrix = occupation_matrix()
+    assert matrix["total_occupations"] == 40
+    assert matrix["public_benchmarks"] == 18
+    assert matrix["direct_public_career"] == 4
+    assert matrix["conditional_comparable_public_career"] == 14
+    assert sum(r["public_benchmark_status"] == "unavailable" for r in matrix["rows"]) == 22
+    rows = {r["occupation"]: r for r in matrix["rows"]}
+    assert rows["nurse"]["mapping_precision"] == "direct_public_career"
+    assert rows["nurse"]["value"] == 1657.04
+    assert rows["software_developer"]["mapping_precision"] == "conditional_comparable_public_career"
+    assert rows["truck_driver"]["value"] is None
+    with TestClient(app) as client:
+        response = client.get("/v1/pt/public-sector/occupations")
+        assert response.status_code == 200
+        assert response.json()["rows"] == matrix["rows"]
+
+
+def test_pt_coverage_table_explains_public_career_vs_broad_group():
+    from app.catalog import OCCUPATIONS
+    catalog = json.loads((ROOT / "docs/data/pt-coverage-40.json").read_text(encoding="utf8"))
+    assert catalog["schema"] == 1
+    assert catalog["jobs"] == [[row["id"], row["translations"]["pt"]] for row in OCCUPATIONS]
+    webpage = (ROOT / "docs/index.html").read_text(encoding="utf8")
+    assert 'id="portugalCoverageDetail"' in webpage or 'host.id="portugalCoverageDetail"' in webpage
+    assert 'getPortugalSnapshot()' in webpage
+    assert 'fetch("./data/pt-coverage-40.json"' in webpage
+    assert 'Grupo ISCO (não é salário da profissão)' in webpage
+    assert 'x.public_sector_direct_career_occupations' in webpage
