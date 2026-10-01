@@ -104,6 +104,29 @@ def context(occupation, state=None):
 
 
 def coverage():
+    # Count only imported, disclosure-safe *group* observations, never national
+    # figures copied to States and never exact occupation-specific coverage.
+    from app.store import connect
+    from app.in_plfs_microdata import init
+    from app.client_config import REGIONS
+    with connect() as db:
+        init(db)
+        rows = db.execute("""SELECT DISTINCT nco_code, state_code FROM in_plfs_nco_wages
+                              WHERE scope='state' AND state_code<>''""").fetchall()
+    by_state_groups = {}
+    for code, state in rows:
+        by_state_groups.setdefault(state, set()).add(code)
+    by_state = []
+    for code, name in REGIONS["IN"]["options"]:
+        group_codes = by_state_groups.get(code, set())
+        matched_jobs = sorted(job for job, (nco, _) in CONTEXT.items()
+                              if nco in group_codes)
+        by_state.append({"code": code, "name": name,
+                         "group_observations": len(group_codes),
+                         "mapped_professions_with_group_context": len(matched_jobs),
+                         "total_professions": len(ALL_JOBS),
+                         "precision": "broad_nco2015_three_digit_group",
+                         "exact_occupation_wages": 0})
     available = {}
     for occupation in sorted(ALL_JOBS):
         try:
@@ -124,6 +147,7 @@ def coverage():
         ),
         "exact_occupation_wages_from_this_mapping": 0,
         "underlying_nco_coverage": nco_coverage(),
+        "regional_nco_group_coverage": {"regions_listed": len(by_state), "by_state": by_state},
         "by_occupation": available,
         "note": (
             "Broad group data and exact profession salaries have different "
