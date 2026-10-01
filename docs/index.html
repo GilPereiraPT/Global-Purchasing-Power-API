@@ -40,6 +40,7 @@ function syncYears(){for(const opt of $("end").options)opt.disabled=+opt.value<+
 syncYears();
 function apiBase(){const u=new URL($("base").value.trim());if(u.protocol!=="https:"&&u.hostname!=="localhost")throw Error("A API tem de usar HTTPS.");return u.origin+u.pathname.replace(/\/$/,"")}
 function updateDirectLinks(){try{const base=apiBase();$("directHealth").href=base+"/v1/health";$("directCountries").href=base+"/v1/countries"}catch{}}$("base").addEventListener("input",updateDirectLinks);updateDirectLinks();
+const brazilUF=[["AC","Acre"],["AL","Alagoas"],["AP","Amapá"],["AM","Amazonas"],["BA","Bahia"],["CE","Ceará"],["DF","Distrito Federal"],["ES","Espírito Santo"],["GO","Goiás"],["MA","Maranhão"],["MT","Mato Grosso"],["MS","Mato Grosso do Sul"],["MG","Minas Gerais"],["PA","Pará"],["PB","Paraíba"],["PR","Paraná"],["PE","Pernambuco"],["PI","Piauí"],["RJ","Rio de Janeiro"],["RN","Rio Grande do Norte"],["RS","Rio Grande do Sul"],["RO","Rondônia"],["RR","Roraima"],["SC","Santa Catarina"],["SP","São Paulo"],["SE","Sergipe"],["TO","Tocantins"]];
 async function updateRegions(countryId,regionId,boxId){
     const country=$(countryId).value;
     const box=$(boxId),select=$(regionId);
@@ -53,10 +54,12 @@ async function updateRegions(countryId,regionId,boxId){
       const payload=await response.json();
       for(const item of payload.options||[])select.add(new Option(item.name,item.code));
       if(country==="IN"&&select.options.length===1){const snap=await getIndiaSnapshot();for(const [id,name] of indiaStateOptions(snap))select.add(new Option(name,id))}
+      if(country==="BR"&&select.options.length===1)for(const [id,name] of brazilUF)select.add(new Option(name,id));
 
     }catch(error){
       console.warn("Opções regionais indisponíveis",error);
       if(country==="IN")try{const snap=await getIndiaSnapshot();for(const [id,name] of indiaStateOptions(snap))select.add(new Option(name,id))}catch(e){console.warn("Sem lista estática da Índia",e)}
+      if(country==="BR")for(const [id,name] of brazilUF)select.add(new Option(name,id));
 
     }
   if(country==="IN")renderIndiaMain();
