@@ -60,7 +60,48 @@ $("load").onclick=async()=>{try{const [countries,occupations]=await Promise.all(
 $("lang").onchange=()=>$("load").click();
 $("copy").onclick=()=>navigator.clipboard.writeText(lastJSON).catch(()=>alert("Cópia indisponível neste navegador."));
 $("download").onclick=()=>{const blob=new Blob([lastJSON],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="earnwage-api-response.json";a.click();URL.revokeObjectURL(u)};
-function coverageTable(data){const table=document.createElement("table"),head=document.createElement("tr");for(const name of ["País","🟢 Profissão","🟡 Grupo","🔵 Entrada FP","Total","Estado"]){const th=document.createElement("th");th.textContent=name;head.append(th)}table.append(head);for(const x of data.by_country||[]){const tr=document.createElement("tr");for(const val of [x.code,x.observed_occupations,x.group_context_occupations??0,x.public_sector_entry_occupations??0,x.possible_occupations,x.status]){const td=document.createElement("td");td.textContent=String(val);tr.append(td)}table.append(tr)}$("coverageTable").replaceChildren(table);$("coverageSummary").textContent="Cobertura independente: profissão específica · grupo oficial · entrada na função pública. Nenhuma camada substitui outra.";}
+function coverageTable(data){
+  const table=document.createElement("table"),head=document.createElement("tr");
+  for(const name of ["País","🟢 Profissão nacional","📍 Profissões regionais","📍 Regiões com dados","📍 Profissão × região","🟡 Grupo","🔵 Entrada FP","Total","Estado"]){
+    const th=document.createElement("th");th.textContent=name;head.append(th);
+  }
+  table.append(head);
+  for(const x of data.by_country||[]){
+    const r=x.regional_salary_coverage||{}, regional=["US","CA"].includes(x.code);
+    const tr=document.createElement("tr");
+    const vals=[
+      x.code,x.observed_occupations,
+      regional?(r.observed_occupations??"—"):"—",
+      regional?(String(r.regions_with_data??0)+"/"+String(r.possible_regions??0)):"—",
+      regional?(String(r.observed_occupation_region_pairs??0)+"/"+String(r.possible_occupation_region_pairs??0)):"—",
+      x.group_context_occupations??0,x.public_sector_entry_occupations??0,
+      x.possible_occupations,x.status
+    ];
+    for(const value of vals){const td=document.createElement("td");td.textContent=String(value);tr.append(td)}
+    table.append(tr);
+  }
+  const summary=document.createElement("p");
+  summary.textContent="Cobertura regional contabiliza apenas salários oficiais específicos por profissão e Estado/província, efetivamente presentes na BD. Não inclui médias nacionais nem grupos profissionais.";
+  const regionalTable=document.createElement("table");
+  const regionalHead=document.createElement("tr");
+  for(const label of ["País","Estado / província","Profissões específicas","Total"]){
+    const th=document.createElement("th");th.textContent=label;regionalHead.append(th);
+  }
+  regionalTable.append(regionalHead);
+  for(const row of data.by_country||[]){
+    if(!["US","CA"].includes(row.code))continue;
+    for(const region of row.regional_salary_coverage?.by_region||[]){
+      const tr=document.createElement("tr");
+      for(const value of [row.code,region.name,region.observed_occupations,region.possible_occupations]){
+        const td=document.createElement("td");td.textContent=String(value);tr.append(td);
+      }
+      regionalTable.append(tr);
+    }
+  }
+  const heading=document.createElement("h3");heading.textContent="Detalhe por Estado / província";
+  $("coverageTable").replaceChildren(table,summary,heading,regionalTable);
+  $("coverageSummary").textContent="Cobertura nacional e regional independente · Nenhuma média de grupo substitui o salário específico.";
+}
 $("groupRun").onclick=()=>execute("/v1/salaries/groups/"+encodeURIComponent($("country").value)+"/"+encodeURIComponent($("group").value));
 $("groupAudit").onclick=async()=>{try{const r=await request("/v1/salaries/groups/coverage");show(String(r.status),r.data,r.url,r.ms);if(r.status!==200)throw Error("HTTP "+r.status+". Atualiza app/native_wsgi.py no cPanel e reinicia a aplicação.");$("groupSummary").textContent=r.data.observations+" observações históricas · "+r.data.observed_pairs+" / "+r.data.possible_pairs+" pares país/grupo com moeda local";const table=document.createElement("table"),head=document.createElement("tr");for(const v of ["País","Grupos com dados","Total"]){const th=document.createElement("th");th.textContent=v;head.append(th)}table.append(head);for(const row of r.data.by_country||[]){const tr=document.createElement("tr");for(const v of [row.code,row.observed_groups,row.possible_groups]){const td=document.createElement("td");td.textContent=String(v);tr.append(td)}table.append(tr)}$("groupTable").replaceChildren(table)}catch(e){$("groupSummary").textContent="Cobertura de grupos indisponível: "+e.message}};
 $("audit").onclick=async()=>{try{const r=await request("/v1/earnwage/coverage");show(String(r.status),r.data,r.url,r.ms);if(r.status===200&&Array.isArray(r.data.by_country))coverageTable(r.data);else $("coverageSummary").textContent="A API não devolveu cobertura válida (HTTP "+r.status+")."}catch(e){$("coverageSummary").textContent="Erro: "+e.message}};
