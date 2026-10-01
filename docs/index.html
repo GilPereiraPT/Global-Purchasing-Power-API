@@ -277,7 +277,7 @@ $("copy").onclick=()=>navigator.clipboard.writeText(lastJSON).catch(()=>alert("C
 $("download").onclick=()=>{const blob=new Blob([lastJSON],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="earnwage-api-response.json";a.click();URL.revokeObjectURL(u)};
 function coverageTable(data){
   const table=document.createElement("table"),head=document.createElement("tr");
-  for(const name of ["País","🟢 Profissão nacional","📍 Profissões regionais","📍 Regiões com dados","📍 Profissão × região","🟡 Grupo","🔵 Entrada FP","Total","Estado"]){
+  for(const name of ["País","🟢 Profissão nacional","📍 Profissões regionais","📍 Regiões com dados","📍 Profissão × região","🟡 Grupo ISCO (não é salário da profissão)","🔵 Entrada FP (referência)","Total","Estado"]){
     const th=document.createElement("th");th.textContent=name;head.append(th);
   }
   table.append(head);
@@ -289,14 +289,14 @@ function coverageTable(data){
       regional?(r.observed_occupations??"—"):"—",
       regional?(String(r.regions_with_data??0)+"/"+String(r.possible_regions??0)):"—",
       regional?(String(r.observed_occupation_region_pairs??0)+"/"+String(r.possible_occupation_region_pairs??0)):"—",
-      x.group_context_occupations??0,x.public_sector_entry_occupations??0,
+      x.group_context_occupations??0,x.code==="PT"?`${x.public_sector_entry_occupations??0} (${x.public_sector_direct_career_occupations??4} diretas; ${x.public_sector_conditional_career_occupations??14} condicionais)`:(x.public_sector_entry_occupations??0),
       x.possible_occupations,x.status
     ];
     for(const value of vals){const td=document.createElement("td");td.textContent=String(value);tr.append(td)}
     table.append(tr);
   }
   const summary=document.createElement("p");
-  summary.textContent="Cobertura regional contabiliza apenas salários oficiais específicos por profissão e Estado/província, efetivamente presentes na BD. Não inclui médias nacionais nem grupos profissionais.";
+  summary.textContent="🟢 = profissão específica com observação nacional. 🟡 = dados do grupo ISCO, nunca equivalem a salários específicos das 40 profissões. 🔵 = remuneração publicada de entrada na função pública (em PT: correspondência direta ou comparador condicionado à carreira). A cobertura regional só contabiliza combinações com observação própria.";
   const regionalTable=document.createElement("table");
   const regionalHead=document.createElement("tr");
   for(const label of ["País","Estado / província","Profissões específicas","Total"]){
@@ -315,9 +315,35 @@ function coverageTable(data){
   }
   const heading=document.createElement("h3");heading.textContent="Detalhe por Estado / província";
   $("coverageTable").replaceChildren(table,summary,heading,regionalTable);
+  renderPortugalCoverageDetail();
   $("coverageSummary").textContent="Cobertura nacional e regional independente · Nenhuma média de grupo substitui o salário específico.";
 }
 
+async function renderPortugalCoverageDetail(){
+ let host=$("portugalCoverageDetail");
+ if(!host){host=document.createElement("div");host.id="portugalCoverageDetail";$("coverageTable").after(host)}
+ host.replaceChildren();
+ const heading=document.createElement("h3");heading.textContent="Portugal · cobertura profissão a profissão";
+ const explanation=document.createElement("p");
+ explanation.className="muted";
+ explanation.textContent="Auditoria independente da API de produção: 40 profissões do catálogo, separando carreiras diretamente correspondentes, comparadores condicionais e profissões sem referência pública. As referências não contam como médias nacionais.";
+ host.append(heading,explanation);
+ try{
+  const snap=await getPortugalSnapshot();
+  const labels={"direct":"Carreira pública diretamente correspondente","conditional":"Comparação condicional à carreira"};
+  const byJob=new Map(snap.occupations.map(x=>[x[0],x]));
+  const occupations=await fetch("./data/pt-coverage-40.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()});
+  if(occupations.schema!==1||occupations.jobs?.length!==40)throw Error("Catálogo português inesperado");
+  const t=document.createElement("table"),head=document.createElement("tr");
+  for(const label of ["Profissão","Referência FP 2026","Valor mensal base","Carreira / condição"]){const th=document.createElement("th");th.textContent=label;head.append(th)}t.append(head);
+  for(const [id,label] of occupations.jobs){
+   const match=byJob.get(id),career=match?snap.careers[match[2]]:null,tr=document.createElement("tr");
+   const values=[label,match?labels[match[3]]:"Sem correspondência aprovada",career?Number(career.value).toLocaleString("pt-PT",{style:"currency",currency:"EUR"}):"—",career?career.title+" · "+career.level:"Não foi inventado um valor para esta profissão"];
+   for(const item of values){const td=document.createElement("td");td.textContent=item;tr.append(td)}t.append(tr);
+  }
+  host.append(t);
+ }catch(e){const warning=document.createElement("p");warning.textContent="Não foi possível carregar a auditoria portuguesa: "+e.message;host.append(warning)}
+}
 // India diagnostic is intentionally separate from the national exact-salary table.
 const indiaButton=$("indiaCheck"),indiaMessage=$("indiaMessage");
 function indiaCard(label,value){const div=document.createElement("div");div.style.cssText="border:1px solid #dae5e7;border-radius:10px;padding:12px;background:#f6faf9";const title=document.createElement("div");title.className="muted";title.textContent=label;const number=document.createElement("strong");number.style.fontSize="1.3rem";number.textContent=String(value);div.append(title,number);return div}
