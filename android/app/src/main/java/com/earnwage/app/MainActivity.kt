@@ -191,14 +191,14 @@ class MainActivity:ComponentActivity() {
     LaunchedEffect(country) {
         prefs.edit().putString("country",country).apply()
         region=""
-        regions=if(country in listOf("US","CA","IN","BR")) try {
+        regions=if(country in listOf("US","CA","IN","BR","DE")) try {
             parseRegions(api("/v1/regions/"+country))
         } catch (_:Exception) { emptyList() } else emptyList()
     }
     LaunchedEffect(dest) {
         prefs.edit().putString("destination",dest).apply()
         regionB=""
-        regionsB=if(dest in listOf("US","CA","IN","BR")) try {
+        regionsB=if(dest in listOf("US","CA","IN","BR","DE")) try {
             parseRegions(api("/v1/regions/"+dest))
         } catch (_:Exception) { emptyList() } else emptyList()
     }
@@ -861,7 +861,26 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
 @Composable private fun RegionalWageCard(data:JSONObject,lang:String) {
     val region=data.optJSONObject("region")?.optString("selected").orEmpty()
     val code=data.optJSONObject("country")?.optString("code").orEmpty()
-    if(region.isBlank() || code !in listOf("US","CA")) return
+    if(region.isBlank() || code !in listOf("US","CA","BR","DE")) return
+    if(code=="DE") {
+        val row=data.optJSONObject("regional_occupation_wage")
+        val label=if(lang=="pt") "Alemanha · mediana por Estado" else "Germany · state median"
+        val name=row?.optString("state_name")?.takeIf{it.isNotBlank()} ?: region
+        val amount=row?.optDouble("value",Double.NaN) ?: Double.NaN
+        if(row?.optString("status")=="available" && amount.isFinite() && amount>0) {
+            Metric(label+" · "+name,money(amount,"EUR")+
+                (if(lang=="pt") " / mês" else " / month"),
+                "BA Entgeltatlas · Berufsgattung · "+
+                (if(lang=="pt") "Mediana bruta; não representa salário líquido."
+                 else "Gross median; not take-home pay."))
+        } else {
+            Metric(label+" · "+name,
+                if(lang=="pt") "Sem mediana estadual validada" else "No validated state median",
+                if(lang=="pt") "Importação regional pendente. Não substituímos dados nacionais ou grupos profissionais."
+                else "Regional import pending. National or broad occupational values are not substituted.")
+        }
+        return
+    }
     if(code=="BR") {
         val row=data.optJSONObject("regional_occupation_wage")
         val label=if(lang=="pt") "Brasil · mediana por Estado" else "Brazil · state median"
