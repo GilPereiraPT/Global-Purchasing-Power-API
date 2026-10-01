@@ -481,6 +481,11 @@ def dispatch(path, q):
     if len(parts) == 4 and parts[:2] == ["v1", "salaries"]:
         c, job = country(parts[2]), occupation(parts[3])
         return ew.wage_for(c, job)
+    if len(parts) == 6 and parts[:4] == ["v1", "us", "oews", "states"]:
+        try:
+            return us_oews.curated_state_wages(occupation(parts[4]), parts[5])
+        except ValueError as exc:
+            raise ApiError(422, str(exc)) from exc
     if path == "/v1/us/oews/coverage":
         return us_oews.coverage()
     if path == "/v1/us/oews/occupations":
