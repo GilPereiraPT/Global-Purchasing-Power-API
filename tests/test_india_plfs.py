@@ -38,3 +38,18 @@ def test_india_api_context_independent_of_profession():
         assert result["country"]["currency"] == "INR"
         assert client.get("/v1/earnwage/overview?country=US&occupation=nurse").json()[
             "india_plfs_employee_earnings_context"]["status"] == "not_applicable"
+
+
+def test_published_india_nco_dataset_carries_derivative_provenance():
+    with TestClient(app) as client:
+        coverage = client.get("/v1/in/plfs/nco/coverage").json()
+        assert coverage["status"] == "available"
+        assert coverage["observations"] == 597
+        assert coverage["nco_occupations"] == 113
+        assert coverage["states_or_territories"] == 33
+        assert coverage["precision"] == "broad_nco2015_three_digit_group"
+        assert coverage["provenance"] == "public_third_party_harmonised_microdata"
+        assert coverage["reuse_license"] == "ODbL 1.0"
+        detail = client.get("/v1/in/wage-sources").json()
+        assert detail["broad_nco2015_group_wages"]["observations"] == 597
+        assert detail["exact_occupation_wages"]["status"] == "pending_official_microdata_analysis"
