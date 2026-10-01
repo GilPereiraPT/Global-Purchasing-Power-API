@@ -127,3 +127,18 @@ def test_state_wages_never_fall_back_to_national(tmp_path, monkeypatch):
     assert view["national_occupation_wage"]["geography"] == "national"
     assert view["regional_occupation_wage"]["geography"] == "state"
     assert view["regional_occupation_wage"]["metrics"]["a_mean"] == 160000
+
+
+def test_published_2025_bls_snapshot_has_national_and_state_coverage(tmp_path, monkeypatch):
+    """Validate the exact source-backed artifact that production will ingest."""
+    from pathlib import Path
+    from app.us_oews_snapshot import load_snapshot
+    from app.us_oews import curated_national, curated_state_wages
+    source = Path(__file__).resolve().parent.parent / "data" / "us_oews_curated.json"
+    assert source.is_file(), "US OEWS must be committed before production deploy"
+    monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "published-us.sqlite"))
+    count = load_snapshot(source)
+    assert count >= 1400
+    assert curated_national("15-1252") is not None
+    assert curated_state_wages("software_developer", "CA")["status"] == "available"
+    assert curated_state_wages("software_developer", "TX")["status"] == "available"
