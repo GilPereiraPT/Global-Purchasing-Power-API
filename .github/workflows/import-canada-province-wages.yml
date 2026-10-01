@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/import-canada-province-wages.yml'
       - 'app/ca_province_wages.py'
+      - 'tests/test_ca_province_wages.py'
 permissions:
   contents: write
 concurrency:
