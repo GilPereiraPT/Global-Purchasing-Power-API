@@ -191,14 +191,14 @@ class MainActivity:ComponentActivity() {
     LaunchedEffect(country) {
         prefs.edit().putString("country",country).apply()
         region=""
-        regions=if(country in listOf("US","CA")) try {
+        regions=if(country in listOf("US","CA","IN")) try {
             parseRegions(api("/v1/regions/"+country))
         } catch (_:Exception) { emptyList() } else emptyList()
     }
     LaunchedEffect(dest) {
         prefs.edit().putString("destination",dest).apply()
         regionB=""
-        regionsB=if(dest in listOf("US","CA")) try {
+        regionsB=if(dest in listOf("US","CA","IN")) try {
             parseRegions(api("/v1/regions/"+dest))
         } catch (_:Exception) { emptyList() } else emptyList()
     }
@@ -845,7 +845,7 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
 @Composable private fun RegionalWageCard(data:JSONObject,lang:String) {
     val region=data.optJSONObject("region")?.optString("selected").orEmpty()
     val code=data.optJSONObject("country")?.optString("code").orEmpty()
-    if(region.isBlank() || code !in listOf("US","CA")) return
+    if(region.isBlank() || code !in listOf("US","CA","IN")) return
     val record=data.optJSONObject("regional_occupation_wage")
     val label=if(code=="CA") {
         if(lang=="pt") "Salário por província / território" else "Province / territory wage"
@@ -921,6 +921,31 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
                         (if(lang=="pt")
                             "Média ponderada do grupo profissional em 2025; não é o salário específico desta profissão."
                         else "Weighted 2025 occupational-group average; not this specific profession's wage.")
+                )
+            }
+        }
+    }
+    if(code=="IN") {
+        val regional=data.optJSONObject("india_nco2015_regional_group_context")
+        val regionId=data.optJSONObject("region")?.optString("selected").orEmpty()
+        if(regionId.isNotBlank()) {
+            val observation=regional?.optJSONObject("observation")
+            val value=observation?.optDouble("value",Double.NaN) ?: Double.NaN
+            val stateName=observation?.optString("state_name")?.takeIf { it.isNotBlank() } ?: regionId
+            if(regional?.optString("status")=="available" && value.isFinite()) {
+                Metric(
+                    (if(lang=="pt") "Índia · grupo NCO por Estado" else "India · state NCO group")+" · "+stateName,
+                    money(value,"INR")+(if(lang=="pt") " / mês" else " / month"),
+                    "NCO "+regional.optString("nco2015_group")+" · "+regional.optString("nco2015_group_label")+"\\n"+
+                        (if(lang=="pt") "Média do grupo profissional neste Estado; não corresponde ao salário específico da profissão ou ao valor líquido."
+                         else "State-level occupational-group mean; not a job-specific wage or take-home income.")
+                )
+            } else {
+                Metric(
+                    (if(lang=="pt") "Índia · grupo NCO por Estado" else "India · state NCO group")+" · "+stateName,
+                    if(lang=="pt") "Amostra insuficiente ou categoria indisponível" else "Insufficient sample or group unavailable",
+                    if(lang=="pt") "Não foi utilizada a média nacional como substituto do Estado."
+                    else "National mean is not substituted for missing state data."
                 )
             }
         }
