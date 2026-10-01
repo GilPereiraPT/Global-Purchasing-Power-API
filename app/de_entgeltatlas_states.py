@@ -53,7 +53,7 @@ def validate(obj):
                 row["requirement_level"] != national_row["requirement_level"] or
                 row["evidence_page_id"] != approved[0] or
                 row["state_ba_region_id"] != state_info[1] or
-                row["source_url"] != "https://web.arbeitsagentur.de/entgeltatlas/beruf/" + national[0] or
+                row["source_url"] != "https://web.arbeitsagentur.de/entgeltatlas/beruf/" + approved[0] or
                 row["reference_period"] != YEAR or row["currency"] != "EUR"
                 or row["unit"] != "EUR/month" or row["measure"] != "median"
                 or row["precision"] != PRECISION
