@@ -15,6 +15,32 @@ PRODUCT = {
     "portuguese_language": "pt",
 }
 REGIONS = {
+    "DE": {
+        "kind": "federal_state",
+        "label": {"pt": "Estado federado", "en": "Federal state"},
+        "note": {
+            "pt": "Seleção opcional. Medianas profissionais estaduais do Entgeltatlas apenas após validação da Berufsgattung; a importação regional está pendente. Não representa salário líquido.",
+            "en": "Optional selection. State-level occupational medians from Entgeltatlas will appear only after exact Berufsgattung verification; regional import is pending. Not take-home pay.",
+        },
+        "options": [
+            ("BW", "Baden-Württemberg"),
+            ("BY", "Bayern"),
+            ("BE", "Berlin"),
+            ("BB", "Brandenburg"),
+            ("HB", "Bremen"),
+            ("HH", "Hamburg"),
+            ("HE", "Hessen"),
+            ("MV", "Mecklenburg-Vorpommern"),
+            ("NI", "Niedersachsen"),
+            ("NW", "Nordrhein-Westfalen"),
+            ("RP", "Rheinland-Pfalz"),
+            ("SL", "Saarland"),
+            ("SN", "Sachsen"),
+            ("ST", "Sachsen-Anhalt"),
+            ("SH", "Schleswig-Holstein"),
+            ("TH", "Thüringen"),
+        ],
+    },
     "BR": {
         "kind": "federal_unit",
         "label": {"en": "State or Federal District", "pt": "Estado ou Distrito Federal"},
