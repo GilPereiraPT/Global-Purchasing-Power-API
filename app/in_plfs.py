@@ -49,9 +49,12 @@ def earnings():
 
 
 def wage_sources():
+    from app.in_plfs_microdata import coverage as nco_coverage
+    broad_groups = nco_coverage()
     return {
         "country": "IN",
         "currency": "INR",
+        "broad_nco2015_group_wages": broad_groups,
         "exact_occupation_wages": {
             "status": "pending_official_microdata_analysis",
             "reason": (
