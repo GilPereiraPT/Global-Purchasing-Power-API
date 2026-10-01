@@ -26,7 +26,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-          for filename in ("index", "india", "brazil"):
+          for filename in ("index", "india", "brazil", "germany"):
               text = Path(f"docs/{filename}.html").read_text(encoding="utf-8")
               blocks = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", text)
               assert blocks, f"No inline script in {filename}.html"
@@ -35,6 +35,7 @@ jobs:
           node --check /tmp/earnwage-index.js
           node --check /tmp/earnwage-india.js
           node --check /tmp/earnwage-brazil.js
+          node --check /tmp/earnwage-germany.js
       - uses: actions/configure-pages@v5
         with:
           enablement: true
