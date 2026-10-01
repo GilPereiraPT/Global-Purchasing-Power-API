@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EarnWage · Salários por grupo profissional na Índia</title>
+<meta name="description" content="Consultar médias salariais nacionais e estaduais por grupo profissional na Índia com base no PLFS 2025.">
+<style>
+:root{font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:#142e39;background:#f4f8fa}
+*{box-sizing:border-box}body{margin:0}header{background:#102b36;color:#fff;padding:20px max(18px,calc((100vw - 900px)/2))}
+header a{color:#b5eee0}h1{font-size:1.5rem;margin:10px 0 5px}main{max-width:900px;margin:24px auto;padding:0 18px}
+section{background:white;border:1px solid #dce6e7;border-radius:14px;padding:22px;margin-bottom:18px}
+h2{font-size:1.12rem;margin-top:0}p{line-height:1.55}small,.muted{color:#536e75}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px}
+label{display:block;font-weight:700;margin-bottom:6px}select{width:100%;padding:11px;border:1px solid #afc4c8;background:white;border-radius:9px;font:inherit}
+.metric{padding:16px;border:1px solid #dce6e7;border-radius:10px;background:#f5faf9}
+.metric strong{display:block;font-size:1.35rem;margin:8px 0}.metric small{display:block}
+a{color:#087b65}#status{font-weight:650}
+</style></head><body>
+<header><a href="./">← Voltar ao EarnWage</a><h1>🇮🇳 Índia · salários por profissão e Estado</h1>
+<p>Médias estatísticas por grupo NCO · PLFS 2025</p></header>
+<main>
+<section>
+<h2>Seleciona a profissão e o Estado</h2>
+<div class="grid"><div><label for="job">Profissão</label><select id="job"><option value="">A carregar profissões…</option></select></div>
+<div><label for="state">Estado ou território da União</label><select id="state"><option value="">Toda a Índia</option></select></div></div>
+<p class="muted">O Estado é opcional. Só existem valores estaduais para grupos com amostras suficientes.</p>
+</section>
+<section><h2>Resultados</h2><p id="status" role="status" aria-live="polite">A carregar os dados publicados…</p>
+<div class="grid"><div class="metric"><span>Média nacional do grupo</span><strong id="national">—</strong><small id="nationalNote"></small></div>
+<div class="metric"><span>Média do grupo no Estado selecionado</span><strong id="regional">—</strong><small id="regionalNote"></small></div></div>
+<p id="category" class="muted"></p></section>
+<section><h2>Como interpretar</h2><p>Estes valores são médias mensais ponderadas de <strong>grupos profissionais NCO-2015 de três dígitos</strong>, não salários exatos da profissão selecionada. Não são salários líquidos, nem incluem um ajustamento de custo de vida. Uma região sem amostra publicada não recebe artificialmente o valor nacional.</p>
+<p>Fonte de origem: <a href="https://microdata.gov.in/NADA/index.php/catalog/284">MoSPI, PLFS 2025</a>. Versão pública pré-processada por <a href="https://github.com/Vonter/india-plf-survey">Vonter (ODbL)</a>. <a href="./data/india-plfs-2025-nco.json">Consultar dados agregados usados nesta página</a>.</p></section>
+</main><script>
+"use strict";
+const $=id=>document.getElementById(id);
+const names={
+accountant:"Contabilista",auditor:"Auditor",financial_analyst:"Analista financeiro",
+doctor:"Médico",nurse:"Enfermeiro",pharmacist:"Farmacêutico",psychologist:"Psicólogo",
+physiotherapist:"Fisioterapeuta",teacher:"Professor",preschool_teacher:"Educador de infância",
+software_developer:"Programador",it_technician:"Técnico de informática",civil_engineer:"Engenheiro civil",
+mechanical_engineer:"Engenheiro mecânico",architect:"Arquiteto",administrative_assistant:"Assistente administrativo",
+manager:"Gestor",receptionist:"Rececionista",sales_assistant:"Vendedor",supermarket_worker:"Operador de supermercado",
+truck_driver:"Motorista de pesados",bus_driver:"Motorista de autocarro",electrician:"Eletricista",
+plumber:"Canalizador",construction_worker:"Trabalhador da construção",cook:"Cozinheiro",
+waiter:"Empregado de mesa",cleaner:"Empregado de limpeza",security_guard:"Segurança privado",lawyer:"Advogado",
+dentist:"Dentista",healthcare_assistant:"Auxiliar de saúde",data_analyst:"Analista de dados",
+cybersecurity_specialist:"Especialista em cibersegurança",secondary_teacher:"Professor de secundário",
+warehouse_operator:"Operador de armazém",industrial_operator:"Operador industrial",
+welder:"Soldador",automotive_mechanic:"Mecânico automóvel",agricultural_worker:"Trabalhador agrícola"
+};
+let data=null;
+const money=v=>v.toLocaleString("pt-PT",{style:"currency",currency:"INR",maximumFractionDigits:0})+" / mês";
+function render(){
+ if(!data)return;
+ const occupation=$("job").value,state=$("state").value,code=data.mapping[occupation],records=data.records;
+ $("national").textContent="—";$("regional").textContent="—";$("nationalNote").textContent="";$("regionalNote").textContent="";$("category").textContent="";
+ if(!code){$("status").textContent="Esta profissão é demasiado abrangente para uma correspondência NCO validada.";return}
+ const national=records.find(r=>r[0]===code&&!r[1]),regional=state?records.find(r=>r[0]===code&&r[1]===state):null;
+ $("status").textContent="Médias de grupos profissionais, não salários específicos.";
+ $("national").textContent=national?money(national[2]):"Sem observação";
+ $("nationalNote").textContent=national?"PLFS 2025 · média ponderada nacional":"Não foi publicada amostra suficiente";
+ $("regional").textContent=state?(regional?money(regional[2]):"Sem observação"):"Seleciona um Estado";
+ $("regionalNote").textContent=state?(regional?"Observação estadual própria · PLFS 2025":"Não substituída pela média nacional"):"O Estado é opcional";
+ $("category").textContent="Categoria estatística: NCO "+code+" (abrange várias funções e especialidades).";
+ const url=new URL(location.href);url.searchParams.set("occupation",occupation);
+ if(state)url.searchParams.set("region",state);else url.searchParams.delete("region");
+ history.replaceState(null,"",url);
+}
+async function start(){
+ try{
+  const r=await fetch("./data/india-plfs-2025-nco.json",{cache:"no-store"});
+  if(!r.ok)throw Error("HTTP "+r.status);
+  data=await r.json();
+  if(data.schema!==1||data.records?.length!==597||data.precision!=="broad_nco2015_three_digit_group")
+    throw Error("Versão de dados incompatível");
+  const options=Object.entries(names).sort((a,b)=>a[1].localeCompare(b[1],"pt"))
+    .map(([id,label])=>new Option(label,id));
+  $("job").replaceChildren(...options);
+  const states=new Map(data.records.filter(row=>row[1]&&row[3]).map(row=>[row[1],row[3]]));
+  const choices=[...states].sort((a,b)=>a[1].localeCompare(b[1],"en")).map(([id,label])=>new Option(label,id));
+  $("state").replaceChildren(new Option("Toda a Índia",""),...choices);
+  const params=new URLSearchParams(location.search);
+  const job=params.get("occupation");
+  $("job").value=job&&Object.hasOwn(names,job)?job:"software_developer";
+  const state=params.get("region")||"";
+  $("state").value=states.has(state)?state:"";
+  $("job").addEventListener("change",render);$("state").addEventListener("change",render);
+  render();
+ }catch(e){$("status").textContent="Não foi possível carregar os dados publicados: "+e.message}
+}
+start();
+</script></body></html>
