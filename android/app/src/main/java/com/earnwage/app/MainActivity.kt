@@ -842,10 +842,55 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
     }
 }
 
+@Composable private fun RegionalWageCard(data:JSONObject,lang:String) {
+    val region=data.optJSONObject("region")?.optString("selected").orEmpty()
+    val code=data.optJSONObject("country")?.optString("code").orEmpty()
+    if(region.isBlank() || code !in listOf("US","CA")) return
+    val record=data.optJSONObject("regional_occupation_wage")
+    val label=if(code=="CA") {
+        if(lang=="pt") "Salário por província / território" else "Province / territory wage"
+    } else if(lang=="pt") "Salário por Estado" else "State wage"
+    val name=if(code=="CA") record?.optString("province_name")?.takeIf{it.isNotBlank()} ?: region
+        else record?.optString("state_name")?.takeIf{it.isNotBlank()} ?: region
+    if(record?.optString("status")!="available") {
+        Metric(label+" · "+name,
+            if(lang=="pt") "Dados regionais indisponíveis" else "Regional data unavailable",
+            if(lang=="pt") "Não foi estimado um valor com base na média nacional."
+                else "No value was inferred from the national wage.")
+        return
+    }
+    val metrics=record.optJSONObject("metrics")
+    val unit=if(code=="CA") record.optString("unit") else
+        if(metrics?.isNull("a_median")==false || metrics?.isNull("a_mean")==false) "USD/year" else "USD/hour"
+    val median=if(code=="CA") metrics?.optDouble("median",Double.NaN) ?: Double.NaN
+        else metrics?.optDouble(if(unit=="USD/year") "a_median" else "h_median",Double.NaN) ?: Double.NaN
+    val mean=if(code=="CA") metrics?.optDouble("mean",Double.NaN) ?: Double.NaN
+        else metrics?.optDouble(if(unit=="USD/year") "a_mean" else "h_mean",Double.NaN) ?: Double.NaN
+    val preferredValue=if(median.isFinite() && median>0) median else mean
+    val measure=if(median.isFinite() && median>0)
+        if(lang=="pt") "Mediana" else "Median"
+        else if(lang=="pt") "Média" else "Mean"
+    val currency=if(code=="CA") "CAD" else "USD"
+    val suffix=if(unit.endsWith("/year")) (if(lang=="pt") " / ano" else " / year")
+        else (if(lang=="pt") " / hora" else " / hour")
+    val period=record.optString("reference_period")
+    if(preferredValue.isFinite() && preferredValue>0) {
+        Metric(label+" · "+name,money(preferredValue,currency)+suffix,
+            measure+" · "+period+" · "+(if(lang=="pt")
+                "Bruto estatístico; não representa salário líquido."
+                else "Published gross statistic; not take-home pay."))
+    } else {
+        Metric(label+" · "+name,
+            if(lang=="pt") "Salário não publicado" else "Wage not published",
+            period)
+    }
+}
+
 @Composable private fun WageCard(data:JSONObject,lang:String,preferred:String,fx:Map<String,JSONObject>) {
     val c=data.optJSONObject("country")
     val code=c?.optString("code") ?: ""
     val name=c?.optString("name") ?: code
+    RegionalWageCard(data,lang)
     val annual=data.optJSONObject("annual_presentation")
     if(annual?.optString("status")!="available") {
         val group = data.optJSONObject("national_major_group_context")
