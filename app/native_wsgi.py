@@ -74,6 +74,8 @@ def initialize():
         load_uk_wages()
         from app.de_entgeltatlas_wages import load_snapshot as load_de_wages
         load_de_wages()
+        from app import de_entgeltatlas_states
+        de_entgeltatlas_states.load()
         from app.fr_insee_wages import load_snapshot as load_fr_wages
         load_fr_wages()
         from app.nl_cbs_wages import load_snapshot as load_nl_wages
@@ -494,6 +496,9 @@ def dispatch(path, q):
             return us_oews.curated_state_wages(occupation(parts[4]), parts[5])
         except ValueError as exc:
             raise ApiError(422, str(exc)) from exc
+    if path == "/v1/de/entgeltatlas/regional/coverage":
+        from app.de_entgeltatlas_states import coverage
+        return coverage()
     if path == "/v1/br/rais/regional/coverage":
         from app.br_rais_states import coverage
         return coverage()
