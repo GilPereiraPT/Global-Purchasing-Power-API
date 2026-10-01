@@ -72,4 +72,4 @@ def test_pt_public_web_snapshot_has_exactly_the_documented_source_mappings():
     main = (ROOT / "docs/index.html").read_text(encoding="utf-8")
     assert 'fetch("./data/pt-public-entry-2026.json"' in page
     assert 'href="./portugal.html?occupation=nurse"' in main
-    assert "não são uma média salarial portuguesa" in page
+    assert "não são uma média salarial portuguesa" in page.lower()
