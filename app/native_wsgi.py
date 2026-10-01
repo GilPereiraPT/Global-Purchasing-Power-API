@@ -492,6 +492,15 @@ def dispatch(path, q):
             return us_oews.curated_state_wages(occupation(parts[4]), parts[5])
         except ValueError as exc:
             raise ApiError(422, str(exc)) from exc
+    if path == "/v1/in/earnwage-nco/coverage":
+        from app.in_nco_crosswalk import coverage
+        return coverage()
+    if len(parts) == 4 and parts[:3] == ["v1", "in", "earnwage-nco"]:
+        from app.in_nco_crosswalk import context
+        try:
+            return context(occupation(parts[3]), one(q, "state"))
+        except ValueError as exc:
+            raise ApiError(422, str(exc)) from exc
     if path == "/v1/in/plfs/nco/coverage":
         from app.in_plfs_microdata import coverage
         return coverage()
