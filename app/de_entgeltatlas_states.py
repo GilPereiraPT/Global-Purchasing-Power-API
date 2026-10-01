@@ -7,7 +7,7 @@ Official help: https://www.arbeitsagentur.de/hilfe-entgeltatlas
 import json
 import math
 from pathlib import Path
-from app.de_entgeltatlas_wages import APPROVED, YEAR, AGGREGATION_LEVEL, PRECISION
+from app.de_entgeltatlas_wages import APPROVED, YEAR, AGGREGATION_LEVEL, PRECISION, DEFAULT as NATIONAL_SNAPSHOT
 
 STATES = {
     "BW": ("Baden-Württemberg", 11), "BY": ("Bayern", 12),
@@ -34,16 +34,24 @@ def validate(obj):
             or obj.get("country") != "DE" or obj.get("reference_period") != YEAR
             or not isinstance(obj.get("records"), list)):
         raise ValueError("Unreviewed Entgeltatlas regional metadata")
+    # Check the selected German profession and classification against the
+    # already approved, committed national occupation/classification record.
+    national = json.loads(NATIONAL_SNAPSHOT.read_text(encoding="utf-8"))
+    national_index = {r["occupation"]: r for r in national["records"]}
     observed = {}
     for row in obj["records"]:
         if not isinstance(row, dict) or set(row) != REQUIRED:
             raise ValueError("Invalid Entgeltatlas regional record schema")
         occupation, state = row["occupation"], row["state"]
-        national = APPROVED.get(occupation)
+        approved = APPROVED.get(occupation)
+        national_row = national_index.get(occupation)
         state_info = STATES.get(state)
         value = row["value"]
-        if (national is None or state_info is None or
-                row["evidence_page_id"] != national[0] or
+        if (approved is None or national_row is None or state_info is None or
+                row["profession_title"] != national_row["profession_title"] or
+                row["occupational_aggregate"] != national_row["occupational_aggregate"] or
+                row["requirement_level"] != national_row["requirement_level"] or
+                row["evidence_page_id"] != approved[0] or
                 row["state_ba_region_id"] != state_info[1] or
                 row["source_url"] != "https://web.arbeitsagentur.de/entgeltatlas/beruf/" + national[0] or
                 row["reference_period"] != YEAR or row["currency"] != "EUR"
