@@ -247,5 +247,17 @@ $("country").addEventListener("change",renderIndiaMain);
 $("regionA").addEventListener("change",renderIndiaMain);
 $("occupation").addEventListener("input",renderIndiaMain);
 setSalaryTab(false);
-$("module").dispatchEvent(new Event("change"));$("load").click();
+$("module").dispatchEvent(new Event("change"));
+$("load").click();
+const indiaLink=new URLSearchParams(location.search);
+if(indiaLink.get("country")==="IN"){
+  $("country").value="IN";$("occupation").value=indiaLink.get("occupation")||"software_developer";
+  $("module").value="salary";
+  updateRegions("country","regionA","regionABox").then(()=>{
+    const requested=indiaLink.get("region");
+    if(requested&&[...$("regionA").options].some(o=>o.value===requested))$("regionA").value=requested;
+    renderIndiaMain();
+    $("indiaMainPanel").scrollIntoView({block:"center"});
+  });
+}
 </script></body></html>
