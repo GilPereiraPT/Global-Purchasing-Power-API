@@ -64,7 +64,7 @@ def test_real_coverage_and_invalid_region():
         assert country["CA"]["observed_occupations"] == 38
         assert country["CA"]["group_context_occupations"] == 40
         assert country["CA"]["public_sector_entry_occupations"] == 0
-        assert country["US"]["observed_occupations"] == 10
+        assert 10 <= country["US"]["observed_occupations"] <= 29  # curated national or complete imported OEWS
         assert country["DE"]["observed_occupations"] == 27
         assert country["FR"]["observed_occupations"] == 23
         assert country["NL"]["observed_occupations"] == 21
