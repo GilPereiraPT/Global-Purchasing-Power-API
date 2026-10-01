@@ -412,6 +412,74 @@ def curated_wage_observations(soc: str):
     return result
 
 
+def curated_state(soc: str, state: str):
+    """Latest exact state-wide, all-industry OEWS record, never a metro proxy."""
+    from app.client_config import REGIONS
+    valid = {code for code, _ in REGIONS["US"]["options"]}
+    if not re.fullmatch(r"\\d{2}-\\d{4}", soc):
+        raise ValueError("Invalid SOC code")
+    state = state.upper()
+    if state not in valid:
+        raise ValueError("Unknown US state")
+    with connect() as db:
+        init(db)
+        rows = db.execute(
+            f"""SELECT {','.join(DB_COLUMNS)} FROM us_oews
+                WHERE occ_code=? AND prim_state=? AND area_type IN ('2','2.0')
+                  AND o_group='detailed'
+                  AND naics IN ('000000','0')
+                  AND (i_group IN ('cross-industry','cross_industry','') OR i_group IS NULL)
+                  AND own_code IN ('1235','')
+                ORDER BY published_year DESC, source_file""",
+            (soc, state),
+        ).fetchall()
+    if not rows:
+        return None
+    latest = max(row[1] for row in rows)
+    latest_rows = [dict(zip(DB_COLUMNS, row)) for row in rows if row[1] == latest]
+    # Multiple nonidentical official records in the same scope are ambiguous.
+    signatures = {(r["area"], r["area_title"], r["a_mean"], r["a_median"],
+                   r["h_mean"], r["h_median"]) for r in latest_rows}
+    return latest_rows[0] if len(signatures) == 1 else None
+
+
+def curated_state_wages(occupation: str, state: str):
+    """Optional state context; absence never silently falls back to national."""
+    from app.north_america import US_SOC, US_SOC_UNMAPPED
+    from app.client_config import REGIONS
+    state = state.upper()
+    names = dict(REGIONS["US"]["options"])
+    if state not in names:
+        raise ValueError("Unknown US state")
+    mapping = US_SOC.get(occupation)
+    if not mapping:
+        return {"status": "unavailable", "occupation": occupation,
+                "state": state, "state_name": names[state],
+                "reason": US_SOC_UNMAPPED.get(occupation, "No exact SOC mapping")}
+    soc, _ = mapping
+    record = curated_state(soc, state)
+    if record is None:
+        return {"status": "unavailable", "occupation": occupation,
+                "state": state, "state_name": names[state],
+                "soc": soc, "reason": "No unique, validated state-wide OEWS row imported"}
+    metrics = {
+        name: record[name] for name in
+        ("h_mean", "a_mean", "h_pct10", "h_pct25", "h_median", "h_pct75",
+         "h_pct90", "a_pct10", "a_pct25", "a_median", "a_pct75", "a_pct90")
+    }
+    return {
+        "status": "available", "country": "US", "state": state,
+        "state_name": names[state], "occupation": occupation, "soc": soc,
+        "soc_title": record["occ_title"], "area_title": record["area_title"],
+        "scope": "state_wide_cross_industry", "geography": "state",
+        "currency": "USD", "reference_period": record["reference_period"],
+        "published_year": record["published_year"],
+        "hourly_unit": "USD/hour", "annual_unit": "USD/year",
+        "metrics": metrics, "source_url": record["source_url"],
+        "note": "State-wide BLS occupational wage statistics, not a city wage or a take-home salary. Missing metrics are null.",
+    }
+
+
 def coverage():
     with connect() as db:
         init(db)
