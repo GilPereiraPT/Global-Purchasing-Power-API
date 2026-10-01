@@ -1,0 +1,44 @@
+name: Import Brazil 2025 regional RAIS wages
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/import-brazil-rais-states.yml'
+permissions:
+  contents: write
+concurrency:
+  group: earnwage-brazil-rais-states
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Import published state medians and audit every CBO code
+        run: |
+          python -m pip install requests beautifulsoup4
+          python -m app.br_rais_states_import --output data/br_rais_2025_states.json
+      - name: Validate and inspect actual coverage
+        run: |
+          python - <<'PY'
+          from app.br_rais_states import load, coverage
+          count=load()
+          c=coverage()
+          print(c)
+          assert count>=100 and c["states_with_data"]>=10
+          assert c["observed_occupations"]>=20
+          PY
+      - name: Publish aggregate observations only
+        run: |
+          git add data/br_rais_2025_states.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(brazil): add RAIS 2025 occupation medians by state with source URLs"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
