@@ -75,7 +75,7 @@ def test_fails_closed_on_unreviewed_crosswalk_and_wrong_schema(tmp_path):
     person_file(path)
     with pytest.raises(ValueError, match="crosswalk"):
         aggregate(path, {**MANIFEST, "official_state_crosswalk_reviewed": False})
-    with pytest.raises(ValueError, match="regular"):
+    with pytest.raises(ValueError, match="salaried CWS codes"):
         aggregate(path, {**MANIFEST, "regular_employee_cws_codes": ["31"]})
     path.write_text("wrong,fields\n1,2\n", encoding="utf8")
     with pytest.raises(ValueError, match="columns"):
