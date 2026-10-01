@@ -499,6 +499,9 @@ def dispatch(path, q):
     if path == "/v1/de/entgeltatlas/regional/coverage":
         from app.de_entgeltatlas_states import coverage
         return coverage()
+    if path == "/v1/pt/public-sector/coverage":
+        from app.pt_public_wages import coverage
+        return coverage()
     if path == "/v1/br/rais/regional/coverage":
         from app.br_rais_states import coverage
         return coverage()
