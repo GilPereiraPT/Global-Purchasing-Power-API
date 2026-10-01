@@ -416,7 +416,7 @@ def curated_state(soc: str, state: str):
     """Latest exact state-wide, all-industry OEWS record, never a metro proxy."""
     from app.client_config import REGIONS
     valid = {code for code, _ in REGIONS["US"]["options"]}
-    if not re.fullmatch(r"\\d{2}-\\d{4}", soc):
+    if not re.fullmatch(r"\d{2}-\d{4}", soc):
         raise ValueError("Invalid SOC code")
     state = state.upper()
     if state not in valid:
