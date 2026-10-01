@@ -44,7 +44,7 @@ def test_main_web_contains_india_static_salary_flow():
     assert 'renderIndiaMain();' in text
     assert "./data/india-plfs-2025-nco.json" in text
     assert "snap.mapping[job]" in text
-    assert 'case "salary":return ["IN","DE","BR"].includes(c)?' in text
+    assert 'case "salary":return ["IN","DE","BR","PT"].includes(c)?' in text
     assert 'renderIndiaMain' in text
     assert "não é salário específico" in text
 
