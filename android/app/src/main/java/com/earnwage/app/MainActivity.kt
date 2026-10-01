@@ -764,7 +764,7 @@ private fun salaryCurrencies(data:JSONObject):List<String> {
     data.optJSONObject("india_nco2015_professional_group_context")
         ?.optJSONObject("observation")?.optString("currency")
         ?.takeIf { it.isNotBlank() }?.let(out::add)
-    listOf("brazil_public_sector_entry","ireland_public_sector_entry","public_sector_entry").forEach { data.optJSONObject(it)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
+    listOf("portugal_public_sector_entry","brazil_public_sector_entry","ireland_public_sector_entry","public_sector_entry").forEach { data.optJSONObject(it)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
     return out
 }
 private fun preferredObservation(data:JSONObject?):JSONObject? {
@@ -791,7 +791,7 @@ private fun groupObservation(data:JSONObject?):JSONObject? {
     return null
 }
 private fun publicObservation(data:JSONObject):JSONObject? =
-    listOf("brazil_public_sector_entry","ireland_public_sector_entry","public_sector_entry")
+    listOf("portugal_public_sector_entry","brazil_public_sector_entry","ireland_public_sector_entry","public_sector_entry")
         .mapNotNull{data.optJSONObject(it)}.firstOrNull{it.optString("status")=="available"}
 private fun unitSuffix(unit:String,pt:Boolean)=when {
     unit.contains("/hour") -> if(pt)" / h" else " / h"
@@ -854,6 +854,18 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
                     (if(lang=="pt") " · PLFS 2025 · média mensal de grupo"
                     else " · PLFS 2025 · monthly group mean"))
             SalaryLayer(if(lang=="pt")"🔵 Setor público" else "🔵 Public sector",public,preferred,fx,Color(0xFF1769A6),lang)
+            if(place.code=="PT" && public!=null) {
+                val label=public.optString("public_role")
+                val isConditional=public.optString("mapping_precision")=="conditional_comparable_public_career"
+                Caption(label+" · "+public.optString("entry_grade")+" · "+public.optString("entry_level"))
+                Caption(
+                    if(lang=="pt")
+                        if(isConditional) "Referência de carreira pública apenas se houver recrutamento nessa carreira. Não é salário da profissão no mercado."
+                        else "Remuneração base de entrada da carreira pública; não é a média da profissão."
+                    else if(isConditional) "Public-career comparator only if recruited into that career. Not the occupation's market wage."
+                    else "Public-career entry basic remuneration; not an occupational average."
+                )
+            }
         }
     }
 }
