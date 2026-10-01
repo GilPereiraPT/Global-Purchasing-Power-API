@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EarnWage · Alemanha: salários nacionais e regiões</title>
+<style>:root{font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:#163039;background:#f3f7f9}*{box-sizing:border-box}body{margin:0}header{background:#12313e;color:white;padding:22px max(20px,calc((100vw - 900px)/2))}header a{color:#b7efdf}main{max-width:900px;margin:22px auto;padding:0 18px}section{border:1px solid #dce6e9;background:white;padding:20px;border-radius:14px;margin:16px 0}h1{font-size:1.5rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}label{display:block;font-weight:700;margin:0 0 7px}select{background:white;border:1px solid #b4c9cd;border-radius:9px;padding:12px;width:100%;font:inherit}.metric{padding:16px;background:#f5faf8;border:1px solid #d8e7e2;border-radius:12px}.metric strong{display:block;font-size:1.4rem;margin:8px 0}.muted,small{color:#516c74}p{line-height:1.5}a{color:#0a7963}</style></head><body>
+<header><a href="./">← EarnWage</a><h1>🇩🇪 Alemanha · salários e estados federados</h1><p>Entgeltatlas 2025 · Fonte: Bundesagentur für Arbeit</p></header>
+<main><section><h2>Profissão e localização</h2><div class="grid"><div><label for="job">Profissão validada</label><select id="job"></select></div><div><label for="state">Estado federado (opcional)</label><select id="state"></select></div></div>
+<p class="muted">O seletor estadual está preparado. As medianas estaduais específicas só aparecerão após validação das observações por Berufsgattung.</p></section>
+<section><h2>Resultados</h2><p id="status" role="status" aria-live="polite">A consultar dados…</p>
+<div class="grid"><div class="metric"><span>Mediana nacional mensal (bruta)</span><strong id="national">—</strong><small id="nationalInfo"></small></div><div class="metric"><span>Mediana do Estado selecionado</span><strong id="regional">—</strong><small id="regionalInfo"></small></div></div>
+<p id="source"></p></section>
+<section><h2>Metodologia e limites</h2><p>O Entgeltatlas apresenta medianas salariais de trabalhadores a tempo completo sujeitos à segurança social. O EarnWage aceita apenas a Berufsgattung correspondente à profissão validada. A Bundesagentur für Arbeit pode apresentar uma categoria mais ampla ou outra região quando as amostras são reduzidas; esses valores não são tratados aqui como salário específico do estado escolhido.</p>
+<p>São salários brutos, não rendimentos líquidos nem valores ajustados ao custo de vida. <a href="https://www.arbeitsagentur.de/hilfe-entgeltatlas" target="_blank" rel="noopener">Consultar a metodologia oficial</a>. <a href="./data/de-entgeltatlas-2025.json">Ver os dados nacionais incluídos nesta página</a>.</p></section>
+</main><script>
+"use strict";
+const $=id=>document.getElementById(id);
+const STATES=[["BW","Baden-Württemberg"],["BY","Bayern"],["BE","Berlin"],["BB","Brandenburg"],["HB","Bremen"],["HH","Hamburg"],["HE","Hessen"],["MV","Mecklenburg-Vorpommern"],["NI","Niedersachsen"],["NW","Nordrhein-Westfalen"],["RP","Rheinland-Pfalz"],["SL","Saarland"],["SN","Sachsen"],["ST","Sachsen-Anhalt"],["SH","Schleswig-Holstein"],["TH","Thüringen"]];
+let data;
+const money=n=>Number(n).toLocaleString("pt-PT",{style:"currency",currency:"EUR",maximumFractionDigits:0})+" / mês";
+function render(){
+ if(!data)return;
+ const job=$("job").value,state=$("state").value;
+ const row=data.records.find(r=>r.occupation===job);
+ if(!row){$("status").textContent="Profissão sem mediana nacional validada";return}
+ $("national").textContent=money(row.value);
+ $("nationalInfo").textContent=row.label+" · "+row.period+" · Berufsgattung";
+ $("regional").textContent=state?"Importação pendente":"Seleciona um Estado";
+ $("regionalInfo").textContent=state?"Só serão apresentados dados estaduais com a mesma Berufsgattung validada; nunca se utiliza a mediana nacional como substituto.":"A seleção regional é opcional";
+ $("status").textContent="27 profissões com mediana nacional validada. Os dados estaduais ainda não foram importados.";
+ const link=document.createElement("a");link.href=row.source_url;link.target="_blank";link.rel="noopener";link.textContent="Ver esta profissão na fonte oficial e selecionar a região ↗";$("source").replaceChildren(link);
+ const url=new URL(location.href);url.searchParams.set("occupation",job);
+ if(state)url.searchParams.set("region",state);else url.searchParams.delete("region");
+ history.replaceState(null,"",url);
+}
+async function start(){
+ try{
+  const response=await fetch("./data/de-entgeltatlas-2025.json",{cache:"no-store"});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  data=await response.json();
+  if(data.schema!==1||data.records?.length!==27||data.precision!=="occupation_specific_kldb_berufsgattung_no_fallback")throw Error("Dados não validados");
+  const occupations=[...data.records].sort((a,b)=>a.label.localeCompare(b.label,"de"));
+  $("job").replaceChildren(...occupations.map(r=>new Option(r.label+" ("+r.occupation+")",r.occupation)));
+  $("state").replaceChildren(new Option("Alemanha · nacional",""),...STATES.map(([code,name])=>new Option(name,code)));
+  const p=new URLSearchParams(location.search),job=p.get("occupation")||"software_developer",state=p.get("region")||"";
+  if(occupations.some(r=>r.occupation===job))$("job").value=job;
+  if(STATES.some(x=>x[0]===state))$("state").value=state;
+  $("job").addEventListener("change",render);$("state").addEventListener("change",render);
+  render();
+ }catch(e){$("status").textContent="Não foi possível carregar os dados: "+e.message}
+}
+start();
+</script></body></html>
