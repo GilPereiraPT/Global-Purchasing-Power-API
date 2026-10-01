@@ -96,3 +96,56 @@ def test_unified_availability_includes_imported_canadian_wages(tmp_path, monkeyp
         assert cell["status"] == "available"
         assert cell["latest_period"] == "2023-2024"
         assert client.get("/v1/salaries/CA/nurse").json()["observations"][0]["currency"] == "CAD"
+
+
+def test_us_soc_mapping_is_conservative_and_broadly_expanded():
+    from app.north_america import US_SOC, US_SOC_UNMAPPED
+    assert len(US_SOC) == 29
+    assert len(US_SOC_UNMAPPED) == 11
+    assert set(US_SOC).isdisjoint(US_SOC_UNMAPPED)
+    assert US_SOC["financial_analyst"][0] == "13-2051"
+    assert US_SOC["physiotherapist"][0] == "29-1123"
+    assert US_SOC["preschool_teacher"][0] == "25-2011"
+    assert US_SOC["it_technician"][0] == "15-1232"
+    assert US_SOC["architect"][0] == "17-1011"
+    assert US_SOC["truck_driver"][0] == "53-3032"
+    assert US_SOC["bus_driver"][0] == "53-3052"
+    assert US_SOC["healthcare_assistant"][0] == "31-1131"
+    assert US_SOC["secondary_teacher"][0] == "25-2031"
+    assert "doctor" in US_SOC_UNMAPPED
+    assert "manager" in US_SOC_UNMAPPED
+    assert "data_analyst" in US_SOC_UNMAPPED
+
+
+def test_curated_us_route_falls_back_to_full_oews(tmp_path, monkeypatch):
+    from app.us_oews import persist as persist_oews
+    monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "combined.sqlite"))
+    persist_oews([{
+        "reference_period": "May 2025", "published_year": 2025,
+        "source_file": "national.xlsx", "area": "99", "area_title": "U.S.",
+        "area_type": "1", "prim_state": "", "naics": "000000",
+        "naics_title": "Cross-industry", "i_group": "cross-industry",
+        "own_code": "1235", "occ_code": "43-4171",
+        "occ_title": "Receptionists and Information Clerks", "o_group": "detailed",
+        "tot_emp": 1000, "emp_prse": 1.0, "jobs_1000": None,
+        "loc_quotient": None, "pct_total": None, "pct_rpt": None,
+        "h_mean": 18.5, "a_mean": 38480, "mean_prse": 1.0,
+        "h_pct10": 12, "h_pct25": 14, "h_median": 17.5,
+        "h_pct75": 21, "h_pct90": 25,
+        "a_pct10": 24960, "a_pct25": 29120, "a_median": 36400,
+        "a_pct75": 43680, "a_pct90": 52000,
+        "source_url": "https://www.bls.gov/oes/tables.htm",
+    }], replace_year=2025)
+    record = wages("US", "receptionist")
+    assert record["status"] == "available"
+    assert record["reference_period"] == "May 2025"
+    assert {o["measure"] for o in record["observations"]} == {"mean", "median"}
+    assert {o["value"] for o in record["observations"]} == {38480, 36400}
+
+
+def test_unmapped_generic_us_job_explains_why(tmp_path, monkeypatch):
+    monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "empty.sqlite"))
+    record = wages("US", "doctor")
+    assert record["status"] == "unavailable"
+    assert "exact SOC mapping" in record["reason"]
+    assert "mapping_caution" in record
