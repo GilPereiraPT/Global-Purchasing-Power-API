@@ -5,6 +5,7 @@ They do not trigger Remotive, Eurostat or ECB traffic on every screen render.
 """
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
+from app import ca_province_wages as ca_province
 from app import pt_occupation_wages as pt_wages
 from app import uk_ashe_wages as uk_wages
 from app import de_entgeltatlas_wages as de_wages
@@ -175,7 +176,8 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     wage = wage_for(code, occupation)
     from app.us_oews import curated_state_wages
     regional_wage = (curated_state_wages(occupation, region) if code == "US" and region
-                     else {"status": "not_requested" if code == "US" else "not_applicable"})
+                     else ca_province.wage(occupation, region) if code == "CA" and region
+                     else {"status": "not_requested" if code in ("US", "CA") else "not_applicable"})
     major_group = JOBS[occupation]["isco08_major_group"]
     group_context = (
         ca_groups.context(occupation) if code == "CA" else
