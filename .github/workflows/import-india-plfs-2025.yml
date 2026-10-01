@@ -1,0 +1,72 @@
+name: Import attributed India PLFS 2025 NCO wages
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/import-india-plfs-2025.yml'
+permissions:
+  contents: write
+concurrency:
+  group: india-plfs-public-aggregates
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Fetch checksum-pinned public preprocessed release and exact mapped source files
+        run: |
+          python - <<'PY'
+          from urllib.request import urlretrieve
+          from pathlib import Path
+          from app.in_plfs_derived_import import DERIVATIVE_COMMIT, DERIVATIVE_FILE, SOURCE_SHA256
+          import hashlib
+          root=Path('/tmp/india-plfs')
+          root.mkdir(parents=True,exist_ok=True)
+          source=root/'2025.csv.zip'
+          urlretrieve(DERIVATIVE_FILE,source)
+          digest=hashlib.sha256(source.read_bytes()).hexdigest()
+          assert digest==SOURCE_SHA256, f'Public archive changed: {digest}'
+          for fn in ('mappings.py','mappings.csv'):
+              urlretrieve(f'https://raw.githubusercontent.com/Vonter/india-plf-survey/{DERIVATIVE_COMMIT}/{fn}',root/fn)
+          print('Downloaded checksum-pinned public derivative and matching occupation/state maps')
+          PY
+      - name: Stream 2025 microdata into aggregate-only NCO and State statistics
+        run: |
+          python -m app.in_plfs_derived_import \
+            --zip /tmp/india-plfs/2025.csv.zip \
+            --mappings /tmp/india-plfs/mappings.py \
+            --states /tmp/india-plfs/mappings.csv \
+            --output data/in_plfs_2025_nco.json
+          python - <<'PY'
+          from pathlib import Path
+          from app.in_plfs_microdata import load_snapshot, coverage, wages
+          import os
+          os.environ['GPP_CACHE_DB']='/tmp/india_plfs_aggregate_verification.sqlite3'
+          n=load_snapshot('data/in_plfs_2025_nco.json')
+          c=coverage()
+          print(c)
+          assert n>50 and c['nco_occupations']>30 and c['states_or_territories']>15,c
+          data=Path('data/in_plfs_2025_nco.json').read_text()
+          assert 'Person ID' not in data
+          PY
+      - name: Verify full API test suite
+        run: python -m pytest -q
+      - name: Publish aggregated observations only under attributable ODbL terms
+        run: |
+          git add data/in_plfs_2025_nco.json
+          if git diff --cached --quiet; then
+            echo 'No aggregate data changes'
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(india): publish attributed PLFS 2025 broad NCO group and State wage aggregates"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
