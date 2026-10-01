@@ -57,3 +57,44 @@ def test_imported_groups_exposed_separately_and_never_annualized():
         other = client.get("/v1/earnwage/overview",
                            params={"country": "US", "occupation": "software_developer"}).json()
         assert other["india_nco2015_professional_group_context"]["status"] == "not_applicable"
+
+
+def test_india_state_dropdown_and_non_fallback_regional_group_wages():
+    with TestClient(app) as client:
+        options = client.get("/v1/regions/IN").json()
+        assert options["visible"] is True
+        assert options["region_type"] == "state_or_union_territory"
+        labels = {r["code"]: r["name"] for r in options["options"]}
+        assert len(labels) == 33
+        assert labels["27"] == "Maharashtra"
+        assert labels["7"] == "Delhi"
+        assert "group" in options["note"]["en"].lower()
+
+        regional = client.get("/v1/earnwage/overview", params={
+            "country": "IN", "occupation": "software_developer", "region": "27"
+        })
+        assert regional.status_code == 200
+        body = regional.json()
+        national = body["india_nco2015_professional_group_context"]
+        regional_group = body["india_nco2015_regional_group_context"]
+        assert national["status"] == regional_group["status"] == "available"
+        assert national["observation"]["geography"] == "national"
+        assert regional_group["observation"]["geography"] == "state"
+        assert regional_group["observation"]["state_name"] == "Maharashtra"
+        assert regional_group["observation"]["value"] != national["observation"]["value"]
+        assert regional_group["exact_occupation_salary"] is False
+        assert body["national_occupation_wage"]["status"] == "unavailable"
+        assert body["annual_presentation"]["status"] == "unavailable"
+
+        missing = client.get("/v1/earnwage/overview", params={
+            "country": "IN", "occupation": "software_developer", "region": "4"
+        }).json()
+        assert missing["india_nco2015_professional_group_context"]["status"] == "available"
+        assert missing["india_nco2015_regional_group_context"]["status"] == "group_observation_unavailable"
+        assert client.get("/v1/earnwage/overview?country=IN&occupation=software_developer&region=INVALID").status_code == 422
+        compare = client.get("/v1/earnwage/compare", params={
+            "country_a": "IN", "country_b": "US", "occupation": "software_developer",
+            "region_a": "27", "region_b": "CA"
+        })
+        assert compare.status_code == 200
+        assert compare.json()["country_a"]["india_nco2015_regional_group_context"]["status"] == "available"
