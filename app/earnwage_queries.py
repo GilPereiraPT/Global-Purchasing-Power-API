@@ -23,6 +23,7 @@ from app import ca_statcan_groups as ca_groups
 from app import br_cbo
 from app import br_rais_wages
 from app import br_public_wages
+from app import pt_public_wages
 from app.ilostat_import import salary as ilostat_salary, availability as ilostat_availability
 from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
@@ -204,6 +205,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     ireland_group_context = ie_groups.context(occupation, major_group) if code == "IE" else {"status":"not_applicable"}
     brazil_cbo = br_cbo.mapping(occupation) if code == "BR" else {"status":"not_applicable"}
     brazil_public_entry = br_public_wages.wage(occupation) if code == "BR" else {"status":"not_applicable"}
+    portugal_public_entry = pt_public_wages.wage(occupation) if code == "PT" else {"status":"not_applicable"}
     exact_available = wage.get("status") == "available"
     group_available = (
         group_context.get("status") == "available" and (
@@ -257,6 +259,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "ireland_cso_occupational_group_context": ireland_group_context,
         "brazil_cbo_occupation": brazil_cbo,
         "brazil_public_sector_entry": brazil_public_entry,
+        "portugal_public_sector_entry": portugal_public_entry,
         "annual_presentation": annual_presentation(wage, group_context),
         "salary_display": {
             "source": display_source,
@@ -400,6 +403,7 @@ def coverage():
 
     public_ie = ie_wages.public_sector_coverage()
     public_br = br_public_wages.public_sector_coverage()
+    public_pt = pt_public_wages.public_sector_coverage()
     rows = []
     for code in COUNTRY_MAP:
         exact_count = sum(country == code for country, _occupation in observed)
@@ -414,7 +418,8 @@ def coverage():
             if context.get("status") == "available":
                 group_count += 1
         public_count = (len(public_ie) if code == "IE" else
-                        len(public_br) if code == "BR" else 0)
+                        len(public_br) if code == "BR" else
+                        len(public_pt) if code == "PT" else 0)
         rows.append({
             "code": code,
             "observed_occupations": exact_count,
