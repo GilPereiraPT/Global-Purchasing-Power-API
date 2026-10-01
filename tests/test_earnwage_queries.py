@@ -64,6 +64,19 @@ def test_real_coverage_and_invalid_region():
         assert country["CA"]["observed_occupations"] == 38
         assert country["CA"]["group_context_occupations"] == 40
         assert country["CA"]["public_sector_entry_occupations"] == 0
+        us_regions = country["US"]["regional_salary_coverage"]
+        ca_regions = country["CA"]["regional_salary_coverage"]
+        assert us_regions["region_type"] == "state"
+        assert us_regions["possible_regions"] == 50
+        assert us_regions["regions_with_data"] <= 50
+        assert us_regions["observed_occupation_region_pairs"] <= 29 * 50
+        assert ca_regions["region_type"] == "province_or_territory"
+        assert ca_regions["possible_regions"] == 13
+        assert ca_regions["regions_with_data"] == 13
+        assert ca_regions["observed_occupation_region_pairs"] == 444
+        assert any(r["code"] == "ON" and r["observed_occupations"] > 0
+                   for r in ca_regions["by_region"])
+        assert country["PT"]["regional_salary_coverage"]["status"] == "not_applicable"
         assert 10 <= country["US"]["observed_occupations"] <= 29  # curated national or complete imported OEWS
         assert country["DE"]["observed_occupations"] == 27
         assert country["FR"]["observed_occupations"] == 23
