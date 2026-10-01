@@ -69,16 +69,51 @@ CANADA_NOC = {
 }
 # US SOC 2018 detailed units. Avoid conflating related-but-distinct occupations.
 US_SOC = {
+    # Direct or defensible SOC 2018 detailed mappings only. Generic interface
+    # labels that span multiple detailed SOC occupations are intentionally absent.
     "accountant": ("13-2011", "Accountants and Auditors"),
+    "auditor": ("13-2011", "Accountants and Auditors"),
+    "financial_analyst": ("13-2051", "Financial and Investment Analysts"),
     "nurse": ("29-1141", "Registered Nurses"),
-    "civil_engineer": ("17-2051", "Civil Engineers"),
-    "electrician": ("47-2111", "Electricians"),
-    "software_developer": ("15-1252", "Software Developers"),
-    "mechanical_engineer": ("17-2141", "Mechanical Engineers"),
     "pharmacist": ("29-1051", "Pharmacists"),
     "physiotherapist": ("29-1123", "Physical Therapists"),
+    "preschool_teacher": ("25-2011", "Preschool Teachers, Except Special Education"),
+    "software_developer": ("15-1252", "Software Developers"),
+    "it_technician": ("15-1232", "Computer User Support Specialists"),
+    "civil_engineer": ("17-2051", "Civil Engineers"),
+    "mechanical_engineer": ("17-2141", "Mechanical Engineers"),
+    "architect": ("17-1011", "Architects, Except Landscape and Naval"),
+    "administrative_assistant": ("43-6014", "Secretaries and Administrative Assistants, Except Legal, Medical, and Executive"),
+    "receptionist": ("43-4171", "Receptionists and Information Clerks"),
+    "sales_assistant": ("41-2031", "Retail Salespersons"),
+    "truck_driver": ("53-3032", "Heavy and Tractor-Trailer Truck Drivers"),
+    "bus_driver": ("53-3052", "Bus Drivers, Transit and Intercity"),
+    "electrician": ("47-2111", "Electricians"),
+    "plumber": ("47-2152", "Plumbers, Pipefitters, and Steamfitters"),
+    "construction_worker": ("47-2061", "Construction Laborers"),
+    "waiter": ("35-3031", "Waiters and Waitresses"),
+    "security_guard": ("33-9032", "Security Guards"),
+    "lawyer": ("23-1011", "Lawyers"),
     "dentist": ("29-1021", "Dentists, General"),
+    "healthcare_assistant": ("31-1131", "Nursing Assistants"),
     "cybersecurity_specialist": ("15-1212", "Information Security Analysts"),
+    "secondary_teacher": ("25-2031", "Secondary School Teachers, Except Special and Career/Technical Education"),
+    "welder": ("51-4121", "Welders, Cutters, Solderers, and Brazers"),
+    "automotive_mechanic": ("49-3023", "Automotive Service Technicians and Mechanics"),
+}
+
+US_SOC_UNMAPPED = {
+    "doctor": "Generic doctor spans multiple physician and surgeon SOC occupations.",
+    "psychologist": "Generic psychologist spans clinical/counseling, school, industrial-organizational and other SOC occupations.",
+    "teacher": "Generic teacher spans preschool, elementary, middle, secondary, postsecondary and special-education SOC occupations.",
+    "manager": "Generic manager spans many detailed management SOC occupations.",
+    "supermarket_worker": "Supermarket work can be cashier, retail sales, stock/order filling, management or another occupation.",
+    "cook": "Generic cook spans restaurant, institutional, fast-food, private-household and other cook SOC occupations.",
+    "cleaner": "Generic cleaner spans janitors/building cleaners and maids/housekeeping cleaners.",
+    "data_analyst": "Data analyst is not a single SOC 2018 detailed occupation; duties may align with data scientists, statisticians or other analysts.",
+    "warehouse_operator": "Warehouse operator can map to stock/order filling, material moving, forklift or clerical occupations depending on duties.",
+    "industrial_operator": "Industrial machine operator requires the machine/process to select a detailed SOC occupation.",
+    "agricultural_worker": "Generic agricultural worker spans several skilled and farmworker SOC occupations.",
 }
 
 
