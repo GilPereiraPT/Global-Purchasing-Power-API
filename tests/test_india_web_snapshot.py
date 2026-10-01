@@ -52,3 +52,15 @@ def test_main_web_contains_india_static_salary_flow():
 if __name__ == "__main__":
     WEB.parent.mkdir(exist_ok=True, parents=True)
     WEB.write_text(json.dumps(snapshot(), ensure_ascii=False, separators=(",", ":")), encoding="utf8")
+
+
+def test_india_direct_lookup_is_linked_and_does_not_depend_on_production_api():
+    main = (ROOT / "docs/index.html").read_text(encoding="utf8")
+    page = (ROOT / "docs/india.html").read_text(encoding="utf8")
+    assert 'href="./india.html?occupation=software_developer&region=27"' in main
+    assert 'fetch("./data/india-plfs-2025-nco.json"' in page
+    assert 'earnwage-api.policlinicosdesantoandre.com' not in page
+    assert 'data.mapping[occupation]' in page
+    assert 'new URLSearchParams(location.search)' in page
+    assert "Não substituída pela média nacional" in page
+    assert "não salários exatos" in page
