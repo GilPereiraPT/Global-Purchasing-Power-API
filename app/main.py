@@ -39,6 +39,8 @@ async def lifespan(app: FastAPI):
     load_uk_wages()
     from app.de_entgeltatlas_wages import load_snapshot as load_de_wages
     load_de_wages()
+    from app import de_entgeltatlas_states
+    de_entgeltatlas_states.load()
     from app.fr_insee_wages import load_snapshot as load_fr_wages
     load_fr_wages()
     from app.nl_cbs_wages import load_snapshot as load_nl_wages
@@ -371,6 +373,12 @@ def us_oews_state_wage(occupation: str, state: str):
         return us_oews.curated_state_wages(occupation, state)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/v1/de/entgeltatlas/regional/coverage")
+def germany_entgeltatlas_regional_coverage():
+    from app.de_entgeltatlas_states import coverage
+    return coverage()
 
 
 @app.get("/v1/br/rais/regional/coverage")
