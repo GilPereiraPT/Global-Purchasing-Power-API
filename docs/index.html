@@ -66,7 +66,7 @@ function showMainIndiaGroup(data,url){
     const response=document.querySelector("#status")?.closest("section");
     response?.parentNode?.insertBefore(panel,response);
   }
-  const isIndia=typeof url==="string" && /\\/v1\\/earnwage\\/(overview|compare)/.test(url);
+  const isIndia=typeof url==="string" && (url.includes("/v1/earnwage/overview") || url.includes("/v1/earnwage/compare"));
   if(!panel||!isIndia){if(panel)panel.hidden=true;return}
   const matches=[];
   if(data?.country?.code==="IN")matches.push(data);
