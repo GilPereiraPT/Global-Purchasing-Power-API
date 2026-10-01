@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '.github/workflows/import-us-oews-complete.yml'
+      - 'tests/test_earnwage_queries.py'
+      - 'app/us_oews_snapshot.py'
 permissions:
   contents: write
 concurrency:
