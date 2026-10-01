@@ -354,6 +354,17 @@ async def job_detail(job_id: int):
         raise HTTPException(404, "Job not in latest available Remotive feed")
     return record
 
+@app.get("/v1/us/oews/states/{occupation}/{state}")
+def us_oews_state_wage(occupation: str, state: str):
+    """Explicit state-wide salary context; no national fallback."""
+    if occupation not in {item["id"] for item in OCCUPATIONS}:
+        raise HTTPException(422, "Unknown occupation")
+    try:
+        return us_oews.curated_state_wages(occupation, state)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 @app.get("/v1/us/oews/coverage")
 def us_oews_coverage():
     """Coverage actually imported from official BLS OEWS files."""
