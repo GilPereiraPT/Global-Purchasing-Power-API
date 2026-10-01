@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import jobs as job_provider
 from app import north_america as na_wages
+from app import ca_province_wages
 from app import us_oews
 from app.client_config import configuration as earnwage_configuration, region_configuration
 from app import earnwage_queries as ew_queries
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
     from pathlib import Path
     load_snapshot(Path(__file__).resolve().parent.parent / "data" / "salaries_snapshot.json")
     na_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "north_america_wages.json")
+    ca_province_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "ca_province_wages.json")
     from app.pt_occupation_wages import load_snapshot as load_pt_wages
     load_pt_wages()
     from app.uk_ashe_wages import load_snapshot as load_uk_wages
@@ -361,6 +363,21 @@ def us_oews_state_wage(occupation: str, state: str):
         raise HTTPException(422, "Unknown occupation")
     try:
         return us_oews.curated_state_wages(occupation, state)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/v1/ca/provinces/coverage")
+def canada_provincial_coverage():
+    return ca_province_wages.coverage()
+
+
+@app.get("/v1/ca/provinces/{occupation}/{province}")
+def canada_provincial_wages(occupation: str, province: str):
+    if occupation not in {item["id"] for item in OCCUPATIONS}:
+        raise HTTPException(422, "Unknown occupation")
+    try:
+        return ca_province_wages.wage(occupation, province)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
 
