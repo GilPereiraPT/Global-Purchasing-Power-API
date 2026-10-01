@@ -7,6 +7,12 @@
 <main><section><h2>🇧🇷 Consultar salários por Estado no Brasil</h2><p>38 profissões e 993 medianas salariais regionais derivadas da RAIS 2025, com consulta direta sem depender da atualização da API.</p><p><a href="./brazil.html?occupation=accountant&uf=SP" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir salários por Estado no Brasil ↗</a></p></section><section><h2>🇮🇳 Consultar salários na Índia</h2><p>Pesquisa simplificada por profissão e Estado, utilizando diretamente as médias PLFS 2025 publicadas no site, sem depender da API de produção.</p><p><a href="./india.html?occupation=software_developer&region=27" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir consulta da Índia ↗</a></p><p class="muted">São referências estatísticas de grupos NCO; não representam o salário específico da profissão.</p></section><section><h2>Data Manager · atualizar API e dados sem Terminal</h2><p class="muted">Gestão protegida pelo navegador: atualizar a API de produção a partir da última versão testada do GitHub, criar cópias de segurança, importar dados oficiais e consultar o histórico de execuções.</p><p><a href="./data-manager.html#deploy" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Atualizar API / abrir Data Manager ↗</a></p></section><section><h2>Inventário real da base de dados</h2><p class="muted">Audita país a país todos os indicadores importados, salários e cache de câmbios. Filtra os dados existentes e em falta, verifica datas, exporta CSV e JSON.</p><p><a href="./data-inventory.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir inventário de dados ↗</a></p></section><section><h2>Comparação económica · Moeda global</h2><p class="muted">Comparar salários líquidos de referência, inflação e nível de preços com conversão cambial identificada.</p><p><a href="./economic-compare.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir comparação económica ↗</a></p></section><section><h2>Country Insights · Qualidade de vida</h2><p class="muted">Indicadores oficiais, evolução histórica e comparação entre 2 e 5 países, com fonte e ano de referência.</p><p><a href="./country-insights.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir Country Insights ↗</a></p></section><section><h2>Ligação à API</h2><div class="grid"><div><label for="base">Endereço da API</label><input id="base" value="https://earnwage-api.policlinicosdesantoandre.com" spellcheck="false"></div><div><label for="module">Módulo</label><select id="module"></select></div></div><p class="muted"><a id="directHealth" href="https://earnwage-api.policlinicosdesantoandre.com/v1/health" target="_blank" rel="noopener">Abrir diretamente o estado da API ↗</a> · <a id="directCountries" href="https://earnwage-api.policlinicosdesantoandre.com/v1/countries" target="_blank" rel="noopener">Abrir países diretamente ↗</a></p><p class="muted">Página pública de desenvolvimento: não introduzir tokens, palavras-passe ou dados pessoais. A API tem de permitir CORS para esta origem GitHub Pages.</p></section>
 <section><h2>Consulta salarial</h2><p class="muted">Consulta atual: último valor conhecido, sem selecionar ano. Histórico: intervalo de anos, sem preencher lacunas.</p><div class="actions"><button id="latestTab" type="button">Último valor conhecido</button><button id="historyTab" class="secondary" type="button">Evolução salarial</button></div><p id="salaryTabNote" class="muted">Consulta atual sem ano selecionado.</p></section>
 <section><h2>Parâmetros</h2><div class="grid"><div><label for="country">País</label><select id="country"></select></div><div><label for="destination">Destino</label><select id="destination"></select></div><div id="regionABox" hidden><label for="regionA">Estado / província (opcional)</label><select id="regionA"></select></div><div id="regionBBox" hidden><label for="regionB">Estado / província do destino (opcional)</label><select id="regionB"></select></div><div><label for="occupation">Profissão (pesquisável)</label><input id="occupation" list="occupations" placeholder="Pesquisar profissão"><datalist id="occupations"></datalist></div><div><label for="lang">Idioma das profissões</label><select id="lang"><option value="pt">Português</option><option value="en">English</option></select></div><div><label for="currency">Moeda ISO</label><input id="currency" value="USD" maxlength="3"></div><div><label for="gross">Salário bruto anual (opcional)</label><input id="gross" type="number" min="1" placeholder="Ex.: 40000"></div><div class="historyOnly" style="display:none"><label for="start">Ano inicial (referência para testes)</label><select id="start"></select></div><div class="historyOnly" style="display:none"><label for="end">Ano final (referência para testes)</label><select id="end"></select></div><div><label for="limit">Máximo de empregos</label><input id="limit" type="number" min="1" max="100" value="20"></div></div><p class="muted" id="moduleNote"></p><div class="actions"><button id="run">Executar teste</button><button id="load" class="secondary">Carregar países e profissões</button><button id="matrix" class="secondary">Testar cobertura salarial</button></div></section>
+<section id="brazilMainPanel" hidden>
+<h2>🇧🇷 Brasil · mediana salarial por profissão e Estado</h2>
+<p class="muted">Observações RAIS 2025 publicadas pela 99K, para um código CBO validado e vínculos formais com jornada de 40–44 horas. A consulta usa os dados agregados deste site e não depende da atualização da API de produção.</p>
+<p id="brazilMainMessage" role="status" aria-live="polite"></p><div id="brazilMainResult"></div>
+<p><a href="./brazil.html?occupation=accountant&uf=SP">Abrir consulta brasileira completa ↗</a></p>
+</section>
 <section id="indiaMainPanel" hidden><h2>🇮🇳 Índia · referência salarial por grupo profissional</h2><p class="muted">Dados PLFS 2025 publicados no GitHub Pages. São médias de grupos NCO, não salários específicos da profissão nem rendimentos líquidos. Esta consulta funciona independentemente da atualização da API de produção.</p><p id="indiaMainMessage" role="status" aria-live="polite"></p><div id="indiaMainResult" style="overflow:auto"></div></section>
 <section id="india-data"><h2>🇮🇳 Índia · salários por grupo profissional e Estado</h2>
 <p class="muted">PLFS 2025 · 597 observações agregadas publicadas no GitHub, de uma versão pré-processada dos microdados MoSPI. Valores mensais em INR, referentes a grupos profissionais NCO de três dígitos; <strong>não são salários exatos das 40 profissões</strong>.</p>
@@ -54,12 +60,45 @@ async function updateRegions(countryId,regionId,boxId){
 
     }
   if(country==="IN")renderIndiaMain();
+  if(country==="BR")renderBrazilMain();
 }
 $("country").addEventListener("change",()=>updateRegions("country","regionA","regionABox"));
 $("destination").addEventListener("change",()=>updateRegions("destination","regionB","regionBBox"));
 $("base").addEventListener("change",()=>{updateRegions("country","regionA","regionABox");updateRegions("destination","regionB","regionBBox")});
 updateRegions("country","regionA","regionABox");
 updateRegions("destination","regionB","regionBBox");
+
+let brazilSnapshotPromise;
+function getBrazilSnapshot(){
+  if(!brazilSnapshotPromise)brazilSnapshotPromise=fetch("./data/br-rais-2025-states.json",{cache:"no-store"})
+    .then(r=>{if(!r.ok)throw Error("Brazil snapshot HTTP "+r.status);return r.json()})
+    .then(j=>{if(j.schema!==1||j.country!=="BR"||j.precision!=="occupation_cbo2002_6_digit"||!Array.isArray(j.records))throw Error("Brazil snapshot format");return j})
+    .catch(e=>{brazilSnapshotPromise=null;throw e});
+  return brazilSnapshotPromise;
+}
+async function renderBrazilMain(){
+  const panel=$("brazilMainPanel");
+  if($("country").value!=="BR"){panel.hidden=true;return}
+  panel.hidden=false;
+  const message=$("brazilMainMessage"),out=$("brazilMainResult");
+  const job=occupationId(),uf=$("regionA").value;
+  message.textContent="A consultar dados RAIS por Estado…";out.replaceChildren();
+  try{
+    const snapshot=await getBrazilSnapshot();
+    if($("country").value!=="BR")return;
+    if(!uf){message.textContent="Seleciona um Estado para consultar a remuneração regional. Os salários nacionais da RAIS estão disponíveis no módulo de salário por profissão.";return}
+    const row=snapshot.records.find(r=>r[0]===job&&r[1]===uf);
+    if(!row){message.textContent="Sem mediana publicada para esta profissão e Estado. Não substituímos valores estaduais pela mediana nacional.";return}
+    const table=document.createElement("table"),head=document.createElement("tr");
+    ["Profissão","Estado","Mediana de dezembro de 2025","Vínculos da amostra","Código CBO"].forEach(title=>{const th=document.createElement("th");th.textContent=title;head.append(th)});table.append(head);
+    const tr=document.createElement("tr"),name=$("regionA").selectedOptions[0]?.text||uf;
+    const values=[job,name,Number(row[2]).toLocaleString("pt-PT",{style:"currency",currency:"BRL",maximumFractionDigits:0})+" / mês",Number(row[3]).toLocaleString("pt-PT"),row[4]];
+    values.forEach(value=>{const td=document.createElement("td");td.textContent=value;tr.append(td)});table.append(tr);
+    const source=document.createElement("a");source.href=row[5];source.target="_blank";source.rel="noopener";source.textContent="Consultar dados da profissão na fonte 99K ↗";
+    message.textContent="Mediana estatística específica do código CBO; não é salário líquido ou garantia individual.";
+    out.replaceChildren(table,source);
+  }catch(e){message.textContent="Dados brasileiros indisponíveis neste navegador: "+e.message}
+}
 
 let indiaSnapshotPromise;
 function getIndiaSnapshot(){
@@ -244,6 +283,9 @@ $("latestTab").onclick=()=>setSalaryTab(false);$("historyTab").onclick=()=>setSa
 $("module").addEventListener("change",()=>{const v=$("module").value;if(v==="overview"||v==="history")setSalaryTabFields(v==="history")});
 function setSalaryTabFields(historical){for(const e of document.querySelectorAll(".historyOnly"))e.style.display=historical?"":"none"}
 $("country").addEventListener("change",renderIndiaMain);
+$("country").addEventListener("change",renderBrazilMain);
+$("regionA").addEventListener("change",renderBrazilMain);
+$("occupation").addEventListener("input",renderBrazilMain);
 $("regionA").addEventListener("change",renderIndiaMain);
 $("occupation").addEventListener("input",renderIndiaMain);
 setSalaryTab(false);
