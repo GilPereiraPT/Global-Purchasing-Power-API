@@ -371,6 +371,21 @@ def us_oews_state_wage(occupation: str, state: str):
         raise HTTPException(422, str(exc)) from exc
 
 
+@app.get("/v1/in/earnwage-nco/coverage")
+def india_earnwage_nco_coverage():
+    from app.in_nco_crosswalk import coverage
+    return coverage()
+
+
+@app.get("/v1/in/earnwage-nco/{occupation}")
+def india_earnwage_nco_context(occupation: str, state: str | None = None):
+    from app.in_nco_crosswalk import context
+    try:
+        return context(occupation, state)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 @app.get("/v1/in/plfs/nco/coverage")
 def india_nco_coverage():
     from app.in_plfs_microdata import coverage
