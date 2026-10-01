@@ -118,5 +118,37 @@ def coverage():
     }
 
 
+def occupation_matrix():
+    """40-entry PT audit: distinguish public matches from market wage coverage.
+
+    Every available public amount is an explicit 2026 career benchmark. This
+    matrix does not assert that national market wages exist for the job.
+    """
+    from app.catalog import OCCUPATIONS
+    rows = []
+    for job in OCCUPATIONS:
+        observation = wage(job["id"])
+        rows.append({
+            "occupation": job["id"],
+            "label_pt": job["translations"]["pt"],
+            "public_benchmark_status": observation["status"],
+            "mapping_precision": observation.get("mapping_precision"),
+            "public_career": observation.get("public_role"),
+            "value": observation.get("value"),
+            "currency": observation.get("currency"),
+            "reference_period": observation.get("reference_period"),
+            "source_url": observation.get("source_url"),
+            "notice": observation.get("note", observation.get("reason")),
+        })
+    return {
+        "country": "PT", "total_occupations": len(rows), "period": YEAR,
+        "market_wage_layer": "independent_not_inferred_from_public_pay",
+        "direct_public_career": len(DIRECT),
+        "conditional_comparable_public_career": len(CONDITIONAL),
+        "public_benchmarks": len(DIRECT) + len(CONDITIONAL),
+        "rows": rows,
+    }
+
+
 def public_sector_coverage():
     return {("PT", job): YEAR for job in set(DIRECT) | set(CONDITIONAL)}
