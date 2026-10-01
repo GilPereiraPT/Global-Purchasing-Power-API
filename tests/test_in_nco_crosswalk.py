@@ -32,6 +32,12 @@ def test_imported_groups_exposed_separately_and_never_annualized():
         assert coverage["unmapped_ambiguous"] == 9
         assert coverage["exact_occupation_wages_from_this_mapping"] == 0
         assert coverage["underlying_nco_coverage"]["observations"] == 597
+        state_coverage = coverage["regional_nco_group_coverage"]
+        assert state_coverage["regions_listed"] == 33
+        region_by_code = {row["code"]: row for row in state_coverage["by_state"]}
+        assert region_by_code["27"]["name"] == "Maharashtra"
+        assert region_by_code["27"]["mapped_professions_with_group_context"] > 0
+        assert region_by_code["27"]["exact_occupation_wages"] == 0
         assert coverage["broad_group_observations_available"] >= 10
 
         url = "/v1/in/earnwage-nco/software_developer"
