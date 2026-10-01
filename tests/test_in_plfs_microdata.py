@@ -84,6 +84,9 @@ def test_fails_closed_on_unreviewed_crosswalk_and_wrong_schema(tmp_path):
 
 def test_nco_api_is_explicitly_unavailable_without_import(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "empty.sqlite"))
+    # Simulate a clean deployment even when the repository already ships data.
+    from app import in_plfs_microdata
+    monkeypatch.setattr(in_plfs_microdata, "load_snapshot", lambda path: 0)
     with TestClient(app) as client:
         c = client.get("/v1/in/plfs/nco/coverage").json()
         assert c["status"] == "not_imported"
