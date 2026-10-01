@@ -1,0 +1,49 @@
+name: Import complete official US OEWS wages
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/import-us-oews-complete.yml'
+permissions:
+  contents: write
+concurrency:
+  group: us-oews-curated-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Import source OEWS May 2025 all-data release
+        env:
+          GPP_CACHE_DB: ${{ runner.temp }}/oews-full.sqlite3
+        run: |
+          python -m app.us_oews --download --year 2025
+          python -m app.us_oews_snapshot --export
+          python -m app.us_oews_snapshot --load
+          python - <<'PY'
+          from app.us_oews import coverage
+          from app.us_oews_snapshot import export_snapshot
+          print("Official full release:", coverage())
+          print("Published curated subset:", export_snapshot())
+          PY
+      - name: Run tests
+        run: python -m pytest -q
+      - name: Publish validated national and state snapshot
+        run: |
+          git add data/us_oews_curated.json
+          if git diff --cached --quiet; then
+            echo "No new OEWS data"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: publish official BLS 2025 national and state OEWS observations"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
