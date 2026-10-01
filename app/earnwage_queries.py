@@ -244,6 +244,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
         "national_occupation_wage": wage,
         "india_plfs_employee_earnings_context": (in_plfs.earnings() if code == "IN" else {"status": "not_applicable"}),
         "india_nco2015_professional_group_context": (in_nco_crosswalk.context(occupation) if code == "IN" else {"status": "not_applicable"}),
+        "india_nco2015_regional_group_context": (in_nco_crosswalk.context(occupation, region) if code == "IN" and region else {"status": "not_requested" if code == "IN" else "not_applicable"}),
         "regional_occupation_wage": regional_wage,
         "national_major_group_context": group_context,
         "swiss_ch_isco19_submajor_context": swiss_context,
