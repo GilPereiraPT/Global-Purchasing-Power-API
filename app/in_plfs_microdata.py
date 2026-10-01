@@ -245,10 +245,19 @@ def coverage():
         init(db)
         n, jobs, regions = db.execute("""SELECT COUNT(*), COUNT(DISTINCT nco_code),
             COUNT(DISTINCT CASE WHEN scope='state' THEN state_code END) FROM in_plfs_nco_wages""").fetchone()
+        sources = [r[0] for r in db.execute(
+            "SELECT DISTINCT source_url FROM in_plfs_nco_wages ORDER BY source_url")]
+    from app.in_plfs_derived_import import DERIVATIVE_URL
+    secondary = DERIVATIVE_URL in sources
     return {"status": "available" if n else "not_imported",
             "observations": n, "nco_occupations": jobs, "states_or_territories": regions,
+            "precision": "broad_nco2015_three_digit_group",
             "occupation_mapping_status": "requires_separate_approved_crosswalk",
-            "source_url": MICRODATA_URL}
+            "provenance": "public_third_party_harmonised_microdata" if secondary
+                          else "direct_official_microdata" if n else "not_imported",
+            "reuse_license": "ODbL 1.0" if secondary else None,
+            "source_urls": sources,
+            "underlying_official_source_url": MICRODATA_URL}
 
 
 if __name__ == "__main__":
