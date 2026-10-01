@@ -7,6 +7,7 @@
 <main><section><h2>Data Manager · atualizar API e dados sem Terminal</h2><p class="muted">Gestão protegida pelo navegador: atualizar a API de produção a partir da última versão testada do GitHub, criar cópias de segurança, importar dados oficiais e consultar o histórico de execuções.</p><p><a href="./data-manager.html#deploy" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Atualizar API / abrir Data Manager ↗</a></p></section><section><h2>Inventário real da base de dados</h2><p class="muted">Audita país a país todos os indicadores importados, salários e cache de câmbios. Filtra os dados existentes e em falta, verifica datas, exporta CSV e JSON.</p><p><a href="./data-inventory.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir inventário de dados ↗</a></p></section><section><h2>Comparação económica · Moeda global</h2><p class="muted">Comparar salários líquidos de referência, inflação e nível de preços com conversão cambial identificada.</p><p><a href="./economic-compare.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir comparação económica ↗</a></p></section><section><h2>Country Insights · Qualidade de vida</h2><p class="muted">Indicadores oficiais, evolução histórica e comparação entre 2 e 5 países, com fonte e ano de referência.</p><p><a href="./country-insights.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir Country Insights ↗</a></p></section><section><h2>Ligação à API</h2><div class="grid"><div><label for="base">Endereço da API</label><input id="base" value="https://earnwage-api.policlinicosdesantoandre.com" spellcheck="false"></div><div><label for="module">Módulo</label><select id="module"></select></div></div><p class="muted"><a id="directHealth" href="https://earnwage-api.policlinicosdesantoandre.com/v1/health" target="_blank" rel="noopener">Abrir diretamente o estado da API ↗</a> · <a id="directCountries" href="https://earnwage-api.policlinicosdesantoandre.com/v1/countries" target="_blank" rel="noopener">Abrir países diretamente ↗</a></p><p class="muted">Página pública de desenvolvimento: não introduzir tokens, palavras-passe ou dados pessoais. A API tem de permitir CORS para esta origem GitHub Pages.</p></section>
 <section><h2>Consulta salarial</h2><p class="muted">Consulta atual: último valor conhecido, sem selecionar ano. Histórico: intervalo de anos, sem preencher lacunas.</p><div class="actions"><button id="latestTab" type="button">Último valor conhecido</button><button id="historyTab" class="secondary" type="button">Evolução salarial</button></div><p id="salaryTabNote" class="muted">Consulta atual sem ano selecionado.</p></section>
 <section><h2>Parâmetros</h2><div class="grid"><div><label for="country">País</label><select id="country"></select></div><div><label for="destination">Destino</label><select id="destination"></select></div><div id="regionABox" hidden><label for="regionA">Estado / província (opcional)</label><select id="regionA"></select></div><div id="regionBBox" hidden><label for="regionB">Estado / província do destino (opcional)</label><select id="regionB"></select></div><div><label for="occupation">Profissão (pesquisável)</label><input id="occupation" list="occupations" placeholder="Pesquisar profissão"><datalist id="occupations"></datalist></div><div><label for="lang">Idioma das profissões</label><select id="lang"><option value="pt">Português</option><option value="en">English</option></select></div><div><label for="currency">Moeda ISO</label><input id="currency" value="USD" maxlength="3"></div><div><label for="gross">Salário bruto anual (opcional)</label><input id="gross" type="number" min="1" placeholder="Ex.: 40000"></div><div class="historyOnly" style="display:none"><label for="start">Ano inicial (referência para testes)</label><select id="start"></select></div><div class="historyOnly" style="display:none"><label for="end">Ano final (referência para testes)</label><select id="end"></select></div><div><label for="limit">Máximo de empregos</label><input id="limit" type="number" min="1" max="100" value="20"></div></div><p class="muted" id="moduleNote"></p><div class="actions"><button id="run">Executar teste</button><button id="load" class="secondary">Carregar países e profissões</button><button id="matrix" class="secondary">Testar cobertura salarial</button></div></section>
+<section id="indiaMainPanel" hidden><h2>🇮🇳 Índia · referência salarial por grupo profissional</h2><p class="muted">Dados PLFS 2025 publicados no GitHub Pages. São médias de grupos NCO, não salários específicos da profissão nem rendimentos líquidos. Esta consulta funciona independentemente da atualização da API de produção.</p><p id="indiaMainMessage" role="status" aria-live="polite"></p><div id="indiaMainResult" style="overflow:auto"></div></section>
 <section id="india-data"><h2>🇮🇳 Índia · salários por grupo profissional e Estado</h2>
 <p class="muted">PLFS 2025 · 597 observações agregadas publicadas no GitHub, de uma versão pré-processada dos microdados MoSPI. Valores mensais em INR, referentes a grupos profissionais NCO de três dígitos; <strong>não são salários exatos das 40 profissões</strong>.</p>
 <div class="actions"><button id="indiaCheck">Verificar dados da Índia no servidor</button><button id="indiaExample" class="secondary">Consultar exemplo: software / Maharashtra</button></div>
@@ -45,15 +46,58 @@ async function updateRegions(countryId,regionId,boxId){
       if(!response.ok)throw Error("HTTP "+response.status);
       const payload=await response.json();
       for(const item of payload.options||[])select.add(new Option(item.name,item.code));
+      if(country==="IN"&&select.options.length===1){const snap=await getIndiaSnapshot();for(const [id,name] of indiaStateOptions(snap))select.add(new Option(name,id))}
+
     }catch(error){
       console.warn("Opções regionais indisponíveis",error);
+      if(country==="IN")try{const snap=await getIndiaSnapshot();for(const [id,name] of indiaStateOptions(snap))select.add(new Option(name,id))}catch(e){console.warn("Sem lista estática da Índia",e)}
+
     }
+  if(country==="IN")renderIndiaMain();
 }
 $("country").addEventListener("change",()=>updateRegions("country","regionA","regionABox"));
 $("destination").addEventListener("change",()=>updateRegions("destination","regionB","regionBBox"));
 $("base").addEventListener("change",()=>{updateRegions("country","regionA","regionABox");updateRegions("destination","regionB","regionBBox")});
 updateRegions("country","regionA","regionABox");
 updateRegions("destination","regionB","regionBBox");
+
+let indiaSnapshotPromise;
+function getIndiaSnapshot(){
+  if(!indiaSnapshotPromise)indiaSnapshotPromise=fetch("./data/india-plfs-2025-nco.json",{cache:"no-store"})
+    .then(r=>{if(!r.ok)throw Error("snapshot HTTP "+r.status);return r.json()})
+    .then(data=>{if(data.schema!==1||data.precision!=="broad_nco2015_three_digit_group"||!Array.isArray(data.records))throw Error("Ficheiro agregado inválido");return data})
+    .catch(err=>{indiaSnapshotPromise=null;throw err});
+  return indiaSnapshotPromise;
+}
+function indiaStateOptions(snapshot){
+  const choices=new Map(snapshot.records.filter(r=>r[1]&&r[3]).map(r=>[r[1],r[3]]));
+  return [...choices].sort((a,b)=>a[1].localeCompare(b[1],"en"));
+}
+async function renderIndiaMain(){
+  const panel=$("indiaMainPanel");
+  if($("country").value!=="IN"){panel.hidden=true;return}
+  panel.hidden=false;
+  const message=$("indiaMainMessage"),out=$("indiaMainResult");
+  const job=occupationId(),state=$("regionA").value;
+  message.textContent="A consultar os dados PLFS publicados…";out.replaceChildren();
+  try{
+    const snap=await getIndiaSnapshot();
+    if($("country").value!=="IN")return;
+    const nco=snap.mapping[job];
+    if(!nco){message.textContent="Seleciona uma profissão. Se já está selecionada, a categoria pode ser demasiado ampla para ter correspondência NCO validada.";return}
+    const national=snap.records.find(r=>r[0]===nco&&r[1]==="");
+    const regional=state?snap.records.find(r=>r[0]===nco&&r[1]===state):null;
+    const value=row=>row?Number(row[2]).toLocaleString("pt-PT",{style:"currency",currency:"INR",maximumFractionDigits:0})+" / mês":"Sem observação disponível";
+    const table=document.createElement("table"),h=document.createElement("tr");
+    ["Âmbito","Média mensal","Precisão"].forEach(name=>{const c=document.createElement("th");c.textContent=name;h.append(c)});table.append(h);
+    function add(name,row){const tr=document.createElement("tr");[name,value(row),"Grupo NCO "+nco+" · PLFS 2025 (não é salário específico)"].forEach(x=>{const td=document.createElement("td");td.textContent=x;tr.append(td)});table.append(tr)}
+    add("Índia · nacional",national);
+    if(state)add(regional?.[3]||indiaStateOptions(snap).find(pair=>pair[0]===state)?.[1]||state,regional);
+    message.textContent="Fonte: PLFS 2025 pré-processado (Vonter, ODbL). Os valores abaixo provêm do ficheiro agregado alojado no GitHub Pages, não dependem da API de produção.";
+    out.replaceChildren(table);
+  }catch(error){message.textContent="Não foi possível consultar o ficheiro agregado: "+error.message}
+}
+
 function occupationId(){const raw=$("occupation").value.trim();return occupationMap.get(raw.toLocaleLowerCase())||raw}
 function endpoint(){const c=encodeURIComponent($("country").value),d=encodeURIComponent($("destination").value),o=encodeURIComponent(occupationId()),lang=encodeURIComponent($("lang").value);const qs=p=>new URLSearchParams(p).toString();switch($("module").value){
 case "health":return "/v1/health";case "countries":return "/v1/countries";case "occupations":return "/v1/occupations?"+qs({lang});case "coverage":return "/v1/earnwage/coverage";case "matrix":return "/v1/salaries/availability/matrix";case "salary":return c==="IN"?"/v1/earnwage/overview?"+qs({country:"IN",occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{})}):"/v1/salaries/"+c+"/"+o;case "history":return "/v1/earnwage/history?"+qs({country:c,occupation:occupationId(),start_year:$("start").value,end_year:$("end").value});case "overview":return "/v1/earnwage/overview?"+qs({country:c,occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{}),...($("gross").value?{annual_gross:$("gross").value}:{})});case "compare":return "/v1/earnwage/compare?"+qs({country_a:c,country_b:d,occupation:occupationId(),...($("regionA").value?{region_a:$("regionA").value}:{}),...($("regionB").value?{region_b:$("regionB").value}:{})});case "inflation":return "/v1/inflation/"+c;case "exchange":return "/v1/exchange-rates/"+encodeURIComponent($("currency").value.trim().toUpperCase());case "jobs":return "/v1/jobs?"+qs({country:c,occupation:occupationId(),limit:$("limit").value});case "sources":return "/v1/sources";case "regions":return "/v1/regions/"+c;case "tax":return "/v1/tax-components/"+c+"?"+qs({annual_gross:$("gross").value||"40000",tax_year:2026});default:throw Error("Módulo desconhecido")}}
@@ -199,6 +243,9 @@ function setSalaryTab(historical){$("module").value=historical?"history":"overvi
 $("latestTab").onclick=()=>setSalaryTab(false);$("historyTab").onclick=()=>setSalaryTab(true);
 $("module").addEventListener("change",()=>{const v=$("module").value;if(v==="overview"||v==="history")setSalaryTabFields(v==="history")});
 function setSalaryTabFields(historical){for(const e of document.querySelectorAll(".historyOnly"))e.style.display=historical?"":"none"}
+$("country").addEventListener("change",renderIndiaMain);
+$("regionA").addEventListener("change",renderIndiaMain);
+$("occupation").addEventListener("input",renderIndiaMain);
 setSalaryTab(false);
 $("module").dispatchEvent(new Event("change"));$("load").click();
 </script></body></html>
