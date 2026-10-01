@@ -1017,6 +1017,27 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
             }
         }
     }
+    if(code=="PT") {
+        val public=data.optJSONObject("portugal_public_sector_entry")
+        if(public?.optString("status")=="available") {
+            val pay=public.optDouble("value",Double.NaN)
+            if(pay.isFinite() && pay>0) {
+                val conditional=public.optString("mapping_precision")=="conditional_comparable_public_career"
+                Metric(
+                    if(lang=="pt") "Portugal · remuneração de entrada na FP"
+                    else "Portugal · public-sector entry pay",
+                    money(pay,"EUR")+(if(lang=="pt") " / mês" else " / month"),
+                    public.optString("public_role")+" · "+public.optString("entry_grade")+" · "+
+                    public.optString("entry_level")+" · 2026\n"+
+                    if(lang=="pt")
+                        if(conditional) "Comparação condicional à contratação nesta carreira; não é o salário médio da profissão."
+                        else "Vencimento base inicial da carreira; não é o salário médio nacional da profissão."
+                    else if(conditional) "Conditional public-career comparator; not this occupation's market average."
+                    else "Starting public-career basic pay; not this occupation's market average."
+                )
+            }
+        }
+    }
     val annual=data.optJSONObject("annual_presentation")
     if(annual?.optString("status")!="available") {
         val group = data.optJSONObject("national_major_group_context")
