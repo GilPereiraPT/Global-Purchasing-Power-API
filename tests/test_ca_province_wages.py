@@ -8,11 +8,11 @@ HEAD = ("NOC_CNP,NOC_Title_eng,prov,ER_Code_Code_RE,Low_Wage_Salaire_Minium,"
         "Average_Wage_Salaire_Moyen,Quartile1_Wage_Salaire_Quartile1,"
         "Quartile3_Wage_Salaire_Quartile3,Annual_Wage_Flag_Salaire_annuel,Reference_Period\n")
 ROWS = (
-    "NOC_31301,Registered nurses and registered psychiatric nurses,ON,ER00,32,42,56,44,37,50,0,2023-2024\n"
-    "NOC_31301,Registered nurses and registered psychiatric nurses,QC,ER00,31,41,53,43,36,49,0,2023-2024\n"
+    "NOC_31301,Registered nurses and registered psychiatric nurses,ON,ER35,32,42,56,44,37,50,0,2023-2024\n"
+    "NOC_31301,Registered nurses and registered psychiatric nurses,QC,ER24,31,41,53,43,36,49,0,2023-2024\n"
     "NOC_31301,Registered nurses and registered psychiatric nurses,ON,ER35,50,60,70,62,55,65,0,2023-2024\n"
     "NOC_31301,Registered nurses and registered psychiatric nurses,NAT,ER00,60,70,80,75,65,76,0,2023-2024\n"
-    "NOC_31110,Dentists,AB,ER00,100000,150000,210000,160000,115000,190000,1,2021\n"
+    "NOC_31110,Dentists,AB,ER48,100000,150000,210000,160000,115000,190000,1,2021\n"
 )
 
 
@@ -46,7 +46,7 @@ def test_province_rejects_schema_drift_and_unknown_province(tmp_path, monkeypatc
     with pytest.raises(ValueError, match="schema"):
         list(records("a,b\n1,2\n"))
     with pytest.raises(ValueError, match="title drift"):
-        list(records(HEAD + "NOC_31301,Electricians,ON,ER00,1,2,3,4,5,6,0,2023-2024\n"))
+        list(records(HEAD + "NOC_31301,Electricians,ON,ER35,1,2,3,4,5,6,0,2023-2024\n"))
     with pytest.raises(ValueError, match="province"):
         wage("nurse", "XX")
 
