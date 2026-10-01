@@ -369,6 +369,18 @@ def us_oews_state_wage(occupation: str, state: str):
         raise HTTPException(422, str(exc)) from exc
 
 
+@app.get("/v1/in/plfs/earnings")
+def india_plfs_earnings():
+    from app.in_plfs import earnings
+    return earnings()
+
+
+@app.get("/v1/in/wage-sources")
+def india_wage_sources():
+    from app.in_plfs import wage_sources
+    return wage_sources()
+
+
 @app.get("/v1/ca/provinces/coverage")
 def canada_provincial_coverage():
     return ca_province_wages.coverage()
