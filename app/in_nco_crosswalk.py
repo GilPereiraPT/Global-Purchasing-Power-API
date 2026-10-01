@@ -6,7 +6,8 @@ they can contain multiple professions and specialties. Ambiguous titles
 deliberately stay unmapped. Never feed this into exact occupation coverage.
 Official classification: https://www.ncs.gov.in/documents/national%20classification%20of%20occupations%20_vol%20i-%202015.pdf
 """
-from app.catalog import JOBS
+from app.catalog import OCCUPATIONS
+ALL_JOBS = {item["id"] for item in OCCUPATIONS}
 from app.in_plfs_microdata import wages, coverage as nco_coverage
 
 # Audit record: NCO group, verbatim classification label, why it is only context.
@@ -60,7 +61,7 @@ SOURCE = "NCO-2015 three-digit classification; PLFS 2025 first-visit derivative"
 
 
 def mapping(occupation):
-    if occupation not in JOBS:
+    if occupation not in ALL_JOBS:
         raise ValueError("Unknown EarnWage occupation")
     if occupation in UNMAPPED:
         return {
@@ -104,7 +105,7 @@ def context(occupation, state=None):
 
 def coverage():
     available = {}
-    for occupation in JOBS:
+    for occupation in sorted(ALL_JOBS):
         try:
             item = context(occupation)
         except ValueError:
@@ -115,7 +116,7 @@ def coverage():
             "observation_available": item["status"] == "available",
         }
     return {
-        "country": "IN", "total_occupations": len(JOBS),
+        "country": "IN", "total_occupations": len(ALL_JOBS),
         "mapped_to_broad_nco_groups": len(CONTEXT),
         "unmapped_ambiguous": len(UNMAPPED),
         "broad_group_observations_available": sum(
@@ -133,4 +134,4 @@ def coverage():
 
 # Fail loudly if catalogue changes and requires explicit mapping review.
 assert not set(CONTEXT).intersection(UNMAPPED)
-assert set(CONTEXT) | set(UNMAPPED) == set(JOBS)
+assert set(CONTEXT) | set(UNMAPPED) == ALL_JOBS
