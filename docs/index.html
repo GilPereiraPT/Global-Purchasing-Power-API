@@ -56,9 +56,52 @@ updateRegions("country","regionA","regionABox");
 updateRegions("destination","regionB","regionBBox");
 function occupationId(){const raw=$("occupation").value.trim();return occupationMap.get(raw.toLocaleLowerCase())||raw}
 function endpoint(){const c=encodeURIComponent($("country").value),d=encodeURIComponent($("destination").value),o=encodeURIComponent(occupationId()),lang=encodeURIComponent($("lang").value);const qs=p=>new URLSearchParams(p).toString();switch($("module").value){
-case "health":return "/v1/health";case "countries":return "/v1/countries";case "occupations":return "/v1/occupations?"+qs({lang});case "coverage":return "/v1/earnwage/coverage";case "matrix":return "/v1/salaries/availability/matrix";case "salary":return "/v1/salaries/"+c+"/"+o;case "history":return "/v1/earnwage/history?"+qs({country:c,occupation:occupationId(),start_year:$("start").value,end_year:$("end").value});case "overview":return "/v1/earnwage/overview?"+qs({country:c,occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{}),...($("gross").value?{annual_gross:$("gross").value}:{})});case "compare":return "/v1/earnwage/compare?"+qs({country_a:c,country_b:d,occupation:occupationId(),...($("regionA").value?{region_a:$("regionA").value}:{}),...($("regionB").value?{region_b:$("regionB").value}:{})});case "inflation":return "/v1/inflation/"+c;case "exchange":return "/v1/exchange-rates/"+encodeURIComponent($("currency").value.trim().toUpperCase());case "jobs":return "/v1/jobs?"+qs({country:c,occupation:occupationId(),limit:$("limit").value});case "sources":return "/v1/sources";case "regions":return "/v1/regions/"+c;case "tax":return "/v1/tax-components/"+c+"?"+qs({annual_gross:$("gross").value||"40000",tax_year:2026});default:throw Error("Módulo desconhecido")}}
+case "health":return "/v1/health";case "countries":return "/v1/countries";case "occupations":return "/v1/occupations?"+qs({lang});case "coverage":return "/v1/earnwage/coverage";case "matrix":return "/v1/salaries/availability/matrix";case "salary":return c==="IN"?"/v1/earnwage/overview?"+qs({country:"IN",occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{})}):"/v1/salaries/"+c+"/"+o;case "history":return "/v1/earnwage/history?"+qs({country:c,occupation:occupationId(),start_year:$("start").value,end_year:$("end").value});case "overview":return "/v1/earnwage/overview?"+qs({country:c,occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{}),...($("gross").value?{annual_gross:$("gross").value}:{})});case "compare":return "/v1/earnwage/compare?"+qs({country_a:c,country_b:d,occupation:occupationId(),...($("regionA").value?{region_a:$("regionA").value}:{}),...($("regionB").value?{region_b:$("regionB").value}:{})});case "inflation":return "/v1/inflation/"+c;case "exchange":return "/v1/exchange-rates/"+encodeURIComponent($("currency").value.trim().toUpperCase());case "jobs":return "/v1/jobs?"+qs({country:c,occupation:occupationId(),limit:$("limit").value});case "sources":return "/v1/sources";case "regions":return "/v1/regions/"+c;case "tax":return "/v1/tax-components/"+c+"?"+qs({annual_gross:$("gross").value||"40000",tax_year:2026});default:throw Error("Módulo desconhecido")}}
 function flatten(value,path="",out=[]){if(out.length>350)return out;if(value&&typeof value==="object"){for(const [k,v] of Object.entries(value)){if(out.length>350)break;flatten(v,path?path+"."+k:k,out)}}else out.push([path,value===null?"null":String(value)]);return out}
-function show(status,data,url,ms){lastJSON=JSON.stringify(data,null,2);$("json").textContent=lastJSON;$("request").textContent=url||"—";$("status").textContent=status;$("status").className="pill"+(status.startsWith("2")?"":status.startsWith("Por")?"":" error");$("timing").textContent=ms==null?"":ms+" ms";$("summary").textContent=typeof data==="object"&&data!==null?["status","reason","error","detail","count","available_cells","total_cells","version"].filter(k=>k in data).map(k=>k+": "+JSON.stringify(data[k])).join(" · ")||"Resposta JSON recebida; inspeciona os campos.":String(data);const rows=flatten(data);const table=document.createElement("table");const head=document.createElement("tr");for(const t of ["Campo JSON","Valor"]){const th=document.createElement("th");th.textContent=t;head.append(th)}table.append(head);for(const [key,value] of rows){const tr=document.createElement("tr");for(const text of [key,value]){const td=document.createElement("td");td.textContent=text;tr.append(td)}table.append(tr)}$("fields").replaceChildren(table)}
+
+function showMainIndiaGroup(data,url){
+  let panel=$("mainIndiaGroup");
+  if(!panel){
+    panel=document.createElement("section");panel.id="mainIndiaGroup";panel.hidden=true;
+    const response=document.querySelector("#status")?.closest("section");
+    response?.parentNode?.insertBefore(panel,response);
+  }
+  const isIndia=typeof url==="string" && /\\/v1\\/earnwage\\/(overview|compare)/.test(url);
+  if(!panel||!isIndia){if(panel)panel.hidden=true;return}
+  const matches=[];
+  if(data?.country?.code==="IN")matches.push(data);
+  for(const k of ["country_a","country_b"]){if(data?.[k]?.country?.code==="IN")matches.push(data[k])}
+  if(matches.length===0){panel.hidden=true;return}
+  panel.hidden=false;panel.replaceChildren();
+  const h=document.createElement("h2");h.textContent="🇮🇳 Índia · média salarial do grupo NCO";panel.append(h);
+  for(const item of matches){
+    const job=item.occupation?.label||item.occupation?.id||"Profissão";
+    const title=document.createElement("p");title.className="summary";title.textContent=job;panel.append(title);
+    const national=item.india_nco2015_professional_group_context;
+    const regional=item.india_nco2015_regional_group_context;
+    const fmt=ob=>ob?.status==="available" && Number.isFinite(Number(ob?.observation?.value))?
+      Number(ob.observation.value).toLocaleString("pt-PT",{style:"currency",currency:"INR",maximumFractionDigits:0})+" / mês":"Não disponível";
+    const groupName=national?.nco2015_group_label||"";
+    const code=national?.nco2015_group||"";
+    const table=document.createElement("table"),head=document.createElement("tr");
+    for(const name of ["Âmbito","Média ponderada","Referência"]){const th=document.createElement("th");th.textContent=name;head.append(th)}
+    table.append(head);
+    const make=(where,val,detail)=>{
+      const tr=document.createElement("tr");
+      for(const text of [where,val,detail]){const td=document.createElement("td");td.textContent=text;tr.append(td)}
+      table.append(tr);
+    };
+    make("Índia",fmt(national),code?"NCO "+code+" · "+groupName:"Profissão sem correspondência NCO validada");
+    if(item.region?.selected)make(regional?.observation?.state_name||item.region.selected,fmt(regional),
+      regional?.status==="available"?"Observação estadual própria · PLFS 2025":"Sem observação divulgável neste Estado; não se aplica a média nacional");
+    panel.append(table);
+    const note=document.createElement("p");note.className="muted";
+    note.textContent="Valores PLFS 2025 de grupos NCO de 3 dígitos, NÃO salários exatos desta profissão. Fonte: microdados oficiais pré-processados por Vonter (ODbL). A consulta específica de salários mantém-se indisponível quando não há observações exatas.";
+    panel.append(note);
+  }
+}
+
+function show(status,data,url,ms){lastJSON=JSON.stringify(data,null,2);$("json").textContent=lastJSON;$("request").textContent=url||"—";$("status").textContent=status;$("status").className="pill"+(status.startsWith("2")?"":status.startsWith("Por")?"":" error");$("timing").textContent=ms==null?"":ms+" ms";$("summary").textContent=typeof data==="object"&&data!==null?["status","reason","error","detail","count","available_cells","total_cells","version"].filter(k=>k in data).map(k=>k+": "+JSON.stringify(data[k])).join(" · ")||"Resposta JSON recebida; inspeciona os campos.":String(data);showMainIndiaGroup(data,url);const rows=flatten(data);const table=document.createElement("table");const head=document.createElement("tr");for(const t of ["Campo JSON","Valor"]){const th=document.createElement("th");th.textContent=t;head.append(th)}table.append(head);for(const [key,value] of rows){const tr=document.createElement("tr");for(const text of [key,value]){const td=document.createElement("td");td.textContent=text;tr.append(td)}table.append(tr)}$("fields").replaceChildren(table)}
 async function request(path){const url=apiBase()+path;const start=performance.now();const r=await fetch(url,{headers:{Accept:"application/json"},cache:"no-store"});const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{data={error:"Resposta não JSON",body:raw.slice(0,1500)}}return {status:r.status,data,url,ms:Math.round(performance.now()-start)}}
 async function execute(path){$("run").disabled=true;$("status").textContent="A consultar…";try{const result=await request(path||endpoint());show(String(result.status),result.data,result.url,result.ms)}catch(e){show("Erro de ligação",{error:e.message,note:"Abre o link «estado da API» acima. Se devolver JSON mas o laboratório falhar, a API em produção ainda não autoriza CORS para https://gilpereirapt.github.io. Atualizar apenas o GitHub não atualiza automaticamente o servidor Passenger."},apiBase()+ (path||endpoint()),null)}finally{$("run").disabled=false}}
 $("run").onclick=()=>execute();$("matrix").onclick=()=>execute("/v1/salaries/availability/matrix");
