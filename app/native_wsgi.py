@@ -490,6 +490,12 @@ def dispatch(path, q):
             return us_oews.curated_state_wages(occupation(parts[4]), parts[5])
         except ValueError as exc:
             raise ApiError(422, str(exc)) from exc
+    if path == "/v1/in/plfs/earnings":
+        from app.in_plfs import earnings
+        return earnings()
+    if path == "/v1/in/wage-sources":
+        from app.in_plfs import wage_sources
+        return wage_sources()
     if path == "/v1/ca/provinces/coverage":
         return ca_province_wages.coverage()
     if len(parts) == 5 and parts[:3] == ["v1", "ca", "provinces"]:
