@@ -29,6 +29,9 @@ def test_germany_direct_page_and_selector_do_not_fabricate_state_mediana():
     index = (ROOT / "docs/index.html").read_text(encoding="utf8")
     page = (ROOT / "docs/germany.html").read_text(encoding="utf8")
     assert 'href="./germany.html?occupation=software_developer&region=BY"' in index
+    assert 'id="germanyMainPanel"' in index
+    assert 'fetch("./data/de-entgeltatlas-2025.json"' in index
+    assert "A mediana nacional não substitui o valor estadual." in index
     assert 'fetch("./data/de-entgeltatlas-2025.json"' in page
     assert 'data.records.find(r=>r.occupation===job)' in page
     assert "Importação pendente" in page
