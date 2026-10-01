@@ -175,6 +175,15 @@ def load_snapshot(path="data/in_plfs_2025_nco.json"):
     records = obj.get("records")
     if not isinstance(records, list) or not records:
         raise ValueError("Empty PLFS NCO observations")
+    source_kind = obj.get("source_kind", "direct_official_microdata")
+    if source_kind not in ("direct_official_microdata", "third_party_preprocessed_official_microdata"):
+        raise ValueError("Unknown PLFS dataset provenance")
+    if source_kind == "third_party_preprocessed_official_microdata":
+        from app.in_plfs_derived_import import SOURCE_SHA256, DERIVATIVE_URL
+        if (obj.get("derivative_sha256") != SOURCE_SHA256
+                or obj.get("source_url") != DERIVATIVE_URL
+                or not obj.get("reuse_license", "").startswith("Open Database License")):
+            raise ValueError("Unreviewed PLFS derivative source")
     rows = []
     for item in records:
         code, scope = item["nco2015_code"], item["geography"]
@@ -187,8 +196,13 @@ def load_snapshot(path="data/in_plfs_2025_nco.json"):
                 or n < MIN_SAMPLE or neff < MIN_EFFECTIVE or psu < 10
                 or not isinstance(v, (float, int)) or not math.isfinite(v) or v < 0):
             raise ValueError("Invalid or insufficient PLFS result")
+        if source_kind == "third_party_preprocessed_official_microdata":
+            if (item.get("precision") != "broad_nco2015_three_digit_group"
+                    or item.get("source_url") != obj["source_url"]):
+                raise ValueError("Derivative NCO group or source mismatch")
         rows.append((code, scope, state, item["nco2015_label"], item["state_name"],
-                     v, n, neff, psu, item["period"], MICRODATA_URL))
+                     v, n, neff, psu, item["period"],
+                     item.get("source_url", MICRODATA_URL)))
     with connect() as db:
         init(db)
         db.executemany("INSERT OR REPLACE INTO in_plfs_nco_wages VALUES (?,?,?,?,?,?,?,?,?,?,?)", rows)
@@ -219,7 +233,10 @@ def wages(nco_code, state=None):
         "sample_n": row[3], "effective_n_approx": row[4],
         "psu_count_approx": row[5], "reference_period": row[6],
         "source_url": row[7],
-        "note": "NCO-coded survey estimate; not yet mapped to an EarnWage profession. Descriptive only."
+        "note": ("NCO 2015 three-digit survey-group estimate, not an exact EarnWage "
+                 "occupation or official MoSPI published table. Descriptive only. "
+                 "If the source URL is github.com/Vonter, it is an attributed "
+                 "third-party harmonisation of the official PLFS microdata.")
     }
 
 
