@@ -27,6 +27,8 @@ async def lifespan(app: FastAPI):
     load_snapshot(Path(__file__).resolve().parent.parent / "data" / "salaries_snapshot.json")
     na_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "north_america_wages.json")
     ca_province_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "ca_province_wages.json")
+    from app.us_oews_snapshot import load_snapshot as load_us_oews_snapshot
+    load_us_oews_snapshot(Path(__file__).resolve().parent.parent / "data" / "us_oews_curated.json")
     from app.pt_occupation_wages import load_snapshot as load_pt_wages
     load_pt_wages()
     from app.uk_ashe_wages import load_snapshot as load_uk_wages
