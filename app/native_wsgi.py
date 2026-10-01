@@ -17,6 +17,7 @@ from urllib.parse import parse_qs
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import earnwage_queries as ew
 from app import north_america as na
+from app import us_oews
 from app import jobs
 from app.client_config import configuration, region_configuration
 from app.ilostat_import import (
@@ -26,7 +27,7 @@ from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
 from app.store import connect
 from app.tax_components import components as tax_components
 
-VERSION = "0.5.18"
+VERSION = "0.5.20"
 ROOT = Path(__file__).resolve().parent.parent
 LOG = logging.getLogger("earnwage.wsgi")
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -480,6 +481,25 @@ def dispatch(path, q):
     if len(parts) == 4 and parts[:2] == ["v1", "salaries"]:
         c, job = country(parts[2]), occupation(parts[3])
         return ew.wage_for(c, job)
+    if path == "/v1/us/oews/coverage":
+        return us_oews.coverage()
+    if path == "/v1/us/oews/occupations":
+        term = one(q, "q")
+        if term is not None and len(term) > 100:
+            raise ApiError(422, "Search term too long")
+        limit = integer(q, "limit", 100)
+        offset = integer(q, "offset", 0)
+        if not 1 <= limit <= 500 or offset < 0:
+            raise ApiError(422, "Invalid pagination")
+        return us_oews.catalogue(q=term, limit=limit, offset=offset)
+    if len(parts) == 5 and parts[:4] == ["v1", "us", "oews", "wages"]:
+        year_raw = one(q, "year")
+        try:
+            year = int(year_raw) if year_raw is not None else None
+            return us_oews.wages(parts[4], state=one(q, "state"),
+                                 area=one(q, "area"), year=year)
+        except ValueError as exc:
+            raise ApiError(422, str(exc)) from exc
     if len(parts) == 4 and parts[:2] == ["v1", "wages"]:
         return na.wages(country(parts[2]), occupation(parts[3]))
     if len(parts) == 3 and parts[:2] == ["v1", "tax-components"]:
