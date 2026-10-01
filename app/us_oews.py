@@ -19,6 +19,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 from typing import Iterable
+from itertools import chain
 
 import httpx
 from openpyxl import load_workbook
@@ -201,7 +202,7 @@ def persist(records: Iterable[dict], replace_year: int | None = None) -> int:
         sql = f"INSERT OR REPLACE INTO us_oews ({','.join(DB_COLUMNS)}) VALUES ({placeholders})"
         count = 0
         batch = []
-        for row in (item for pair in ((first,), iterator) for item in pair):
+        for row in chain((first,), iterator):
             batch.append(tuple(row.get(column) for column in DB_COLUMNS))
             if len(batch) >= 5000:
                 db.executemany(sql, batch)
