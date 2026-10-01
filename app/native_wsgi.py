@@ -66,6 +66,8 @@ def initialize():
         load_us_oews_snapshot(ROOT / "data" / "us_oews_curated.json")
         from app.in_plfs_microdata import load_snapshot as load_india_plfs
         load_india_plfs(ROOT / "data" / "in_plfs_2025_nco.json")
+        from app import br_rais_states
+        br_rais_states.load()
         from app.pt_occupation_wages import load_snapshot as load_pt_wages
         load_pt_wages()
         from app.uk_ashe_wages import load_snapshot as load_uk_wages
@@ -492,6 +494,9 @@ def dispatch(path, q):
             return us_oews.curated_state_wages(occupation(parts[4]), parts[5])
         except ValueError as exc:
             raise ApiError(422, str(exc)) from exc
+    if path == "/v1/br/rais/regional/coverage":
+        from app.br_rais_states import coverage
+        return coverage()
     if path == "/v1/in/earnwage-nco/coverage":
         from app.in_nco_crosswalk import coverage
         return coverage()
