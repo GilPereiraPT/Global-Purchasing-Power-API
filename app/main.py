@@ -381,6 +381,12 @@ def germany_entgeltatlas_regional_coverage():
     return coverage()
 
 
+@app.get("/v1/pt/public-sector/coverage")
+def portugal_public_sector_coverage():
+    from app.pt_public_wages import coverage
+    return coverage()
+
+
 @app.get("/v1/br/rais/regional/coverage")
 def brazil_rais_regional_coverage():
     from app.br_rais_states import coverage
