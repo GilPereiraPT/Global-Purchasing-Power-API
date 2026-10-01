@@ -381,6 +381,12 @@ def germany_entgeltatlas_regional_coverage():
     return coverage()
 
 
+@app.get("/v1/pt/public-sector/occupations")
+def portugal_public_sector_occupations():
+    from app.pt_public_wages import occupation_matrix
+    return occupation_matrix()
+
+
 @app.get("/v1/pt/public-sector/coverage")
 def portugal_public_sector_coverage():
     from app.pt_public_wages import coverage
