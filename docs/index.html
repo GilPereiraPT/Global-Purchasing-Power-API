@@ -9,6 +9,10 @@
 <p><a href="./germany.html?occupation=software_developer&region=BY" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir consulta da Alemanha ↗</a></p></section><section><h2>🇧🇷 Consultar salários por Estado no Brasil</h2><p>38 profissões e 993 medianas salariais regionais derivadas da RAIS 2025, com consulta direta sem depender da atualização da API.</p><p><a href="./brazil.html?occupation=accountant&uf=SP" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir salários por Estado no Brasil ↗</a></p></section><section><h2>🇮🇳 Consultar salários na Índia</h2><p>Pesquisa simplificada por profissão e Estado, utilizando diretamente as médias PLFS 2025 publicadas no site, sem depender da API de produção.</p><p><a href="./india.html?occupation=software_developer&region=27" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir consulta da Índia ↗</a></p><p class="muted">São referências estatísticas de grupos NCO; não representam o salário específico da profissão.</p></section><section><h2>Data Manager · atualizar API e dados sem Terminal</h2><p class="muted">Gestão protegida pelo navegador: atualizar a API de produção a partir da última versão testada do GitHub, criar cópias de segurança, importar dados oficiais e consultar o histórico de execuções.</p><p><a href="./data-manager.html#deploy" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Atualizar API / abrir Data Manager ↗</a></p></section><section><h2>Inventário real da base de dados</h2><p class="muted">Audita país a país todos os indicadores importados, salários e cache de câmbios. Filtra os dados existentes e em falta, verifica datas, exporta CSV e JSON.</p><p><a href="./data-inventory.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir inventário de dados ↗</a></p></section><section><h2>Comparação económica · Moeda global</h2><p class="muted">Comparar salários líquidos de referência, inflação e nível de preços com conversão cambial identificada.</p><p><a href="./economic-compare.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir comparação económica ↗</a></p></section><section><h2>Country Insights · Qualidade de vida</h2><p class="muted">Indicadores oficiais, evolução histórica e comparação entre 2 e 5 países, com fonte e ano de referência.</p><p><a href="./country-insights.html" style="display:inline-block;background:#159780;color:white;padding:12px 17px;border-radius:9px;text-decoration:none;font-weight:700">Abrir Country Insights ↗</a></p></section><section><h2>Ligação à API</h2><div class="grid"><div><label for="base">Endereço da API</label><input id="base" value="https://earnwage-api.policlinicosdesantoandre.com" spellcheck="false"></div><div><label for="module">Módulo</label><select id="module"></select></div></div><p class="muted"><a id="directHealth" href="https://earnwage-api.policlinicosdesantoandre.com/v1/health" target="_blank" rel="noopener">Abrir diretamente o estado da API ↗</a> · <a id="directCountries" href="https://earnwage-api.policlinicosdesantoandre.com/v1/countries" target="_blank" rel="noopener">Abrir países diretamente ↗</a></p><p class="muted">Página pública de desenvolvimento: não introduzir tokens, palavras-passe ou dados pessoais. A API tem de permitir CORS para esta origem GitHub Pages.</p></section>
 <section><h2>Consulta salarial</h2><p class="muted">Consulta atual: último valor conhecido, sem selecionar ano. Histórico: intervalo de anos, sem preencher lacunas.</p><div class="actions"><button id="latestTab" type="button">Último valor conhecido</button><button id="historyTab" class="secondary" type="button">Evolução salarial</button></div><p id="salaryTabNote" class="muted">Consulta atual sem ano selecionado.</p></section>
 <section><h2>Parâmetros</h2><div class="grid"><div><label for="country">País</label><select id="country"></select></div><div><label for="destination">Destino</label><select id="destination"></select></div><div id="regionABox" hidden><label for="regionA">Estado / província (opcional)</label><select id="regionA"></select></div><div id="regionBBox" hidden><label for="regionB">Estado / província do destino (opcional)</label><select id="regionB"></select></div><div><label for="occupation">Profissão (pesquisável)</label><input id="occupation" list="occupations" placeholder="Pesquisar profissão"><datalist id="occupations"></datalist></div><div><label for="lang">Idioma das profissões</label><select id="lang"><option value="pt">Português</option><option value="en">English</option></select></div><div><label for="currency">Moeda ISO</label><input id="currency" value="USD" maxlength="3"></div><div><label for="gross">Salário bruto anual (opcional)</label><input id="gross" type="number" min="1" placeholder="Ex.: 40000"></div><div class="historyOnly" style="display:none"><label for="start">Ano inicial (referência para testes)</label><select id="start"></select></div><div class="historyOnly" style="display:none"><label for="end">Ano final (referência para testes)</label><select id="end"></select></div><div><label for="limit">Máximo de empregos</label><input id="limit" type="number" min="1" max="100" value="20"></div></div><p class="muted" id="moduleNote"></p><div class="actions"><button id="run">Executar teste</button><button id="load" class="secondary">Carregar países e profissões</button><button id="matrix" class="secondary">Testar cobertura salarial</button></div></section>
+<section id="germanyMainPanel" hidden><h2>🇩🇪 Alemanha · mediana por profissão</h2>
+<p class="muted">As 27 medianas nacionais Entgeltatlas 2025 são lidas do ficheiro publicado neste site. A seleção de estado está preparada, mas os valores estaduais ainda necessitam de validação.</p>
+<p id="germanyMainMessage" role="status" aria-live="polite"></p><div id="germanyMainResult"></div>
+<p><a href="./germany.html?occupation=software_developer&region=BY">Abrir consulta da Alemanha ↗</a></p></section>
 <section id="brazilMainPanel" hidden>
 <h2>🇧🇷 Brasil · mediana salarial por profissão e Estado</h2>
 <p class="muted">Observações RAIS 2025 publicadas pela 99K, para um código CBO validado e vínculos formais com jornada de 40–44 horas. A consulta usa os dados agregados deste site e não depende da atualização da API de produção.</p>
@@ -69,6 +73,7 @@ async function updateRegions(countryId,regionId,boxId){
     }
   if(country==="IN")renderIndiaMain();
   if(country==="BR")renderBrazilMain();
+  if(country==="DE")renderGermanyMain();
 }
 $("country").addEventListener("change",()=>updateRegions("country","regionA","regionABox"));
 $("destination").addEventListener("change",()=>updateRegions("destination","regionB","regionBBox"));
@@ -76,6 +81,35 @@ $("base").addEventListener("change",()=>{updateRegions("country","regionA","regi
 updateRegions("country","regionA","regionABox");
 updateRegions("destination","regionB","regionBBox");
 
+let germanSnapshotPromise;
+function getGermanSnapshot(){
+ if(!germanSnapshotPromise)germanSnapshotPromise=fetch("./data/de-entgeltatlas-2025.json",{cache:"no-store"})
+   .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()})
+   .then(data=>{if(data.schema!==1||data.precision!=="occupation_specific_kldb_berufsgattung_no_fallback"||!Array.isArray(data.records))throw Error("Invalid approved German snapshot");return data})
+   .catch(e=>{germanSnapshotPromise=null;throw e});
+ return germanSnapshotPromise;
+}
+async function renderGermanyMain(){
+ const panel=$("germanyMainPanel");
+ if($("country").value!=="DE"){panel.hidden=true;return}
+ panel.hidden=false;
+ const msg=$("germanyMainMessage"),result=$("germanyMainResult"),job=occupationId(),state=$("regionA").value;
+ msg.textContent="A consultar os dados aprovados do Entgeltatlas…";result.replaceChildren();
+ try{
+  const snapshot=await getGermanSnapshot();
+  if($("country").value!=="DE")return;
+  const record=snapshot.records.find(row=>row.occupation===job);
+  if(!record){msg.textContent="Esta profissão ainda não tem correspondência Berufsgattung aprovada.";return}
+  const table=document.createElement("table"),head=document.createElement("tr");
+  for(const label of ["Âmbito","Mediana mensal bruta","Fonte"]){const th=document.createElement("th");th.textContent=label;head.append(th)}table.append(head);
+  function add(loc,amount,source){const tr=document.createElement("tr");for(const val of [loc,amount,source]){const td=document.createElement("td");td.textContent=val;tr.append(td)}table.append(tr)}
+  add("Alemanha · nacional",Number(record.value).toLocaleString("pt-PT",{style:"currency",currency:"EUR",maximumFractionDigits:0})+" / mês","BA · Berufsgattung · "+record.period);
+  if(state){const label=germanStates.find(x=>x[0]===state)?.[1]||state;add(label,"Pendente de validação","A mediana nacional não substitui o valor estadual.");}
+  const source=document.createElement("a");source.href=record.source_url;source.target="_blank";source.rel="noopener";source.textContent="Ver profissão e escolher região na fonte oficial ↗";
+  msg.textContent="A mediana nacional está validada. Valores estaduais só serão publicados após verificação da Berufsgattung e amostra da região.";
+  result.replaceChildren(table,source);
+ }catch(e){msg.textContent="Falha ao consultar o ficheiro nacional: "+e.message}
+}
 let brazilSnapshotPromise;
 function getBrazilSnapshot(){
   if(!brazilSnapshotPromise)brazilSnapshotPromise=fetch("./data/br-rais-2025-states.json",{cache:"no-store"})
@@ -147,7 +181,7 @@ async function renderIndiaMain(){
 
 function occupationId(){const raw=$("occupation").value.trim();return occupationMap.get(raw.toLocaleLowerCase())||raw}
 function endpoint(){const c=encodeURIComponent($("country").value),d=encodeURIComponent($("destination").value),o=encodeURIComponent(occupationId()),lang=encodeURIComponent($("lang").value);const qs=p=>new URLSearchParams(p).toString();switch($("module").value){
-case "health":return "/v1/health";case "countries":return "/v1/countries";case "occupations":return "/v1/occupations?"+qs({lang});case "coverage":return "/v1/earnwage/coverage";case "matrix":return "/v1/salaries/availability/matrix";case "salary":return c==="IN"?"/v1/earnwage/overview?"+qs({country:"IN",occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{})}):"/v1/salaries/"+c+"/"+o;case "history":return "/v1/earnwage/history?"+qs({country:c,occupation:occupationId(),start_year:$("start").value,end_year:$("end").value});case "overview":return "/v1/earnwage/overview?"+qs({country:c,occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{}),...($("gross").value?{annual_gross:$("gross").value}:{})});case "compare":return "/v1/earnwage/compare?"+qs({country_a:c,country_b:d,occupation:occupationId(),...($("regionA").value?{region_a:$("regionA").value}:{}),...($("regionB").value?{region_b:$("regionB").value}:{})});case "inflation":return "/v1/inflation/"+c;case "exchange":return "/v1/exchange-rates/"+encodeURIComponent($("currency").value.trim().toUpperCase());case "jobs":return "/v1/jobs?"+qs({country:c,occupation:occupationId(),limit:$("limit").value});case "sources":return "/v1/sources";case "regions":return "/v1/regions/"+c;case "tax":return "/v1/tax-components/"+c+"?"+qs({annual_gross:$("gross").value||"40000",tax_year:2026});default:throw Error("Módulo desconhecido")}}
+case "health":return "/v1/health";case "countries":return "/v1/countries";case "occupations":return "/v1/occupations?"+qs({lang});case "coverage":return "/v1/earnwage/coverage";case "matrix":return "/v1/salaries/availability/matrix";case "salary":return ["IN","DE","BR"].includes(c)?"/v1/earnwage/overview?"+qs({country:c,occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{})}):"/v1/salaries/"+c+"/"+o;case "history":return "/v1/earnwage/history?"+qs({country:c,occupation:occupationId(),start_year:$("start").value,end_year:$("end").value});case "overview":return "/v1/earnwage/overview?"+qs({country:c,occupation:occupationId(),...($("regionA").value?{region:$("regionA").value}:{}),...($("gross").value?{annual_gross:$("gross").value}:{})});case "compare":return "/v1/earnwage/compare?"+qs({country_a:c,country_b:d,occupation:occupationId(),...($("regionA").value?{region_a:$("regionA").value}:{}),...($("regionB").value?{region_b:$("regionB").value}:{})});case "inflation":return "/v1/inflation/"+c;case "exchange":return "/v1/exchange-rates/"+encodeURIComponent($("currency").value.trim().toUpperCase());case "jobs":return "/v1/jobs?"+qs({country:c,occupation:occupationId(),limit:$("limit").value});case "sources":return "/v1/sources";case "regions":return "/v1/regions/"+c;case "tax":return "/v1/tax-components/"+c+"?"+qs({annual_gross:$("gross").value||"40000",tax_year:2026});default:throw Error("Módulo desconhecido")}}
 function flatten(value,path="",out=[]){if(out.length>350)return out;if(value&&typeof value==="object"){for(const [k,v] of Object.entries(value)){if(out.length>350)break;flatten(v,path?path+"."+k:k,out)}}else out.push([path,value===null?"null":String(value)]);return out}
 
 function showMainIndiaGroup(data,url){
@@ -294,6 +328,9 @@ $("country").addEventListener("change",renderIndiaMain);
 $("country").addEventListener("change",renderBrazilMain);
 $("regionA").addEventListener("change",renderBrazilMain);
 $("occupation").addEventListener("input",renderBrazilMain);
+$("country").addEventListener("change",renderGermanyMain);
+$("regionA").addEventListener("change",renderGermanyMain);
+$("occupation").addEventListener("input",renderGermanyMain);
 $("regionA").addEventListener("change",renderIndiaMain);
 $("occupation").addEventListener("input",renderIndiaMain);
 setSalaryTab(false);
