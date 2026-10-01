@@ -248,12 +248,20 @@ def import_canada():
 
 
 def observed_coverage():
-    """Compact country/occupation coverage for the full availability matrix."""
+    """Compact country/occupation coverage, including imported full US OEWS data."""
     with connect() as db:
         init(db)
         rows = db.execute("""SELECT country,occupation,MAX(reference_period)
             FROM north_america_wages GROUP BY country,occupation""").fetchall()
-    return {(country, occupation): period for country, occupation, period in rows}
+    result = {(country, occupation): period for country, occupation, period in rows}
+    # Once the complete OEWS database is imported, mapped jobs become available
+    # automatically without duplicating the large raw release into the snapshot.
+    from app.us_oews import curated_national
+    for occupation, (soc, _title) in US_SOC.items():
+        row = curated_national(soc)
+        if row:
+            result[("US", occupation)] = row["reference_period"]
+    return result
 
 
 def wages(country, occupation):
@@ -268,8 +276,26 @@ def wages(country, occupation):
           ORDER BY published_year DESC, reference_period DESC, measure""",
           (country, occupation)).fetchall()
     if not rows:
+        if country == "US" and occupation in US_SOC:
+            from app.us_oews import curated_wage_observations
+            observations = curated_wage_observations(US_SOC[occupation][0])
+            if observations:
+                newest = observations[0]
+                return {
+                    "status": "available", "country": "US", "occupation": occupation,
+                    "geography": "national",
+                    "published_year": newest["published_year"],
+                    "reference_period": newest["reference_period"],
+                    "observations": observations,
+                    "note": "Mapped from an explicit EarnWage occupation to one detailed SOC 2018 code. BLS source units and measures are retained; no annualization or geographic inference.",
+                }
+        reason = ("No exact SOC mapping for this generic EarnWage occupation"
+                  if country == "US" and occupation in US_SOC_UNMAPPED
+                  else "No validated occupational observation imported")
         return {"status": "unavailable", "country": country, "occupation": occupation,
-                "reason": "No validated occupational observation imported"}
+                "reason": reason,
+                **({"mapping_caution": US_SOC_UNMAPPED[occupation]}
+                   if country == "US" and occupation in US_SOC_UNMAPPED else {})}
     newest = (rows[0][4], rows[0][3])
     subset = [r for r in rows if (r[4], r[3]) == newest]
     return {"status": "available", "country": country, "occupation": occupation,
