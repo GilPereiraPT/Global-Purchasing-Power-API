@@ -12,6 +12,17 @@ from app.client_config import REGIONS
 from app.north_america import CANADA_NOC, CANADA_URL, CANADA_DATASET, number
 
 PROVINCES = {code: name for code, name in REGIONS["CA"]["options"]}
+# Official Job Bank 2025 province codes and province-wide economic-region totals.
+# PEI, YK and NWT are normalized to EarnWage's ISO-like selector codes.
+SOURCE_PROVINCES = {
+    "NL": ("NL", "ER10"), "PEI": ("PE", "ER1110"),
+    "NS": ("NS", "ER12"), "NB": ("NB", "ER13"),
+    "QC": ("QC", "ER24"), "ON": ("ON", "ER35"),
+    "MB": ("MB", "ER46"), "SK": ("SK", "ER47"),
+    "AB": ("AB", "ER48"), "BC": ("BC", "ER59"),
+    "YK": ("YT", "ER6010"), "NWT": ("NT", "ER6110"),
+    "NU": ("NU", "ER6210"),
+}
 MEASURES = {
     "low": "Low_Wage_Salaire_Minium",
     "median": "Median_Wage_Salaire_Median",
@@ -47,11 +58,11 @@ def records(text):
         by_code.setdefault("NOC_" + noc, []).append((job, title))
     count = 0
     for row in reader:
-        province = row["prov"].strip().upper()
-        # The province/territory total is ER00. Regional ERxx rows are not
-        # province-wide and must not enter the province selector.
-        if province not in PROVINCES or row["ER_Code_Code_RE"].strip() != "ER00":
+        source_province = row["prov"].strip().upper()
+        mapping = SOURCE_PROVINCES.get(source_province)
+        if not mapping or row["ER_Code_Code_RE"].strip() != mapping[1]:
             continue
+        province = mapping[0]
         code = row["NOC_CNP"].strip()
         if code not in by_code:
             continue
