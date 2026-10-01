@@ -8,6 +8,7 @@ from app import north_america as na
 from app import in_plfs
 from app import in_nco_crosswalk
 from app import br_rais_states
+from app import de_entgeltatlas_states
 from app import ca_province_wages as ca_province
 from app import pt_occupation_wages as pt_wages
 from app import uk_ashe_wages as uk_wages
@@ -181,7 +182,8 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     regional_wage = (curated_state_wages(occupation, region) if code == "US" and region
                      else ca_province.wage(occupation, region) if code == "CA" and region
                      else br_rais_states.wage(occupation, region) if code == "BR" and region
-                     else {"status": "not_requested" if code in ("US", "CA", "BR") else "not_applicable"})
+                     else de_entgeltatlas_states.wage(occupation, region) if code == "DE" and region
+                     else {"status": "not_requested" if code in ("US", "CA", "BR", "DE") else "not_applicable"})
     major_group = JOBS[occupation]["isco08_major_group"]
     group_context = (
         ca_groups.context(occupation) if code == "CA" else
@@ -297,7 +299,12 @@ def compare(country_a, country_b, occupation, region_a=None, region_b=None,
 
 def regional_salary_coverage(country):
     """Actual exact occupation/region cells; no national, metro or group proxies."""
-    if country == "BR":
+    if country == "DE":
+        from app.de_entgeltatlas_states import STATES
+        names = {code: item[0] for code, item in STATES.items()}
+        cells = list(de_entgeltatlas_states.DATA)
+        kind = "federal_state"
+    elif country == "BR":
         from app.br_rais_states_import import UF
         names = UF
         cells = list(br_rais_states.DATA)
