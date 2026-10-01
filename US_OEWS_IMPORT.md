@@ -77,3 +77,23 @@ The full OEWS release is large. The importer:
 - never performs the import inside a public HTTP request.
 
 The SQLite database should live outside `public_html` and must be writable/readable by both the CLI/cron user and Passenger process.
+
+## State-wide occupation comparisons
+
+Once the complete official state/all-data workbook has been imported:
+
+```text
+GET /v1/us/oews/states/software_developer/CA
+GET /v1/us/oews/states/software_developer/TX
+GET /v1/earnwage/overview?country=US&occupation=software_developer&region=CA
+```
+
+The new curated state API requires a detailed SOC mapping, state-wide
+`AREA_TYPE=2`, cross-industry `NAICS=000000`, and the all-ownerships
+`OWN_CODE=1235` row. It excludes metropolitan and industry-specific rows.
+A missing or ambiguous source row is `unavailable` without any national fallback.
+
+The EarnWage overview keeps `national_occupation_wage` and
+`regional_occupation_wage` independent. State and federal tax scenarios
+are also independent of the OEWS reference-year wage observations. Never
+present an OEWS gross state wage as take-home pay.
