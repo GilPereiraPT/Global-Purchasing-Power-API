@@ -906,6 +906,25 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
             }
         }
     }
+    if(code=="IN") {
+        val group=data.optJSONObject("india_nco2015_professional_group_context")
+        if(group?.optString("status")=="available") {
+            val sample=group.optJSONObject("observation")
+            val monthly=sample?.optDouble("value",Double.NaN) ?: Double.NaN
+            if(monthly.isFinite() && monthly>=0) {
+                val groupLabel=group.optString("nco2015_group_label")
+                val codeNco=group.optString("nco2015_group")
+                Metric(
+                    if(lang=="pt") "Índia · referência do grupo NCO" else "India · NCO group context",
+                    money(monthly,"INR")+(if(lang=="pt") " / mês" else " / month"),
+                    "NCO "+codeNco+" · "+groupLabel+"\n"+
+                        (if(lang=="pt")
+                            "Média ponderada do grupo profissional em 2025; não é o salário específico desta profissão."
+                        else "Weighted 2025 occupational-group average; not this specific profession's wage.")
+                )
+            }
+        }
+    }
     val annual=data.optJSONObject("annual_presentation")
     if(annual?.optString("status")!="available") {
         val group = data.optJSONObject("national_major_group_context")
