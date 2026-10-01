@@ -10,7 +10,7 @@ HEAD = ("NOC_CNP,NOC_Title_eng,prov,ER_Code_Code_RE,Low_Wage_Salaire_Minium,"
 ROWS = (
     "NOC_31301,Registered nurses and registered psychiatric nurses,ON,ER35,32,42,56,44,37,50,0,2023-2024\n"
     "NOC_31301,Registered nurses and registered psychiatric nurses,QC,ER24,31,41,53,43,36,49,0,2023-2024\n"
-    "NOC_31301,Registered nurses and registered psychiatric nurses,ON,ER35,50,60,70,62,55,65,0,2023-2024\n"
+    "NOC_31301,Registered nurses and registered psychiatric nurses,ON,ER3510,50,60,70,62,55,65,0,2023-2024\n"
     "NOC_31301,Registered nurses and registered psychiatric nurses,NAT,ER00,60,70,80,75,65,76,0,2023-2024\n"
     "NOC_31110,Dentists,AB,ER48,100000,150000,210000,160000,115000,190000,1,2021\n"
 )
