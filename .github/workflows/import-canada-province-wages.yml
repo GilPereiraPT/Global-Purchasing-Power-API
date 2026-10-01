@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/import-canada-province-wages.yml'
+      - 'app/ca_province_wages.py'
 permissions:
   contents: write
 concurrency:
@@ -19,24 +20,6 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - name: Inspect official regional coding
-        run: |
-          python - <<'PY'
-          import csv,io,collections,httpx
-          from app.north_america import CANADA_URL
-          r=httpx.get(CANADA_URL, timeout=90, follow_redirects=True)
-          r.raise_for_status()
-          reader=csv.DictReader(io.StringIO(r.content.decode("utf-8-sig")))
-          counts=collections.Counter()
-          samples={}
-          for row in reader:
-              if row["NOC_CNP"] != "NOC_31301": continue
-              p=row["prov"]; code=row["ER_Code_Code_RE"]; name=row.get("ER_Name")
-              counts[(p,code)] += 1
-              if p not in samples: samples[p]=(code,name)
-          print("Nurse province ER codes:", sorted(counts))
-          print("One sample per geography:", samples)
-          PY
       - name: Fetch and validate official 2025 Job Bank province totals
         env:
           GPP_CACHE_DB: ${{ runner.temp }}/ca_province.sqlite3
