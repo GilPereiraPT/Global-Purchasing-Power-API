@@ -297,7 +297,12 @@ def compare(country_a, country_b, occupation, region_a=None, region_b=None,
 
 def regional_salary_coverage(country):
     """Actual exact occupation/region cells; no national, metro or group proxies."""
-    if country == "CA":
+    if country == "BR":
+        from app.br_rais_states_import import UF
+        names = UF
+        cells = list(br_rais_states.DATA)
+        kind = "state"
+    elif country == "CA":
         from app.ca_province_wages import init as init_ca, PROVINCES
         from app.store import connect
         with connect() as db:
