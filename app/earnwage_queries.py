@@ -6,6 +6,7 @@ They do not trigger Remotive, Eurostat or ECB traffic on every screen render.
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app import north_america as na
 from app import in_plfs
+from app import in_nco_crosswalk
 from app import ca_province_wages as ca_province
 from app import pt_occupation_wages as pt_wages
 from app import uk_ashe_wages as uk_wages
@@ -242,6 +243,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                      else "not_implemented" if code in ("US","CA") else "not_applicable")},
         "national_occupation_wage": wage,
         "india_plfs_employee_earnings_context": (in_plfs.earnings() if code == "IN" else {"status": "not_applicable"}),
+        "india_nco2015_professional_group_context": (in_nco_crosswalk.context(occupation) if code == "IN" else {"status": "not_applicable"}),
         "regional_occupation_wage": regional_wage,
         "national_major_group_context": group_context,
         "swiss_ch_isco19_submajor_context": swiss_context,
