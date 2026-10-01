@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import jobs as job_provider
 from app import north_america as na_wages
+from app import us_oews
 from app.client_config import configuration as earnwage_configuration, region_configuration
 from app import earnwage_queries as ew_queries
 from app.tax_components import components as tax_components
@@ -38,7 +39,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="EarnWage — Global Purchasing Power API",
-    version="0.5.19",
+    version="0.5.20",
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
@@ -198,9 +199,9 @@ def sources():
             "status": "official national wages imported for mapped NOC occupations",
         },
         "us_bls_oews": {
-            "url": na_wages.BLS_TABLE,
-            "role": "US national detailed occupation wages in BLS May 2025 workbook",
-            "status": "May 2025 official national Table 1 nine mean wages imported; full XLSX importer available",
+            "url": us_oews.BLS_TABLE,
+            "role": "Complete official US OEWS occupation wages: national, state, area and industry/ownership scopes",
+            "status": "full offline ZIP/XLSX importer and query API implemented; availability reflects rows imported into persistent SQLite",
         },
         "remotive_jobs": {
             "url": "https://remotive.com/remote-jobs/api",
@@ -352,6 +353,36 @@ async def job_detail(job_id: int):
     if record is None:
         raise HTTPException(404, "Job not in latest available Remotive feed")
     return record
+
+@app.get("/v1/us/oews/coverage")
+def us_oews_coverage():
+    """Coverage actually imported from official BLS OEWS files."""
+    return us_oews.coverage()
+
+
+@app.get("/v1/us/oews/occupations")
+def us_oews_occupations(
+    q: str | None = Query(default=None, max_length=100),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """Search the imported national detailed SOC catalogue."""
+    return us_oews.catalogue(q=q, limit=limit, offset=offset)
+
+
+@app.get("/v1/us/oews/wages/{soc}")
+def us_oews_wages(
+    soc: str,
+    state: str | None = Query(default=None, min_length=2, max_length=2),
+    area: str | None = Query(default=None, max_length=20),
+    year: int | None = Query(default=None, ge=1997, le=2100),
+):
+    """Return BLS-published rows for a SOC code without wage/geography inference."""
+    try:
+        return us_oews.wages(soc, state=state, area=area, year=year)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
 
 @app.get("/v1/wages/{country}/{occupation}")
 def north_america_wages(country: str, occupation: str):
