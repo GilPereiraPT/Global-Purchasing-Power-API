@@ -29,10 +29,10 @@ function updateDirectLinks(){try{const base=apiBase();$("directHealth").href=bas
 async function updateRegions(countryId,regionId,boxId){
     const country=$(countryId).value;
     const box=$(boxId),select=$(regionId);
-    box.hidden=!["US","CA"].includes(country);
+    box.hidden=!["US","CA","IN"].includes(country);
     select.replaceChildren(new Option("Todo o país (nacional)",""));
     if(box.hidden)return;
-    box.querySelector("label").textContent=country==="US"?"Estado (opcional)":"Província / território (opcional)";
+    box.querySelector("label").textContent=country==="US"?"Estado (opcional)":country==="IN"?"Estado / território da União (contexto NCO, opcional)":"Província / território (opcional)";
     try{
       const response=await fetch(apiBase()+"/v1/regions/"+country,{headers:{Accept:"application/json"}});
       if(!response.ok)throw Error("HTTP "+response.status);
