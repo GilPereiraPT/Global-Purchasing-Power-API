@@ -849,8 +849,8 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
                 else if(lang=="pt") "🟡 Grupo" else "🟡 Group",
                 group,preferred,fx,Color(0xFF9A6A00),lang)
             if(place.code=="IN" && indiaObservation!=null)
-                Caption("NCO "+india.optString("nco2015_group")+" · "+
-                    india.optString("nco2015_group_label")+
+                Caption("NCO "+india?.optString("nco2015_group").orEmpty()+" · "+
+                    india?.optString("nco2015_group_label").orEmpty()+
                     (if(lang=="pt") " · PLFS 2025 · média mensal de grupo"
                     else " · PLFS 2025 · monthly group mean"))
             SalaryLayer(if(lang=="pt")"🔵 Setor público" else "🔵 Public sector",public,preferred,fx,Color(0xFF1769A6),lang)
