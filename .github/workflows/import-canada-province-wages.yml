@@ -1,0 +1,48 @@
+name: Import official Canada province wages
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/import-canada-province-wages.yml'
+permissions:
+  contents: write
+concurrency:
+  group: canadian-province-wages
+  cancel-in-progress: false
+jobs:
+  provincial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Fetch and validate official 2025 Job Bank province totals
+        env:
+          GPP_CACHE_DB: ${{ runner.temp }}/ca_province.sqlite3
+        run: |
+          python -m app.ca_province_wages --import-official --export
+          python - <<'PY'
+          import json
+          from app.ca_province_wages import load_snapshot, coverage
+          n = load_snapshot("data/ca_province_wages.json")
+          c = coverage()
+          print(json.dumps(c))
+          assert n > 0 and c["occupation_province_pairs"] >= 10, c
+          PY
+          python -m pytest -q tests/test_ca_province_wages.py tests/test_north_america.py
+      - name: Commit attributable provincial wage snapshot
+        run: |
+          git add data/ca_province_wages.json
+          if git diff --cached --quiet; then
+            echo "No validated provincial data change"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: publish official Job Bank provincial occupation wages"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
