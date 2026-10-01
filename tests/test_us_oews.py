@@ -86,3 +86,44 @@ def test_wages_validates_soc(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "oews.sqlite"))
     with pytest.raises(ValueError, match="SOC"):
         wages("software")
+
+
+def test_state_wages_never_fall_back_to_national(tmp_path, monkeypatch):
+    from app.us_oews import curated_state_wages
+    from app.earnwage_queries import overview
+    monkeypatch.setattr(store, "DB_PATH", str(tmp_path / "states.sqlite"))
+    national = {
+        "reference_period": "May 2025", "published_year": 2025,
+        "source_file": "national.xlsx", "area": "99", "area_title": "U.S.",
+        "area_type": "1", "prim_state": "", "naics": "000000",
+        "naics_title": "Cross-industry", "i_group": "cross-industry",
+        "own_code": "1235", "occ_code": "15-1252",
+        "occ_title": "Software Developers", "o_group": "detailed",
+        "a_mean": 120000, "a_median": 110000, "h_mean": 60,
+        "h_median": 55, "source_url": "https://www.bls.gov/oes/tables.htm",
+    }
+    california = {**national, "source_file": "states.xlsx",
+                  "area": "0600000", "area_title": "California",
+                  "area_type": "2", "prim_state": "CA",
+                  "a_mean": 160000, "a_median": 150000}
+    metro = {**national, "source_file": "metros.xlsx",
+             "area": "41860", "area_title": "San Francisco",
+             "area_type": "4", "prim_state": "CA", "a_mean": 190000}
+    industry = {**california, "source_file": "industry.xlsx",
+                "naics": "541500", "naics_title": "Computer Systems Design",
+                "i_group": "4-digit", "a_mean": 210000}
+    assert persist([national, california, metro, industry], replace_year=2025) == 4
+    ca = curated_state_wages("software_developer", "CA")
+    assert ca["status"] == "available"
+    assert ca["metrics"]["a_mean"] == 160000
+    assert ca["metrics"]["a_median"] == 150000
+    assert ca["scope"] == "state_wide_cross_industry"
+    assert curated_state_wages("software_developer", "TX")["status"] == "unavailable"
+    assert curated_state_wages("doctor", "CA")["status"] == "unavailable"
+    with pytest.raises(ValueError, match="state"):
+        curated_state_wages("software_developer", "XX")
+    # Overview preserves distinct national and regional labels.
+    view = overview("US", "software_developer", region="CA")
+    assert view["national_occupation_wage"]["geography"] == "national"
+    assert view["regional_occupation_wage"]["geography"] == "state"
+    assert view["regional_occupation_wage"]["metrics"]["a_mean"] == 160000
