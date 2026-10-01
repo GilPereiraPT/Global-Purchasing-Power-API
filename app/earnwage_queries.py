@@ -173,6 +173,9 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
     region_check(code, region)
     selected = COUNTRY_MAP[code]
     wage = wage_for(code, occupation)
+    from app.us_oews import curated_state_wages
+    regional_wage = (curated_state_wages(occupation, region) if code == "US" and region
+                     else {"status": "not_requested" if code == "US" else "not_applicable"})
     major_group = JOBS[occupation]["isco08_major_group"]
     group_context = (
         ca_groups.context(occupation) if code == "CA" else
@@ -233,6 +236,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026)
                      state_wage_income_tax(region, tax_year, annual_gross).get("status") == "partial_components"
                      else "not_implemented" if code in ("US","CA") else "not_applicable")},
         "national_occupation_wage": wage,
+        "regional_occupation_wage": regional_wage,
         "national_major_group_context": group_context,
         "swiss_ch_isco19_submajor_context": swiss_context,
             "italy_cp2021_major_group_context": italy_context,
