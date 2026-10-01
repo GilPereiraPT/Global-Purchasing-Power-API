@@ -64,6 +64,8 @@ def initialize():
         ca_province_wages.load_snapshot(ROOT / "data" / "ca_province_wages.json")
         from app.us_oews_snapshot import load_snapshot as load_us_oews_snapshot
         load_us_oews_snapshot(ROOT / "data" / "us_oews_curated.json")
+        from app.in_plfs_microdata import load_snapshot as load_india_plfs
+        load_india_plfs(ROOT / "data" / "in_plfs_2025_nco.json")
         from app.pt_occupation_wages import load_snapshot as load_pt_wages
         load_pt_wages()
         from app.uk_ashe_wages import load_snapshot as load_uk_wages
@@ -488,6 +490,15 @@ def dispatch(path, q):
     if len(parts) == 6 and parts[:4] == ["v1", "us", "oews", "states"]:
         try:
             return us_oews.curated_state_wages(occupation(parts[4]), parts[5])
+        except ValueError as exc:
+            raise ApiError(422, str(exc)) from exc
+    if path == "/v1/in/plfs/nco/coverage":
+        from app.in_plfs_microdata import coverage
+        return coverage()
+    if len(parts) == 5 and parts[:4] == ["v1", "in", "plfs", "nco"]:
+        from app.in_plfs_microdata import wages
+        try:
+            return wages(parts[4], one(q, "state"))
         except ValueError as exc:
             raise ApiError(422, str(exc)) from exc
     if path == "/v1/in/plfs/earnings":
