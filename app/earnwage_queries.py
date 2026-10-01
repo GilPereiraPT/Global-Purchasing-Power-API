@@ -286,6 +286,83 @@ def compare(country_a, country_b, occupation, region_a=None, region_b=None,
     }
 
 
+def regional_salary_coverage(country):
+    """Actual exact occupation/region cells; no national, metro or group proxies."""
+    if country == "CA":
+        from app.ca_province_wages import init as init_ca, PROVINCES
+        from app.store import connect
+        with connect() as db:
+            init_ca(db)
+            cells = db.execute("""
+                SELECT occupation, province FROM ca_province_wages
+                GROUP BY occupation, province
+                HAVING COUNT(DISTINCT unit)=1
+            """).fetchall()
+        names = PROVINCES
+        kind = "province_or_territory"
+    elif country == "US":
+        from app.us_oews import init as init_us
+        from app.north_america import US_SOC
+        from app.client_config import REGIONS
+        from app.store import connect
+        names = dict(REGIONS["US"]["options"])
+        # An imported SOC may be used by more than one approved interface title.
+        jobs_by_soc = {}
+        for occupation, (soc, _) in US_SOC.items():
+            jobs_by_soc.setdefault(soc, set()).add(occupation)
+        with connect() as db:
+            init_us(db)
+            raw = db.execute("""
+                SELECT occ_code, prim_state, published_year,
+                       COUNT(DISTINCT area || ':' || area_title || ':' ||
+                           COALESCE(CAST(a_mean AS TEXT), '') || ':' ||
+                           COALESCE(CAST(a_median AS TEXT), '') || ':' ||
+                           COALESCE(CAST(h_mean AS TEXT), '') || ':' ||
+                           COALESCE(CAST(h_median AS TEXT), '')) AS variants
+                FROM us_oews
+                WHERE area_type IN ('2','2.0')
+                  AND o_group='detailed' AND naics IN ('000000','0')
+                  AND (i_group IN ('cross-industry','cross_industry','') OR i_group IS NULL)
+                  AND own_code IN ('1235','')
+                  AND (a_mean IS NOT NULL OR a_median IS NOT NULL
+                       OR h_mean IS NOT NULL OR h_median IS NOT NULL)
+                GROUP BY occ_code, prim_state, published_year
+            """).fetchall()
+        latest = {}
+        for soc, region, year, variants in raw:
+            if region not in names or soc not in jobs_by_soc:
+                continue
+            key = (soc, region)
+            if key not in latest or year > latest[key][0]:
+                latest[key] = (year, variants)
+        cells = [(job, region) for (soc, region), (_, variants) in latest.items()
+                 if variants == 1 for job in jobs_by_soc[soc]]
+        kind = "state"
+    else:
+        return {"status": "not_applicable", "region_type": None}
+    by_region = []
+    for region, name in names.items():
+        occupations = sorted({job for job, code in cells if code == region})
+        by_region.append({"code": region, "name": name,
+                          "observed_occupations": len(occupations),
+                          "possible_occupations": len(JOBS),
+                          "status": "partial" if occupations else "unavailable"})
+    covered = {occupation for occupation, region in cells if region in names}
+    valid_cells = {(occupation, region) for occupation, region in cells if region in names}
+    return {
+        "status": "partial" if valid_cells else "unavailable",
+        "region_type": kind,
+        "regions_with_data": sum(r["observed_occupations"] > 0 for r in by_region),
+        "possible_regions": len(names),
+        "observed_occupations": len(covered),
+        "possible_occupations": len(JOBS),
+        "observed_occupation_region_pairs": len(valid_cells),
+        "possible_occupation_region_pairs": len(JOBS) * len(names),
+        "by_region": by_region,
+        "note": "Only imported, exact occupation-region observations. National wages and occupational groups do not count.",
+    }
+
+
 def coverage():
     """Coverage by independent salary layer: occupation, group context and public-sector entry."""
     observed = {(c["country"], c["occupation"]): c["latest_period"]
@@ -323,6 +400,7 @@ def coverage():
             "group_context_occupations": group_count,
             "public_sector_entry_occupations": public_count,
             "possible_occupations": len(OCCUPATIONS),
+            "regional_salary_coverage": regional_salary_coverage(code),
             "status": "partial" if (exact_count or group_count or public_count) else "unavailable",
         })
     return {
