@@ -6,21 +6,23 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.de_entgeltatlas_states import STATES, load, wage, coverage, validate
-from app.de_entgeltatlas_wages import APPROVED, PRECISION
+from app.de_entgeltatlas_wages import APPROVED, PRECISION, DEFAULT as NATIONAL_SNAPSHOT
 
 
 def example():
     occupation = "software_developer"
     page, _national = APPROVED[occupation]
+    source = next(r for r in json.loads(NATIONAL_SNAPSHOT.read_text(encoding="utf-8"))["records"]
+                  if r["occupation"] == occupation)
     return {
         "occupation": occupation, "state": "BY", "state_ba_region_id": 12,
         "value": 5000, "reference_period": "2025", "currency": "EUR",
         "unit": "EUR/month", "measure": "median", "precision": PRECISION,
         "aggregation_level": "Berufsgattung", "evidence_page_id": page,
         "source_url": "https://web.arbeitsagentur.de/entgeltatlas/beruf/" + page,
-        "profession_title": "Sample reviewed profession",
-        "occupational_aggregate": "Sample exact Berufsgattung",
-        "requirement_level": "Experte",
+        "profession_title": source["profession_title"],
+        "occupational_aggregate": source["occupational_aggregate"],
+        "requirement_level": source["requirement_level"],
         "raw_ba_evidence_reference": "synthetic-test-only",
     }
 
@@ -45,6 +47,7 @@ def test_validation_strictly_rejects_broad_scope_and_region_substitution():
     assert validate(obj)[("software_developer", "BY")]["value"] == 5000
     for field, bad in (
         ("aggregation_level", "Berufsgruppe"),
+        ("occupational_aggregate", "Other occupation, unapproved category"),
         ("state_ba_region_id", 1),
         ("evidence_page_id", "99999999"),
         ("measure", "mean"),
