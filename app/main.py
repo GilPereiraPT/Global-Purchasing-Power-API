@@ -29,6 +29,8 @@ async def lifespan(app: FastAPI):
     ca_province_wages.load_snapshot(Path(__file__).resolve().parent.parent / "data" / "ca_province_wages.json")
     from app.us_oews_snapshot import load_snapshot as load_us_oews_snapshot
     load_us_oews_snapshot(Path(__file__).resolve().parent.parent / "data" / "us_oews_curated.json")
+    from app.in_plfs_microdata import load_snapshot as load_india_plfs
+    load_india_plfs(Path(__file__).resolve().parent.parent / "data" / "in_plfs_2025_nco.json")
     from app.pt_occupation_wages import load_snapshot as load_pt_wages
     load_pt_wages()
     from app.uk_ashe_wages import load_snapshot as load_uk_wages
@@ -365,6 +367,21 @@ def us_oews_state_wage(occupation: str, state: str):
         raise HTTPException(422, "Unknown occupation")
     try:
         return us_oews.curated_state_wages(occupation, state)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/v1/in/plfs/nco/coverage")
+def india_nco_coverage():
+    from app.in_plfs_microdata import coverage
+    return coverage()
+
+
+@app.get("/v1/in/plfs/nco/{nco_code}")
+def india_nco_wages(nco_code: str, state: str | None = None):
+    from app.in_plfs_microdata import wages
+    try:
+        return wages(nco_code, state)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
 
