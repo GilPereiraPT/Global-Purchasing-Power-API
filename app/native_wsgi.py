@@ -17,6 +17,7 @@ from urllib.parse import parse_qs
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
 from app import earnwage_queries as ew
 from app import north_america as na
+from app import ca_province_wages
 from app import us_oews
 from app import jobs
 from app.client_config import configuration, region_configuration
@@ -60,6 +61,7 @@ def initialize():
             pass
         load_snapshot(ROOT / "data" / "salaries_snapshot.json")
         na.load_snapshot(ROOT / "data" / "north_america_wages.json")
+        ca_province_wages.load_snapshot(ROOT / "data" / "ca_province_wages.json")
         from app.pt_occupation_wages import load_snapshot as load_pt_wages
         load_pt_wages()
         from app.uk_ashe_wages import load_snapshot as load_uk_wages
@@ -484,6 +486,13 @@ def dispatch(path, q):
     if len(parts) == 6 and parts[:4] == ["v1", "us", "oews", "states"]:
         try:
             return us_oews.curated_state_wages(occupation(parts[4]), parts[5])
+        except ValueError as exc:
+            raise ApiError(422, str(exc)) from exc
+    if path == "/v1/ca/provinces/coverage":
+        return ca_province_wages.coverage()
+    if len(parts) == 5 and parts[:3] == ["v1", "ca", "provinces"]:
+        try:
+            return ca_province_wages.wage(occupation(parts[3]), parts[4])
         except ValueError as exc:
             raise ApiError(422, str(exc)) from exc
     if path == "/v1/us/oews/coverage":
