@@ -191,14 +191,14 @@ class MainActivity:ComponentActivity() {
     LaunchedEffect(country) {
         prefs.edit().putString("country",country).apply()
         region=""
-        regions=if(country in listOf("US","CA","IN")) try {
+        regions=if(country in listOf("US","CA","IN","BR")) try {
             parseRegions(api("/v1/regions/"+country))
         } catch (_:Exception) { emptyList() } else emptyList()
     }
     LaunchedEffect(dest) {
         prefs.edit().putString("destination",dest).apply()
         regionB=""
-        regionsB=if(dest in listOf("US","CA","IN")) try {
+        regionsB=if(dest in listOf("US","CA","IN","BR")) try {
             parseRegions(api("/v1/regions/"+dest))
         } catch (_:Exception) { emptyList() } else emptyList()
     }
@@ -862,6 +862,26 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
     val region=data.optJSONObject("region")?.optString("selected").orEmpty()
     val code=data.optJSONObject("country")?.optString("code").orEmpty()
     if(region.isBlank() || code !in listOf("US","CA")) return
+    if(code=="BR") {
+        val row=data.optJSONObject("regional_occupation_wage")
+        val label=if(lang=="pt") "Brasil · mediana por Estado" else "Brazil · state median"
+        val name=row?.optString("uf_name")?.takeIf{it.isNotBlank()} ?: region
+        val amount=row?.optDouble("value",Double.NaN) ?: Double.NaN
+        if(row?.optString("status")=="available" && amount.isFinite() && amount>0) {
+            Metric(label+" · "+name,money(amount,"BRL")+
+                (if(lang=="pt") " / mês" else " / month"),
+                "CBO "+row.optString("cbo_code")+" · RAIS 2025 · "+
+                (if(lang=="pt") "Vínculos formais, 40–44 h/semana; não é salário líquido."
+                 else "Formal employment, 40–44 hours/week; not take-home pay."))
+        } else {
+            Metric(label+" · "+name,
+                if(lang=="pt") "Sem mediana estadual publicada" else "No published state median",
+                if(lang=="pt") "Não foi usada a mediana nacional como substituto."
+                else "National median has not been substituted.")
+        }
+        return
+    }
+
     val record=data.optJSONObject("regional_occupation_wage")
     val label=if(code=="CA") {
         if(lang=="pt") "Salário por província / território" else "Province / territory wage"
