@@ -761,6 +761,9 @@ private fun salaryCurrencies(data:JSONObject):List<String> {
     val wage=data.optJSONObject("national_occupation_wage")
     wage?.optJSONArray("observations")?.let { a -> for(i in 0 until a.length()) a.optJSONObject(i)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
     data.optJSONObject("national_major_group_context")?.optJSONArray("observations")?.let { a -> for(i in 0 until a.length()) a.optJSONObject(i)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
+    data.optJSONObject("india_nco2015_professional_group_context")
+        ?.optJSONObject("observation")?.optString("currency")
+        ?.takeIf { it.isNotBlank() }?.let(out::add)
     listOf("brazil_public_sector_entry","ireland_public_sector_entry","public_sector_entry").forEach { data.optJSONObject(it)?.optString("currency")?.takeIf{it.isNotBlank()}?.let(out::add) }
     return out
 }
@@ -830,13 +833,26 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
 }
 @Composable private fun GlobalSalaryCard(place:Place,data:JSONObject,lang:String,preferred:String,fx:Map<String,JSONObject>) {
     val exact=preferredObservation(data.optJSONObject("national_occupation_wage"))
-    val group=groupObservation(data.optJSONObject("national_major_group_context"))
+    val india=data.optJSONObject("india_nco2015_professional_group_context")
+    val indiaObservation=if(place.code=="IN" && india?.optString("status")=="available")
+        india.optJSONObject("observation") else null
+    val group=indiaObservation ?: groupObservation(data.optJSONObject("national_major_group_context"))
     val public=publicObservation(data)
     Card(shape=RoundedCornerShape(18.dp),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text(countryFlag(place.code)+" "+place.name,fontSize=17.sp,fontWeight=FontWeight.Bold)
             SalaryLayer(if(lang=="pt")"🟢 Profissão" else "🟢 Occupation",exact,preferred,fx,Color(0xFF087B62),lang)
-            SalaryLayer(if(lang=="pt")"🟡 Grupo" else "🟡 Group",group,preferred,fx,Color(0xFF9A6A00),lang)
+            SalaryLayer(
+                if(place.code=="IN")
+                    if(lang=="pt") "🟡 Grupo NCO · referência (não salário específico)"
+                    else "🟡 NCO group · context (not exact salary)"
+                else if(lang=="pt") "🟡 Grupo" else "🟡 Group",
+                group,preferred,fx,Color(0xFF9A6A00),lang)
+            if(place.code=="IN" && indiaObservation!=null)
+                Caption("NCO "+india.optString("nco2015_group")+" · "+
+                    india.optString("nco2015_group_label")+
+                    (if(lang=="pt") " · PLFS 2025 · média mensal de grupo"
+                    else " · PLFS 2025 · monthly group mean"))
             SalaryLayer(if(lang=="pt")"🔵 Setor público" else "🔵 Public sector",public,preferred,fx,Color(0xFF1769A6),lang)
         }
     }
@@ -845,7 +861,7 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
 @Composable private fun RegionalWageCard(data:JSONObject,lang:String) {
     val region=data.optJSONObject("region")?.optString("selected").orEmpty()
     val code=data.optJSONObject("country")?.optString("code").orEmpty()
-    if(region.isBlank() || code !in listOf("US","CA","IN")) return
+    if(region.isBlank() || code !in listOf("US","CA")) return
     val record=data.optJSONObject("regional_occupation_wage")
     val label=if(code=="CA") {
         if(lang=="pt") "Salário por província / território" else "Province / territory wage"
