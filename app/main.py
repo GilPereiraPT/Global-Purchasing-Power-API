@@ -13,6 +13,7 @@ from app.client_config import configuration as earnwage_configuration, region_co
 from app import earnwage_queries as ew_queries
 from app.tax_components import components as tax_components
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
+from app.release import COMMIT, ready
 from app.store import connect
 from app.ilostat_import import salary, availability, earnings_datasets, TOC, download, load_snapshot, catalogue_rows
 import csv
@@ -65,7 +66,9 @@ def data_inventory():
 
 @app.get("/v1/health")
 def health():
-    return {"status": "ok", "version": app.version}
+    if not ready():
+        raise HTTPException(503, "Application stores unavailable")
+    return {"status": "ok", "version": app.version, "commit": COMMIT}
 
 @app.get("/v1/app-config")
 def app_config():

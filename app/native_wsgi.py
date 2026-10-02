@@ -25,6 +25,7 @@ from app.ilostat_import import (
     TOC, earnings_datasets, availability, load_snapshot, catalogue_rows,
 )
 from app.providers import UpstreamUnavailable, exchange_rate, inflation_series
+from app.release import COMMIT, ready
 from app.store import connect
 from app.tax_components import components as tax_components
 
@@ -247,7 +248,9 @@ def sources():
 
 def dispatch(path, q):
     if path in ("/", "/v1/health"):
-        return {"status": "ok", "version": VERSION,
+        if path == "/v1/health" and not ready():
+            raise ApiError(503, "Application stores unavailable")
+        return {"status": "ok", "version": VERSION, "commit": COMMIT,
                 "service": "EarnWage API",
                 "runtime": "native_wsgi"} if path == "/v1/health" else {
                     "service": "EarnWage API", "version": VERSION,

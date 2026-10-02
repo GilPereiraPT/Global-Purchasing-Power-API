@@ -4,7 +4,6 @@ on:
   workflow_run:
     workflows: ["API tests"]
     types: [completed]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,13 +17,12 @@ jobs:
     if: >
       ${{
         vars.EARNWAGE_DEPLOY_ENABLED == 'true' &&
-        (
-          github.event_name == 'workflow_dispatch' ||
-          (
-            github.event.workflow_run.conclusion == 'success' &&
-            github.event.workflow_run.head_branch == 'main'
-          )
-        )
+        github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.status == 'completed' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == 'GilPereiraPT/Global-Purchasing-Power-API'
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -38,11 +36,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "sha=$TESTED_SHA" >> "$GITHUB_OUTPUT"
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
 
       - name: Checkout exact tested commit
         uses: actions/checkout@v4
@@ -57,33 +53,21 @@ jobs:
           SSH_USER: ${{ secrets.EARNWAGE_SSH_USER }}
           SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
           SSH_PRIVATE_KEY: ${{ secrets.EARNWAGE_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EARNWAGE_SSH_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           test -n "$SSH_HOST" || { echo "::error::Missing EARNWAGE_SSH_HOST"; exit 1; }
           test -n "$SSH_USER" || { echo "::error::Missing EARNWAGE_SSH_USER"; exit 1; }
           test -n "$SSH_PORT" || { echo "::error::Missing EARNWAGE_SSH_PORT"; exit 1; }
           test -n "$SSH_PRIVATE_KEY" || { echo "::error::Missing EARNWAGE_SSH_PRIVATE_KEY"; exit 1; }
+          test -n "$SSH_KNOWN_HOSTS" || { echo "::error::Missing EARNWAGE_SSH_KNOWN_HOSTS"; exit 1; }
 
       - name: Build allow-listed runtime bundle
         id: bundle
         shell: bash
         run: |
           set -euo pipefail
-          git ls-files \
-            'app/*.py' \
-            'data/*.json' \
-            'passenger_wsgi.py' \
-            'requirements.txt' \
-            > /tmp/earnwage-deploy-files.txt
-
-          test -s /tmp/earnwage-deploy-files.txt
-
-          if grep -E '(^|/)(\.env|\.htaccess|.*\.sqlite3?|_earnwage_backups)(/|$)' /tmp/earnwage-deploy-files.txt; then
-            echo "::error::Unsafe file found in deploy allow-list"
-            exit 1
-          fi
-
-          tar -czf /tmp/earnwage-runtime.tgz -T /tmp/earnwage-deploy-files.txt
+          python -m scripts.deploy_runtime build --root . --archive /tmp/earnwage-runtime.tgz --commit "$TESTED_SHA"
 
           EXPECTED_VERSION="$(python - <<'PY'
           import re
@@ -96,7 +80,9 @@ jobs:
           PY
           )"
           echo "version=$EXPECTED_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Deploying $(wc -l < /tmp/earnwage-deploy-files.txt) tracked runtime files, version $EXPECTED_VERSION"
+          echo "Packaged tested commit $TESTED_SHA, version $EXPECTED_VERSION"
+        env:
+          TESTED_SHA: ${{ steps.ref.outputs.sha }}
 
       - name: Configure SSH
         shell: bash
@@ -104,13 +90,17 @@ jobs:
           SSH_HOST: ${{ secrets.EARNWAGE_SSH_HOST }}
           SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
           SSH_PRIVATE_KEY: ${{ secrets.EARNWAGE_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EARNWAGE_SSH_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/earnwage_deploy
           chmod 600 ~/.ssh/earnwage_deploy
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+          test -n "$SSH_KNOWN_HOSTS"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/earnwage_known_hosts
+          ssh-keygen -F "[$SSH_HOST]:$SSH_PORT" -f ~/.ssh/earnwage_known_hosts >/dev/null || \
+            ssh-keygen -F "$SSH_HOST" -f ~/.ssh/earnwage_known_hosts >/dev/null
+          chmod 600 ~/.ssh/earnwage_known_hosts
 
       - name: Upload runtime bundle
         shell: bash
@@ -121,7 +111,7 @@ jobs:
         run: |
           set -euo pipefail
           REMOTE_ARCHIVE=".earnwage-deploy-${{ steps.ref.outputs.sha }}.tgz"
-          scp -P "$SSH_PORT" -i ~/.ssh/earnwage_deploy \
+          scp -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/earnwage_known_hosts -o BatchMode=yes -P "$SSH_PORT" -i ~/.ssh/earnwage_deploy \
             /tmp/earnwage-runtime.tgz \
             "$SSH_USER@$SSH_HOST:$APP_ROOT/$REMOTE_ARCHIVE"
 
@@ -135,43 +125,25 @@ jobs:
           set -euo pipefail
           REMOTE_ARCHIVE=".earnwage-deploy-${{ steps.ref.outputs.sha }}.tgz"
 
-          ssh -p "$SSH_PORT" -i ~/.ssh/earnwage_deploy "$SSH_USER@$SSH_HOST" \
+          ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/earnwage_known_hosts -o BatchMode=yes -p "$SSH_PORT" -i ~/.ssh/earnwage_deploy "$SSH_USER@$SSH_HOST" \
             "APP_ROOT='$APP_ROOT' REMOTE_ARCHIVE='$REMOTE_ARCHIVE' bash -s" <<'REMOTE'
           set -euo pipefail
           cd "$APP_ROOT"
 
           test -f "$REMOTE_ARCHIVE"
 
-          mkdir -p _earnwage_backups
-          tar -czf _earnwage_backups/code-predeploy-latest.tgz \
-            --ignore-failed-read \
-            app data passenger_wsgi.py requirements.txt 2>/dev/null || true
-
-          tar -xzf "$REMOTE_ARCHIVE"
+          INSTALLER="$(mktemp)"
+          trap 'rm -f "$INSTALLER"' EXIT
+          tar -xOf "$REMOTE_ARCHIVE" scripts/deploy_runtime.py > "$INSTALLER"
+          python3 "$INSTALLER" install --root "$APP_ROOT" --archive "$REMOTE_ARCHIVE"
           rm -f "$REMOTE_ARCHIVE"
-
-          mkdir -p tmp
-          touch tmp/restart.txt
           REMOTE
 
-      - name: Verify production health and version
+      - name: Verify production health and exact commit
         shell: bash
         env:
           EXPECTED_VERSION: ${{ steps.bundle.outputs.version }}
+          EXPECTED_COMMIT: ${{ steps.ref.outputs.sha }}
         run: |
           set -euo pipefail
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            if BODY="$(curl -fsS --max-time 15 "$API_HEALTH_URL" 2>/dev/null)"; then
-              ACTUAL_VERSION="$(python -c 'import json,sys; print(json.load(sys.stdin).get("version",""))' <<<"$BODY")"
-              if [ "$ACTUAL_VERSION" = "$EXPECTED_VERSION" ]; then
-                echo "Production API is healthy on version $ACTUAL_VERSION"
-                exit 0
-              fi
-              echo "Attempt $attempt: health responded with version '$ACTUAL_VERSION', expected '$EXPECTED_VERSION'"
-            else
-              echo "Attempt $attempt: health endpoint not ready"
-            fi
-            sleep 6
-          done
-          echo "::error::Production health/version verification failed"
-          exit 1
+          python -m scripts.verify_release --url "$API_HEALTH_URL" --commit "$EXPECTED_COMMIT" --version "$EXPECTED_VERSION"

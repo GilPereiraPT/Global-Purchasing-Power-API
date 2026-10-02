@@ -43,6 +43,8 @@ MAX_DEPLOY_ARCHIVE_BYTES = 20 * 1024 * 1024
 DEPLOY_REQUIRED = {
     "app/native_wsgi.py", "app/data_manager.py",
     "passenger_wsgi.py", "requirements.txt",
+    "scripts/backup_earnwage_data.py", "scripts/restore_earnwage_data.py",
+    "scripts/deploy_runtime.py", "scripts/verify_release.py", "app/release.py",
 }
 
 
@@ -333,7 +335,9 @@ def _tested_main_commit():
     candidates = [
         run for run in runs.get("workflow_runs", [])
         if run.get("name") == "API tests" and run.get("head_sha") == sha
-        and run.get("event") in ("push", "workflow_run")
+        and run.get("event") == "push"
+        and run.get("head_branch") == "main"
+        and run.get("head_repository", {}).get("full_name") == GITHUB_REPOSITORY
     ]
     if not any(run.get("status") == "completed" and run.get("conclusion") == "success"
                for run in candidates):
@@ -424,21 +428,16 @@ def _deploy(payload):
                     shutil.copyfileobj(src, dst)
             version = _validate_staged_runtime(staging, members)
 
-            backup_id = _code_backup(members)
-            for relative in sorted(members):
-                source = staging / relative
-                target = ROOT / relative
-                target.parent.mkdir(parents=True, exist_ok=True)
-                temporary = target.with_name(target.name + ".deploy-tmp")
-                shutil.copy2(source, temporary)
-                os.replace(temporary, target)
-
-    restart = ROOT / "tmp" / "restart.txt"
-    restart.parent.mkdir(parents=True, exist_ok=True)
-    restart.touch()
+            (staging / "app" / "_release.py").write_text("COMMIT = " + repr(sha) + "\n")
+            runtime_archive = staging / "runtime.tgz"
+            with tarfile.open(runtime_archive, "w:gz") as package:
+                for relative in [*members, "app/_release.py"]:
+                    package.add(staging / relative, arcname=relative, recursive=False)
+            from scripts.deploy_runtime import install
+            backup_id = install(ROOT, runtime_archive).name
 
     return {
-        "status": "deployed",
+        "status": "restart_requested",
         "commit": sha,
         "version": version,
         "files_updated": len(members),
@@ -446,7 +445,7 @@ def _deploy(payload):
         "restart_requested": True,
         "note": (
             "Validated GitHub main deployed from a successful API tests run. "
-            "Passenger restart requested; poll /v1/health for the new version."
+            "Restart requested, not verified healthy; confirm status, version and exact commit via /v1/health."
         ),
     }
 

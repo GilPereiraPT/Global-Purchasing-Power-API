@@ -326,13 +326,17 @@ $("inventory").onclick=()=>standalone(publicInventory,"A consultar base de dados
 $("check").onclick=()=>standalone(async()=>{
 await publicInventory();await status();report("Ligação protegida verificada · Data Manager disponível.");
 },"A verificar acesso protegido...");
+function releaseHealthy(response,health,release){
+return response.ok && health.status==="ok" && health.version===release.version &&
+/^[0-9a-f]{40}$/.test(release.commit||"") && health.commit===release.commit;
+}
 $("deployApi").onclick=()=>standalone(async()=>{
 if(!confirm("Atualizar agora a API de produção com a última versão testada do GitHub?"))return;
 $("deployResult").textContent="A descarregar, validar e instalar a versão testada…";
 const r=await admin("deploy",{confirm:"deploy_tested_main"});
 $("deployResult").textContent="Atualização instalada · versão "+r.version+
 " · "+r.files_updated+" ficheiros · backup "+r.backup_id+". A confirmar reinício…";
-log("Deploy GitHub concluído: "+r.commit+" · versão "+r.version+
+log("Ficheiros instalados; verificação pendente: "+r.commit+" · versão "+r.version+
 " · "+r.files_updated+" ficheiros.");
 let ready=false,last="";
 for(let attempt=1;attempt<=12;attempt++){
@@ -341,10 +345,10 @@ for(let attempt=1;attempt<=12;attempt++){
   const response=await fetch(API+"/v1/health",{cache:"no-store"});
   const health=await response.json();
   last=health.version||"";
-  if(response.ok && last===r.version){ready=true;break;}
+  if(releaseHealthy(response,health,r)){ready=true;break;}
  }catch{}
 }
-if(!ready)throw Error("Os ficheiros foram instalados, mas /v1/health ainda não confirmou a versão "+r.version+
+if(!ready)throw Error("Os ficheiros foram instalados, mas /v1/health ainda não confirmou saúde, versão "+r.version+" e commit "+r.commit+
 ". Versão observada: "+(last||"sem resposta")+". Verifica o Passenger.");
 $("deployResult").textContent="API atualizada com sucesso · versão "+r.version+
 " · commit "+r.commit.slice(0,8)+".";
