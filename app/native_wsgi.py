@@ -285,7 +285,8 @@ def dispatch(path, q):
                            one(q, "region"),
                            one(q, "annual_gross") if one(q, "tax_scenario") else gross(q, "annual_gross"),
                            integer(q, "tax_year", 2026), one(q, "tax_scenario"),
-                           one(q, "tax_region"), integer(q, "net_tax_year", None))
+                           one(q, "tax_region"), integer(q, "net_tax_year", None),
+                           one(q, "eligible_household_expenses"))
     if path == "/v1/earnwage/compare":
         return ew.compare(country(one(q, "country_a")),
                           country(one(q, "country_b")),
@@ -296,7 +297,8 @@ def dispatch(path, q):
                           integer(q, "tax_year", 2026),
                           one(q, "tax_scenario_a"), one(q, "tax_scenario_b"),
                           one(q, "tax_region_a"), one(q, "tax_region_b"),
-                          integer(q, "net_tax_year_a", None), integer(q, "net_tax_year_b", None))
+                          integer(q, "net_tax_year_a", None), integer(q, "net_tax_year_b", None),
+                          one(q, "eligible_household_expenses_a"), one(q, "eligible_household_expenses_b"))
     if path == "/v1/eurostat/coverage":
         from app.eurostat_economy import EUROSTAT_COUNTRIES, SERIES, ensure_tables, read
         from app.country_insights_store import connect as insights_connect

@@ -14,9 +14,10 @@ ASSUMPTIONS = (
     'Entire annual gross income subject to employee contributions',
     'No IRS Jovem, NHR, IFICI or other special tax regime',
     'No other income, union/professional dues or employment termination indemnities',
+    'Eligible household expenses must be explicitly supplied; missing is not zero',
 )
 MISSING_RULES = (
-    'Employee contribution rate, assessment base, exceptions and applicable 2025 evidence',
+    'Employee periodic monetary rounding and annual aggregation of contributions',
     'Actual eligible invoice credits and other collection deductions; not assumed zero',
     'Legal annual liquidation rounding and reconciliation of article 68(2) with AT practical table',
     'Independent complete annual reference cases before activating net salary',
@@ -48,6 +49,7 @@ class PortugalAdapter:
                 'source_candidates': list(SOURCE_CANDIDATES),
                 'verified_component_sources': list(pt2025.SOURCES),
                 'verified_component_rules': list(pt2025.RULES),
+                'inputs': {'eligible_household_expenses': 'Explicit eligible general-family invoice total; missing is unknown, not zero'},
                 'reason': '2025 AT components verified; complete annual model remains unvalidated'}
 
     def calculate(self, request):
@@ -62,6 +64,6 @@ class PortugalAdapter:
             return TaxOutcome('partial', sources=module.SOURCES, applicable_rules=module.RULES,
                               assumptions=ASSUMPTIONS, limitations=MISSING_RULES,
                               reason='Verified 2025 components only; final IRS, contributions and net remain unavailable',
-                              components=module.available_components(request.annual_gross))
+                              components=module.available_components(request.annual_gross, request.eligible_household_expenses))
         return TaxOutcome('unavailable', assumptions=ASSUMPTIONS,
                           limitations=MISSING_RULES, reason=reason)

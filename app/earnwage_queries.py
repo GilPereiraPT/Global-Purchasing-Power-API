@@ -169,14 +169,14 @@ def wage_for(country, occupation):
 
 
 def fiscal_context(country, region, annual_gross, tax_year, tax_scenario=None,
-                   tax_region=None, net_tax_year=None):
+                   tax_region=None, net_tax_year=None, eligible_household_expenses=None):
     if tax_scenario is not None:
         from app.tax_engine import calculate
         if annual_gross is None or net_tax_year is None:
             raise ValueError("An explicit annual_gross and net_tax_year are required for a net tax scenario")
-        return calculate(country, annual_gross, net_tax_year, tax_scenario, tax_region)
-    if tax_region is not None or net_tax_year is not None:
-        raise ValueError("Select tax_scenario when supplying tax_region or net_tax_year")
+        return calculate(country, annual_gross, net_tax_year, tax_scenario, tax_region, eligible_household_expenses)
+    if tax_region is not None or net_tax_year is not None or eligible_household_expenses is not None:
+        raise ValueError("Select tax_scenario when supplying tax_region, net_tax_year or eligible_household_expenses")
     if annual_gross is None:
         return {"status": "not_requested", "net_income": None,
                 "reason": "Supply your own annual gross salary to request a separate fiscal scenario"}
@@ -196,7 +196,7 @@ def fiscal_context(country, region, annual_gross, tax_year, tax_scenario=None,
 
 
 def overview(country, occupation, region=None, annual_gross=None, tax_year=2026,
-             tax_scenario=None, tax_region=None, net_tax_year=None):
+             tax_scenario=None, tax_region=None, net_tax_year=None, eligible_household_expenses=None):
     """One place/one profession: wages, optional region and independent tax scenario."""
     code = country.upper()
     region = region.upper() if region else None
@@ -303,7 +303,7 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026,
                      if exact_available else "No validated earnings available."),
         },
         "tax_scenario": fiscal_context(code, region, annual_gross, tax_year,
-                                       tax_scenario, tax_region, net_tax_year),
+                                       tax_scenario, tax_region, net_tax_year, eligible_household_expenses),
         "capital_cost_of_living": {"status": "unavailable", "value": None},
         "net_purchasing_power": {"status": "unavailable", "value": None},
         "currency_conversion": {"status": "not_requested",
@@ -315,12 +315,13 @@ def overview(country, occupation, region=None, annual_gross=None, tax_year=2026,
 def compare(country_a, country_b, occupation, region_a=None, region_b=None,
             annual_gross_a=None, annual_gross_b=None, tax_year=2026,
             tax_scenario_a=None, tax_scenario_b=None, tax_region_a=None, tax_region_b=None,
-            net_tax_year_a=None, net_tax_year_b=None):
+            net_tax_year_a=None, net_tax_year_b=None,
+            eligible_household_expenses_a=None, eligible_household_expenses_b=None):
     """No overall winner/ranking: side-by-side sourced records with original units."""
     a = overview(country_a, occupation, region_a, annual_gross_a, tax_year,
-                 tax_scenario_a, tax_region_a, net_tax_year_a)
+                 tax_scenario_a, tax_region_a, net_tax_year_a, eligible_household_expenses_a)
     b = overview(country_b, occupation, region_b, annual_gross_b, tax_year,
-                 tax_scenario_b, tax_region_b, net_tax_year_b)
+                 tax_scenario_b, tax_region_b, net_tax_year_b, eligible_household_expenses_b)
     return {
         "occupation": occupation, "country_a": a, "country_b": b,
         "wage_comparability": {

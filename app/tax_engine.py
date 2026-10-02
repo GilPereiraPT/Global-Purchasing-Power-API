@@ -28,6 +28,24 @@ def annual_amount(value):
     return amount
 
 
+def eligible_expenses_amount(value):
+    """Explicit eligible invoices: zero is valid, missing is not zero."""
+    raw = str(value)
+    if len(raw) > 64:
+        raise ValueError('eligible_household_expenses monetary input is too long')
+    try:
+        amount = Decimal(raw)
+    except (InvalidOperation, ValueError, TypeError):
+        raise ValueError('eligible_household_expenses must be a decimal amount') from None
+    if not amount.is_finite() or not 0 <= amount <= MAX_GROSS:
+        raise ValueError('eligible_household_expenses must be non-negative and at most 100000000')
+    with localcontext() as context:
+        context.prec = 40
+        if amount != amount.quantize(CENT):
+            raise ValueError('eligible_household_expenses must have at most two decimal places')
+    return amount
+
+
 def monetary(value):
     """Round once at the output boundary; never convert through binary float."""
     with localcontext() as context:
@@ -72,6 +90,7 @@ class TaxRequest:
     annual_gross: Decimal
     scenario: str
     region: str | None
+    eligible_household_expenses: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -118,7 +137,7 @@ def years(country):
     return {key: details[key] for key in ('country', 'status', 'supported_tax_years')}
 
 
-def calculate(country, annual_gross, tax_year, scenario, region=None):
+def calculate(country, annual_gross, tax_year, scenario, region=None, eligible_household_expenses=None):
     code = str(country).upper()
     if len(code) != 2 or not code.isascii() or not code.isalpha():
         raise ValueError('country must be a two-letter code')
@@ -126,7 +145,9 @@ def calculate(country, annual_gross, tax_year, scenario, region=None):
         raise ValueError('tax_year must be an explicitly selected year from 1900 to 2100')
     if not isinstance(scenario, str) or not scenario.strip():
         raise ValueError('scenario must be explicitly selected')
-    request = TaxRequest(code, tax_year, annual_amount(annual_gross), scenario, region)
+    expenses = (eligible_expenses_amount(eligible_household_expenses)
+                if eligible_household_expenses is not None else None)
+    request = TaxRequest(code, tax_year, annual_amount(annual_gross), scenario, region, expenses)
     adapter = _adapters().get(code)
     outcome = (adapter.calculate(request) if adapter else
                TaxOutcome('unavailable', reason='No validated country adapter'))
@@ -171,6 +192,8 @@ def present(request, outcome, currency):
             'sources': list(outcome.sources), 'applicable_rules': list(outcome.applicable_rules),
             'assumptions': list(outcome.assumptions), 'limitations': list(outcome.limitations),
             'reason': reason}
+    if request.eligible_household_expenses is not None:
+        result['eligible_household_expenses'] = monetary(request.eligible_household_expenses)
     if outcome.components:
         result['components'] = list(outcome.components)
     return result
@@ -178,7 +201,7 @@ def present(request, outcome, currency):
 
 def calculate_query(params):
     """Shared strict HTTP input validation for ASGI and native WSGI."""
-    allowed = {'country', 'annual_gross', 'tax_year', 'scenario', 'region'}
+    allowed = {'country', 'annual_gross', 'tax_year', 'scenario', 'region', 'eligible_household_expenses'}
     if set(params) - allowed:
         raise ValueError('Unexpected tax calculation parameters')
     values = {}
@@ -193,4 +216,4 @@ def calculate_query(params):
     if len(raw_year) != 4 or not raw_year.isascii() or not raw_year.isdigit():
         raise ValueError('tax_year must be a four-digit year')
     return calculate(values['country'], values['annual_gross'], int(raw_year),
-                     values['scenario'], values.get('region'))
+                     values['scenario'], values.get('region'), values.get('eligible_household_expenses'))

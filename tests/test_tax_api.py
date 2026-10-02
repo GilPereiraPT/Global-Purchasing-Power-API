@@ -120,3 +120,74 @@ def test_verified_synthetic_adapter_can_flow_to_overview_without_net_ppp(client,
     assert response.status_code == code == 200 and response.json() == body
     assert body['tax_scenario']['net_income'] == '29808.67'
     assert body['net_purchasing_power']['value'] is None
+
+
+@pytest.mark.parametrize('expenses,expected', [('0.00', '0.00'), ('100', '35.00'),
+                                             ('1000', '250.00'), ('714.28', '250.00')])
+def test_explicit_household_expenses_match_in_both_runtimes(client, expenses, expected):
+    params = {**PARAMS, 'eligible_household_expenses': expenses}
+    response = client.get('/v1/tax/calculate', params=params)
+    code, body = wsgi('/v1/tax/calculate', params)
+    assert response.status_code == code == 200 and response.json() == body
+    credit = next(item for item in body['components'] if item['id'] == 'general_expense_credit')
+    assert credit['value'] == expected
+    assert body['net_income'] is None
+
+
+@pytest.mark.parametrize('expenses', ['NaN', 'Infinity', '-1', '0.001', '', '100000001'])
+def test_invalid_household_expenses_rejected_in_both_runtimes(client, expenses):
+    params = {**PARAMS, 'eligible_household_expenses': expenses}
+    assert client.get('/v1/tax/calculate', params=params).status_code == 422
+    assert wsgi('/v1/tax/calculate', params)[0] == 422
+
+
+def test_duplicate_expenses_rejected_in_calculation(client):
+    params = list(PARAMS.items()) + [('eligible_household_expenses', '0'),
+                                   ('eligible_household_expenses', '1000')]
+    assert client.get('/v1/tax/calculate', params=params).status_code == 422
+    assert wsgi('/v1/tax/calculate', params)[0] == 422
+
+
+def test_expenses_flow_through_overview_and_independent_comparison(client):
+    params = {'country': 'PT', 'occupation': 'nurse', 'annual_gross': '25000',
+              'tax_scenario': SCENARIO, 'tax_region': 'mainland', 'net_tax_year': 2025,
+              'eligible_household_expenses': '1000'}
+    response = client.get('/v1/earnwage/overview', params=params)
+    code, body = wsgi('/v1/earnwage/overview', params)
+    assert response.status_code == code == 200 and response.json() == body
+    assert body['tax_scenario']['eligible_household_expenses'] == '1000.00'
+    assert body['tax_scenario']['net_income'] is None
+    comparison = {'country_a': 'PT', 'country_b': 'PT', 'occupation': 'nurse',
+                  'annual_gross_a': '25000', 'annual_gross_b': '25000',
+                  'tax_scenario_a': SCENARIO, 'tax_scenario_b': SCENARIO,
+                  'tax_region_a': 'mainland', 'tax_region_b': 'mainland',
+                  'net_tax_year_a': 2025, 'net_tax_year_b': 2025,
+                  'eligible_household_expenses_a': '0', 'eligible_household_expenses_b': '1000'}
+    response = client.get('/v1/earnwage/compare', params=comparison)
+    code, body = wsgi('/v1/earnwage/compare', comparison)
+    assert response.status_code == code == 200 and response.json() == body
+    assert body['country_a']['tax_scenario']['eligible_household_expenses'] == '0.00'
+    assert body['country_b']['tax_scenario']['eligible_household_expenses'] == '1000.00'
+
+
+def test_expenses_cannot_be_silently_ignored_by_legacy_overview(client):
+    params = {'country': 'PT', 'occupation': 'nurse', 'eligible_household_expenses': '100'}
+    assert client.get('/v1/earnwage/overview', params=params).status_code == 422
+    assert wsgi('/v1/earnwage/overview', params)[0] == 422
+
+
+def test_disability_does_not_select_a_reduced_employee_rate(client):
+    params = {**PARAMS, 'disability': 'true'}
+    assert client.get('/v1/tax/calculate', params=params).status_code == 422
+    assert wsgi('/v1/tax/calculate', params)[0] == 422
+
+
+@pytest.mark.parametrize('path,params,name', [
+    ('/v1/earnwage/overview', {'country': 'PT', 'occupation': 'nurse'}, 'eligible_household_expenses'),
+    ('/v1/earnwage/compare', {'country_a': 'PT', 'country_b': 'PT', 'occupation': 'nurse'}, 'eligible_household_expenses_a'),
+    ('/v1/earnwage/compare', {'country_a': 'PT', 'country_b': 'PT', 'occupation': 'nurse'}, 'eligible_household_expenses_b'),
+])
+def test_duplicate_expenses_rejected_in_overview_and_comparison(client, path, params, name):
+    repeated = list(params.items()) + [(name, '0'), (name, '1000')]
+    assert client.get(path, params=repeated).status_code == 422
+    assert wsgi(path, repeated)[0] == 422

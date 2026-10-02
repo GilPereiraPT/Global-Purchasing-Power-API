@@ -539,7 +539,8 @@ def tax_assumptions(country: str):
 
 @app.get("/v1/tax/calculate")
 def tax_calculate(request: Request, country: str, annual_gross: str,
-                  tax_year: str, scenario: str, region: str | None = None):
+                  tax_year: str, scenario: str, region: str | None = None,
+                  eligible_household_expenses: str | None = None):
     """Explicit annual scenario. Money is serialized as fixed decimal strings."""
     params = {}
     for key, value in request.query_params.multi_items():
@@ -556,6 +557,11 @@ def earnwage_coverage():
     return ew_queries.coverage()
 
 
+def _single_expense_input(request, name):
+    if len(request.query_params.getlist(name)) > 1:
+        raise HTTPException(422, 'Supply one value for ' + name)
+
+
 @app.get("/v1/earnwage/overview")
 def earnwage_overview(
     request: Request,
@@ -567,12 +573,14 @@ def earnwage_overview(
     tax_scenario: str | None = None,
     tax_region: str | None = None,
     net_tax_year: int | None = None,
+    eligible_household_expenses: str | None = None,
 ):
     """One screen-ready place/occupation record, no live external requests."""
+    _single_expense_input(request, "eligible_household_expenses")
     try:
         return ew_queries.overview(country, occupation, region,
                                    request.query_params.get("annual_gross") if tax_scenario else annual_gross, tax_year,
-                                   tax_scenario, tax_region, net_tax_year)
+                                   tax_scenario, tax_region, net_tax_year, eligible_household_expenses)
     except LookupError as exc:
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:
@@ -596,14 +604,19 @@ def earnwage_compare(
     tax_region_b: str | None = None,
     net_tax_year_a: int | None = None,
     net_tax_year_b: int | None = None,
+    eligible_household_expenses_a: str | None = None,
+    eligible_household_expenses_b: str | None = None,
 ):
     """Side-by-side verified national wages, never a fabricated PPP winner."""
+    _single_expense_input(request, "eligible_household_expenses_a")
+    _single_expense_input(request, "eligible_household_expenses_b")
     try:
         return ew_queries.compare(country_a, country_b, occupation, region_a, region_b,
                                   request.query_params.get("annual_gross_a") if tax_scenario_a else annual_gross_a,
                                   request.query_params.get("annual_gross_b") if tax_scenario_b else annual_gross_b, tax_year,
                                   tax_scenario_a, tax_scenario_b, tax_region_a, tax_region_b,
-                                  net_tax_year_a, net_tax_year_b)
+                                  net_tax_year_a, net_tax_year_b,
+                                  eligible_household_expenses_a, eligible_household_expenses_b)
     except LookupError as exc:
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:

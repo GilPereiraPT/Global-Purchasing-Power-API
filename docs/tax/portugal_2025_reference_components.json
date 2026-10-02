@@ -1,0 +1,90 @@
+{
+  "tax_year": 2025,
+  "scenario": "single_employee_no_dependents",
+  "region": "mainland",
+  "validation_scope": "Independent rational arithmetic against historical article68, article25, article70 and verified 11% rate; conditional component references only, NOT complete annual or net references",
+  "complete_annual_validation": false,
+  "important_condition": "Taxable bases assume actual annual employee contributions equal the unrounded annual 11% product. The periodic rounding convention and payment bases required to prove this are not verified. Expenses are explicit; other personal credits are unknown.",
+  "sources": [
+    "https://info.portaldasfinancas.gov.pt/pt/apoio_ao_contribuinte/Cidadaos/Rendimentos/Declaracao/Deducoes_beneficios_taxas/Paginas/default.aspx",
+    "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs68ra_202512.aspx",
+    "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs70ra_202512.aspx",
+    "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Lei_55_A_2025.pdf",
+    "https://files.diariodarepublica.pt/1s/2009/09/18000/0649006528.pdf",
+    "https://diariodarepublica.pt/dr/legislacao-consolidada/lei/2009-34514575",
+    "https://diariodarepublica.pt/dr/detalhe/decreto-regulamentar/1-a-2011-406905",
+    "https://www.seg-social.pt/ptss/pssd/menu/ajuda/guias-praticos"
+  ],
+  "cases": [
+    {
+      "annual_gross": "15000",
+      "eligible_household_expenses": "1000",
+      "employee_contribution_unrounded": "1650",
+      "specific_deduction_given_contributions_equal_unrounded_product": "4462.15",
+      "minimum_existence_abatement": "0",
+      "conditional_taxable_income": "10537.85",
+      "article68_collection_unrounded_before_credits": "1403.99100",
+      "solidarity_unrounded": "0",
+      "general_family_expense_credit_unrounded": "250",
+      "final_annual_irs": null,
+      "annual_net": null,
+      "monthly_equivalent_12": null
+    },
+    {
+      "annual_gross": "25000",
+      "eligible_household_expenses": "1000",
+      "employee_contribution_unrounded": "2750",
+      "specific_deduction_given_contributions_equal_unrounded_product": "4462.15",
+      "minimum_existence_abatement": "0",
+      "conditional_taxable_income": "20537.85",
+      "article68_collection_unrounded_before_credits": "3560.56146",
+      "solidarity_unrounded": "0",
+      "general_family_expense_credit_unrounded": "250",
+      "final_annual_irs": null,
+      "annual_net": null,
+      "monthly_equivalent_12": null
+    },
+    {
+      "annual_gross": "40000",
+      "eligible_household_expenses": "1000",
+      "employee_contribution_unrounded": "4400",
+      "specific_deduction_given_contributions_equal_unrounded_product": "4462.15",
+      "minimum_existence_abatement": "0",
+      "conditional_taxable_income": "35537.85",
+      "article68_collection_unrounded_before_credits": "8396.60565",
+      "solidarity_unrounded": "0",
+      "general_family_expense_credit_unrounded": "250",
+      "final_annual_irs": null,
+      "annual_net": null,
+      "monthly_equivalent_12": null
+    },
+    {
+      "annual_gross": "60000",
+      "eligible_household_expenses": "1000",
+      "employee_contribution_unrounded": "6600",
+      "specific_deduction_given_contributions_equal_unrounded_product": "6600",
+      "minimum_existence_abatement": "0",
+      "conditional_taxable_income": "53400",
+      "article68_collection_unrounded_before_credits": "15721.88909",
+      "solidarity_unrounded": "0",
+      "general_family_expense_credit_unrounded": "250",
+      "final_annual_irs": null,
+      "annual_net": null,
+      "monthly_equivalent_12": null
+    },
+    {
+      "annual_gross": "100000",
+      "eligible_household_expenses": "1000",
+      "employee_contribution_unrounded": "11000",
+      "specific_deduction_given_contributions_equal_unrounded_product": "11000",
+      "minimum_existence_abatement": "0",
+      "conditional_taxable_income": "89000",
+      "article68_collection_unrounded_before_credits": "31780.09584",
+      "solidarity_unrounded": "225",
+      "general_family_expense_credit_unrounded": "250",
+      "final_annual_irs": null,
+      "annual_net": null,
+      "monthly_equivalent_12": null
+    }
+  ]
+}

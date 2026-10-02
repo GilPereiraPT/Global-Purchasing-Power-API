@@ -14,6 +14,9 @@ ARTICLE70_URL = ('https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/'
                  'codigos_tributarios/cirs_rep/ra/Pages/irs70ra_202512.aspx')
 LAW55_URL = ('https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/'
              'legislacao/diplomas_legislativos/Documents/Lei_55_A_2025.pdf')
+CONTRIBUTIVE_CODE_URL = 'https://diariodarepublica.pt/dr/legislacao-consolidada/lei/2009-34514575'
+CONTRIBUTIVE_ORIGINAL_URL = 'https://files.diariodarepublica.pt/1s/2009/09/18000/0649006528.pdf'
+EMPLOYEE_RATE = D('.11')
 STANDARD_DEDUCTION = D('4462.15')
 IAS = D('522.50')
 MINIMUM_REFERENCE = D('12180')
@@ -40,7 +43,14 @@ SOURCES = tuple({'publisher': 'Autoridade Tributária e Aduaneira', 'url': url,
                                    (ARTICLE68_URL, 'Historical article 68, December 2025'),
                                    (ARTICLE70_URL, 'Historical article 70, December 2025'),
                                    (LAW55_URL, 'Law 55-A/2025 published 22 July 2025')))
-RULES = ('CIRS article 25: standard deduction 4462.15 EUR, capped at gross; '
+SOURCES += ({'publisher': 'Diário da República', 'url': CONTRIBUTIVE_CODE_URL,
+             'tax_year': 2025, 'verification_status': 'verified', 'verified_on': '2026-10-02',
+             'scope': 'Unchanged articles 13, 44, 53: standard 11% employee rate and contribution base; annual monetary rounding NOT verified'},
+            {'publisher': 'Diário da República', 'url': CONTRIBUTIVE_ORIGINAL_URL,
+             'tax_year': 2025, 'verification_status': 'verified', 'verified_on': '2026-10-02',
+             'scope': 'Original Law 110/2009, matched against unchanged rate/base articles; not all original provisions remain effective in 2025'})
+RULES = ('Contributive Code articles 13, 44, 53: general employee rate 11%; annual sum of rounded monthly liabilities remains pending',
+         'CIRS article 25: standard deduction 4462.15 EUR, capped at gross; '
          'actual mandatory contributions replace it when higher',
          'CIRS article 68 / Law 55-A/2025: 2025 rates and AT practical table',
          'CIRS article 70: 2025 AT simplified minimum-existence formulas for one taxpayer',
@@ -54,6 +64,18 @@ def _amount(value, name):
     if value > D('100000000'):
         raise ValueError(name + ' exceeds supported monetary bound')
     return value
+
+
+def employee_contribution_unrounded(contribution_base):
+    """Verified general-regime rate applied to a known fully subject base.
+
+    This is not the sum of monthly payroll amounts. No legally unverified
+    annual rounding convention or disability-related reduction is applied.
+    """
+    _amount(contribution_base, 'contribution_base')
+    with localcontext() as context:
+        context.prec = 40
+        return contribution_base * EMPLOYEE_RATE
 
 
 def specific_deduction(gross, mandatory_contributions):
@@ -92,6 +114,36 @@ def minimum_existence_abatement(gross, deduction):
         return min(gross - deduction, max(D(0), raw))
 
 
+def statutory_minimum_existence_abatement(gross, deduction):
+    """Historical article 70 using the unrounded statutory L formula.
+
+    This is separate from the published simplified rounded-L helper. It does
+    not claim that the internal precision/rounding of the AT is reproduced.
+    """
+    _amount(gross, 'gross')
+    if deduction is not None:
+        _amount(deduction, 'deduction')
+        if deduction > gross:
+            raise ValueError('deduction cannot exceed gross')
+    if gross > MINIMUM_EXCLUSION:
+        return D(0)
+    if deduction is None:
+        return None
+    with localcontext() as context:
+        context.prec = 40
+        first_rate = TABLE[0][1]
+        limit = (MINIMUM_REFERENCE - GENERAL_EXPENSE_LIMIT / (first_rate * D('3.6'))
+                 + TABLE[0][0] / D('3.6'))
+        if gross <= MINIMUM_REFERENCE:
+            raw = MINIMUM_REFERENCE - deduction - GENERAL_EXPENSE_LIMIT / first_rate
+        elif gross <= limit:
+            raw = (MINIMUM_REFERENCE - D('2.6') * (gross - MINIMUM_REFERENCE)
+                   - deduction - GENERAL_EXPENSE_LIMIT / first_rate)
+        else:
+            raw = limit - TABLE[0][0] - D('1.35') * (gross - limit) - deduction
+        return min(gross - deduction, max(D(0), raw))
+
+
 def practical_general_collection(taxable):
     """AT 2025 practical table: taxable*A - published deduction, BEFORE credits.
 
@@ -104,6 +156,24 @@ def practical_general_collection(taxable):
         for ceiling, rate, average, deduction in TABLE:
             if ceiling is None or taxable <= ceiling:
                 return taxable * rate - deduction
+
+
+def statutory_general_collection(taxable):
+    """Article 68(2): completed lower band at B, excess at next normal A.
+
+    Raw arithmetic only. Boundaries follow the published normal-rate bands;
+    no rounding of intermediate amounts or assertion of final liquidation.
+    The practical-table helper remains separate for comparison, not net tax.
+    """
+    _amount(taxable, 'taxable')
+    lower = D(0)
+    lower_average = D(0)
+    with localcontext() as context:
+        context.prec = 40
+        for ceiling, normal, average, practical_deduction in TABLE:
+            if ceiling is None or taxable <= ceiling:
+                return lower * lower_average + (taxable - lower) * normal
+            lower, lower_average = ceiling, average
 
 
 def solidarity_collection(taxable):
@@ -124,10 +194,18 @@ def general_expense_credit(eligible_expenses):
         return min(GENERAL_EXPENSE_LIMIT, eligible_expenses * D('.35'))
 
 
-def available_components(gross):
+def available_components(gross, eligible_expenses=None):
     """Only report known parameters or mathematically proved non-applicability."""
     _amount(gross, 'gross')
+    credit = general_expense_credit(eligible_expenses)
+    from app.tax_engine import monetary
     return (
+        {'id': 'employee_social_security_rate', 'status': 'verified', 'value': '0.11',
+         'unit': 'fraction', 'rule': 'Contributive Code article 53, general employees only'},
+        {'id': 'employee_social_security_unrounded', 'status': 'partial', 'value': None,
+         'unrounded_value': format(employee_contribution_unrounded(gross), 'f'),
+         'rule': 'Fully subject annual contribution base multiplied by 11%',
+         'reason': 'Not actual annual payroll contributions; periodic monetary rounding is not yet verified'},
         {'id': 'category_a_standard_deduction_limit', 'status': 'verified',
          'value': '4462.15', 'rule': 'CIRS 25 / AT annual 2025 table',
          'note': 'A limit, not the actual deduction; actual contributions remain unknown'},
@@ -142,8 +220,12 @@ def available_components(gross):
          'value': '0.00' if gross <= D('80000') else None,
          'rule': 'CIRS 68-A; taxable income cannot exceed category A gross',
          'reason': None if gross <= D('80000') else 'Taxable base is unknown'},
-        {'id': 'general_expense_credit', 'status': 'unavailable', 'value': None,
-         'reason': 'Eligible invoice expenses not supplied or verified; never assumed zero'},
+        {'id': 'general_expense_credit', 'status': 'verified' if credit is not None else 'unavailable',
+         'value': monetary(credit) if credit is not None else None,
+         'unrounded_value': format(credit, 'f') if credit is not None else None,
+         'rule': 'CIRS 78-B: 35% of explicitly supplied eligible expenses, capped at 250 EUR',
+         'rounding': 'Presentation only; legal liquidation rounding remains pending',
+         'reason': None if credit is not None else 'Eligible expenses must be explicitly supplied; never assumed zero'},
         {'id': 'annual_irs', 'status': 'unavailable', 'value': None,
          'reason': 'Contributions, actual credits and annual liquidation rounding are incomplete'},
     )
