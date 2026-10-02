@@ -43,6 +43,8 @@ MAX_DEPLOY_ARCHIVE_BYTES = 20 * 1024 * 1024
 DEPLOY_REQUIRED = {
     "app/native_wsgi.py", "app/data_manager.py",
     "passenger_wsgi.py", "requirements.txt",
+    "scripts/backup_earnwage_data.py", "scripts/restore_earnwage_data.py",
+    "scripts/deploy_runtime.py",
 }
 
 

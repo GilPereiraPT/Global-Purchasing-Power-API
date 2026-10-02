@@ -70,6 +70,9 @@ jobs:
           git ls-files \
             'app/*.py' \
             'data/*.json' \
+            'scripts/backup_earnwage_data.py' \
+            'scripts/restore_earnwage_data.py' \
+            'scripts/deploy_runtime.py' \
             'passenger_wsgi.py' \
             'requirements.txt' \
             > /tmp/earnwage-deploy-files.txt
@@ -144,16 +147,11 @@ jobs:
 
           test -f "$REMOTE_ARCHIVE"
 
-          mkdir -p _earnwage_backups
-          tar -czf _earnwage_backups/code-predeploy-latest.tgz \
-            --ignore-failed-read \
-            app data passenger_wsgi.py requirements.txt 2>/dev/null || true
-
-          tar -xzf "$REMOTE_ARCHIVE"
+          INSTALLER="$(mktemp)"
+          trap 'rm -f "$INSTALLER"' EXIT
+          tar -xOf "$REMOTE_ARCHIVE" scripts/deploy_runtime.py > "$INSTALLER"
+          python3 "$INSTALLER" install --root "$APP_ROOT" --archive "$REMOTE_ARCHIVE"
           rm -f "$REMOTE_ARCHIVE"
-
-          mkdir -p tmp
-          touch tmp/restart.txt
           REMOTE
 
       - name: Verify production health and version

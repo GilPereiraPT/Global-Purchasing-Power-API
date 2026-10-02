@@ -56,7 +56,7 @@ def backup(output):
     if sources[0][1] == sources[1][1]:
         raise ValueError("Separate insights and wages/cache databases expected")
 
-    destination.mkdir(parents=True)
+    destination.mkdir(parents=True, mode=0o700)
     manifest = {"generated_at": datetime.now(timezone.utc).isoformat(),
                 "databases": {}, "snapshots": {}}
     for label, path in sources:
@@ -74,11 +74,12 @@ def backup(output):
                 backup_db.close()
         finally:
             connection.close()
+        target.chmod(0o600)
         manifest["databases"][label] = {
             "file": target.name, "bytes": target.stat().st_size,
             "sha256": digest(target), "integrity": "ok",
         }
-    for name in SNAPSHOTS:
+    for name in sorted(set(SNAPSHOTS) | {p.name for p in (ROOT / "data").glob("*.json")}):
         source = ROOT / "data" / name
         if not source.is_file():
             manifest["snapshots"][name] = {"status": "not_present"}
