@@ -58,6 +58,25 @@ def annual_presentation(wage, group_context):
                         "monthly_kind":"annual_divided_by_12",
                         "payments_per_year":None, "payments_verified":False,
                         "note":"Published annual wage; monthly figure is annual/12, not contractual monthly pay."}
+        if wage.get("unit") == "gross/year":
+            result = {
+                "status": "available", "value": wage.get("value"),
+                "currency": wage["currency"], "unit": "per_year",
+                "kind": "reported_annual", "reference_period": wage["period"],
+                "source": wage["source"], "source_url": wage["source_url"],
+                "measure": wage["measure"], "precision": wage["precision"],
+                "monthly_optional": None, "monthly_kind": "annual_divided_by_12",
+                "payments_per_year": None, "payments_verified": False,
+                "note": "Published gross annual remuneration; not a national mean or contractual monthly pay.",
+            }
+            if wage.get("value_type") == "range":
+                result.update(value=None, value_type="range",
+                              min_value=wage["min_value"], max_value=wage["max_value"],
+                              monthly_kind=None)
+                result["note"] += " Source minimum and maximum retained; no midpoint or monthly salary inferred."
+            else:
+                result["monthly_optional"] = wage["value"] / 12
+            return result
         if wage.get("unit", "").startswith("monthly"):
             return {"status":"available", "value":wage["value"]*12,
                     "currency":wage["currency"], "unit":"per_year",
