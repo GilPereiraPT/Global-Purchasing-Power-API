@@ -1,215 +1,231 @@
-# Motor de salário líquido — Fase 3
+# Motor de salário líquido — Fase 3B
 
-## Estado da entrega
+## Estado atual
 
-A infraestrutura do motor anual, a API versionada e a integração opcional no
-EarnWage estão implementadas. **O cálculo português continua indisponível.**
-Não foi possível consultar a legislação oficial neste ambiente: o proxy devolveu
-`CONNECT tunnel failed, response 403` ao aceder ao Portal das Finanças. Não há
-qualquer ano fiscal português validado ou taxa portuguesa ativa nesta entrega.
-2025 é apenas um ano candidato à primeira validação; não é um ano suportado.
+O modelo português de 2025 passou de indisponível a **parcial**: existem agora
+componentes fiscais implementados e testados contra documentação oficial da AT.
+**O IRS final anual, as contribuições do trabalhador e o salário líquido continuam
+indisponíveis.** Não há ano ou cenário português anunciado como integralmente
+suportado: `supported_tax_years` e `available_countries` continuam vazios.
 
-A ausência de cálculo é intencional. A existência de URLs oficiais ou o sucesso
-dos testes de aritmética não valida uma regra fiscal. Não foram usados valores
-lembrados, simuladores de terceiros ou tabelas de retenção como substitutos da
-legislação anual.
+O Portal das Finanças tornou-se acessível nesta fase. Foram consultadas a página
+explicitamente dedicada aos rendimentos de 2025, as versões históricas de dezembro
+de 2025 dos artigos 68.º e 70.º e o diploma da Lei n.º 55-A/2025. O guia da Segurança
+Social fornecido não foi obtido como documento válido: o endereço sem `www`
+devolveu 503/timeout; a variante com `www` redirecionou para HTML da Segurança
+Social Direta. A alternativa `www.seg-social.gov.pt` foi bloqueada pelo proxy.
+O Diário da República respondeu com uma aplicação JavaScript, sem fornecer o
+texto contributivo que permitisse validar o regime histórico.
 
-## Arquitetura
+Não foi ativada uma taxa contributiva de 11% com base em memória ou fontes de
+terceiros. Não foram presumidos créditos ou despesas do contribuinte a zero.
 
-- `app/tax_engine.py`: pedidos imutáveis, protocolo de adaptadores nacionais,
-  registo de países, validação partilhada, aritmética progressiva e apresentação.
-- `app/tax_portugal.py`: cenário inicial, pressupostos, lacunas e fontes a
-  consultar. O adaptador devolve exclusivamente `unavailable`.
-- `app/main.py` e `app/native_wsgi.py`: os mesmos serviços e validação de cálculo
-  nos runtimes de desenvolvimento e produção.
-- `app/earnwage_queries.py`: seleção explícita do novo cenário, sem aplicar
-  impostos automaticamente aos salários estatísticos existentes.
+## Arquitetura e âmbito
 
-Os módulos são ficheiros diretos de `app/`, compatíveis com o empacotamento
-existente. Não foi alterado o sistema de deployment.
+- `app/tax_engine.py`: pedidos imutáveis, protocolo de adaptadores por país,
+  registo, validação partilhada, `Decimal` e proteção contra resultados completos
+  sem componentes/proveniência suficientes.
+- `app/tax_portugal.py`: controlo explícito do país, cenário, região e ano; só
+  devolve os componentes de 2025 no cenário continental reconhecido.
+- `app/tax_portugal_2025.py`: componentes oficiais de 2025, funções puras e fontes.
+- `docs/tax/portugal_2025_sources.json`: URLs, âmbito, data de consulta, excertos e
+  SHA-256 dos documentos obtidos. Os hashes identificam os documentos consultados;
+  não constituem uma validação automática de futuras versões dessas páginas.
+- FastAPI e WSGI usam o mesmo serviço; o overview/comparação selecionam o motor
+  explicitamente. Os pedidos e o endpoint fiscal legados mantêm o comportamento.
 
-Cada adaptador recebe país, ano fiscal, rendimento bruto anual, cenário e região
-opcional. Tem de verificar as regras nacionais e regionais aplicáveis ao pedido.
-Não há fallback automático de região, ano ou situação familiar. Para Portugal é
-necessária a região explícita `mainland`.
+Os módulos continuam como ficheiros diretos de `app/`, compatíveis com o pacote
+existente. Não se alterou o deployment ou o Android.
 
-Os estados do novo contrato são:
+Cenário: `single_employee_no_dependents`, região fiscal explícita `mainland`:
+residente fiscal durante todo o ano, adulto solteiro, sem dependentes/deficiência,
+apenas categoria A, regime geral, bruto integralmente sujeito a contribuições,
+sem IRS Jovem/RNH/IFICI e sem outros rendimentos. Excluem-se quotizações sindicais,
+ordens profissionais e indemnizações de rescisão. Estes pressupostos delimitam o
+cenário; **não declaram inexistentes despesas gerais ou outros créditos pessoais**.
 
-| Estado | Significado | Líquido anual / equivalente mensal |
+Casados, dependentes, ilhas e regimes especiais continuam sem cobertura. Não se
+calculam contribuições patronais, retenção mensal, reembolsos/acertos com retenções,
+pagamentos efetivos em 12/14 meses ou poder de compra líquido internacional.
+
+## Componentes verificados para 2025
+
+### Categoria A — artigo 25.º
+
+Dedução específica padrão: **4 462,15 €**, correspondente a 8,54 × IAS de 522,50 €.
+No âmbito restrito, a dedução é o menor entre o bruto e o maior entre este limite
+e as contribuições obrigatórias efetivamente conhecidas. Não se deduzem novamente
+as contribuições ao rendimento coletável depois de já terem substituído a dedução
+específica.
+
+`specific_deduction(gross, mandatory_contributions)` exige o montante efetivo das
+contribuições. Se for desconhecido, devolve `None`. A API publica o limite padrão,
+mas não o apresenta como a dedução efetiva do utilizador.
+
+### Escalões anuais — artigo 68.º e Lei n.º 55-A/2025
+
+Tabela prática publicada pela AT para os rendimentos de 2025:
+
+| Rendimento coletável até (€) | Taxa normal | Parcela a abater (€) |
 | --- | --- | --- |
-| `verified` | Modelo completo e validado para o cenário e ano selecionados | Disponíveis |
-| `partial` | Existem componentes, mas faltam regras ou componentes necessários | `null` |
-| `unavailable` | Não existe cálculo validado para o pedido | `null` |
+| 8 059 | 12,50% | 0,00 |
+| 12 160 | 16,00% | 282,07 |
+| 17 233 | 21,50% | 950,91 |
+| 22 306 | 24,40% | 1 450,67 |
+| 28 400 | 31,40% | 3 011,98 |
+| 41 629 | 34,90% | 4 006,10 |
+| 44 987 | 43,10% | 7 419,54 |
+| 83 696 | 44,60% | 8 094,51 |
+| Superior a 83 696 | 48,00% | 10 939,90 |
 
-O motor impede a apresentação de líquido se um adaptador declarar `verified`
-sem imposto anual, contribuições, moeda, fontes ou regras aplicáveis. O estado
-`verified` descreve a validação do modelo dentro do seu âmbito; o resultado é
-uma estimativa anual, não uma liquidação da AT.
+`practical_general_collection(taxable)` aplica rendimento coletável × taxa normal
+− parcela a abater da tabela prática. **É coleta prática antes de créditos, não
+IRS final.** O módulo conserva também as taxas médias publicadas no artigo 68.º.
+Não usa as taxas iniciais de 2025 nem os limites de 2026.
 
-Todos os cálculos monetários usam `Decimal`. A nova API representa os montantes
-como **strings decimais com duas casas**, por exemplo `"30000.01"`; valores
-indisponíveis são `null`. O bruto deve ser positivo, ter no máximo duas casas
-decimais e não exceder 100 000 000. Não são aceites NaN, infinito, parâmetros de
-cálculo inesperados ou parâmetros duplicados.
+A tabela prática tem coeficientes arredondados e pequenas descontinuidades nos
+limites. Os testes reproduzem os valores publicados, sem suavizações inventadas.
+Ainda é necessário reconciliar este método com o artigo 68.º, n.º 2, e a precisão
+utilizada pela AT na liquidação. Não se promove este componente a imposto final.
 
-A apresentação genérica usa `ROUND_HALF_UP`. As regras de arredondamento legal,
-deduções, abatimentos e créditos pertencem ao adaptador e terão de ser validadas
-antes da sua ativação. Não se presume que o algoritmo progressivo genérico,
-isoladamente, reproduza a liquidação portuguesa.
+### Mínimo de existência — artigo 70.º histórico
 
-## Primeiro cenário português proposto
+Para um único sujeito passivo, exclusivamente categoria A:
 
-Identificador: `single_employee_no_dependents`.
+- IAS de 2025: **522,50 €**.
+- Valor de referência (VR): **12 180 €**, não os 12 880 € do texto atual.
+- Limite L publicado nas fórmulas simplificadas da AT: **13 863,06 €**.
+- Limite de exclusão: bruto superior a **16 093 €** (2,2 × 14 × IAS).
+- Limite das despesas gerais usado na fórmula: **250 €**; este parâmetro legal não
+  significa que o contribuinte tenha direito a um crédito efetivo de 250 €.
 
-- Residente fiscal durante todo o ano em Portugal continental.
-- Adulto solteiro, sem dependentes e sem deficiência.
-- Apenas rendimentos de trabalho dependente da categoria A.
-- Regime geral da Segurança Social; bruto integralmente sujeito a contribuições.
-- Sem IRS Jovem, RNH, IFICI ou outros regimes especiais.
-- Sem outros rendimentos, deduções opcionais ou créditos por despesas reclamados.
+Com RB = bruto e DE = dedução específica conhecida, o abatimento bruto é:
 
-Este âmbito ainda precisa de validação. Não são assumidos a zero benefícios,
-abatimentos ou ajustes obrigatórios. Casados, dependentes, ilhas e regimes
-especiais não estão implementados. Não são calculadas contribuições patronais,
-retenção mensal, reembolso/acerto com retenções ou pagamentos efetivos em 12/14
-meses.
+1. RB ≤ 12 180: `12180 − DE − 250/0.125`.
+2. 12 180 < RB ≤ 13 863,06: `12180 − 2.6×(RB−12180) − DE − 250/0.125`.
+3. RB > 13 863,06: `13863.06 − 8059 − 1.35×(RB−13863.06) − DE`.
 
-O objetivo de `income_tax` é uma estimativa do **IRS final anual**, que será
-subtraída, juntamente com as contribuições do trabalhador, ao bruto anual.
-`monthly_equivalent_12` será o líquido anual dividido por 12; não representa um
-recibo de vencimento, subsídios de férias/Natal nem retenção na fonte.
+O resultado é limitado entre zero e RB−DE. Acima de 16 093 € o abatimento não se
+aplica. As outras exclusões do artigo 70.º ficam fora do âmbito porque o cenário
+exclui outros rendimentos e outros titulares.
 
-### Regras em falta antes de ativar Portugal
+O módulo aplica as **fórmulas simplificadas publicadas** com L = 13 863,06. Não
+presume que arredondar L a duas casas seja a convenção legal interna da liquidação.
+A equivalência com a fórmula legislativa e o seu arredondamento continua pendente.
 
-1. Tabela anual de escalões e taxas e alterações legislativas do ano selecionado.
-2. Dedução específica da categoria A e interação com contribuições obrigatórias.
-3. Mínimo de existência: limiares, fórmulas e limites de aplicação.
-4. Taxa adicional de solidariedade e interação com deduções.
-5. Ajustes obrigatórios à coleta, créditos aplicáveis e arredondamento anual.
-6. Taxa contributiva do trabalhador, base de incidência e exceções do regime geral.
+### Solidariedade — artigo 68.º-A
 
-As fontes a consultar são a [Autoridade Tributária](https://info.portaldasfinancas.gov.pt/),
-o [Diário da República](https://diariodarepublica.pt/) e a
-[Segurança Social](https://www.seg-social.pt/). Os links em `source_candidates`
-são candidatos não verificados, não proveniência de um cálculo. As páginas de
-legislação consolidada atual não bastam para provar as regras históricas de 2025.
+`solidarity_collection(taxable)` calcula 2,5% da parcela entre 80 000 e 250 000 €,
+mais 5% do excedente de 250 000 €. Os limiares respeitam ao **rendimento coletável**,
+não ao bruto. Para bruto até 80 000 €, no cenário restrito, é possível provar a
+não aplicação da solidariedade sem estimar a base coletável.
 
-Para ativar um ano será necessário registar o URL oficial efetivamente
-verificado, ano fiscal, versão/alterações legislativas, artigos e regras
-aplicáveis, bem como verificar a fórmula completa contra exemplos oficiais ou
-casos independentemente calculados. Só então poderá ser adicionado a
-`supported_tax_years` e o respetivo cenário passar a `verified`.
+### Despesas gerais familiares — artigo 78.º-B
+
+`general_expense_credit(eligible_expenses)` calcula 35% das despesas elegíveis
+conhecidas, com limite de 250 €. `None` continua `None`: nem zero nem o limite
+máximo são atribuídos por defeito. Elegibilidade e montantes efetivos dependem de
+faturas e identificação fiscal; a API atual não recebe esses dados.
+
+## Aritmética e arredondamento
+
+Todos os componentes usam `Decimal`, com contexto local de precisão 40 nas
+operações. Não há conversão para float. As funções conservam resultados não
+arredondados; não se arredonda cada escalão ou operação intermédia.
+
+A API usa strings com duas casas para valores monetários apresentados. O
+`ROUND_HALF_UP` genérico é uma convenção de **apresentação**, não uma afirmação
+sobre o arredondamento legal do IRS. Não foi encontrada/validada a especificação
+completa do arredondamento da liquidação anual. Esse bloqueio impede a ativação
+do IRS final, mesmo que as restantes fórmulas fossem suficientes.
+
+O futuro `monthly_equivalent_12` será o líquido anual dividido por 12. Não será
+retenção mensal, recibo de vencimento nem descrição dos pagamentos de subsídios.
 
 ## API versionada — FastAPI e WSGI
 
 | Método e caminho | Função |
 | --- | --- |
-| `GET /v1/tax/countries` | Adaptadores, cenários e países efetivamente disponíveis |
-| `GET /v1/tax/years/{country}` | Anos fiscais suportados |
-| `GET /v1/tax/assumptions/{country}` | Pressupostos, limitações, lacunas e fontes candidatas |
+| `GET /v1/tax/countries` | Adaptadores, cenários e países integralmente disponíveis |
+| `GET /v1/tax/years/{country}` | Anos integralmente suportados |
+| `GET /v1/tax/assumptions/{country}` | Pressupostos, limitações e fontes dos componentes |
 | `GET /v1/tax/calculate` | Pedido anual explícito |
 
-Exemplo válido, com resultado atualmente indisponível:
-
 ```text
-/v1/tax/calculate?country=PT&annual_gross=30000.01&tax_year=2025&scenario=single_employee_no_dependents&region=mainland
+/v1/tax/calculate?country=PT&annual_gross=30000&tax_year=2025&scenario=single_employee_no_dependents&region=mainland
 ```
 
-Excerto da resposta:
+Devolve `status: partial`, `income_tax: null`, `employee_social_security: null`,
+`net_income: null` e `monthly_equivalent_12: null`. O campo adicional `components`
+identifica valores conhecidos e desconhecidos. Neste exemplo o abatimento por
+mínimo de existência e a solidariedade são comprovadamente zero; a dedução
+específica efetiva, os créditos e o IRS final continuam desconhecidos.
 
-```json
-{
-  "status": "unavailable",
-  "country": "PT",
-  "currency": "EUR",
-  "tax_year": 2025,
-  "annual_gross": "30000.01",
-  "income_tax": null,
-  "employee_social_security": null,
-  "net_income": null,
-  "monthly_equivalent_12": null,
-  "sources": [],
-  "applicable_rules": []
-}
-```
+`verified_component_sources` e `validated_component_tax_years: [2025]` nos
+metadados distinguem componentes confirmados de anos integralmente suportados.
+Outros anos, regiões e cenários devolvem `unavailable`, sem reutilizar os
+componentes de 2025. Fontes verificadas registam URL, ano, âmbito e data.
 
-`country`, `annual_gross`, `tax_year` e `scenario` são obrigatórios. A região é
-opcional no protocolo internacional, mas necessária para o cenário continental
-português. Entradas inválidas recebem HTTP 422; países, anos, regiões e cenários
-sem modelo validado recebem HTTP 200 com `status: unavailable`, montantes nulos e
-motivo explícito. Isto distingue um pedido inválido de falta de cobertura fiscal.
+`country`, `annual_gross`, `tax_year` e `scenario` são obrigatórios. O bruto deve
+ser positivo, ter no máximo duas casas e não exceder 100 000 000. Entradas inválidas,
+parâmetros de cálculo inesperados ou duplicados recebem 422; falta de cobertura
+fiscal recebe 200 com `unavailable`. `partial` nunca expõe líquido.
 
-Atualmente `available_countries` e `supported_tax_years` estão vazios. A presença
-de Portugal no catálogo de adaptadores não significa que exista cálculo ativo.
+Overview: selecionar `tax_scenario`, `tax_region`, `net_tax_year` e bruto explícito.
+O ano não é inferido do default fiscal legado ou da observação salarial. Na
+comparação, os mesmos parâmetros têm sufixos `_a` e `_b` e são independentes.
+`region` continua a descrever os dados salariais; `tax_region`, a jurisdição fiscal.
+`/v1/tax-components/{country}` e os pedidos existentes permanecem intactos.
 
-### Overview e comparação
+## Validação e passos para completar
 
-Os pedidos existentes mantêm o comportamento e os contratos anteriores. O
-endpoint legado `/v1/tax-components/{country}` não foi alterado.
+Os testes cobrem todos os limites de escalão da tabela prática (abaixo, no limite,
+acima), substituição/cap da dedução específica, ramos e limites do mínimo,
+solidariedade, despesas conhecidas/desconhecidas, precisão Decimal, proveniência,
+paridade FastAPI/WSGI e indisponibilidade do líquido em todos os casos incompletos.
 
-Para selecionar o novo motor no overview:
+Há referências numéricas independentes para **componentes** e uma cadeia com
+contribuições explicitamente fornecidas. Por exemplo: bruto 30 000 €, contribuições
+conhecidas de 3 300 €, DE 4 462,15 €, mínimo zero, coletável 25 537,85 € e coleta
+prática não arredondada de 5 006,9049 €. Os 3 300 € são um dado de entrada do caso,
+não prova de uma taxa contributiva de 11%. O valor não é IRS final nem permite
+publicar um líquido validado.
 
-```text
-/v1/earnwage/overview?country=PT&occupation=nurse&annual_gross=30000.01&tax_scenario=single_employee_no_dependents&tax_region=mainland&net_tax_year=2025
-```
+**Ainda não existem casos anuais completos de referência validados.** Para os
+concluir e ativar `verified`, falta:
 
-`tax_scenario`, `tax_region` e `net_tax_year` selecionam o novo modelo.
-`net_tax_year` é obrigatório quando há `tax_scenario`: não se reutiliza
-silenciosamente o ano por defeito do cenário fiscal legado. O `region` existente
-continua a descrever os dados salariais; `tax_region` descreve a jurisdição fiscal.
-O bruto é introduzido pelo utilizador; não é inferido do salário da profissão.
+1. Obter documentação oficial válida do regime contributivo aplicável em 2025:
+   taxa, base de incidência, exceções, periodicidade e arredondamento. Não é
+   suficiente multiplicar o bruto anual por uma taxa presumida.
+2. Validar os dados de créditos pessoais/despesas e as deduções à coleta aplicáveis,
+   incluindo a forma explícita de receber esses dados na API.
+3. Confirmar arredondamento legal da liquidação e equivalência entre tabela prática,
+   taxas médias e fórmulas simplificadas do mínimo de existência.
+4. Criar referências anuais completas independentemente calculadas para os
+   limiares, rendimentos baixos/altos e solidariedade.
 
-Na comparação existem os parâmetros correspondentes com sufixos `_a` e `_b`,
-incluindo `annual_gross_a/b` e `net_tax_year_a/b`. Cada país pode usar um ano e
-cenário independentes. O resultado está em `country_a.tax_scenario` e
-`country_b.tax_scenario`.
+Não são necessários novos segredos ou alterações ao deployment. Para avançar,
+é necessário um documento oficial contributivo acessível e a especificação de
+liquidação/precisão da AT; podem ser usadas cópias oficiais verificáveis com
+identificação da versão e vigência de 2025.
 
-Os resultados líquidos só podem aparecer quando o adaptador é integralmente
-suportado. `net_purchasing_power` continua indisponível: não foi criado um modelo
-de custo de vida nem uma classificação internacional de salários líquidos.
-
-## Validação e configuração necessária
-
-Os testes novos cobrem limites imediatamente abaixo, no valor e acima dos
-escalões; arredondamento decimal; entradas inválidas; resultados incompletos;
-ano obrigatório; falta de cobertura; paridade FastAPI/WSGI e integração no
-overview/comparação. As tabelas e adaptadores verificados dos testes são
-**sintéticos**. Não são exemplos portugueses nem provam conformidade fiscal.
-
-Antes da ativação faltam testes portugueses baseados em regras oficiais para
-cada escalão, mínimo de existência, dedução específica, solidariedade,
-contribuições e arredondamento, além de casos de referência anuais independentes.
-
-Foi preparado um rascunho aditivo da configuração de rede da nuvem, preservando
-`api.github.com` e os presets existentes, com os destinos:
-
-- `info.portaldasfinancas.gov.pt`
-- `diariodarepublica.pt` e `files.diariodarepublica.pt`
-- `www.seg-social.pt` e `www.seg-social.gov.pt`
-
-É necessário guardar essa configuração nas definições do ambiente e confirmar
-que as consultas HTTPS às fontes funcionam. Guardar o rascunho por si só não
-aplica a configuração à máquina. Não são necessários novos segredos ou mudanças
-no deployment para os endpoints novos.
-
-### Resultados desta entrega
-
-Base `main` verificada: `1a57090`, que inclui a Fase 2 e as três correções de dados
-anteriores. A suite original passou com **265 aprovados, 0 falhados**.
-
-Suite completa após esta implementação:
+## Resultados de execução — Fase 3B
 
 ```text
 .venv/bin/python -m pytest -q
-346 passed, 1 warning in 70.57s
+444 passed, 1 warning in 69.58s
 ```
 
-São **81 testes novos**, 346 aprovados e 0 falhados. O aviso existente
-`StarletteDeprecationWarning` refere a utilização de `httpx` no TestClient;
-não foram alteradas dependências fora do âmbito. `pip check` não identificou
-incompatibilidades. Os testes existentes foram preservados.
+**444 aprovados, 0 falhados**, incluindo 98 testes novos nesta fase (346 na entrega
+anterior). Os testes anteriores foram conservados; as expectativas do cenário
+PT/2025 foram atualizadas de `unavailable` para `partial`, mantendo as verificações
+que impedem líquido e contribuições inventadas. Os testes específicos do motor,
+API e componentes somam 179 aprovados.
 
-A entrega fica numa branch dedicada e em PR de rascunho para revisão. A
-infraestrutura está testada, mas o motor fiscal português ainda não está pronto
-para utilização em produção. Não houve merge em `main`, deployment, alterações
-à aplicação Android, a segredos ou a bases de dados de produção.
+O único aviso é o `StarletteDeprecationWarning` preexistente relativo a `httpx`
+no TestClient. Não foram alteradas dependências para resolver esse assunto fora
+do âmbito.
+
+A implementação mantém-se na branch `feat/portugal-net-salary` e na PR #13 em
+rascunho. Não houve merge, deployment ou alteração ao Android, ao sistema de
+deployment, a segredos ou a bases de dados de produção.

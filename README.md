@@ -432,8 +432,9 @@ separates verified, partial and unavailable calculations. Opt-in tax scenarios
 are integrated into EarnWage overview and comparison without changing legacy
 requests or calculating international net purchasing power.
 
-**Portugal remains unavailable:** official annual rules could not be verified
-in the restricted cloud environment. No Portuguese tax year is currently
-supported and no Portuguese net salary is fabricated. See
+**Portugal remains partial:** official 2025 AT components are implemented and
+tested. Employee contributions, actual tax credits and legal annual liquidation
+rounding remain unvalidated. No full Portuguese tax year is currently supported
+and no net salary is fabricated. See
 [TAX_ENGINE.md](TAX_ENGINE.md) for the API contract, proposed mainland employee
 scenario, outstanding fiscal validation and required network configuration.
