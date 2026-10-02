@@ -53,12 +53,14 @@ jobs:
           SSH_USER: ${{ secrets.EARNWAGE_SSH_USER }}
           SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
           SSH_PRIVATE_KEY: ${{ secrets.EARNWAGE_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EARNWAGE_SSH_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           test -n "$SSH_HOST" || { echo "::error::Missing EARNWAGE_SSH_HOST"; exit 1; }
           test -n "$SSH_USER" || { echo "::error::Missing EARNWAGE_SSH_USER"; exit 1; }
           test -n "$SSH_PORT" || { echo "::error::Missing EARNWAGE_SSH_PORT"; exit 1; }
           test -n "$SSH_PRIVATE_KEY" || { echo "::error::Missing EARNWAGE_SSH_PRIVATE_KEY"; exit 1; }
+          test -n "$SSH_KNOWN_HOSTS" || { echo "::error::Missing EARNWAGE_SSH_KNOWN_HOSTS"; exit 1; }
 
       - name: Build allow-listed runtime bundle
         id: bundle
@@ -100,13 +102,17 @@ jobs:
           SSH_HOST: ${{ secrets.EARNWAGE_SSH_HOST }}
           SSH_PORT: ${{ secrets.EARNWAGE_SSH_PORT }}
           SSH_PRIVATE_KEY: ${{ secrets.EARNWAGE_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EARNWAGE_SSH_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/earnwage_deploy
           chmod 600 ~/.ssh/earnwage_deploy
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+          test -n "$SSH_KNOWN_HOSTS"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/earnwage_known_hosts
+          ssh-keygen -F "[$SSH_HOST]:$SSH_PORT" -f ~/.ssh/earnwage_known_hosts >/dev/null || \
+            ssh-keygen -F "$SSH_HOST" -f ~/.ssh/earnwage_known_hosts >/dev/null
+          chmod 600 ~/.ssh/earnwage_known_hosts
 
       - name: Upload runtime bundle
         shell: bash
@@ -117,7 +123,7 @@ jobs:
         run: |
           set -euo pipefail
           REMOTE_ARCHIVE=".earnwage-deploy-${{ steps.ref.outputs.sha }}.tgz"
-          scp -P "$SSH_PORT" -i ~/.ssh/earnwage_deploy \
+          scp -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/earnwage_known_hosts -o BatchMode=yes -P "$SSH_PORT" -i ~/.ssh/earnwage_deploy \
             /tmp/earnwage-runtime.tgz \
             "$SSH_USER@$SSH_HOST:$APP_ROOT/$REMOTE_ARCHIVE"
 
@@ -131,7 +137,7 @@ jobs:
           set -euo pipefail
           REMOTE_ARCHIVE=".earnwage-deploy-${{ steps.ref.outputs.sha }}.tgz"
 
-          ssh -p "$SSH_PORT" -i ~/.ssh/earnwage_deploy "$SSH_USER@$SSH_HOST" \
+          ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/earnwage_known_hosts -o BatchMode=yes -p "$SSH_PORT" -i ~/.ssh/earnwage_deploy "$SSH_USER@$SSH_HOST" \
             "APP_ROOT='$APP_ROOT' REMOTE_ARCHIVE='$REMOTE_ARCHIVE' bash -s" <<'REMOTE'
           set -euo pipefail
           cd "$APP_ROOT"

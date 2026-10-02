@@ -45,3 +45,16 @@ def test_browser_deployment_requires_original_push(monkeypatch, event, repo):
     else:
         with pytest.raises(RuntimeError, match='github_tests_not_green'):
             dm._tested_main_commit()
+
+
+def test_ssh_uses_only_pretrusted_keys():
+    text = WORKFLOW.read_text()
+    assert 'ssh-keyscan' not in text
+    assert 'secrets.EARNWAGE_SSH_KNOWN_HOSTS' in text
+    for line in text.splitlines():
+        if line.strip().startswith(('scp ', 'ssh ')):
+            assert 'StrictHostKeyChecking=yes' in line
+            assert 'UserKnownHostsFile=' in line
+            assert 'BatchMode=yes' in line
+    assert 'set -x' not in text
+    assert 'echo "$SSH_PRIVATE_KEY"' not in text
