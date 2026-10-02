@@ -80,7 +80,7 @@ def test_overview_explicit_scenario_has_parity_and_keeps_ppp_unavailable(client)
     response = client.get('/v1/earnwage/overview', params=params)
     code, body = wsgi('/v1/earnwage/overview', params)
     assert response.status_code == code == 200 and response.json() == body
-    assert body['tax_scenario']['status'] == 'unavailable'
+    assert body['tax_scenario']['status'] == 'partial'
     assert body['tax_scenario']['net_income'] is None
     assert body['net_purchasing_power']['value'] is None
     params.pop('net_tax_year')

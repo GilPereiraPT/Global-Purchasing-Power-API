@@ -1,0 +1,65 @@
+{
+  "scope": "Verified AT components only, no complete annual or net reference cases validated",
+  "documents": [
+    {
+      "publisher": "Autoridade Tributária e Aduaneira",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_ao_contribuinte/Cidadaos/Rendimentos/Declaracao/Deducoes_beneficios_taxas/Paginas/default.aspx",
+      "tax_year": 2025,
+      "verification_status": "verified",
+      "verified_on": "2026-10-02",
+      "scope": "Explicit 2025 annual component tables",
+      "sha256_retrieved_document": "5548214f336f37aa3fa370292707ca1d9f81eb7450a2b5c7af0f776f0091a858",
+      "verified_extracts": {
+        "category_a_standard_deduction": "4462.15 EUR; actual mandatory contributions replace when higher",
+        "ias_2025": "522.50 EUR",
+        "minimum_reference": "12180 EUR",
+        "minimum_L_published": "13863.06 EUR",
+        "minimum_exclusion_one_taxpayer": "16093.00 EUR",
+        "general_expense_credit": "35% of eligible expenses, maximum 250 EUR; not an automatic flat credit",
+        "solidarity": "2.5% over 80000 EUR taxable; 5% over 250000 EUR taxable"
+      }
+    },
+    {
+      "publisher": "Autoridade Tributária e Aduaneira",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs68ra_202512.aspx",
+      "tax_year": 2025,
+      "verification_status": "verified",
+      "verified_on": "2026-10-02",
+      "scope": "Historical article 68, December 2025",
+      "sha256_retrieved_document": "a862158e72a93465486ea89cb14ee819bca7586f4cdfc81ad3bd2794082f001a",
+      "excerpt": "Artigo 68.º Taxas gerais 1 - As taxas do imposto são as constantes da tabela seguinte:​ Rendimento coletável (euros) Taxas (percentagem) Normal (A) Média (B) Até 8 059 ​12,50 12,500 De mais de 8 059 até 12 160 16,00 13,680 De mais de 12 160 até 17 233 21,50 ​ 15,982 De mais de 17 233 até 22 306 24,40 17,897 De mais de 22 306 até 28 400 31,40 20,794 De mais de 28 400 até 41 629 34,90 25,277 De mais de 41 629 até 44 987 43,10 26,607 De mais de 44 987 até 83 696 44,60 34,929 ​ Superior a 83 696 48,00 – ​​ ​(Redação da Lei n.º 55-A/2025, de 22/07​) ​ ​ ​ 2 - O quantitativo do rendimento coletável, quando superior a 8059 €, é dividido em duas partes, nos seguintes termos: uma, igual ao limite do maior dos escalões que nele couber, à qual se aplica a taxa da coluna B correspondente a esse escalão; outra, igual ao excedente, a que se aplica a taxa da coluna A respeitante ao escalão imediatamente superior. ( Redação da Lei n.º 45-A / 2024, de 31 de dezembro ​) ​​"
+    },
+    {
+      "publisher": "Autoridade Tributária e Aduaneira",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs70ra_202512.aspx",
+      "tax_year": 2025,
+      "verification_status": "verified",
+      "verified_on": "2026-10-02",
+      "scope": "Historical article 70, December 2025",
+      "sha256_retrieved_document": "85e17f2cc1f8c87a6d488032603bef6522a8f2f8dd192d02c6b789b261bf12ea",
+      "excerpt": "Artigo 70.º Mínimo de existência 1 - O valor de referência do mínimo de existência é igual ao maior valor entre 12 180 € e 1,5 × 14 × IAS. (Redação da Lei n.º 45-A/2024, de 31 de dezembro)​ 2 * - No apuramento do rendimento coletável, para os titulares de rendimentos brutos predominantemente originados em trabalho dependente, em atividades previstas na tabela constante do anexo i à Portaria n.º 1011/2001, de 21 de​ agosto, com exceção do código 15, ou em pensões é abatido um montante por mínimo de existência, por titular, nos seguintes termos: a) Para os titulares cujo total dos rendimentos brutos seja igual ou inferior ao valor de referência, o montante do abatimento é igual à diferença positiva entre o valor de referência e a soma das deduções específicas com Limite despesas gerais; Taxa 1.º escalão b) Para os titulares cujo total dos rendimentos brutos seja superior ao valor de referência e igual ou inferior a L, o montante do abatimento é igual à diferença positiva entre o valor de referência - 2,60 x (rendimentos brutos - valor de referência) e a soma das deduções específicas com Limite despesas gerais/taxa 1.º escalão; ( Redação da Lei nº 82/2023, de 29 de dezembro ) c) Para os titulares cujo total dos rendimentos brutos seja superior a L, o montante do abatimento é igual à diferença positiva entre L – limite do 1.º escalão – 1,35 × (rendimentos brutos – L) e a soma das deduções específicas; ( Redação da Lei nº 34​/2024 , de 7 de agosto ) d) O montante do abatimento por mínimo de existência tem como valor mínimo zero e não pode ser superior à diferença entre os rendimentos brutos e as deduções específicas. 3​ - Para efeitos do disposto no presente artigo, entende-se que: L = valor de referência - (Limite despesas gerais/Taxa 1.º escalão x 3,60) + (Limite 1.º escalão/ 3,60 ). ( Redação da Lei nº 82/2023, de 29 de dezembro ) ​ 4 * - O abatimento referido no n.º 2 não se aplica a qualquer dos titulares quando: a) A soma dos rendimentos brutos de todos os titulares é superior a 2,2 x 14 x IAS multiplicado pelo número de sujeitos passivos; b) A soma dos rendimentos não englobados e tributados a taxas liberatórias, obtidos pelos sujeitos passivos e dependentes constantes da declaração a que se refere o artigo 57.º, é superior a 14 x IAS multiplicado pelo número desses sujeitos passivos. ​5 ** - Para efeitos do presente artigo, considera-se: a) «Rendimentos brutos», a soma de todos os rendimentos do ano, ainda que isentos ou excluídos de tributação, de todas as categorias, declarados na declaração a que se refere o artigo 57.º, considerando-se, no caso das mais-valias, o saldo apurado entre as mais e as menos-valias, quando positivo, e no caso dos rendimentos prediais, o respetivo resultado positivo; b) «Deduções específicas», o montante total de deduções específicas das quais o titular de rendimentos beneficie, previstas nos artigos 25.º, 27.º, 53.º e 54.º, e as que resultem da alínea b) do n.º 1 e dos n. os 2 e 10 do artigo 31.º; c) «Limite despesas gerais», o montante do limite global, para cada sujeito passivo, da dedução de despesas gerais familiares, conforme definido no n.º 1 do artigo 78.º-B, considerando-se o valor de zero no caso de titulares dependentes; d) «Taxa 1.º escalão», a taxa normal do 1.º escalão de IRS, em percentagem, conforme definido no n.º 1 do artigo 68.º; e e) «Limite do 1.º escalão», o limite do 1.º escalão de IRS, conforme definido no n.º 1 do artigo 68.º 6 - A AT publicita no seu sítio na Internet, durante o primeiro trimestre do ano seguinte àquele a que respeitam os rendimentos, os valores das variáveis utilizadas para o cálculo do mínimo de existência e as fórmulas simplificadas correspondentes ao previsto nos n. os 2, 3 e 4. (Aditado pela Lei n.º 24-D/2022, de 30 de dezembro; produz efeitos a partir de 1 de janeiro de 2024.)​ * (Redação da Lei n.º 24-D/2022, de 30 de dezembro; produz efeitos a partir de 1 de janeiro de 2024.) ** (Aditado pela Lei n.º 24-D/2022, de 30 de dezembro; produz efeitos a partir de 1 de janeiro de 2024.) ​"
+    },
+    {
+      "publisher": "Autoridade Tributária e Aduaneira",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Lei_55_A_2025.pdf",
+      "tax_year": 2025,
+      "verification_status": "verified",
+      "verified_on": "2026-10-02",
+      "scope": "Law 55-A/2025 published 22 July 2025",
+      "sha256_retrieved_document": "802db69be6c95ff4fc8cc788b2e6b681ea09f6fece4dac1dae4c2a9afaeb12f9",
+      "verified_extracts": {
+        "publication": "22 July 2025, Law 55-A/2025",
+        "article2": "2025 article 68 normal and average rates match historical page",
+        "article4": "Enters into force the day after publication"
+      }
+    }
+  ],
+  "unverified": {
+    "employee_contributions": {
+      "url": "https://seg-social.pt/documents/10152/58902/trabalhadores_conta_outrem/55116df3-c41d-4bc9-983a-b591c8db1bcf",
+      "observation": "503 upstream connection timeout; www variant redirected to Social Security Direct HTML, not a valid PDF"
+    },
+    "rounding": "Statutory final annual liquidation rounding and reconciliation with practical/average rates not verified",
+    "credits": "Eligible expense inputs and all applicable personal credits must be established"
+  }
+}

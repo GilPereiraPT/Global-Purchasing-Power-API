@@ -85,6 +85,7 @@ class TaxOutcome:
     assumptions: tuple = ()
     limitations: tuple = ()
     reason: str | None = None
+    components: tuple = ()
 
 
 class CountryAdapter(Protocol):
@@ -158,7 +159,7 @@ def present(request, outcome, currency):
                 raise ValueError('Validated deductions exceed gross income')
             net = monetary(net_amount)
             monthly = monetary(net_amount / Decimal(12))
-    return {'status': status, 'country': request.country, 'currency': currency,
+    result = {'status': status, 'country': request.country, 'currency': currency,
             'tax_year': request.tax_year, 'scenario': request.scenario,
             'region': request.region, 'annual_gross': monetary(request.annual_gross),
             'income_tax': monetary(outcome.income_tax) if outcome.income_tax is not None else None,
@@ -170,6 +171,9 @@ def present(request, outcome, currency):
             'sources': list(outcome.sources), 'applicable_rules': list(outcome.applicable_rules),
             'assumptions': list(outcome.assumptions), 'limitations': list(outcome.limitations),
             'reason': reason}
+    if outcome.components:
+        result['components'] = list(outcome.components)
+    return result
 
 
 def calculate_query(params):

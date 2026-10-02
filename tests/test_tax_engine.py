@@ -67,18 +67,22 @@ def test_incomplete_adapters_never_expose_net(outcome):
     (SCENARIO, None, 2025)])
 def test_portugal_pending_rules_and_unsupported_scenarios_never_estimate(scenario, region, year):
     result = calculate('PT', '30000', year, scenario, region)
-    assert result['status'] == 'unavailable'
+    partial = scenario == SCENARIO and region == 'mainland' and year == 2025
+    assert result['status'] == ('partial' if partial else 'unavailable')
     assert result['tax_year'] == year
     assert result['annual_gross'] == '30000.00'
     assert result['income_tax'] is None and result['employee_social_security'] is None
-    assert result['net_income'] is None and result['sources'] == []
-    assert result['applicable_rules'] == []
+    assert result['net_income'] is None
+    assert bool(result['sources']) == partial
+    assert bool(result['applicable_rules']) == partial
+    if partial:
+        assert all(source['tax_year'] == 2025 for source in result['sources'])
 
 
 def test_country_registry_does_not_advertise_pending_year_as_supported():
     assert countries()['available_countries'] == []
     assert years('PT')['supported_tax_years'] == []
-    assert countries()['countries'][0]['source_candidates'][0]['verification_status'] == 'not_verified'
+    assert countries()['countries'][0]['source_candidates'][-1]['verification_status'] == 'not_verified'
     assert calculate('US', '30000', 2025, 'single')['status'] == 'unavailable'
 
 
