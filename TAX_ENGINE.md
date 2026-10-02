@@ -1,4 +1,4 @@
-# Motor de salário líquido — Fase 3B
+# Motor de salário líquido — Fase 3C
 
 ## Estado atual
 
@@ -8,17 +8,28 @@ componentes fiscais implementados e testados contra documentação oficial da AT
 indisponíveis.** Não há ano ou cenário português anunciado como integralmente
 suportado: `supported_tax_years` e `available_countries` continuam vazios.
 
-O Portal das Finanças tornou-se acessível nesta fase. Foram consultadas a página
-explicitamente dedicada aos rendimentos de 2025, as versões históricas de dezembro
-de 2025 dos artigos 68.º e 70.º e o diploma da Lei n.º 55-A/2025. O guia da Segurança
-Social fornecido não foi obtido como documento válido: o endereço sem `www`
-devolveu 503/timeout; a variante com `www` redirecionou para HTML da Segurança
-Social Direta. A alternativa `www.seg-social.gov.pt` foi bloqueada pelo proxy.
-O Diário da República respondeu com uma aplicação JavaScript, sem fornecer o
-texto contributivo que permitisse validar o regime histórico.
+Nesta fase foram confirmados no Diário da República os artigos 13.º, 44.º e
+53.º do Código Contributivo: aplicação da taxa à base remuneratória e **11% a cargo
+do trabalhador no regime geral**. A taxa está implementada, sem descontos por
+deficiência. O artigo 109.º também mantém 11% para o trabalhador; a redução ali
+indicada é patronal. Os regimes especiais continuam excluídos.
 
-Não foi ativada uma taxa contributiva de 11% com base em memória ou fontes de
-terceiros. Não foram presumidos créditos ou despesas do contribuinte a zero.
+A publicação original da Lei n.º 110/2009 foi comparada com os artigos não
+alterados da consolidação oficial. As redações com efeitos apenas em janeiro de
+2026 não foram usadas no modelo de 2025. Também foi obtido o guia oficial
+«Declaração de Remunerações», versão 2016–V5.36, publicado em 14 de janeiro de 2025
+(e atualizado em setembro de 2025 no catálogo público). O identificador 2016 é o
+número do guia, não o ano fiscal.
+
+**Continua por validar a convenção de arredondamento monetário das quotizações e
+a agregação dos montantes periódicos num total anual.** Nem os artigos consultados,
+nem o Decreto Regulamentar n.º 1-A/2011, nem o guia obtido forneceram a especificação
+necessária. A regra de arredondamento de taxas do artigo 56.º, n.º 3, não é uma regra
+de arredondamento de montantes das quotizações e não foi usada como tal.
+
+As despesas gerais elegíveis podem agora ser fornecidas explicitamente. Não são
+presumidos a zero os restantes créditos ou deduções pessoais desconhecidos. O
+arredondamento final/intermédio do IRS também continua sem validação suficiente.
 
 ## Arquitetura e âmbito
 
@@ -27,7 +38,7 @@ terceiros. Não foram presumidos créditos ou despesas do contribuinte a zero.
   sem componentes/proveniência suficientes.
 - `app/tax_portugal.py`: controlo explícito do país, cenário, região e ano; só
   devolve os componentes de 2025 no cenário continental reconhecido.
-- `app/tax_portugal_2025.py`: componentes oficiais de 2025, funções puras e fontes.
+- `app/tax_portugal_2025.py`: componentes oficiais de 2025, taxa contributiva geral, métodos legislativos e práticos separados, funções puras e fontes.
 - `docs/tax/portugal_2025_sources.json`: URLs, âmbito, data de consulta, excertos e
   SHA-256 dos documentos obtidos. Os hashes identificam os documentos consultados;
   não constituem uma validação automática de futuras versões dessas páginas.
@@ -49,6 +60,25 @@ calculam contribuições patronais, retenção mensal, reembolsos/acertos com re
 pagamentos efetivos em 12/14 meses ou poder de compra líquido internacional.
 
 ## Componentes verificados para 2025
+
+### Segurança Social — Código Contributivo
+
+`employee_contribution_unrounded(contribution_base)` aplica **11%** a uma base
+conhecida integralmente sujeita. Mantém precisão Decimal, sem inventar arredondamento
+anual. O bruto do cenário exclui prestações isentas e bases convencionais; não se
+presume que todo o rendimento da categoria A, fora deste cenário, esteja sujeito
+à Segurança Social.
+
+A taxa e o produto não arredondado são publicados como componentes. O produto
+anual **não é apresentado como a soma das quotizações efetivamente descontadas**.
+Essa soma depende dos períodos/bases contributivos e da convenção de arredondamento,
+que falta confirmar. `employee_social_security` continua `null` no resultado anual.
+Não se inferem pagamentos iguais em 12 ou 14 meses.
+
+Fontes: Código Contributivo, artigos 13.º, 44.º, 46.º e 53.º; publicação original da
+Lei n.º 110/2009 e correspondência com os artigos aplicáveis em 2025. O artigo
+109.º foi consultado para impedir a atribuição automática de uma taxa reduzida ao
+trabalhador com deficiência; esse cenário não está coberto no IRS inicial.
 
 ### Categoria A — artigo 25.º
 
@@ -80,13 +110,18 @@ Tabela prática publicada pela AT para os rendimentos de 2025:
 
 `practical_general_collection(taxable)` aplica rendimento coletável × taxa normal
 − parcela a abater da tabela prática. **É coleta prática antes de créditos, não
-IRS final.** O módulo conserva também as taxas médias publicadas no artigo 68.º.
+IRS final.** `statutory_general_collection(taxable)` implementa separadamente o desdobramento
+do artigo 68.º, n.º 2: limite do escalão anterior × taxa média B, mais excedente ×
+taxa normal A do escalão aplicável. Conserva o valor não arredondado. Não substitui
+a fórmula legislativa por uma integração genérica de taxas A ou pelas parcelas
+arredondadas da tabela prática.
 Não usa as taxas iniciais de 2025 nem os limites de 2026.
 
 A tabela prática tem coeficientes arredondados e pequenas descontinuidades nos
 limites. Os testes reproduzem os valores publicados, sem suavizações inventadas.
-Ainda é necessário reconciliar este método com o artigo 68.º, n.º 2, e a precisão
-utilizada pela AT na liquidação. Não se promove este componente a imposto final.
+Os dois métodos estão agora separados e testados. Falta validar a precisão
+intermédia/final e os casos de controlo da liquidação da AT, incluindo os limites
+exatos dos escalões. Não se promove este componente a imposto final.
 
 ### Mínimo de existência — artigo 70.º histórico
 
@@ -111,7 +146,11 @@ exclui outros rendimentos e outros titulares.
 
 O módulo aplica as **fórmulas simplificadas publicadas** com L = 13 863,06. Não
 presume que arredondar L a duas casas seja a convenção legal interna da liquidação.
-A equivalência com a fórmula legislativa e o seu arredondamento continua pendente.
+`statutory_minimum_existence_abatement` usa separadamente a fórmula legislativa
+sem arredondar L: `12180 − 250/(0.125×3.6) + 8059/3.6 = 249535/18`. Assim, L é
+aproximadamente 13 863,055555…; um bruto de 13 863,06 já fica acima desse limite
+não arredondado. Os testes comparam as duas variantes com aritmética racional.
+A precisão que a AT efetivamente utiliza na liquidação continua por validar.
 
 ### Solidariedade — artigo 68.º-A
 
@@ -123,9 +162,13 @@ não aplicação da solidariedade sem estimar a base coletável.
 ### Despesas gerais familiares — artigo 78.º-B
 
 `general_expense_credit(eligible_expenses)` calcula 35% das despesas elegíveis
-conhecidas, com limite de 250 €. `None` continua `None`: nem zero nem o limite
+conhecidas, com limite de 250 €. A API recebe `eligible_household_expenses`,
+montante anual das faturas elegíveis **exclusivamente do artigo 78.º-B**. Não inclui
+saúde, educação ou habitação. `None` continua `None`: nem zero nem o limite
 máximo são atribuídos por defeito. Elegibilidade e montantes efetivos dependem de
-faturas e identificação fiscal; a API atual não recebe esses dados.
+faturas e identificação fiscal; o valor fornecido pelo utilizador é uma declaração
+de elegibilidade, não uma verificação automática das faturas. Outras categorias
+de deduções/créditos não são inferidas deste campo.
 
 ## Aritmética e arredondamento
 
@@ -152,14 +195,15 @@ retenção mensal, recibo de vencimento nem descrição dos pagamentos de subsí
 | `GET /v1/tax/calculate` | Pedido anual explícito |
 
 ```text
-/v1/tax/calculate?country=PT&annual_gross=30000&tax_year=2025&scenario=single_employee_no_dependents&region=mainland
+/v1/tax/calculate?country=PT&annual_gross=30000&tax_year=2025&scenario=single_employee_no_dependents&region=mainland&eligible_household_expenses=1000
 ```
 
 Devolve `status: partial`, `income_tax: null`, `employee_social_security: null`,
 `net_income: null` e `monthly_equivalent_12: null`. O campo adicional `components`
 identifica valores conhecidos e desconhecidos. Neste exemplo o abatimento por
-mínimo de existência e a solidariedade são comprovadamente zero; a dedução
-específica efetiva, os créditos e o IRS final continuam desconhecidos.
+mínimo de existência e a solidariedade são comprovadamente zero; a taxa de 11% e o crédito geral de 250 € são conhecidos. O total contributivo
+monetário, a dedução específica efetiva e o IRS final continuam indisponíveis.
+O produto contributivo não arredondado fica identificado como tal.
 
 `verified_component_sources` e `validated_component_tax_years: [2025]` nos
 metadados distinguem componentes confirmados de anos integralmente suportados.
@@ -171,9 +215,11 @@ ser positivo, ter no máximo duas casas e não exceder 100 000 000. Entradas inv
 parâmetros de cálculo inesperados ou duplicados recebem 422; falta de cobertura
 fiscal recebe 200 com `unavailable`. `partial` nunca expõe líquido.
 
-Overview: selecionar `tax_scenario`, `tax_region`, `net_tax_year` e bruto explícito.
+Overview: selecionar `tax_scenario`, `tax_region`, `net_tax_year`, bruto explícito
+e, quando conhecido, `eligible_household_expenses`.
 O ano não é inferido do default fiscal legado ou da observação salarial. Na
-comparação, os mesmos parâmetros têm sufixos `_a` e `_b` e são independentes.
+comparação, os mesmos parâmetros, incluindo `eligible_household_expenses_a/b`,
+têm sufixos `_a` e `_b` e são independentes.
 `region` continua a descrever os dados salariais; `tax_region`, a jurisdição fiscal.
 `/v1/tax-components/{country}` e os pedidos existentes permanecem intactos.
 
@@ -184,47 +230,59 @@ acima), substituição/cap da dedução específica, ramos e limites do mínimo,
 solidariedade, despesas conhecidas/desconhecidas, precisão Decimal, proveniência,
 paridade FastAPI/WSGI e indisponibilidade do líquido em todos os casos incompletos.
 
-Há referências numéricas independentes para **componentes** e uma cadeia com
-contribuições explicitamente fornecidas. Por exemplo: bruto 30 000 €, contribuições
-conhecidas de 3 300 €, DE 4 462,15 €, mínimo zero, coletável 25 537,85 € e coleta
-prática não arredondada de 5 006,9049 €. Os 3 300 € são um dado de entrada do caso,
-não prova de uma taxa contributiva de 11%. O valor não é IRS final nem permite
-publicar um líquido validado.
+Há referências independentes, com `Fraction` e os coeficientes históricos
+oficiais, para os cinco salários pedidos. Estão em
+`docs/tax/portugal_2025_reference_components.json`. **São referências condicionais
+de componentes; não são liquidações anuais completas validadas.**
 
-**Ainda não existem casos anuais completos de referência validados.** Para os
-concluir e ativar `verified`, falta:
+Em todos os casos abaixo foram explicitamente fornecidas despesas gerais elegíveis
+de 1 000 €, cujo crédito bruto é 250 €. A base coletável assume, para análise da
+fórmula, que as quotizações anuais efetivas coincidem com o produto não arredondado
+de 11%; esta condição ainda não está demonstrada para uma distribuição de pagamentos.
 
-1. Obter documentação oficial válida do regime contributivo aplicável em 2025:
-   taxa, base de incidência, exceções, periodicidade e arredondamento. Não é
-   suficiente multiplicar o bruto anual por uma taxa presumida.
-2. Validar os dados de créditos pessoais/despesas e as deduções à coleta aplicáveis,
-   incluindo a forma explícita de receber esses dados na API.
-3. Confirmar arredondamento legal da liquidação e equivalência entre tabela prática,
-   taxas médias e fórmulas simplificadas do mínimo de existência.
-4. Criar referências anuais completas independentemente calculadas para os
-   limiares, rendimentos baixos/altos e solidariedade.
+| Bruto anual (€) | Produto SS não arredondado (€) | Base coletável condicional (€) | Coleta art. 68 antes de créditos, não arredondada (€) | Solidariedade (€) |
+| --- | --- | --- | --- | --- |
+| 15 000 | 1 650 | 10 537,85 | 1 403,99100 | 0 |
+| 25 000 | 2 750 | 20 537,85 | 3 560,56146 | 0 |
+| 40 000 | 4 400 | 35 537,85 | 8 396,60565 | 0 |
+| 60 000 | 6 600 | 53 400 | 15 721,88909 | 0 |
+| 100 000 | 11 000 | 89 000 | 31 780,09584 | 225 |
 
-Não são necessários novos segredos ou alterações ao deployment. Para avançar,
-é necessário um documento oficial contributivo acessível e a especificação de
-liquidação/precisão da AT; podem ser usadas cópias oficiais verificáveis com
-identificação da versão e vigência de 2025.
+Exemplo de diferença relevante: para 25 000 € brutos, a tabela prática produz
+3 560,5654 €, mas o desdobramento com a taxa média publicada produz 3 560,56146 €.
+Subtraindo o crédito de 250 € e aplicando apenas o arredondamento de apresentação,
+os resultados diferem em um cêntimo: 3 310,57 € e 3 310,56 €. Não se escolheu um
+IRS final silenciosamente.
 
-## Resultados de execução — Fase 3B
+**IRS final, líquido anual e equivalente mensal continuam nulos nos cinco casos.**
+Os testes verificam essa proteção. A independência da aritmética e a confirmação
+legislativa das componentes não substituem os dados/regras em falta.
 
-```text
-.venv/bin/python -m pytest -q
-444 passed, 1 warning in 69.58s
-```
+Para concluir a Fase 3C e ativar `verified`, falta:
 
-**444 aprovados, 0 falhados**, incluindo 98 testes novos nesta fase (346 na entrega
-anterior). Os testes anteriores foram conservados; as expectativas do cenário
-PT/2025 foram atualizadas de `unavailable` para `partial`, mantendo as verificações
-que impedem líquido e contribuições inventadas. Os testes específicos do motor,
-API e componentes somam 179 aprovados.
+1. Validar o arredondamento monetário contributivo de 2025 e a forma de agregar
+   quotizações periódicas. Determinar que dados de pagamentos são necessários,
+   sem inventar uma distribuição em 12/14 pagamentos.
+2. Validar todos os créditos/deduções aplicáveis ao cenário, ou restringir o cenário
+   através de declarações explícitas e comprovadas sobre a sua não aplicação.
+   Ter despesas gerais conhecidas não prova inexistência de outros créditos.
+3. Validar a precisão/arredondamento da liquidação anual do IRS, incluindo taxas
+   médias, limites exatos dos escalões e o L do mínimo de existência.
+4. Obter casos anuais de controlo independentes que confirmem a liquidação e os
+   totais contributivos dos cinco salários antes de publicar líquido.
 
-O único aviso é o `StarletteDeprecationWarning` preexistente relativo a `httpx`
-no TestClient. Não foram alteradas dependências para resolver esse assunto fora
-do âmbito.
+Não houve alterações de segredos ou configuração de produção. Os portais oficiais
+foram consultados com TLS verificado. A dificuldade restante não é apenas acesso:
+a documentação obtida ainda não especifica todas as regras monetárias necessárias.
+São necessários os requisitos técnicos oficiais de 2025 e referências de liquidação.
+
+## Resultados de execução — Fase 3C
+
+Comando: `.venv/bin/python -m pytest -q`. Resultado: **528 testes aprovados,
+zero falhados**, em 72,44 segundos. Foram acrescentados 84 testes aos 444 da
+entrega anterior. Existe um aviso de descontinuação do uso de `httpx` pelo
+TestClient de Starlette; não afetou a execução. Não foram removidos os testes
+existentes ou as proteções que impedem líquido incompleto.
 
 A implementação mantém-se na branch `feat/portugal-net-salary` e na PR #13 em
 rascunho. Não houve merge, deployment ou alteração ao Android, ao sistema de
