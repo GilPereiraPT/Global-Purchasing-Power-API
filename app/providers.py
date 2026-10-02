@@ -1,5 +1,6 @@
 """Official, free upstream connectors. No invented or silently extrapolated observations."""
 import csv
+import math
 from io import StringIO
 
 import httpx
@@ -31,38 +32,51 @@ async def fetch_json(url, params, cache_key, ttl=86400):
 
 
 def parse_eurostat(payload, country):
-    """Decode JSON-stat sparse values using official dimension order."""
-    dimensions = payload.get("id", [])
-    sizes = payload.get("size", [])
-    dim_info = payload.get("dimension", {})
-    if not dimensions or not sizes or "time" not in dimensions:
-        raise UpstreamUnavailable("Unexpected Eurostat data structure")
-    time_info = dim_info["time"]["category"]["index"]
-    # Explicitly restrict the other dimensions, especially unit and COICOP.
-    fixed = {}
-    for dimension in dimensions:
-        if dimension == "time":
-            continue
-        indices = dim_info[dimension]["category"]["index"]
-        if dimension == "geo" and country in indices:
-            fixed[dimension] = indices[country]
-        elif dimension == "coicop" and "CP00" in indices:
-            fixed[dimension] = indices["CP00"]
-        elif dimension == "unit":
-            preferred = next((v for v in ("I25", "I15") if v in indices), None)
-            fixed[dimension] = indices[preferred] if preferred else min(indices.values())
-        else:
-            fixed[dimension] = min(indices.values())
-    values = payload.get("value", {})
-    series = []
-    for period, offset in sorted(time_info.items()):
-        positions = {**fixed, "time": offset}
-        linear = 0
+    """Decode only monthly all-items HICP indices for the requested geography."""
+    try:
+        dimensions = payload["id"]
+        sizes = payload["size"]
+        expected = {"geo", "unit", "coicop", "time"}
+        if (not isinstance(dimensions, list) or len(set(dimensions)) != len(dimensions)
+                or set(dimensions) not in (expected, expected | {"freq"})
+                or len(sizes) != len(dimensions)):
+            raise ValueError("Unexpected dimensions")
+        indexes = {}
         for dimension, size in zip(dimensions, sizes):
-            linear = linear * size + positions[dimension]
-        value = values.get(str(linear)) if isinstance(values, dict) else values[linear]
-        if value is not None:
-            series.append({"period": period, "index": float(value)})
+            index = payload["dimension"][dimension]["category"]["index"]
+            if (type(size) is not int or size <= 0 or not isinstance(index, dict)
+                    or len(index) != size
+                    or any(type(offset) is not int for offset in index.values())
+                    or set(index.values()) != set(range(size))):
+                raise ValueError("Invalid dimension offsets")
+            indexes[dimension] = index
+        unit = next((code for code in ("I25", "I15") if code in indexes["unit"]), None)
+        if unit is None:
+            raise ValueError("Expected HICP index unit")
+        selected = {"geo": country, "unit": unit, "coicop": "CP00"}
+        if "freq" in indexes:
+            selected["freq"] = "M"
+        fixed = {name: indexes[name][code] for name, code in selected.items()}
+        values = payload["value"]
+        if not isinstance(values, (dict, list)):
+            raise ValueError("Invalid observations")
+        series = []
+        for period, offset in sorted(indexes["time"].items()):
+            if (len(period) != 7 or period[4] != "-" or not period[:4].isdigit()
+                    or not period[5:].isdigit() or not 1 <= int(period[5:]) <= 12):
+                raise ValueError("Expected monthly periods")
+            positions = {**fixed, "time": offset}
+            linear = 0
+            for dimension, size in zip(dimensions, sizes):
+                linear = linear * size + positions[dimension]
+            value = values.get(str(linear)) if isinstance(values, dict) else values[linear]
+            if value is not None:
+                number = float(value)
+                if isinstance(value, bool) or not math.isfinite(number) or number <= 0:
+                    raise ValueError("Invalid HICP index")
+                series.append({"period": period, "index": number})
+    except (KeyError, IndexError, TypeError, ValueError, AttributeError) as exc:
+        raise UpstreamUnavailable("Unexpected Eurostat data structure") from exc
     if not series:
         raise UpstreamUnavailable("No observations for selected country")
     return series
