@@ -422,3 +422,18 @@ visiting the page. The public GET coverage endpoint requires no token.
 cannot safely be enabled by copying a token into JavaScript.** Use a
 hosting-supported private configuration method or a separate GitHub Actions
 import/deployment design instead.
+
+## Annual net salary engine — Phase 3
+
+The versioned `/v1/tax/countries`, `/v1/tax/years/{country}`,
+`/v1/tax/assumptions/{country}` and `/v1/tax/calculate` endpoints are shared by
+FastAPI and native WSGI. The country adapter architecture uses Decimal and
+separates verified, partial and unavailable calculations. Opt-in tax scenarios
+are integrated into EarnWage overview and comparison without changing legacy
+requests or calculating international net purchasing power.
+
+**Portugal remains unavailable:** official annual rules could not be verified
+in the restricted cloud environment. No Portuguese tax year is currently
+supported and no Portuguese net salary is fabricated. See
+[TAX_ENGINE.md](TAX_ENGINE.md) for the API contract, proposed mainland employee
+scenario, outstanding fiscal validation and required network configuration.
