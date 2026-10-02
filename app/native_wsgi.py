@@ -122,6 +122,8 @@ def occupation(value):
 
 
 def integer(params, name, default):
+    if name not in params and default is None:
+        return None
     try:
         return int(one(params, name, default))
     except (TypeError, ValueError):
@@ -247,6 +249,16 @@ def sources():
 
 
 def dispatch(path, q):
+    if path.startswith("/v1/tax/"):
+        from app import tax_engine
+        if path == "/v1/tax/countries":
+            return tax_engine.countries()
+        if path == "/v1/tax/calculate":
+            return tax_engine.calculate_query(q)
+        parts = path.split("/")
+        if len(parts) == 5 and parts[3] in ("years", "assumptions"):
+            return (tax_engine.years(parts[4]) if parts[3] == "years"
+                    else tax_engine.metadata(parts[4]))
     if path in ("/", "/v1/health"):
         if path == "/v1/health" and not ready():
             raise ApiError(503, "Application stores unavailable")
@@ -270,15 +282,21 @@ def dispatch(path, q):
     if path == "/v1/earnwage/overview":
         return ew.overview(country(one(q, "country")),
                            occupation(one(q, "occupation")),
-                           one(q, "region"), gross(q, "annual_gross"),
-                           integer(q, "tax_year", 2026))
+                           one(q, "region"),
+                           one(q, "annual_gross") if one(q, "tax_scenario") else gross(q, "annual_gross"),
+                           integer(q, "tax_year", 2026), one(q, "tax_scenario"),
+                           one(q, "tax_region"), integer(q, "net_tax_year", None))
     if path == "/v1/earnwage/compare":
         return ew.compare(country(one(q, "country_a")),
                           country(one(q, "country_b")),
                           occupation(one(q, "occupation")),
                           one(q, "region_a"), one(q, "region_b"),
-                          gross(q, "annual_gross_a"), gross(q, "annual_gross_b"),
-                          integer(q, "tax_year", 2026))
+                          one(q, "annual_gross_a") if one(q, "tax_scenario_a") else gross(q, "annual_gross_a"),
+                          one(q, "annual_gross_b") if one(q, "tax_scenario_b") else gross(q, "annual_gross_b"),
+                          integer(q, "tax_year", 2026),
+                          one(q, "tax_scenario_a"), one(q, "tax_scenario_b"),
+                          one(q, "tax_region_a"), one(q, "tax_region_b"),
+                          integer(q, "net_tax_year_a", None), integer(q, "net_tax_year_b", None))
     if path == "/v1/eurostat/coverage":
         from app.eurostat_economy import EUROSTAT_COUNTRIES, SERIES, ensure_tables, read
         from app.country_insights_store import connect as insights_connect
