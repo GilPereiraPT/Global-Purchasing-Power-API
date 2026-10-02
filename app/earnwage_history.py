@@ -1,4 +1,6 @@
 """Observed exact-occupation annual history; never substitute ISCO major groups."""
+import re
+
 from app.store import connect
 from app import north_america as na
 from app import uk_ashe_wages as uk
@@ -6,6 +8,20 @@ from app import de_entgeltatlas_wages as de
 from app import fr_insee_wages as fr
 from app import nl_cbs_wages as nl
 from app.ilostat_import import init_salary_db
+
+
+def observation_year(period):
+    """Retain year-first periods and recognize BLS English month/year labels."""
+    text = str(period)
+    if len(text) >= 4 and text[:4].isdigit():
+        return int(text[:4])
+    match = re.fullmatch(
+        r"(?:January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})",
+        text,
+    )
+    if match:
+        return int(match.group(1))
+    raise ValueError("Unsupported observation period")
 
 
 def exact_history(country, occupation, start_year, end_year):
@@ -20,11 +36,12 @@ def exact_history(country, occupation, start_year, end_year):
         entries = []
         for period, published, currency, measure, unit, value, source, url, classification in rows:
             try:
-                year = int(str(period)[:4])
+                year = observation_year(period)
             except ValueError:
                 continue
             if start_year <= year <= end_year:
                 entries.append({"year":year, "published_year":published,
+                                "reference_period":period,
                                 "currency":currency, "measure":measure, "unit":unit,
                                 "value":value, "source":source, "source_url":url,
                                 "classification":classification})
@@ -144,7 +161,7 @@ def exact_history(country, occupation, start_year, end_year):
                     "reported_hourly":{
                         "status":"available", "value":e["value"],
                         "currency":e["currency"], "unit":"per_hour",
-                        "kind":"reported_hourly", "reference_period":str(year),
+                        "kind":"reported_hourly", "reference_period":e.get("reference_period", str(year)),
                         "source":e["source"], "measure":e["measure"],
                         "precision":"exact_occupation"
                     },
@@ -155,7 +172,7 @@ def exact_history(country, occupation, start_year, end_year):
             display = {"status":"available", "value":value,
                        "currency":e["currency"], "unit":"per_year",
                        "kind":"reported_annual" if is_annual else "annualized_12_month_equivalent",
-                       "reference_period":str(year), "source":e["source"],
+                       "reference_period":e.get("reference_period", str(year)), "source":e["source"],
                        "measure":e["measure"], "monthly_optional":value/12 if is_annual else e["value"],
                        "monthly_kind":"annual_divided_by_12" if is_annual else "reported_monthly",
                        "payments_per_year":None, "payments_verified":False,
