@@ -67,24 +67,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git ls-files \
-            'app/*.py' \
-            'data/*.json' \
-            'scripts/backup_earnwage_data.py' \
-            'scripts/restore_earnwage_data.py' \
-            'scripts/deploy_runtime.py' \
-            'passenger_wsgi.py' \
-            'requirements.txt' \
-            > /tmp/earnwage-deploy-files.txt
-
-          test -s /tmp/earnwage-deploy-files.txt
-
-          if grep -E '(^|/)(\.env|\.htaccess|.*\.sqlite3?|_earnwage_backups)(/|$)' /tmp/earnwage-deploy-files.txt; then
-            echo "::error::Unsafe file found in deploy allow-list"
-            exit 1
-          fi
-
-          tar -czf /tmp/earnwage-runtime.tgz -T /tmp/earnwage-deploy-files.txt
+          python -m scripts.deploy_runtime build --root . --archive /tmp/earnwage-runtime.tgz --commit "$TESTED_SHA"
 
           EXPECTED_VERSION="$(python - <<'PY'
           import re
@@ -97,7 +80,9 @@ jobs:
           PY
           )"
           echo "version=$EXPECTED_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Deploying $(wc -l < /tmp/earnwage-deploy-files.txt) tracked runtime files, version $EXPECTED_VERSION"
+          echo "Packaged tested commit $TESTED_SHA, version $EXPECTED_VERSION"
+        env:
+          TESTED_SHA: ${{ steps.ref.outputs.sha }}
 
       - name: Configure SSH
         shell: bash
@@ -154,24 +139,11 @@ jobs:
           rm -f "$REMOTE_ARCHIVE"
           REMOTE
 
-      - name: Verify production health and version
+      - name: Verify production health and exact commit
         shell: bash
         env:
           EXPECTED_VERSION: ${{ steps.bundle.outputs.version }}
+          EXPECTED_COMMIT: ${{ steps.ref.outputs.sha }}
         run: |
           set -euo pipefail
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            if BODY="$(curl -fsS --max-time 15 "$API_HEALTH_URL" 2>/dev/null)"; then
-              ACTUAL_VERSION="$(python -c 'import json,sys; print(json.load(sys.stdin).get("version",""))' <<<"$BODY")"
-              if [ "$ACTUAL_VERSION" = "$EXPECTED_VERSION" ]; then
-                echo "Production API is healthy on version $ACTUAL_VERSION"
-                exit 0
-              fi
-              echo "Attempt $attempt: health responded with version '$ACTUAL_VERSION', expected '$EXPECTED_VERSION'"
-            else
-              echo "Attempt $attempt: health endpoint not ready"
-            fi
-            sleep 6
-          done
-          echo "::error::Production health/version verification failed"
-          exit 1
+          python -m scripts.verify_release --url "$API_HEALTH_URL" --commit "$EXPECTED_COMMIT" --version "$EXPECTED_VERSION"

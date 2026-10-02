@@ -4,6 +4,7 @@ Stop the application before an operator switches DB paths to the recovered files
 This command does not change environment variables or restore runtime code.
 """
 import argparse
+from contextlib import closing
 import json
 import shutil
 import sqlite3
@@ -25,7 +26,7 @@ def restore(backup, output):
         source = backup / name
         if source.is_symlink() or digest(source) != record['sha256']:
             raise ValueError('Backup checksum mismatch')
-        with sqlite3.connect(source.as_uri() + '?mode=ro', uri=True) as db:
+        with closing(sqlite3.connect(source.as_uri() + '?mode=ro', uri=True)) as db:
             if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
                 raise ValueError('Backup integrity check failed')
         files.append((source, name))

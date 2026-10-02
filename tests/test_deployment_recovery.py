@@ -18,8 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def package(tmp_path):
     workflow = (ROOT / '.github/workflows/deploy-production.yml').read_text()
     block = workflow.split('- name: Build allow-listed runtime bundle', 1)[1]
-    script = textwrap.dedent(block.split('run: |\n', 1)[1].split('\n      - name:', 1)[0])
-    env = {**os.environ, 'GITHUB_OUTPUT': str(tmp_path / 'output')}
+    script = textwrap.dedent(block.split('run: |\n', 1)[1].split('\n      - name:', 1)[0].split('\n        env:', 1)[0])
+    env = {**os.environ, 'GITHUB_OUTPUT': str(tmp_path / 'output'),
+           'TESTED_SHA': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()}
     subprocess.run(['bash', '-euc', script], cwd=ROOT, env=env, check=True, capture_output=True)
     target = tmp_path / 'package.tgz'
     shutil.copyfile('/tmp/earnwage-runtime.tgz', target)
@@ -111,3 +112,20 @@ def test_malicious_archive_never_writes_private_files(tmp_path, name):
         tar.addfile(member, io.BytesIO(b'pass'))
     with pytest.raises(ValueError):
         runtime.install(tmp_path, archive)
+
+
+def test_runtime_lock_prevents_overlapping_operations(tmp_path):
+    with runtime.exclusive(tmp_path):
+        with pytest.raises(BlockingIOError):
+            with runtime.exclusive(tmp_path):
+                pytest.fail('Concurrent installer acquired the same lock')
+
+
+def test_obsolete_runtime_removed_and_recovered(package, tmp_path):
+    root = tmp_path / 'server'
+    (root / 'app').mkdir(parents=True)
+    (root / 'app/obsolete.py').write_text('OLD = True\n')
+    backup = runtime.install(root, package)
+    assert not (root / 'app/obsolete.py').exists()
+    runtime.recover(root, backup)
+    assert (root / 'app/obsolete.py').read_text() == 'OLD = True\n'

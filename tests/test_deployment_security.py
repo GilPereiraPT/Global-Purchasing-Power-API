@@ -6,14 +6,14 @@ from app import data_manager as dm
 WORKFLOW = Path(__file__).resolve().parents[1] / '.github/workflows/deploy-production.yml'
 
 
-def permitted(**changes):
+def permitted(repository=dm.GITHUB_REPOSITORY, enabled="true", **changes):
     run = dict(event='push', status='completed', conclusion='success', head_branch='main',
                head_repository=NS(full_name=dm.GITHUB_REPOSITORY))
     run.update(changes)
-    github = NS(repository=dm.GITHUB_REPOSITORY, event=NS(workflow_run=NS(**run)))
+    github = NS(repository=repository, event=NS(workflow_run=NS(**run)))
     expression = WORKFLOW.read_text().split('${{', 1)[1].split('}}', 1)[0]
     return eval(expression.replace('&&', ' and ').strip().replace('\n', ' '),
-                {'__builtins__': {}}, {'github': github, 'vars': NS(EARNWAGE_DEPLOY_ENABLED='true')})
+                {'__builtins__': {}}, {'github': github, 'vars': NS(EARNWAGE_DEPLOY_ENABLED=enabled)})
 
 
 def test_original_main_push_is_allowed():
@@ -58,3 +58,8 @@ def test_ssh_uses_only_pretrusted_keys():
             assert 'BatchMode=yes' in line
     assert 'set -x' not in text
     assert 'echo "$SSH_PRIVATE_KEY"' not in text
+
+
+@pytest.mark.parametrize('changes', [dict(repository='fork/project'), dict(enabled='false'), dict(enabled='')])
+def test_fork_workflow_and_disabled_activation_are_rejected(changes):
+    assert not permitted(**changes)
