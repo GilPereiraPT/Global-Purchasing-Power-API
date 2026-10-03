@@ -725,7 +725,7 @@ def application(environ, start_response):
         start_response("204 No Content", [
             ("Access-Control-Allow-Origin", origin),
             ("Access-Control-Allow-Methods", "POST, OPTIONS"),
-            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token, X-EarnWage-Package-SHA256"),
+            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token"),
             ("Access-Control-Max-Age", "600"),
             ("Vary", "Origin"),
             ("Cache-Control", "no-store"),

@@ -106,3 +106,26 @@ def test_upload_route_preflight_and_no_get(tmp_path,monkeypatch):
     assert request('salary-upload',token=token,method='GET')[0]==405
     code,_,headers=request('salary-upload',origin=dm.ALLOW_ORIGIN,method='OPTIONS')
     assert code==204 and 'X-EarnWage-Package-SHA256' in headers['Access-Control-Allow-Headers']
+
+
+@pytest.mark.parametrize('enabled',[None,'false','TRUE','1',''])
+def test_preview_never_enables_publication(tmp_path,monkeypatch,enabled):
+    token=setup(monkeypatch,tmp_path)
+    if enabled is None:monkeypatch.delenv('EARNWAGE_BULK_PUBLICATION_ENABLED',raising=False)
+    else:monkeypatch.setenv('EARNWAGE_BULK_PUBLICATION_ENABLED',enabled)
+    raw=pub.encode(package());sha=hashlib.sha256(raw).hexdigest()
+    assert upload(raw,token)[0]==200
+    result=request('bulk-preview',{'checksum':sha},token=token)[1]
+    assert result['status']=='review_required' and not result['publication_enabled']
+    assert os.environ.get('EARNWAGE_BULK_PUBLICATION_ENABLED')==enabled
+
+
+def test_existing_target_symlink_and_interruption_never_replace(tmp_path,monkeypatch):
+    token=setup(monkeypatch,tmp_path);raw=pub.encode(package());sha=hashlib.sha256(raw).hexdigest()
+    directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(parents=True,mode=0o700)
+    victim=tmp_path/'keep';victim.write_bytes(b'original');target=directory/(sha+'.json');target.symlink_to(victim)
+    assert upload(raw,token)[0]==409 and victim.read_bytes()==b'original'
+    target.unlink()
+    from app import salary_package_upload as intake
+    monkeypatch.setattr(intake.os,'fsync',lambda *a:(_ for _ in ()).throw(OSError('interrupted')))
+    assert upload(raw,token)[0]==503 and list(directory.iterdir())==[]
