@@ -67,7 +67,9 @@ code{word-break:break-word}
 <div><label for="salaryChecksum">SHA-256 esperado (fornecido com o pacote)</label><input id="salaryChecksum" type="text" maxlength="64" autocomplete="off" spellcheck="false"></div></div>
 <div class="actions"><button id="salaryUpload">Carregar pacote privado</button><button class="secondary" id="salaryPreview">Pré-visualizar publicação</button></div>
 <p id="salaryResult" class="muted">Nenhum pacote revisto. Cada pacote exige revisão e autorização explícita.</p>
-<p id="salarySafety" class="notice">Antes de qualquer publicação: verificar espaço livre e quota (3 × bases e WAL + snapshots + 64 MiB por backup), permissões e bloqueios SQLite; criar backup verificado e ensaiar recuperação numa pasta isolada. A existência de uma cópia não comprova recuperação. Não existe botão de publicação nesta secção.</p>
+<div class="actions"><button class="secondary" id="publicationConditions">Verificar condições de publicação</button><button class="secondary" id="recoveryTest">Testar recuperação</button><button id="salaryPublish" disabled>Publicar pacote autorizado</button><button class="secondary" id="salaryRollback" disabled>Reverter pacote publicado</button></div>
+<pre id="publicationReport">Condições e recuperação por verificar.</pre>
+<p id="salarySafety" class="notice">Antes de qualquer publicação: verificar espaço livre e quota (3 × bases e WAL + snapshots + 64 MiB por backup), permissões e bloqueios SQLite; criar backup verificado e ensaiar recuperação numa pasta isolada. A existência de uma cópia não comprova recuperação. Publicação e reversão exigem confirmação específica do checksum; não alteram a configuração do servidor.</p>
 </section>
 <section>
 <h2>4. Escolher o que atualizar</h2>
@@ -150,13 +152,15 @@ const eu={hicp_annual_change_monthly:"Inflação homóloga mensal",
 household_price_level_eu27:"Nível de preços das famílias",
 net_annual_earnings_reference:"Salário líquido anual de referência"};
 let inventory=null,metadata=null,working=false,stopped=false;
+let publicationState=null,salaryReview=null;
 function log(t){const el=$("log");el.textContent+= "\n"+t;el.scrollTop=el.scrollHeight}
 function report(t){$("status").textContent=t}
 function busy(on){
 working=on;
 for(const id of ["check","inventory","salaryInventory","backup","preview","one","countryAll","essentials",
-                 "salaryFile","salaryChecksum","salaryUpload","salaryPreview","history","gdpAll","uhcAll","waveCountry","waveAll","source","country","indicator","mode"])$(id).disabled=on;
+                 "salaryFile","salaryChecksum","salaryUpload","salaryPreview","publicationConditions","recoveryTest","salaryPublish","salaryRollback","history","gdpAll","uhcAll","waveCountry","waveAll","source","country","indicator","mode"])$(id).disabled=on;
 $("stop").disabled=!on;
+updatePublicationButtons();
 }
 function smallCard(title,value,note){
 const box=document.createElement("div");box.className="card";
@@ -339,6 +343,7 @@ if(!/^[0-9a-f]{64}$/.test(checksum))throw Error("Introduz o SHA-256 esperado: 64
 return checksum;
 }
 async function uploadSalaryPackage(){
+salaryReview=null;
 const file=$("salaryFile").files[0],checksum=salaryChecksum(),token=$("token").value;
 if(token.length<32)throw Error("Introduz a chave de administração no campo próprio.");
 if(!file || !file.name.toLowerCase().endsWith(".json") || !file.size || file.size>2*1024*1024)
@@ -356,8 +361,12 @@ $("salaryResult").textContent="Pacote guardado em privado · SHA-256: "+result.c
 return result;
 }
 async function previewSalaryPackage(){
+salaryReview=null;
 const result=await admin("bulk-preview",{checksum:salaryChecksum()});
 if(result.status!=="review_required")throw Error("A pré-visualização não foi concluída. Não publicar.");
+publicationState=result.publication_conditions||null;
+salaryReview={checksum:result.checksum,newRows:result.inserted_rows,duplicates:result.duplicate_rows,protected:result.protected_existing_rows,at:Date.now()};
+setTimeout(()=>{salaryReview=null;updatePublicationButtons()},300000);
 $("salaryResult").textContent="SHA-256: "+result.checksum+" · Registos novos: "+result.inserted_rows+
 " · Duplicados: "+result.duplicate_rows+" · Registos protegidos: "+result.protected_existing_rows+
 " · Publicação "+(result.publication_enabled?"ativada no servidor":"desativada")+"; autorização deste pacote ainda necessária.";
@@ -374,6 +383,65 @@ $("salaryPreview").onclick=()=>standalone(async()=>{
 $("salaryResult").textContent="A pré-visualizar sem alterar salários…";
 try{return await previewSalaryPackage()}catch(e){$("salaryResult").textContent="Pré-visualização não concluída: "+e.message;throw e}
 },"A pré-visualizar pacote salarial...");
+function updatePublicationButtons(){
+const checksum=$("salaryChecksum").value.trim();
+const ready=!working && publicationState?.ready && publicationState?.publication_enabled;
+$("salaryPublish").disabled=!(ready && salaryReview && salaryReview.checksum===checksum &&
+ Date.now()-salaryReview.at<300000 && salaryReview.newRows>0 && !salaryReview.duplicates && !salaryReview.protected);
+$("salaryRollback").disabled=!(ready && /^[0-9a-f]{64}$/.test(checksum));
+}
+function showPublicationConditions(result){
+publicationState=result;
+const lines=["Publicação: "+(result.publication_enabled?"ativada manualmente":"desativada"),
+"Pastas privadas: "+(result.private_writable?"ensaio de escrita aprovado":"por verificar"),
+"Espaço livre no filesystem dos backups: "+(result.free_bytes??"indisponível")+" bytes",
+"Espaço exigido para próximo backup: "+(result.required_backup_bytes??"indisponível")+" bytes",
+"Espaço suficiente: "+(result.space_sufficient?"sim":"não"),
+"Último backup: "+(result.backup?.backup_id||"nenhum")+" · "+result.backup?.status,
+"Recuperação: "+(result.recovery_verified?"ensaio aprovado e válido":"por testar")];
+for(const [name,db] of Object.entries(result.databases||{}))
+ lines.push(name+": "+db.status+" · base "+db.bytes+" bytes · WAL "+db.wal_bytes+" bytes · escrita "+(db.writable?"disponível":"por verificar"));
+$("publicationReport").textContent=lines.join("\n");updatePublicationButtons();
+}
+$("publicationConditions").onclick=()=>standalone(async()=>{
+showPublicationConditions(await admin("publication-conditions"));
+},"A verificar condições de publicação…");
+$("recoveryTest").onclick=()=>standalone(async()=>{
+salaryReview=null;publicationState=null;
+if(!confirm("Testar a recuperação do último backup apenas numa pasta temporária isolada, sem substituir bases ativas?"))return;
+try{
+ const result=await admin("recovery-test",{confirm:"test_isolated_backup_recovery"});
+ $("salaryResult").textContent="Recuperação: "+result.status+" · backup "+(result.backup_id||"indisponível");
+ showPublicationConditions(await admin("publication-conditions"));
+}catch(e){$("publicationReport").textContent="Recuperação não aprovada: "+e.message;throw e}
+},"A testar recuperação isolada…");
+$("salaryPublish").onclick=()=>standalone(async()=>{
+const checksum=salaryChecksum(),review=salaryReview;
+salaryReview=null;
+if(!review || review.checksum!==checksum || Date.now()-review.at>=300000 || !publicationState?.ready ||
+ !publicationState.publication_enabled || review.newRows<=0 || review.duplicates || review.protected)
+ throw Error("Repete as condições, o ensaio de recuperação e a pré-visualização sem conflitos.");
+if(prompt("Para autorizar a publicação deste pacote, escreve o SHA-256 apresentado: "+checksum)!==checksum)return;
+publicationState=null;
+try{
+ const result=await admin("bulk-publish",{checksum,confirm:"publish_reviewed_salary_package"});
+ if(!["published","already_published"].includes(result.status))throw Error("Publicação não confirmada: "+result.status);
+ $("salaryResult").textContent="Publicação: "+result.status+" · SHA-256 "+checksum+" · novos "+result.inserted_rows+" · backup "+(result.backup_id||"já registado");
+}catch(e){$("salaryResult").textContent="Publicação não confirmada: "+e.message+". Não repetir automaticamente; pode já existir escrita.";throw e}
+},"A publicar pacote autorizado…");
+$("salaryRollback").onclick=()=>standalone(async()=>{
+const checksum=salaryChecksum();
+if(!publicationState?.ready || !publicationState?.publication_enabled)throw Error("Verifica condições e recuperação antes de reverter.");
+if(prompt("Para autorizar a reversão separada, escreve REVERTER seguido do checksum: REVERTER "+checksum)!=="REVERTER "+checksum)return;
+publicationState=null;salaryReview=null;
+try{
+ const result=await admin("bulk-rollback",{checksum,confirm:"rollback_reviewed_salary_package"});
+ if(!["rolled_back","already_rolled_back"].includes(result.status))throw Error("Reversão não confirmada: "+result.status);
+ $("salaryResult").textContent="Reversão: "+result.status+" · removidos "+(result.removed_rows??0)+" · SHA-256 "+checksum;
+}catch(e){$("salaryResult").textContent="Reversão não confirmada: "+e.message+". Não repetir automaticamente.";throw e}
+},"A reverter pacote autorizado…");
+$("salaryChecksum").oninput=()=>{salaryReview=null;updatePublicationButtons()};
+$("salaryFile").onchange=()=>{salaryReview=null;updatePublicationButtons()};
 $("inventory").onclick=()=>standalone(publicInventory,"A consultar base de dados...");
 $("check").onclick=()=>standalone(async()=>{
 await publicInventory();await status();report("Ligação protegida verificada · Data Manager disponível.");
