@@ -32,7 +32,9 @@
       "jobs": [
         {
           "job": "audit",
-          "permissions": {},
+          "permissions": {
+            "contents": "read"
+          },
           "condition": null,
           "publication": "no_git_dataset_publication"
         }
@@ -595,7 +597,9 @@
       "jobs": [
         {
           "job": "inspect",
-          "permissions": {},
+          "permissions": {
+            "contents": "read"
+          },
           "condition": null,
           "publication": "no_git_dataset_publication"
         }
@@ -681,7 +685,9 @@
       "jobs": [
         {
           "job": "tests",
-          "permissions": {},
+          "permissions": {
+            "contents": "read"
+          },
           "condition": "${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}",
           "publication": "no_git_dataset_publication"
         }
@@ -723,5 +729,6 @@
       ],
       "production_effect": "no_production_database_import"
     }
-  ]
+  ],
+  "phase4d": "All 35 workflows have explicit contents: read at workflow level; only gated manual review jobs request contents: write."
 }

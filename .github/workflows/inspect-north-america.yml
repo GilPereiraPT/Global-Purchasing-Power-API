@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '.github/workflows/inspect-north-america.yml'
+permissions:
+  contents: read
 jobs:
   inspect:
     runs-on: ubuntu-latest

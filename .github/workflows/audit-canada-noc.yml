@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '.github/workflows/audit-canada-noc.yml'
+permissions:
+  contents: read
 jobs:
   audit:
     runs-on: ubuntu-latest

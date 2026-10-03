@@ -56,3 +56,15 @@ def test_workflow_writers_all_require_review():
    name=text.split('python scripts/dataset_review_pr.py ')[1].splitlines()[0].strip()
    assert name in review.ALLOWED
  assert len(writers)==10
+
+
+def test_no_workflow_inherits_repository_default_write_permissions():
+ for path in Path('.github/workflows').glob('*.yml'):
+  text=path.read_text()
+  assert '\npermissions:\n' in text,path
+  before_jobs=text.split('\njobs:',1)[0]
+  assert '  contents: read' in before_jobs,path
+  for block in text.split('\n  propose-review:')[1:]:
+   assert "github.event_name == 'workflow_dispatch'" in block
+   assert "github.ref == 'refs/heads/main'" in block
+   assert "github.repository == '"+review.REPOSITORY+"'" in block
