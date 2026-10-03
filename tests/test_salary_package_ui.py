@@ -18,7 +18,7 @@ const elements={token:{value:'x'.repeat(40)},salaryChecksum:{value:scenario==='h
  salaryResult:{textContent:''},salarySafety:{textContent:''}};
 if(scenario==='token')elements.token.value='';
 let requests=0;
-const context={crypto,Uint8Array,API:'https://isolated.test',$:id=>elements[id],
+const context={crypto,Uint8Array,setTimeout:()=>{},API:'https://isolated.test',$:id=>elements[id],
  fetch:async(url,options)=>{requests++;assert(url.endsWith('/salary-upload'));assert(options.body===raw.buffer);
  assert(options.headers['X-EarnWage-Package-SHA256']===sha);
  return {ok:scenario!=='server',status:422,json:async()=>scenario==='server'?{message:'Pacote recusado'}:

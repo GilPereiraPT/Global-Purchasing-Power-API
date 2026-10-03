@@ -19,7 +19,7 @@ def configured(monkeypatch,tmp_path):
  secret=setup(monkeypatch,tmp_path)
  monkeypatch.setenv('EARNWAGE_BULK_PUBLICATION_ENABLED','true')
  monkeypatch.setattr(backup,'ROOT',tmp_path);(tmp_path/'data').mkdir()
- p=package();sha=checksum(p);directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(parents=True)
+ p=package();sha=checksum(p);dm.BACKUP_DIR.mkdir(mode=0o700);directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(mode=0o700)
  (directory/(sha+'.json')).write_bytes(pub.encode(p))
  return secret,p,{'checksum':sha,'confirm':'publish_reviewed_salary_package'}
 
@@ -28,7 +28,7 @@ def test_insufficient_space_refuses_before_backup_or_publication(monkeypatch,tmp
  secret,p,payload=configured(monkeypatch,tmp_path)
  monkeypatch.setattr(backup.shutil,'disk_usage',lambda _:SimpleNamespace(free=0))
  code,r,_=request('bulk-publish',payload,token=secret)
- assert code==503 and r['error']=='manager_operation_failed'
+ assert code==409 and r['error']=='publication_review_required'
  assert dm._backups()==[]
  with sqlite3.connect(store.DB_PATH) as db:assert db.execute("SELECT count(*) FROM sqlite_master WHERE name='bulk_publications'").fetchone()[0]==0
 
@@ -44,11 +44,14 @@ def test_missing_database_never_recreated(monkeypatch,tmp_path,variable):
 
 def test_disk_exhaustion_during_copy_removes_incomplete_backup(monkeypatch,tmp_path):
  secret,p,payload=configured(monkeypatch,tmp_path)
+ from tests.test_publication_control import approve
+ approve(secret,payload['checksum'])
+ existing=set(dm.BACKUP_DIR.glob('backup-*'))
  (tmp_path/'data'/'test.json').write_text('{}')
  before=Path(store.DB_PATH).read_bytes()
  monkeypatch.setattr(backup.shutil,'copy2',lambda *args: (_ for _ in ()).throw(OSError(errno.ENOSPC,'disk full')))
  assert request('bulk-publish',payload,token=secret)[0]==503
- assert not list(dm.BACKUP_DIR.glob('backup-*'))
+ assert set(dm.BACKUP_DIR.glob('backup-*'))==existing
  assert Path(store.DB_PATH).read_bytes()==before
 
 
