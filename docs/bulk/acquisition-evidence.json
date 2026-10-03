@@ -1,0 +1,586 @@
+{
+  "verified_on": "2026-10-03",
+  "main_baseline_commit": "1a57090",
+  "scope": "Official downloads validated and imported into a fresh local staging database; not a diff against production",
+  "accepted_observations": 15136,
+  "by_source": {
+    "eurostat": 3210,
+    "world_bank": 11926
+  },
+  "quarantined_observations": 257,
+  "nonnull_selected_observations": 15393,
+  "missing_or_suppressed_observations": 14833,
+  "complete_datasets": 32,
+  "country_count": 14,
+  "new_exact_occupation_salary_pairs": 0,
+  "before_staging_observations": 0,
+  "after_staging_observations": 15136,
+  "idempotent_repeat": {
+    "new_accepted_observations": 0,
+    "unchanged_current_count": 15136
+  },
+  "tests": {
+    "passed": 369,
+    "failed": 0,
+    "new_tests": 104,
+    "main_tests": 265,
+    "seconds": 69.39,
+    "warnings": 1
+  },
+  "series": [
+    {
+      "provider": "eurostat",
+      "indicator": "hicp_annual_change_monthly",
+      "country_count": 8,
+      "observations": 2748,
+      "first_period": "1997-01",
+      "last_period": "2026-09"
+    },
+    {
+      "provider": "eurostat",
+      "indicator": "household_price_level_eu27",
+      "country_count": 9,
+      "observations": 270,
+      "first_period": "1995",
+      "last_period": "2024"
+    },
+    {
+      "provider": "eurostat",
+      "indicator": "net_annual_earnings_reference",
+      "country_count": 8,
+      "observations": 192,
+      "first_period": "2000",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "adult_literacy",
+      "country_count": 6,
+      "observations": 74,
+      "first_period": "1980",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "advanced_education_unemployment",
+      "country_count": 14,
+      "observations": 420,
+      "first_period": "1990",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "battle_related_deaths",
+      "country_count": 9,
+      "observations": 47,
+      "first_period": "1989",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "bribery_incidence_firms",
+      "country_count": 14,
+      "observations": 23,
+      "first_period": "2007",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "control_of_corruption",
+      "country_count": 14,
+      "observations": 364,
+      "first_period": "1996",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "electricity_access",
+      "country_count": 14,
+      "observations": 479,
+      "first_period": "1990",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "employment_population_ratio",
+      "country_count": 14,
+      "observations": 490,
+      "first_period": "1991",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "gdp_per_capita",
+      "country_count": 14,
+      "observations": 896,
+      "first_period": "1960",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "gini",
+      "country_count": 14,
+      "observations": 452,
+      "first_period": "1963",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "health_coverage",
+      "country_count": 14,
+      "observations": 336,
+      "first_period": "2000",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "hospital_beds",
+      "country_count": 14,
+      "observations": 559,
+      "first_period": "1960",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "inflation_annual",
+      "country_count": 14,
+      "observations": 875,
+      "first_period": "1960",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "intentional_homicides",
+      "country_count": 14,
+      "observations": 433,
+      "first_period": "1990",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "intentional_homicides_female",
+      "country_count": 13,
+      "observations": 334,
+      "first_period": "1990",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "intentional_homicides_male",
+      "country_count": 13,
+      "observations": 342,
+      "first_period": "1990",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "internet_use",
+      "country_count": 14,
+      "observations": 463,
+      "first_period": "1990",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "life_expectancy",
+      "country_count": 14,
+      "observations": 910,
+      "first_period": "1960",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "out_of_pocket_health_expenditure",
+      "country_count": 14,
+      "observations": 344,
+      "first_period": "2000",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "physicians",
+      "country_count": 14,
+      "observations": 545,
+      "first_period": "1960",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "pm25_air_pollution",
+      "country_count": 14,
+      "observations": 475,
+      "first_period": "1990",
+      "last_period": "2023"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "political_stability",
+      "country_count": 14,
+      "observations": 362,
+      "first_period": "1996",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "ppp_private_consumption",
+      "country_count": 14,
+      "observations": 499,
+      "first_period": "1990",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "primary_completion",
+      "country_count": 11,
+      "observations": 168,
+      "first_period": "1971",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "rule_of_law",
+      "country_count": 14,
+      "observations": 364,
+      "first_period": "1996",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "safe_drinking_water",
+      "country_count": 14,
+      "observations": 345,
+      "first_period": "2000",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "safe_sanitation",
+      "country_count": 13,
+      "observations": 325,
+      "first_period": "2000",
+      "last_period": "2024"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "tax_official_gifts_firms",
+      "country_count": 14,
+      "observations": 24,
+      "first_period": "2005",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "unemployment",
+      "country_count": 14,
+      "observations": 490,
+      "first_period": "1991",
+      "last_period": "2025"
+    },
+    {
+      "provider": "world_bank",
+      "indicator": "youth_unemployment",
+      "country_count": 14,
+      "observations": 488,
+      "first_period": "1991",
+      "last_period": "2025"
+    }
+  ],
+  "artifacts": [
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/IT.NET.USER.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "412fa101eb7c60b62996bbfbfdd691dfe72a91352f2ee90ef20e704a30ac79d3",
+      "bytes": 211992,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:14:05 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:14:05.554857+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/GOV_WGI_CC_SC?format=json&source=2&per_page=10000&page=1",
+      "sha256": "db455af1d89d0259969d44524db568bff5543b8c4f6bb59355a769b33ddc67ff",
+      "bytes": 211056,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:27 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:27.125284+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/VC.BTL.DETH?format=json&source=2&per_page=10000&page=1",
+      "sha256": "b2c66c75e29304615c3835b042f377c5ae1c6c552690529b9d682d94e306d863",
+      "bytes": 199585,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:20 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:20.643513+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SP.DYN.LE00.IN?format=json&source=2&per_page=10000&page=1",
+      "sha256": "8197cd61f14ebe00bebbe7ea1f410a16a18ac07384f64647a72560ec7da5a193",
+      "bytes": 210153,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:12:52 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:12:52.901103+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SH.XPD.OOPC.CH.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "b8d6489c3bbc4d508a66f178e0c2f8708f9d410c8b6adb0007912ab7c4649ead",
+      "bytes": 225125,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:39 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:39.535902+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SH.MED.BEDS.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "454cea4c645ac4dd4477a083fd4ff52a33c66ca9e0cccf12294b6e2f64d122c8",
+      "bytes": 197048,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:37 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:37.981197+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SH_UHC_SCI?format=json&source=2&per_page=10000&page=1",
+      "sha256": "39c10932d6df74b78e60e8e31f074286c697ee1a1c4505b1d2c1633cf6f7019e",
+      "bytes": 185147,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:12:59 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:12:59.145500+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/IC.FRM.BRIB.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "faf9c40aa7bc4db8bd66799593fe7f14d06f71674e59b57446993d6a3b4cf57f",
+      "bytes": 237752,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:28 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:28.711920+00:00"
+    },
+    {
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/prc_ppp_ind?format=TSV&compressed=true",
+      "sha256": "ca1318b39c7c3f36759ed40ea9afeabf16c21f2525cd603f0ef29d0d7391e17f",
+      "bytes": 3286972,
+      "etag": null,
+      "last_modified": null,
+      "content_type": "text/tab-separated-values",
+      "fetched_at": "2026-10-03T00:17:11.764915+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/GOV_WGI_PV_SC?format=json&source=2&per_page=10000&page=1",
+      "sha256": "ed03d769127abf26c5e3c0cecae0ba8944d49cbc355fe10ef0c631d57e71c32e",
+      "bytes": 209221,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:37 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:16:41.814277+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SL.UEM.ADVN.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "f09e660cb93ca3e48eb96f2fc8b517d0db85f2b72a2ba8b7f2c0f7294dc383d1",
+      "bytes": 244437,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:35 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:35.101718+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/VC.IHR.PSRC.P5?format=json&source=2&per_page=10000&page=1",
+      "sha256": "0672242f3e7e0669bf807d501168cf53ec7918c9cf8ebd256dbae6861656b6c1",
+      "bytes": 209740,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:14:10 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:14:10.389276+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/NY.GDP.PCAP.CD?format=json&source=2&per_page=10000&page=1",
+      "sha256": "2c246a72450cbe0ef9fcf24da56fc00ced8728accd2f5473a5231d1d134d9859",
+      "bytes": 202343,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:11:12 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:11:13.108624+00:00"
+    },
+    {
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/prc_hicp_minr?format=TSV&compressed=true",
+      "sha256": "916bd73d8db3cbdcbdaae13e4d220a1985ab37814ac9bc2bb0871c7ec1df5e4f",
+      "bytes": 34175889,
+      "etag": null,
+      "last_modified": null,
+      "content_type": "text/tab-separated-values",
+      "fetched_at": "2026-10-03T00:19:44.160648+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SH.MED.PHYS.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "ac1ad4de1ffdfb9d766c64dcc29eea11db0cd7bee5dbcd36daec0015ec9cc426",
+      "bytes": 192464,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:36 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:36.512038+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SE.PRM.CMPT.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "50253e8c968bc70748d65ecee5c88710668af8f09da972724fe106fb64dfae39",
+      "bytes": 219248,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:13:00 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:13:01.015072+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SI.POV.GINI?format=json&source=2&per_page=10000&page=1",
+      "sha256": "40fbc1254634804ffca707230896ca9dbf925838eb71c636f121cfb2623a675d",
+      "bytes": 171891,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:12:57 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:12:57.607545+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SH.H2O.SMDW.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "33d833b0f56f3fa17d4f0b76ccb714c3ae4b9df13022c603629895870c52451b",
+      "bytes": 233290,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:13:05 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:13:05.624213+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SE.ADT.LITR.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "010a56b400521ae38ae9af180b9870f3317cbe8441a0ab5a4bb7bc0f813daa07",
+      "bytes": 219931,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:13:02 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:13:02.365052+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/VC.IHR.PSRC.FE.P5?format=json&source=2&per_page=10000&page=1",
+      "sha256": "7feded08a845bd4668a9b51943ef26f5c027a81644e27ef25bb9622d06d5cec4",
+      "bytes": 219115,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:14:11 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:14:12.044733+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/VC.IHR.PSRC.MA.P5?format=json&source=2&per_page=10000&page=1",
+      "sha256": "08b99a1b53c8fe215fd2946d122b25f7437000382fb851904294f55a170831a0",
+      "bytes": 215266,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:14:13 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:14:13.762321+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SL.EMP.TOTL.SP.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "f3439e1e683510a5d41ad1b95ddc59c9a5f2a4782f98506eb9d5c4fa1aa305fa",
+      "bytes": 232936,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:33 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:33.565736+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/GOV_WGI_RL_SC?format=json&source=2&per_page=10000&page=1",
+      "sha256": "9765802e041c783c13910edc8f9ed89a2721d57602a7414231ff63276b50b6c6",
+      "bytes": 201825,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:18 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:18.968803+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/PA.NUS.PRVT.PP?format=json&source=2&per_page=10000&page=1",
+      "sha256": "9a4cbbb775d2dfd5b29e7e3c6cb73faf4f9f14b3d15e680c22d44b0b1aba4322",
+      "bytes": 260432,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:11:14 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:11:14.991931+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/EG.ELC.ACCS.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "3488885886d56853c7aac593514bceff5938e0006442763fc6388a824a77f2a8",
+      "bytes": 201259,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:13:03 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:13:03.895738+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SL.UEM.TOTL.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "540cd2e6fd92cd1a5092b9477fd6f9dfa5a907030f70ea1de94d17af6eb9da98",
+      "bytes": 227927,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:12:54 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:12:54.880180+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/IC.TAX.GIFT.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "d069f33f6876011667d694be2a4aa635ec5d627bc36c59d32a5e1aab0886fb79",
+      "bytes": 232149,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:30 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:30.282129+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SL.UEM.1524.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "780acb6c0d5280857bf6a68fc6867ecf4374ac511a3da73249a8b0c81c046456",
+      "bytes": 243895,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:31 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:31.849001+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/FP.CPI.TOTL.ZG?format=json&source=2&per_page=10000&page=1",
+      "sha256": "afe57236386ee81db1f3644c647b546c78f4130d975383fd6f24132659da15ad",
+      "bytes": 210513,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:14:07 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:14:07.436978+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/EN.ATM.PM25.MC.M3?format=json&source=2&per_page=10000&page=1",
+      "sha256": "cf4a358cfb4955c0aff9b4af0c08a311e7c5e0d5dc2b0a3131e34ca1912196ee",
+      "bytes": 238605,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:15:41 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:15:41.121461+00:00"
+    },
+    {
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/earn_nt_net?format=TSV&compressed=true",
+      "sha256": "4e17e96041deb45dd2d7d7114acd084d8a63594b3df3e72efdc593366f7cc255",
+      "bytes": 693396,
+      "etag": null,
+      "last_modified": null,
+      "content_type": "text/tab-separated-values",
+      "fetched_at": "2026-10-03T00:19:52.533004+00:00"
+    },
+    {
+      "url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/SH.STA.SMSS.ZS?format=json&source=2&per_page=10000&page=1",
+      "sha256": "a97b02159d30e87ffa51e6bd08ce6ea3e45260f46e494cd9c5f822df646c91c8",
+      "bytes": 229420,
+      "etag": null,
+      "last_modified": "Sat, 03 Oct 2026 00:13:07 GMT",
+      "content_type": "application/json;charset=utf-8",
+      "fetched_at": "2026-10-03T00:13:07.249923+00:00"
+    }
+  ],
+  "quarantine_rule": "existing-key revisions: 30% relative; new periods: 10 absolute points for percentages/0-100 indices, 30% relative otherwise; provider b/d/u flags require review",
+  "limitations": [
+    "Statistical validation and official provenance are not an independent audit of every published value.",
+    "Upstream null/suppressed values are not zero. Original definitions and periods are retained.",
+    "No new exact occupation wage observations were acquired; national Eurostat net earnings are statistical reference scenarios.",
+    "No production uniqueness comparison was possible without a production inventory export."
+  ],
+  "dashboard_functional_check": "Chromium rendered HTML: 560 rows; nurse filter shows 14; economic count 15136"
+}

@@ -5,7 +5,7 @@ on:
       - '.github/workflows/import-us-bls.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: us-bls-wages
   cancel-in-progress: false
@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -24,14 +26,37 @@ jobs:
         run: |
           python -m app.bls_release_import
           python -m pytest -q
-      - name: Commit real source-backed US/CA wage snapshot
-        run: |
-          git add data/north_america_wages.json
-          if git diff --cached --quiet; then
-            echo "No source-backed changes"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "data: publish official US BLS 2025 national wages alongside Canadian wages"
-          git push
+      - name: Retain validated dataset for explicit review
+        if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-dataset-import-us-bls
+          path: data/north_america_wages.json
+          if-no-files-found: error
+          retention-days: 7
+  propose-review:
+    needs: [verified]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-dataset-import-us-bls
+          path: data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Verify complete suite against proposed datasets
+        run: python -m pytest -q
+      - name: Create data-only branch and review pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/dataset_review_pr.py data/north_america_wages.json

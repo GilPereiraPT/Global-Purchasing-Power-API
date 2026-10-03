@@ -1,0 +1,79 @@
+name: Offline bulk data acquisition
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: Official provider (offline staging only)
+        type: choice
+        options: [world_bank, eurostat]
+        default: world_bank
+        required: true
+      datasets:
+        description: One to four registered dataset names, comma separated
+        type: string
+        default: inflation_annual,ppp_private_consumption
+        required: true
+  schedule:
+    - cron: '37 6 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: offline-bulk-acquisition
+  cancel-in-progress: false
+jobs:
+  acquire:
+    if: >-
+      github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'schedule' && vars.EARNWAGE_BULK_CHECKS_ENABLED == 'true'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - uses: actions/cache/restore@v4
+        id: bulk-cache
+        with:
+          path: ${{ runner.temp }}/earnwage-bulk
+          key: earnwage-bulk-${{ github.ref_name }}-${{ inputs.provider || 'scheduled' }}-${{ github.run_id }}
+          restore-keys: earnwage-bulk-${{ github.ref_name }}-${{ inputs.provider || 'scheduled' }}-
+      - name: Acquire into isolated staging and retain failures
+        env:
+          BULK_WORKSPACE: ${{ runner.temp }}/earnwage-bulk
+          BULK_PROVIDER: ${{ inputs.provider || 'world_bank' }}
+          BULK_DATASETS: ${{ inputs.datasets || 'inflation_annual,ppp_private_consumption' }}
+          BULK_EVENT: ${{ github.event_name }}
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+          from scripts.bulk_acquire import execute
+          names = [item.strip() for item in os.environ['BULK_DATASETS'].split(',')]
+          code, report = execute(os.environ['BULK_WORKSPACE'], os.environ['BULK_PROVIDER'], names, only_due=True)
+          if os.environ['BULK_EVENT'] == 'schedule':
+              euro_code, report = execute(os.environ['BULK_WORKSPACE'], 'eurostat',
+                  ['hicp_annual_change_monthly', 'household_price_level_eu27', 'net_annual_earnings_reference'], only_due=True)
+              code = max(code, euro_code)
+          print({'accepted': report['accepted_observations'], 'quarantined': report['quarantined_versions']})
+          sys.exit(code)
+          PY
+      - name: Preserve resumable offline state even after a failed import
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/earnwage-bulk
+          key: ${{ steps.bulk-cache.outputs.cache-primary-key }}
+      - name: Retain reports and staging for manual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-bulk-staging-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/earnwage-bulk/acquisition.json
+            ${{ runner.temp }}/earnwage-bulk/acquisition.md
+            ${{ runner.temp }}/earnwage-bulk/staging.sqlite3
+          if-no-files-found: error
+          retention-days: 14

@@ -205,3 +205,51 @@ if __name__ == "__main__":
         print(json.dumps({"exported": export_snapshot()}))
     if not args.import_official and not args.export:
         parser.error("Choose --import-official and/or --export")
+
+
+def bulk_rows(stream, geographies):
+    """Strict streaming release reader shared with offline Phase 4 bulk staging.
+
+    Geographic identifiers/names must match the reviewed official release
+    registry; province totals and economic regions remain distinct.
+    """
+    import re
+    from decimal import Decimal, InvalidOperation
+    reader=csv.DictReader(stream)
+    required=REQUIRED | {'ER_Name','Data_Source_E','Revision_Date_Date_revision'}
+    allowed=required | {'NOC_Title_fra','Nom_RE','Source2025_NHQ','Data_Source_F','Wage_Comment_E','Wage_Comment_F','EmployeesWithNonWageBenefit_Pct'}
+    if reader.fieldnames and (len(reader.fieldnames)!=len(set(reader.fieldnames)) or set(reader.fieldnames)-allowed):
+        raise ValueError('Unexpected or duplicate Job Bank columns')
+    if not required <= set(reader.fieldnames or []):
+        raise ValueError('Unexpected Job Bank bulk layout')
+    seen=set()
+    for row in reader:
+        if None in row or any(v is None for v in row.values()):raise ValueError('Malformed CSV row')
+        code=row['NOC_CNP'].strip();area=row['ER_Code_Code_RE'].strip();prov=row['prov'].strip()
+        if not re.fullmatch(r'NOC_\d{5}',code) or not row['NOC_Title_eng'].strip():raise ValueError('Invalid NOC2021 code/title')
+        if geographies.get(area)!={'province':prov,'name':row['ER_Name']}:
+            raise ValueError('Unverified geography identifier or name')
+        if prov=='NAT':
+            if area!='ER00':raise ValueError('Invalid national geography')
+            geo='national'
+        elif prov in SOURCE_PROVINCES:
+            normalized,total=SOURCE_PROVINCES[prov]
+            geo='CA:province:'+normalized if area==total else 'CA:economic_region:'+area
+        else:raise ValueError('Unverified province')
+        flag=row['Annual_Wage_Flag_Salaire_annuel'].strip()
+        if flag not in ('0','1'):raise ValueError('Unverified wage unit')
+        period=row['Reference_Period'].strip()
+        if period!='NA' and not re.fullmatch(r'20\d{2}(?:-20\d{2})?',period):raise ValueError('Unverified period')
+        identity=(code,area,period,flag)
+        if identity in seen:raise ValueError('Duplicate Job Bank scope')
+        seen.add(identity)
+        values={}
+        for measure,column in MEASURES.items():
+            raw=row[column].strip()
+            if not raw:values[measure]=None;continue
+            try:value=Decimal(raw)
+            except InvalidOperation:raise ValueError('Unknown salary token') from None
+            if not value.is_finite() or value<0:raise ValueError('Invalid salary')
+            if period=='NA':raise ValueError('Salary without reference period')
+            values[measure]=str(value)
+        yield row,geo,'CAD/year' if flag=='1' else 'CAD/hour',values

@@ -1,0 +1,18 @@
+{
+  "retrieved_at": "2026-10-03",
+  "bls": {
+    "source_url": "https://www.bls.gov/oes/special-requests/oesm25all.zip",
+    "sha256": "86ffcbbeb27a96b7aa84d01801de71ee94ee9027452152caabebfdec9d764fde",
+    "member": "oesm25all/all_data_M_2025.xlsx",
+    "sample": "bls_2025_rows.json",
+    "sampling": "Two complete source rows: software developers, national and Alabama state. XLSX values preserved; tests reconstruct a miniature workbook. Samples are not a full acquisition."
+  },
+  "job_bank": {
+    "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv",
+    "destination_host": "opencanada.blob.core.windows.net",
+    "sha256": "7bd29fb41b2a84eb61a4dbf49bfb63651a8a694c62ce42ac69cb785679d66328",
+    "licence_url": "https://open.canada.ca/en/open-government-licence-canada",
+    "sample": "job_bank_2025.csv",
+    "sampling": "Four original rows for NOC_21232: national, Ontario total, ER3510 and unavailable ER1020. CSV field values unchanged; quoting normalized. Not a full acquisition."
+  }
+}

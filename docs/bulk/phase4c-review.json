@@ -1,0 +1,18 @@
+{
+  "schema": "earnwage-phase4c-review-v1",
+  "quarantined_reviewed": 13565,
+  "quarantine_approved": 0,
+  "new_verified_pairs": 0,
+  "package_observations": 4126,
+  "package_bytes": 3464907,
+  "local_inserted_rows": 112,
+  "local_duplicate_rows": 2596,
+  "excluded_publication_scopes": {
+    "bls_regional_metadata_not_in_package_scope": 866569,
+    "national_api_measure_not_supported": 146,
+    "canadian_economic_region_has_no_existing_api_table": 11378
+  },
+  "production_status": "not_accessed_no_authorized_inventory",
+  "rollback": "validated_locally",
+  "recovery": "validated_locally"
+}

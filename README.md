@@ -422,3 +422,10 @@ visiting the page. The public GET coverage endpoint requires no token.
 cannot safely be enabled by copying a token into JavaScript.** Use a
 hosting-supported private configuration method or a separate GitHub Actions
 import/deployment design instead.
+
+## Aquisição em massa de dados
+
+O worker offline e os relatórios de cobertura estão documentados em
+[docs/bulk/README.md](docs/bulk/README.md). Os conectores WDI e Eurostat preservam
+histórico, proveniência e quarentena num staging separado. Não atualizam produção
+através dos pedidos da API.

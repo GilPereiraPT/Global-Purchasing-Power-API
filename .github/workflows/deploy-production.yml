@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: >
+    if: >-
       ${{
         vars.EARNWAGE_DEPLOY_ENABLED == 'true' &&
         github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' &&

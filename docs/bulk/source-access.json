@@ -1,0 +1,191 @@
+{
+  "checked_on": "2026-10-03",
+  "scope": "Small public samples; HTTP 200 does not validate the whole dataset or licence",
+  "initial_probes": [
+    {
+      "id": "ilostat",
+      "status": 200,
+      "content_type": "application/octet-stream",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "bls",
+      "status": 200,
+      "content_type": "text/html",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "job_bank",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "ine_gep",
+      "status": 200,
+      "content_type": "application/json;charset=UTF-8",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "oecd",
+      "error_type": "HTTPError",
+      "http_status": 403,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "statcan",
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "rais",
+      "error_type": "HTTPError",
+      "http_status": 404,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "ibge",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "ons",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "ba",
+      "status": 200,
+      "content_type": "text/html;charset=utf-8",
+      "sample_bytes": 48691,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "insee",
+      "error_type": "URLError",
+      "http_status": null,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "cbs",
+      "status": 200,
+      "content_type": "application/json; odata.metadata=minimal; odata.streaming=true; charset=utf-8",
+      "sample_bytes": 660,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "ine_es",
+      "error_type": "URLError",
+      "http_status": null,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "fso",
+      "error_type": "URLError",
+      "http_status": null,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "istat",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "cso",
+      "status": 200,
+      "content_type": "text/html",
+      "sample_bytes": 21537,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "mospi",
+      "error_type": "HTTPError",
+      "http_status": 503,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "pbs",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "sample_bytes": 65536,
+      "full_dataset_downloaded": false
+    },
+    {
+      "id": "ecb",
+      "error_type": "HTTPError",
+      "http_status": 404,
+      "full_dataset_downloaded": false
+    }
+  ],
+  "follow_up_probes": [
+    {
+      "id": "insee",
+      "url": "https://api.insee.fr/melodi/file/DS_DERA_PRIVE_ANNUEL/DS_DERA_PRIVE_ANNUEL_2024_CSV_FR",
+      "full_dataset_downloaded": false,
+      "error_type": "URLError",
+      "http_status": null,
+      "restriction": "environment_proxy_policy"
+    },
+    {
+      "id": "ine_es",
+      "url": "https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/28186",
+      "full_dataset_downloaded": false,
+      "error_type": "URLError",
+      "http_status": null,
+      "restriction": "environment_proxy_policy"
+    },
+    {
+      "id": "fso",
+      "url": "https://www.pxweb-admin-a.bfs.admin.ch/pxweb/en/px-x-0304010000_205/-/px-x-0304010000_205.px/",
+      "full_dataset_downloaded": false,
+      "error_type": "URLError",
+      "http_status": null,
+      "restriction": "environment_proxy_policy"
+    },
+    {
+      "id": "bls_bulk",
+      "url": "https://www.bls.gov/oes/special-requests/oesm25all.zip",
+      "full_dataset_downloaded": false,
+      "status": 200,
+      "content_type": "application/x-zip-compressed",
+      "content_length": "78754064",
+      "sample_bytes": 65536
+    },
+    {
+      "id": "job_bank_bulk",
+      "url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv",
+      "full_dataset_downloaded": false,
+      "error_type": "URLError",
+      "http_status": null,
+      "restriction": "environment_proxy_policy"
+    }
+  ],
+  "phase4b_full_acquisition": [
+    {
+      "provider": "bls",
+      "live_downloads": 5,
+      "accepted_observations": 868201,
+      "acquisition_mode": "live_bulk",
+      "evidence": "phase4b-evidence.json"
+    },
+    {
+      "provider": "job_bank",
+      "live_downloads": 1,
+      "accepted_observations": 14018,
+      "acquisition_mode": "live_bulk",
+      "evidence": "phase4b-evidence.json"
+    }
+  ]
+}

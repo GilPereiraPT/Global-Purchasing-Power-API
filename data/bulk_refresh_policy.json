@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "note": "Offline check intervals only; no cron, API refresh or production activation. Monthly publication feeds require validated provider release metadata before activation.",
+  "providers": {
+    "world_bank": {
+      "check_interval_days": 30,
+      "dataset_frequency": "annual_or_irregular",
+      "conditional_requests": true
+    },
+    "eurostat": {
+      "check_interval_days": 30,
+      "dataset_frequency": "monthly_or_annual",
+      "conditional_requests": true
+    },
+    "ecb": {
+      "check_interval_days": 1,
+      "status": "existing_provider_only"
+    },
+    "ilostat": {
+      "check_interval_days": 90,
+      "status": "existing_importer_follow_up"
+    },
+    "occupational_annual": {
+      "check_interval_days": 90,
+      "status": "provider_specific_release_validation_required"
+    },
+    "bls": {
+      "check_interval_days": 90,
+      "dataset_frequency": "annual",
+      "conditional_requests": true
+    },
+    "job_bank": {
+      "check_interval_days": 90,
+      "dataset_frequency": "annual",
+      "conditional_requests": true
+    }
+  },
+  "series_overrides": {
+    "eurostat:hicp_annual_change_monthly": {
+      "check_interval_days": 1,
+      "note": "Light metadata/conditional check daily; download only when changed. Precise release calendar not yet connected."
+    }
+  },
+  "limits": {
+    "max_datasets_per_invocation": 4,
+    "minimum_request_interval_seconds": 1,
+    "sqlite_batch_size": 250
+  }
+}

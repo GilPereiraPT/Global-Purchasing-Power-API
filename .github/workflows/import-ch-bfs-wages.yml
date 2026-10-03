@@ -10,13 +10,15 @@ on:
     - cron: '17 7 1 5 *'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   import:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Download national CH-ISCO-19 group wages from FSO PXWeb
         run: |
           python - <<'PY'
@@ -98,7 +100,7 @@ jobs:
           Path("data/ch_bfs_wages.json").write_text(json.dumps(payload,ensure_ascii=False,indent=2)+"\n")
           print("observations",len(observations),"year",latest,"groups",len(groups))
           PY
-      - name: Validate and commit
+      - name: Validate downloaded observations
         run: |
           python - <<'PY'
           from app.ch_bfs_wages import load_snapshot
@@ -107,8 +109,37 @@ jobs:
           assert any(r["percentile"]=="median" for r in rows)
           print("validated",len(rows))
           PY
-          git config user.name "earnwage-data-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/ch_bfs_wages.json
-          git diff --cached --quiet || git commit -m "data: refresh Swiss FSO ESS occupation groups"
-          git push
+      - name: Retain validated dataset for explicit review
+        if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-dataset-import-ch-bfs-wages
+          path: data/ch_bfs_wages.json
+          if-no-files-found: error
+          retention-days: 7
+  propose-review:
+    needs: [import]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-dataset-import-ch-bfs-wages
+          path: data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Verify complete suite against proposed datasets
+        run: python -m pytest -q
+      - name: Create data-only branch and review pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/dataset_review_pr.py data/ch_bfs_wages.json

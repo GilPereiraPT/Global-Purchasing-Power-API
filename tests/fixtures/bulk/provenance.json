@@ -1,0 +1,41 @@
+[
+  {
+    "provider": "Eurostat",
+    "series": "hicp_annual_change_monthly",
+    "source_url": "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/prc_hicp_minr?format=TSV&compressed=true",
+    "original_dataset_sha256": "916bd73d8db3cbdcbdaae13e4d220a1985ab37814ac9bc2bb0871c7ec1df5e4f",
+    "extract_sha256": "329b0f3315f9fc81ab76f3e38c0ee50044d5b3351152220afb0a57755ca2b33e",
+    "extract": "prc_hicp_minr_pt.tsv.gz",
+    "fetched_at": "2026-10-03T00:15:26.281303+00:00",
+    "scope": "Verbatim header and exact PT selected row, all original periods/flags; not a full dataset"
+  },
+  {
+    "provider": "Eurostat",
+    "series": "household_price_level_eu27",
+    "source_url": "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/prc_ppp_ind?format=TSV&compressed=true",
+    "original_dataset_sha256": "ca1318b39c7c3f36759ed40ea9afeabf16c21f2525cd603f0ef29d0d7391e17f",
+    "extract_sha256": "18ffbf9cc64b72e7af6d0bfaf4b4648158f083e7b4fa26f1cec9c7b22ffecf25",
+    "extract": "prc_ppp_ind_pt.tsv.gz",
+    "fetched_at": "2026-10-03T00:17:11.764915+00:00",
+    "scope": "Verbatim header and exact PT selected row, all original periods/flags; not a full dataset"
+  },
+  {
+    "provider": "Eurostat",
+    "series": "net_annual_earnings_reference",
+    "source_url": "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/earn_nt_net?format=TSV&compressed=true",
+    "original_dataset_sha256": "4e17e96041deb45dd2d7d7114acd084d8a63594b3df3e72efdc593366f7cc255",
+    "extract_sha256": "b43c6b3d9ede46ab4fad3921d8926caf374d606807b3bc0be7771454356609b9",
+    "extract": "earn_nt_net_pt.tsv.gz",
+    "fetched_at": "2026-10-03T00:13:19.682941+00:00",
+    "scope": "Verbatim header and exact PT selected row, all original periods/flags; not a full dataset"
+  },
+  {
+    "provider": "World Bank WDI",
+    "source_url": "https://api.worldbank.org/v2/country/PRT;ESP;DEU;FRA;GBR;IRL;NLD;CHE;ITA;USA;CAN;BRA;IND;PAK/indicator/NY.GDP.PCAP.CD?format=json&source=2&per_page=10000&page=1",
+    "original_dataset_sha256": "2c246a72450cbe0ef9fcf24da56fc00ced8728accd2f5473a5231d1d134d9859",
+    "fixture_sha256": "413330cb3cf80f7f22e189c69da473ff7b4bec4ba9fed407175c80554327dbf5",
+    "extract": "world_bank_gdp_per_capita.json.gz",
+    "fetched_at": "2026-10-03T00:11:13.108624+00:00",
+    "scope": "Complete original page, gzip-compressed locally without changing JSON"
+  }
+]

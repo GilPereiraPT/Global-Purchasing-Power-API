@@ -11,7 +11,7 @@ on:
         required: true
         default: "EAR_EMTA_SEX_OCU_CUR_NB_A"
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: ilostat-salary-refresh
   cancel-in-progress: false
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -39,15 +39,37 @@ jobs:
           python -m app.ilostat_import --export
       - name: Run tests
         run: python -m pytest -q
-      - name: Commit sourced snapshot
-        if: ${{ inputs.catalogue_only == false }}
-        run: |
-          git add data/salaries_snapshot.json
-          if git diff --cached --quiet; then
-            echo "Snapshot unchanged"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "data: refresh observed ILOSTAT salary snapshot"
-          git push
+      - name: Retain validated dataset for explicit review
+        if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' && (inputs.catalogue_only == false) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-dataset-refresh-ilostat
+          path: data/salaries_snapshot.json
+          if-no-files-found: error
+          retention-days: 7
+  propose-review:
+    needs: [import]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' && (inputs.catalogue_only == false) }}
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-dataset-refresh-ilostat
+          path: data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Verify complete suite against proposed datasets
+        run: python -m pytest -q
+      - name: Create data-only branch and review pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/dataset_review_pr.py data/salaries_snapshot.json

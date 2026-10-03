@@ -115,7 +115,7 @@ def _looks_like_data_sheet(headers: list[str]) -> bool:
     return required <= set(headers) and bool(set(WAGE_FIELDS) & set(headers))
 
 
-def workbook_records(path: str | Path, year: int = DEFAULT_YEAR) -> Iterable[dict]:
+def workbook_records(path: str | Path, year: int = DEFAULT_YEAR, *, bulk=False) -> Iterable[dict]:
     """Yield normalized rows from every compatible worksheet in an OEWS XLSX."""
     if not 1997 <= year <= 2100:
         raise ValueError("Invalid OEWS year")
@@ -143,11 +143,21 @@ def workbook_records(path: str | Path, year: int = DEFAULT_YEAR) -> Iterable[dic
                         break
                 if not found:
                     continue
+            if bulk and (len(headers)!=len(set(headers)) or set(headers)-set(IDENTITY_FIELDS+NUMERIC_FIELDS+('ANNUAL','HOURLY'))):
+                raise ValueError('Unexpected or duplicate bulk columns')
+            if bulk and ws.title.casefold()!=f'All May {year} data'.casefold():
+                raise ValueError('Workbook observation period does not match release')
+            if bulk and any(h.startswith(('H_','A_')) and h not in WAGE_FIELDS for h in headers):
+                raise ValueError('Unexpected salary measure')
+            if bulk and not set(IDENTITY_FIELDS + WAGE_FIELDS) <= set(headers):
+                raise ValueError("Incomplete bulk OEWS schema")
             for values in rows:
                 raw = dict(zip(headers, values))
                 occ_code = _text(raw.get("OCC_CODE"))
                 occ_title = _text(raw.get("OCC_TITLE"))
                 if not re.fullmatch(r"\d{2}-\d{4}", occ_code) or not occ_title:
+                    if bulk and any(v is not None for v in values):
+                        raise ValueError("Invalid occupation in bulk release")
                     continue
                 record = {
                     "reference_period": f"May {year}",
@@ -167,7 +177,12 @@ def workbook_records(path: str | Path, year: int = DEFAULT_YEAR) -> Iterable[dic
                     **{name.lower(): _number(raw.get(name)) for name in NUMERIC_FIELDS},
                     "source_url": BLS_TABLE,
                 }
-                if not any(record[name.lower()] is not None for name in WAGE_FIELDS):
+                if bulk:
+                    record["raw_wages"] = {name: _text(raw.get(name)) for name in WAGE_FIELDS}
+                    for name, value in record["raw_wages"].items():
+                        if value and value not in {"*", "**", "#", "~", "-", "—", "N/A", "NA"} and record[name.lower()] is None:
+                            raise ValueError("Unexpected wage token")
+                if not bulk and not any(record[name.lower()] is not None for name in WAGE_FIELDS):
                     continue
                 emitted += 1
                 yield record
