@@ -143,6 +143,8 @@ def workbook_records(path: str | Path, year: int = DEFAULT_YEAR, *, bulk=False) 
                         break
                 if not found:
                     continue
+            if bulk and (len(headers)!=len(set(headers)) or set(headers)-set(IDENTITY_FIELDS+NUMERIC_FIELDS+('ANNUAL','HOURLY'))):
+                raise ValueError('Unexpected or duplicate bulk columns')
             if bulk and ws.title.casefold()!=f'All May {year} data'.casefold():
                 raise ValueError('Workbook observation period does not match release')
             if bulk and any(h.startswith(('H_','A_')) and h not in WAGE_FIELDS for h in headers):

@@ -259,6 +259,8 @@ class BulkStore:
                     counts['duplicates']+=1
                     continue
                 previous=self.db.execute('SELECT payload FROM bulk_current WHERE key=?',(key,)).fetchone()
+                if previous is None:
+                    previous=self.db.execute("SELECT payload FROM bulk_versions WHERE key=? AND status='accepted' ORDER BY imported_at DESC LIMIT 1",(key,)).fetchone()
                 is_revision=previous is not None
                 if previous is None:
                     # Compare adjacent published candidates, including quarantined ones.

@@ -127,3 +127,18 @@ def test_same_source_code_can_have_distinct_official_group_levels(tmp_path):
 def test_wrong_release_year_cannot_be_assigned_silently(tmp_path):
     z,_=release(tmp_path)
     with pytest.raises(ValueError):list(observations(z,2024,{}))
+
+
+def test_revision_after_suppression_still_compares_last_accepted_value(tmp_path):
+    z,_=release(tmp_path);row=next(observations(z,2025,{}));s=BulkStore(tmp_path/'stage.sqlite3')
+    try:
+        for token,value in [('a','100'),('b',None),('c','1000')]:
+            checksum=token*64;s.artifact({'sha256':checksum,'url':url(2025)})
+            counts=s.ingest(token,checksum,[{**row,'value':value}])
+        assert counts['quarantined']==1 and s.count()==0
+    finally:s.close()
+
+
+def test_unexpected_population_dimension_is_rejected(tmp_path):
+    z,_=release(tmp_path,headers=list(IDENTITY_FIELDS+WAGE_FIELDS)+['SEX'])
+    with pytest.raises(ValueError):list(observations(z,2025,{}))
