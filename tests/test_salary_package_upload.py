@@ -122,7 +122,8 @@ def test_preview_never_enables_publication(tmp_path,monkeypatch,enabled):
 
 def test_existing_target_symlink_and_interruption_never_replace(tmp_path,monkeypatch):
     token=setup(monkeypatch,tmp_path);raw=pub.encode(package());sha=hashlib.sha256(raw).hexdigest()
-    directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(parents=True,mode=0o700)
+    dm.BACKUP_DIR.mkdir(mode=0o700)
+    directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(mode=0o700)
     victim=tmp_path/'keep';victim.write_bytes(b'original');target=directory/(sha+'.json');target.symlink_to(victim)
     assert upload(raw,token)[0]==409 and victim.read_bytes()==b'original'
     target.unlink()
