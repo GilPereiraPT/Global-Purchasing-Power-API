@@ -1,0 +1,131 @@
+{
+  "scope": "isolated local databases seeded only from committed snapshots",
+  "baseline_loads": {
+    "us_rows": 1448,
+    "canada_national_rows": 85,
+    "canada_province_rows": 2493
+  },
+  "packages": [
+    {
+      "checksum": "aa255f6bb29243099c61bbc1cf98c3d3ee9c47e1d6acbce3d35bea75f25e2527",
+      "observations": 996,
+      "preview": {
+        "status": "review_required",
+        "checksum": "aa255f6bb29243099c61bbc1cf98c3d3ee9c47e1d6acbce3d35bea75f25e2527",
+        "inserted_rows": 70,
+        "duplicate_rows": 17,
+        "protected_existing_rows": 0
+      },
+      "publication": {
+        "inserted_rows": 70,
+        "duplicate_rows": 17,
+        "protected_existing_rows": 0,
+        "status": "published",
+        "checksum": "aa255f6bb29243099c61bbc1cf98c3d3ee9c47e1d6acbce3d35bea75f25e2527",
+        "backup_id": "backup-20261003T083757972670Z"
+      },
+      "replay": "already_published"
+    },
+    {
+      "checksum": "e1ad0780fc219fd05a33e771fa36e31495061db997acdfa005ac1d093acd121e",
+      "observations": 636,
+      "preview": {
+        "status": "review_required",
+        "checksum": "e1ad0780fc219fd05a33e771fa36e31495061db997acdfa005ac1d093acd121e",
+        "inserted_rows": 42,
+        "duplicate_rows": 11,
+        "protected_existing_rows": 0
+      },
+      "publication": {
+        "inserted_rows": 42,
+        "duplicate_rows": 11,
+        "protected_existing_rows": 0,
+        "status": "published",
+        "checksum": "e1ad0780fc219fd05a33e771fa36e31495061db997acdfa005ac1d093acd121e",
+        "backup_id": "backup-20261003T083758245821Z"
+      },
+      "replay": "already_published"
+    },
+    {
+      "checksum": "3291aee5bd8e29f5c3ed6029efd716926dd8ff34240f044dc2978264b985f759",
+      "observations": 996,
+      "preview": {
+        "status": "review_required",
+        "checksum": "3291aee5bd8e29f5c3ed6029efd716926dd8ff34240f044dc2978264b985f759",
+        "inserted_rows": 0,
+        "duplicate_rows": 1070,
+        "protected_existing_rows": 0
+      },
+      "publication": {
+        "inserted_rows": 0,
+        "duplicate_rows": 1070,
+        "protected_existing_rows": 0,
+        "status": "published",
+        "checksum": "3291aee5bd8e29f5c3ed6029efd716926dd8ff34240f044dc2978264b985f759",
+        "backup_id": "backup-20261003T083758519162Z"
+      },
+      "replay": "already_published"
+    },
+    {
+      "checksum": "b6e78bb4cc5bc5976d6c21f1ad070aa8d4a3c1dab0a65973b8d162ab3be63f8c",
+      "observations": 998,
+      "preview": {
+        "status": "review_required",
+        "checksum": "b6e78bb4cc5bc5976d6c21f1ad070aa8d4a3c1dab0a65973b8d162ab3be63f8c",
+        "inserted_rows": 0,
+        "duplicate_rows": 998,
+        "protected_existing_rows": 0
+      },
+      "publication": {
+        "inserted_rows": 0,
+        "duplicate_rows": 998,
+        "protected_existing_rows": 0,
+        "status": "published",
+        "checksum": "b6e78bb4cc5bc5976d6c21f1ad070aa8d4a3c1dab0a65973b8d162ab3be63f8c",
+        "backup_id": "backup-20261003T083758889436Z"
+      },
+      "replay": "already_published"
+    },
+    {
+      "checksum": "44f70b67bf233a085f532c01546a08288db29c35ed158b5d0e6e283adcb9fbbe",
+      "observations": 500,
+      "preview": {
+        "status": "review_required",
+        "checksum": "44f70b67bf233a085f532c01546a08288db29c35ed158b5d0e6e283adcb9fbbe",
+        "inserted_rows": 0,
+        "duplicate_rows": 500,
+        "protected_existing_rows": 0
+      },
+      "publication": {
+        "inserted_rows": 0,
+        "duplicate_rows": 500,
+        "protected_existing_rows": 0,
+        "status": "published",
+        "checksum": "44f70b67bf233a085f532c01546a08288db29c35ed158b5d0e6e283adcb9fbbe",
+        "backup_id": "backup-20261003T083759158659Z"
+      },
+      "replay": "already_published"
+    }
+  ],
+  "rows_before_rollback": {
+    "us_oews": 1560,
+    "north_america_wages": 85,
+    "ca_province_wages": 2493
+  },
+  "rows_after_rollback": {
+    "us_oews": 1448,
+    "north_america_wages": 85,
+    "ca_province_wages": 2493
+  },
+  "integrity": "ok",
+  "recovery": "first fresh backup restored to a new local directory; original environment retained",
+  "production_access": false,
+  "elapsed_seconds": 1.548,
+  "max_rss_kib": 43360,
+  "database_sizes": {
+    "wages": 2265088,
+    "insights": 28672
+  },
+  "backup_storage_bytes": 37324736,
+  "test_only_snapshots": true
+}

@@ -318,3 +318,11 @@ Mantém-se **um aviso herdado** Starlette TestClient/httpx. `pip check` passou.
 YAML dos 35 workflows foi analisado; `actionlint` validou os 34 sem o alerta de
 whitespace herdado no deployment, já descrito acima. O lint foi executado sem
 integração externa ShellCheck/Pyflakes; não se afirma que esses analisadores passaram.
+
+## Phase 4D — revisão de release
+
+A revisão completa, sequência WSGI com arquivo real, falhas/interrupções, requisitos
+de infraestrutura e checklist estão em [PHASE4D.md](PHASE4D.md).
+Foram corrigidos orçamento/deadline de backup e permissões herdadas de três workflows.
+Resultado: **468 testes aprovados, zero falhados**. A publicação permanece
+bloqueada por pré-requisitos operacionais e desactivada por omissão.

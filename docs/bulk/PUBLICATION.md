@@ -99,3 +99,9 @@ o checksum/journal permite consultar preview e repetir sem duplicar salários.
 
 Os endpoints são administrativos WSGI do Data Manager, tal como os anteriores;
 a API pública FastAPI/WSGI e os respectivos contratos salariais ficam intactos.
+
+Actualização Phase 4D: o backup exige espaço livre `3 × (bases + WAL) + snapshots +
+64 MiB` e tem deadline cooperativa de 30 segundos. Falhas removem apenas a pasta
+nova incompleta. Ver [PHASE4D.md](PHASE4D.md) para cenários de interrupção, retenção,
+quotas e checklist de autorização. O preflight não garante espaço após escritas
+concorrentes; `SIGKILL` pode deixar pasta incompleta sem manifest elegível.
