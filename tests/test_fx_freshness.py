@@ -61,3 +61,17 @@ def test_inventory_distinguishes_cache_age_and_quote_age(monkeypatch,tmp_path):
   rates=data_inventory._rates(db)
  assert rates['USD']['status']=='invalid_or_stale_observation' and rates['GBP']['status']=='cached'
  assert rates['CAD']['status']=='not_cached'
+
+
+def test_wall_clock_timeout_and_api_parity(monkeypatch,tmp_path):
+ monkeypatch.setattr(store,'DB_PATH',str(tmp_path/'cache.sqlite3'))
+ original=httpx.AsyncClient
+ async def handler(request):
+  await asyncio.sleep(.05)
+  return httpx.Response(200,text=csv())
+ monkeypatch.setattr(providers,'FX_TIMEOUT_SECONDS',.01)
+ monkeypatch.setattr(providers.httpx,'AsyncClient',lambda **kw:original(transport=httpx.MockTransport(handler),**kw))
+ with pytest.raises(providers.UpstreamUnavailable):asyncio.run(providers.exchange_rate('USD'))
+ from app.main import fx
+ from app.native_wsgi import dispatch
+ assert asyncio.run(fx('PKR'))==dispatch('/v1/exchange-rates/PKR',{})

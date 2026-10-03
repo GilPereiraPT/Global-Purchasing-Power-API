@@ -1,5 +1,6 @@
 """Official, free upstream connectors. No invented or silently extrapolated observations."""
 import csv
+import asyncio
 import math
 import json
 from io import StringIO
@@ -11,6 +12,7 @@ from app.fx_policy import CACHE_TTL, ECB_CURRENCIES, valid_quote
 
 EUROSTAT = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr"
 ECB = "https://data-api.ecb.europa.eu/service/data/EXR"
+FX_TIMEOUT_SECONDS = 25
 HEADERS = {"User-Agent": "GlobalPurchasingPowerAPI/0.1 (economic statistics)"}
 
 
@@ -110,16 +112,17 @@ async def exchange_rate(currency):
         return cached
     url = f"{ECB}/D.{currency}.EUR.SP00.A"
     try:
-        async with httpx.AsyncClient(timeout=25, headers=HEADERS, follow_redirects=True) as client:
-            async with client.stream('GET',url,params={"format":"csvdata","lastNObservations":1}) as response:
-                if response.status_code in (404,204):return None
-                response.raise_for_status()
-                body=bytearray()
-                async for chunk in response.aiter_bytes():
-                    if len(body)+len(chunk)>65536:raise UpstreamUnavailable("ECB response exceeds bounded size")
-                    body.extend(chunk)
+        async with asyncio.timeout(FX_TIMEOUT_SECONDS):
+            async with httpx.AsyncClient(timeout=25, headers=HEADERS, follow_redirects=True) as client:
+                async with client.stream('GET',url,params={"format":"csvdata","lastNObservations":1}) as response:
+                    if response.status_code in (404,204):return None
+                    response.raise_for_status()
+                    body=bytearray()
+                    async for chunk in response.aiter_bytes():
+                        if len(body)+len(chunk)>65536:raise UpstreamUnavailable("ECB response exceeds bounded size")
+                        body.extend(chunk)
         rows=list(csv.DictReader(StringIO(body.decode('utf-8-sig'))))
-    except (httpx.HTTPError,UnicodeError) as exc:
+    except (httpx.HTTPError,UnicodeError,TimeoutError) as exc:
         raise UpstreamUnavailable("ECB unavailable") from exc
     if not rows:return None
     if len(rows)!=1:raise UpstreamUnavailable("Unexpected ECB observation count")
