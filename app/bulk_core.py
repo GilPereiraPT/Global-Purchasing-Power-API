@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-HOSTS = {'api.worldbank.org','ec.europa.eu'}
+HOSTS = {'api.worldbank.org','ec.europa.eu','www.bls.gov','open.canada.ca','opencanada.blob.core.windows.net'}
 MAX_FILE = 96 * 1024 * 1024
 BATCH_SIZE = 250
 
@@ -31,6 +31,8 @@ def digest(path):
 
 def valid_url(url):
     p=urlsplit(url)
+    if p.hostname=='opencanada.blob.core.windows.net' and not p.path.startswith('/opengovprod/resources/'):
+        raise ValueError('Unregistered public catalogue destination')
     if p.scheme!='https' or p.hostname not in HOSTS or p.username or p.password or p.port not in (None,443):
         raise ValueError('Only registered public HTTPS provider URLs are permitted')
 
@@ -117,7 +119,7 @@ class Downloader:
                             if total==0:raise ValueError('Empty download')
                             checksum=digest(part)
                             part.replace(body_path)
-                            meta={'url':url,'resolved_url':current,'sha256':checksum,
+                            meta={'url':url,'resolved_url':current.split('?')[0] if urlsplit(current).hostname=='opencanada.blob.core.windows.net' else current,'sha256':checksum,
                                   'bytes':total,'etag':response.headers.get('etag'),
                                   'last_modified':response.headers.get('last-modified'),
                                   'content_type':response.headers.get('content-type'),
@@ -176,6 +178,13 @@ class BulkStore:
         ''')
         self.db.execute("CREATE INDEX IF NOT EXISTS bulk_lookup ON bulk_current(json_extract(payload,'$.country'),json_extract(payload,'$.indicator'))")
         self.db.execute("CREATE INDEX IF NOT EXISTS bulk_version_lookup ON bulk_versions(json_extract(payload,'$.country'),json_extract(payload,'$.indicator'))")
+        columns={r[1] for r in self.db.execute('PRAGMA table_info(bulk_versions)')}
+        if 'series_key' not in columns:
+            self.db.execute('ALTER TABLE bulk_versions ADD COLUMN series_key TEXT')
+            for key,version,payload in self.db.execute('SELECT key,version,payload FROM bulk_versions').fetchall():
+                self.db.execute('UPDATE bulk_versions SET series_key=? WHERE key=? AND version=?',
+                                (observation_key(json.loads(payload),series=True),key,version))
+        self.db.execute('CREATE INDEX IF NOT EXISTS bulk_series ON bulk_versions(series_key)')
         self.db.commit()
 
     def close(self):self.db.close()
@@ -208,7 +217,7 @@ class BulkStore:
             raise ValueError('Import requires registered artifact')
         progress=self.db.execute('SELECT offset FROM bulk_progress WHERE job=? AND checksum=?',(job,checksum)).fetchone()
         offset=progress[0] if progress else 0
-        counts={'accepted':0,'quarantined':0,'duplicates':0,'resumed_rows':offset}
+        counts={'accepted':0,'quarantined':0,'duplicates':0,'missing':0,'resumed_rows':offset}
         batch=[]
         for index,row in enumerate(rows,1):
             if index<=offset:continue
@@ -227,18 +236,21 @@ class BulkStore:
                 required=set(key_fields)|{'value','source_url','flags'}
                 if not required<=row.keys():raise ValueError('Missing observation dimensions')
                 from app.catalog import COUNTRY_MAP
-                if row['country'] not in COUNTRY_MAP or row['geography']!='national':
+                if row['country'] not in COUNTRY_MAP or not valid_geography(row):
                     raise ValueError('Unknown country or unverified region')
                 valid_url(row['source_url'])
                 if isinstance(row['value'],bool):raise ValueError('Boolean observation')
-                try:value=Decimal(str(row['value']))
+                missing=row['value'] is None
+                if missing and row['provider'] not in ('bls','job_bank'):raise ValueError('Unregistered missing observation')
+                try:value=Decimal('0') if missing else Decimal(str(row['value']))
                 except InvalidOperation:raise ValueError('Invalid numeric observation') from None
                 if not value.is_finite() or abs(value)>Decimal('1e12'):
                     raise ValueError('Non-finite or out-of-range value')
-                if not re.fullmatch(r'(19|20)\d{2}(-(?:0[1-9]|1[0-2]))?',row['period']):
+                if not re.fullmatch(r'(19|20)\d{2}(-(?:0[1-9]|1[0-2]))?',row['period']) and not (row['provider']=='job_bank' and missing and row['period']=='unknown') and not (row['provider']=='job_bank' and re.fullmatch(r'(19|20)\d{2}-(19|20)\d{2}',row['period']) and row['period'][:4]<=row['period'][-4:]):
                     raise ValueError('Invalid reference period')
                 dimensions={k:row[k] for k in key_fields}
-                key=hashlib.sha256(json.dumps(dimensions,sort_keys=True).encode()).hexdigest()
+                key=observation_key(row)
+                series_key=observation_key(row,series=True)
                 row={**row,'artifact_sha256':checksum}
                 payload=json.dumps(row,sort_keys=True,separators=(',',':'))
                 # Checksum records the acquisition version even when its value is unchanged.
@@ -252,8 +264,7 @@ class BulkStore:
                     # Compare adjacent published candidates, including quarantined ones.
                     # Do not freeze a growing series against one old accepted anchor.
                     # Existing-key revisions always compare the accepted value above.
-                    candidates=self.db.execute('SELECT payload FROM bulk_versions WHERE json_extract(payload,\'$.country\')=? AND json_extract(payload,\'$.indicator\')=? ORDER BY imported_at DESC',
-                                               (row['country'],row['indicator']))
+                    candidates=self.db.execute('SELECT payload FROM bulk_versions WHERE series_key=? AND status!=? ORDER BY imported_at DESC', (series_key,'missing'))
                     prior=None
                     later=None
                     for item in candidates:
@@ -265,27 +276,30 @@ class BulkStore:
                     nearest=prior or later
                     previous=(json.dumps(nearest),) if nearest else None
                 suspect=False
-                if previous:
+                if previous and not missing:
                     old=Decimal(str(json.loads(previous[0])['value']))
                     if not is_revision and ('percent' in row['unit'] or row['unit'] in ('index_0_100','governance_score_0_100')):
                         suspect=abs(value-old)>Decimal('10')
                     else:
                         suspect=(value!=old if old==0 else abs(value-old)/abs(old)>self.variation_limit)
                 flag_review=row['provider']=='eurostat' and any(f in row['flags'] for f in 'bdu')
-                status='quarantined' if suspect or flag_review else 'accepted'
+                status='missing' if missing else 'quarantined' if suspect or flag_review else 'accepted'
                 reason=('provider_quality_or_methodology_flag' if flag_review else
                         'unexpected_revision_or_temporal_variation' if suspect else None)
-                self.db.execute('INSERT INTO bulk_versions VALUES (?,?,?,?,?,?,?)',
-                                (key,version,str(value),payload,status,reason,utcnow()))
+                self.db.execute('INSERT INTO bulk_versions(key,version,value,payload,status,reason,imported_at,series_key) VALUES (?,?,?,?,?,?,?,?)',
+                                (key,version,'' if missing else str(value),payload,status,reason,utcnow(),series_key))
                 if status=='accepted':
                     self.db.execute('INSERT INTO bulk_current VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET version=excluded.version,payload=excluded.payload',
                                     (key,version,payload))
+                elif status=='missing':
+                    self.db.execute('DELETE FROM bulk_current WHERE key=?',(key,))
                 counts[status]+=1
             self.db.execute('INSERT INTO bulk_progress VALUES (?,?,?) ON CONFLICT(job,checksum) DO UPDATE SET offset=excluded.offset',
                             (job,checksum,batch[-1][0]))
 
     def report(self):
         return {'accepted_observations':self.count(),
+                'missing_versions':self.db.execute("SELECT COUNT(*) FROM bulk_versions WHERE status='missing'").fetchone()[0],
                 'by_source':dict(self.db.execute("SELECT json_extract(payload,'$.provider'),COUNT(*) FROM bulk_current GROUP BY 1")),
                 'quarantined_versions':self.db.execute("SELECT COUNT(*) FROM bulk_versions WHERE status='quarantined'").fetchone()[0],
                 'artifacts':self.db.execute('SELECT COUNT(*) FROM bulk_artifacts').fetchone()[0],
@@ -293,3 +307,23 @@ class BulkStore:
                 'runs':[{**dict(zip(('id','provider','dataset','started_at','finished_at','status','error_type','before_count','after_count'),r)),
                          'result':json.loads(detail[0]) if (detail:=self.db.execute('SELECT result FROM bulk_run_results WHERE run_id=?',(r[0],)).fetchone()) else None}
                         for r in self.db.execute('SELECT * FROM bulk_runs')]}
+
+
+KEY_FIELDS=('provider','dataset','country','geography','indicator','classification','measure','unit','currency','period')
+
+def observation_key(row,series=False):
+    dimensions={k:row[k] for k in KEY_FIELDS if not (series and k=='period')}
+    if row.get('dimensions'):
+        if not isinstance(row['dimensions'],dict) or any(not isinstance(k,str) or not isinstance(v,str) for k,v in row['dimensions'].items()):
+            raise ValueError('Dimensions must be explicit string identifiers')
+        dimensions['dimensions']=row['dimensions']
+    return hashlib.sha256(json.dumps(dimensions,sort_keys=True).encode()).hexdigest()
+
+def valid_geography(row):
+    geo=row['geography']
+    if geo=='national':return True
+    if row['provider']=='bls' and row['country']=='US':
+        return bool(re.fullmatch(r'BLS:[2346]:[0-9]{2,7}',geo))
+    if row['provider']=='job_bank' and row['country']=='CA':
+        return bool(re.fullmatch(r'CA:(?:province:[A-Z]{2}|economic_region:ER[0-9]{4})',geo))
+    return False

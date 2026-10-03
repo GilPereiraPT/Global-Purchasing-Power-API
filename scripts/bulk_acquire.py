@@ -15,7 +15,7 @@ from app.bulk_core import BulkStore, Downloader
 from app.bulk_schedule import load, due
 from app.country_insights import INDICATORS
 from app.eurostat_economy import SERIES
-from app import bulk_world_bank, bulk_eurostat
+from app import bulk_world_bank, bulk_eurostat, bulk_bls
 
 
 def safe_workspace(directory):
@@ -59,9 +59,10 @@ def exclusive_worker(root):
 
 
 def execute(workspace,provider,names,downloader=None,policy_path=None,only_due=False,cache_ttl=3600):
-    module=bulk_world_bank if provider=='world_bank' else bulk_eurostat
-    choices=INDICATORS if provider=='world_bank' else SERIES
-    if provider not in ('world_bank','eurostat') or not names or len(names)>4 or len(set(names))!=len(names) or any(n not in choices for n in names):
+    registry={'world_bank':(bulk_world_bank,INDICATORS),'eurostat':(bulk_eurostat,SERIES),'bls':(bulk_bls,bulk_bls.DATASETS)}
+    if provider not in registry:raise ValueError('Unknown bulk provider')
+    module,choices=registry[provider]
+    if not names or len(names)>4 or len(set(names))!=len(names) or any(n not in choices for n in names):
         raise ValueError('Choose one to four distinct registered datasets')
     root=safe_workspace(workspace)
     with exclusive_worker(root):
@@ -104,7 +105,7 @@ def _execute_locked(root,module,provider,names,downloader,policy_path,only_due,c
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--workspace',type=Path,required=True)
-    parser.add_argument('--provider',choices=('world_bank','eurostat'),required=True)
+    parser.add_argument('--provider',choices=('world_bank','eurostat','bls'),required=True)
     parser.add_argument('--dataset',action='append',required=True)
     parser.add_argument('--policy',type=Path)
     parser.add_argument('--due',action='store_true')
