@@ -619,6 +619,12 @@ def handle(environ, start_response, origin, action, reply):
                     result = control.test_recovery(BACKUP_DIR)
                 else:
                     result = _bulk_publication(action, payload)
+            if result.get("status") == "recovery_blocked":
+                messages = {"backup_unavailable": "Não existe uma cópia completa disponível.",
+                            "insufficient_space": "Espaço insuficiente para testar recuperação.",
+                            "timeout": "O ensaio excedeu o limite de 30 segundos.",
+                            "verification_failed": "Falhou a verificação de checksums, integridade ou completude; nenhuma base ativa foi substituída."}
+                result["message"] = messages.get(result.get("reason"), "Recuperação não aprovada.") + " Backup: " + result.get("backup_id", "indisponível")
             code = 409 if result.get("status") in ("recovery_blocked", "prerequisites_missing") else 200
             return _response(reply, start_response, origin, code, result)
         except (ValueError, TypeError, KeyError, UnicodeError, ArithmeticError):

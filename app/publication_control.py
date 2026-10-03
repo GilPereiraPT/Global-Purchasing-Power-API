@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import sqlite3
@@ -86,7 +87,7 @@ def database_state():
 
 def backup_identity(root):
     root = _private(root)
-    candidates=sorted((p for p in root.iterdir() if p.name.startswith('backup-') and p.is_dir()),reverse=True)
+    candidates=sorted((p for p in root.iterdir() if re.fullmatch(r'backup-[0-9TZ]+',p.name) and p.is_dir()),reverse=True)
     for folder in candidates:
         if not (folder/'manifest.json').exists():continue
         private_path(folder)
@@ -140,6 +141,8 @@ def conditions(root, app_root):
 
 
 def recovery_worker(backup, output):
+    import resource
+    resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
     from scripts.restore_earnwage_data import restore
     from scripts.backup_earnwage_data import digest
     m=_json(Path(backup)/'manifest.json')
@@ -176,7 +179,7 @@ def test_recovery(root):
         if process.returncode!=0:raise ValueError('Recovery verification failed')
         if backup_identity(root)!=evidence:raise ValueError('Backup changed')
         _write(root,'recovery-proof.json',{'backup':evidence,'tested_at':time.time()})
-        return {'status':'recovery_verified','backup_id':evidence['backup_id'],'recovery_verified':True,'databases':['insights','wages_cache'],'valid_for_seconds':RECOVERY_TTL}
+        return {'status':'recovery_verified','backup_id':evidence['backup_id'],'recovery_verified':True,'databases':{label:{'bytes':evidence['files'][label+'.sqlite3'][0], 'integrity':'ok', 'checksum_verified':True, 'complete':True} for label in ('insights','wages_cache')},'valid_for_seconds':RECOVERY_TTL}
     except subprocess.TimeoutExpired:
         return {'status':'recovery_blocked','reason':'timeout','backup_id':evidence['backup_id'],'recovery_verified':False}
     except (OSError,ValueError):
