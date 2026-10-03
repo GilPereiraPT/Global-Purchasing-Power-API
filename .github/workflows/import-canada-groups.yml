@@ -8,13 +8,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   import:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -45,16 +47,37 @@ jobs:
         run: |
           python -m app.ca_statcan_groups "$RUNNER_TEMP/statcan.zip"
           python -c "from app.ca_statcan_groups import load_snapshot; rows=load_snapshot(); groups={r['noc2021_broad_category'] for r in rows}; assert groups == set('0123456789'), groups"
-      - name: Save verified observations
-        run: |
-          git add data/ca_statcan_groups.json
-          if git diff --cached --quiet; then
-            echo "No new data"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "data: import official Canada broad occupational wages"
-          git fetch origin main
-          git rebase origin/main
-          git push origin HEAD:main
+      - name: Retain validated dataset for explicit review
+        if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-dataset-import-canada-groups
+          path: data/ca_statcan_groups.json
+          if-no-files-found: error
+          retention-days: 7
+  propose-review:
+    needs: [import]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-dataset-import-canada-groups
+          path: data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Verify complete suite against proposed datasets
+        run: python -m pytest -q
+      - name: Create data-only branch and review pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/dataset_review_pr.py data/ca_statcan_groups.json
