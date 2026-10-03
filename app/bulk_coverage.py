@@ -231,11 +231,24 @@ def html_report(report):
                    str(item['stored_observations']),str(item['snapshot_records']),
                    ', '.join(item['original_periods'] or item['snapshot_periods']) or '—',
                    ', '.join(map(str,item['missing_target_years'])),
-                   ', '.join(item['missing_configured_regions_in_db']) or 'universo não verificado / sem lacunas configuradas']
+                   item.get('regional_identifier_note') or ', '.join(item['missing_configured_regions_in_db']) or 'universo não verificado / sem lacunas configuradas']
             rows.append('<tr>'+''.join('<td>'+escape(cell)+'</td>' for cell in cells)+'</tr>')
     summary=report['summary']
     acquisition=report.get('acquisition_summary',{})
     economic='<h2>Indicadores económicos e histórico</h2>'
+    bulk=report.get('bulk_salary_coverage')
+    if bulk:
+        economic+='<h2>Salários bulk — staging offline</h2><p>'+escape(str(bulk['covered_pairs']))+' pares cobertos; '+escape(str(len(bulk['newly_covered_pairs'])))+' pares novos face aos snapshots oficiais comparáveis.</p>'
+        economic+='<p>Identidades da baseline fora do universo aceite: '+str(bulk['baseline_not_in_accepted'])+'. Ver quarentena e âmbito da selecção; não representa eliminações em produção.</p>'
+        economic+='<p>Produção: '+escape(bulk['production_inventory']['status'])+'. Diferenças face à baseline: '+escape(str(bulk['baseline_observation_differences']))+'</p>'
+        for provider,source in bulk['sources'].items():
+            economic+='<details><summary>'+escape(provider)+' — '+str(source['accepted'])+' aceites; '+str(source['quarantined_versions'])+' versões em quarentena; '+str(source['missing_versions'])+' versões em falta</summary>'
+            economic+='<p>Regiões: '+str(source['regional'])+' observações; novas face à baseline: '+str(source['new_regional_observations'])+'. Histórico novo: '+str(source['new_historical_observations'])+'.</p>'
+            economic+='<p>'+escape(str(source['by_period']))+' · '+escape(str(source['by_geography_type']))+'</p>'
+            economic+='<p>Modo de aquisição: '+escape(', '.join(source['acquisition_modes']))+'</p>'
+            economic+='<p>Datas de aquisição: '+escape(', '.join(source['acquisition_dates']))+'</p><ul>'
+            economic+=''.join('<li>'+escape(url)+'</li>' for url in source['sources'])+'</ul></details>'
+        economic+='<p>Execuções incompletas excluídas: '+str(bulk['excluded_incomplete_run_observations'])+'. Amostras de testes não contam como aquisição live.</p>'
     economic+='<p>'+str(summary['stored_economic_observations'])+' observações locais · '+str(acquisition.get('quarantined_versions') or 0)+' versões em quarentena · '+str(len(report['failed_updates']))+' atualizações falhadas.</p>'
     if acquisition.get('by_source'):
         economic+='<p>'+escape(' · '.join(source+': '+str(count) for source,count in acquisition['by_source'].items()))+'</p>'

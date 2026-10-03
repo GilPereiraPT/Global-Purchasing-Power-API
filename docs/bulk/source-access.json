@@ -171,5 +171,21 @@
       "http_status": null,
       "restriction": "environment_proxy_policy"
     }
+  ],
+  "phase4b_full_acquisition": [
+    {
+      "provider": "bls",
+      "live_downloads": 5,
+      "accepted_observations": 868201,
+      "acquisition_mode": "live_bulk",
+      "evidence": "phase4b-evidence.json"
+    },
+    {
+      "provider": "job_bank",
+      "live_downloads": 1,
+      "accepted_observations": 14018,
+      "acquisition_mode": "live_bulk",
+      "evidence": "phase4b-evidence.json"
+    }
   ]
 }

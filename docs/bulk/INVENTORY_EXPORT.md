@@ -14,7 +14,10 @@ Os identificadores têm de usar a mesma normalização do staging; a exportaçã
 incluir as dimensões originais relevantes (indústria, propriedade, população, etc.).
 `classification` e `currency` podem ser `null` para indicadores económicos. Valores
 publicados em falta usam `null`. Alias de profissões não são observações adicionais.
-Datas, nomes geográficos e URLs de aquisição não entram na identidade.
+Os campos por observação são exclusivamente os identificadores do exemplo,
+`value` e `dimensions` opcional. Nomes geográficos, URLs de aquisição e outros
+metadados não são admitidos neste protocolo mínimo; dimensões relevantes adicionais
+pertencem a `dimensions`, evitando que sejam descartadas silenciosamente.
 
 ```bash
 .venv/bin/python -m scripts.bulk_compare_inventory \
@@ -57,6 +60,11 @@ Todas as 257 versões estão classificadas em `quarantine-review.csv`: 250 varia
 numéricas e sete flags Eurostat `b` (quebra de série). O CSV conserva valor, período,
 fonte, hash, motivo e comparação temporal. Os valores adjacentes são contexto de
 revisão, não validação independente. Não houve aprovação automática.
+
+Triagem adicional: 124 casos de mortalidade/conflitos, 36 de unidades monetárias
+ou câmbio, 27 de direcção/escala da inflação, 63 de definições/inquéritos/séries e
+sete quebras de metodologia. Estas categorias indicam o trabalho de revisão, não
+identificam automaticamente a causa real da variação.
 
 Todas requerem avaliação manual antes da promoção: confirmar revisão/metodologia,
 volatilidade real ou erro de unidade/dado. Em particular, a sequência portuguesa

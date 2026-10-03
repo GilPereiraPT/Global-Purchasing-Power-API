@@ -1,0 +1,399 @@
+{
+  "phase": "4B",
+  "generated_at": "2026-10-03T04:00:57.655669+00:00",
+  "scope": "offline local staging, not production",
+  "baseline_reference": "committed official snapshots at cfd25e8acfa70260983b04b43b66a8426fabe08b",
+  "coverage": {
+    "scope": "explicit offline staging; no production database access",
+    "excluded_incomplete_run_observations": 0,
+    "newly_covered_pairs": [],
+    "covered_pairs": 67,
+    "baseline_pairs": 67,
+    "baseline_files": [
+      "us_oews_curated.json",
+      "north_america_wages.json",
+      "ca_province_wages.json"
+    ],
+    "baseline_observation_differences": {
+      "new": 862837,
+      "revisions": 0,
+      "duplicates": 19382
+    },
+    "production_inventory": {
+      "status": "not_provided",
+      "new": null,
+      "revisions": null,
+      "duplicates": null
+    },
+    "baseline_note": "Differences only against reconstructible committed official snapshots; not actual production coverage.",
+    "acquisition_mode": "live_bulk only for complete runs; failed/running runs are explicitly listed; fixtures are not acquisition evidence"
+  },
+  "sources": {
+    "bls": {
+      "accepted": 868201,
+      "quarantined_versions": 13565,
+      "missing_versions": 28830,
+      "national": 1632,
+      "regional": 866569,
+      "new_regional_observations": 850011,
+      "new_historical_observations": 693195,
+      "baseline_differences": {
+        "new": 851313,
+        "duplicates": 16888
+      },
+      "by_period": {
+        "2021": 174690,
+        "2022": 171853,
+        "2023": 172863,
+        "2024": 173789,
+        "2025": 175006
+      },
+      "by_geography_type": {
+        "national": 1632,
+        "2": 81963,
+        "3": 3931,
+        "4": 582738,
+        "6": 197937
+      },
+      "sources": [
+        "https://www.bls.gov/oes/special-requests/oesm21all.zip",
+        "https://www.bls.gov/oes/special-requests/oesm22all.zip",
+        "https://www.bls.gov/oes/special-requests/oesm23all.zip",
+        "https://www.bls.gov/oes/special-requests/oesm24all.zip",
+        "https://www.bls.gov/oes/special-requests/oesm25all.zip"
+      ],
+      "acquisition_dates": [
+        "2026-10-03T03:17:02.734649+00:00",
+        "2026-10-03T03:26:41.492053+00:00",
+        "2026-10-03T03:26:55.117650+00:00",
+        "2026-10-03T03:27:08.082769+00:00",
+        "2026-10-03T03:27:21.067777+00:00"
+      ],
+      "acquisition_modes": [
+        "live_bulk"
+      ],
+      "releases": [
+        {
+          "dataset": "2021",
+          "initial_import": {
+            "accepted": 174690,
+            "acquired_at": "2026-10-03T03:26:41.492053+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "4dc5c9db9e111a06e612e848e107488a7beec0743853f02b1a3a069bb48207ce",
+            "duplicates": 0,
+            "excluded_rows": 391284,
+            "missing": 6210,
+            "missing_wages": 6210,
+            "quarantined": 0,
+            "resumed_rows": 0,
+            "selected_rows": 15075,
+            "source_rows": 406359,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm21all.zip"
+          },
+          "latest_validation": {
+            "accepted": 0,
+            "acquired_at": "2026-10-03T03:26:41.492053+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "4dc5c9db9e111a06e612e848e107488a7beec0743853f02b1a3a069bb48207ce",
+            "duplicates": 0,
+            "excluded_rows": 391284,
+            "missing": 0,
+            "missing_wages": 6210,
+            "quarantined": 0,
+            "resumed_rows": 180900,
+            "selected_rows": 15075,
+            "source_rows": 406359,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm21all.zip"
+          }
+        },
+        {
+          "dataset": "2022",
+          "initial_import": {
+            "accepted": 171853,
+            "acquired_at": "2026-10-03T03:26:55.117650+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "a3cf8a5c61d3c3910ad89ea7050ae033f592e370cb5b265d868e42f8e5888969",
+            "duplicates": 0,
+            "excluded_rows": 394721,
+            "missing": 5940,
+            "missing_wages": 5940,
+            "quarantined": 3863,
+            "resumed_rows": 0,
+            "selected_rows": 15138,
+            "source_rows": 409859,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm22all.zip"
+          },
+          "latest_validation": {
+            "accepted": 0,
+            "acquired_at": "2026-10-03T03:26:55.117650+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "a3cf8a5c61d3c3910ad89ea7050ae033f592e370cb5b265d868e42f8e5888969",
+            "duplicates": 0,
+            "excluded_rows": 394721,
+            "missing": 0,
+            "missing_wages": 5940,
+            "quarantined": 0,
+            "resumed_rows": 181656,
+            "selected_rows": 15138,
+            "source_duplicate_rows": 1,
+            "source_rows": 409859,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm22all.zip"
+          }
+        },
+        {
+          "dataset": "2023",
+          "initial_import": {
+            "accepted": 172863,
+            "acquired_at": "2026-10-03T03:27:08.082769+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "9e0d5a320c7189b449708d4223c89bf7e8be1a6dd28613e1f1972d3b5dd60f2b",
+            "duplicates": 0,
+            "excluded_rows": 398123,
+            "missing": 6020,
+            "missing_wages": 6020,
+            "quarantined": 3565,
+            "resumed_rows": 0,
+            "selected_rows": 15204,
+            "source_rows": 413327,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm23all.zip"
+          },
+          "latest_validation": {
+            "accepted": 0,
+            "acquired_at": "2026-10-03T03:27:08.082769+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "9e0d5a320c7189b449708d4223c89bf7e8be1a6dd28613e1f1972d3b5dd60f2b",
+            "duplicates": 0,
+            "excluded_rows": 398123,
+            "missing": 0,
+            "missing_wages": 6020,
+            "quarantined": 0,
+            "resumed_rows": 182448,
+            "selected_rows": 15204,
+            "source_rows": 413327,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm23all.zip"
+          }
+        },
+        {
+          "dataset": "2024",
+          "initial_import": {
+            "accepted": 173789,
+            "acquired_at": "2026-10-03T03:27:21.067777+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "7fe6409f04b73003404de933ecbcc2e4ce6e8440919634beedb237353cfc1d04",
+            "duplicates": 0,
+            "excluded_rows": 399224,
+            "missing": 5986,
+            "missing_wages": 5986,
+            "quarantined": 2781,
+            "resumed_rows": 0,
+            "selected_rows": 15213,
+            "source_rows": 414437,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm24all.zip"
+          },
+          "latest_validation": {
+            "accepted": 0,
+            "acquired_at": "2026-10-03T03:27:21.067777+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "7fe6409f04b73003404de933ecbcc2e4ce6e8440919634beedb237353cfc1d04",
+            "duplicates": 0,
+            "excluded_rows": 399224,
+            "missing": 0,
+            "missing_wages": 5986,
+            "quarantined": 0,
+            "resumed_rows": 182556,
+            "selected_rows": 15213,
+            "source_rows": 414437,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm24all.zip"
+          }
+        },
+        {
+          "dataset": "2025",
+          "initial_import": {
+            "accepted": 175006,
+            "acquired_at": "2026-10-03T03:17:02.734649+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "86ffcbbeb27a96b7aa84d01801de71ee94ee9027452152caabebfdec9d764fde",
+            "duplicates": 0,
+            "excluded_rows": 398274,
+            "missing": 4674,
+            "missing_wages": 4674,
+            "quarantined": 3356,
+            "resumed_rows": 0,
+            "selected_rows": 15253,
+            "source_rows": 413527,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm25all.zip"
+          },
+          "latest_validation": {
+            "accepted": 0,
+            "acquired_at": "2026-10-03T03:17:02.734649+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "86ffcbbeb27a96b7aa84d01801de71ee94ee9027452152caabebfdec9d764fde",
+            "duplicates": 0,
+            "excluded_rows": 398274,
+            "missing": 0,
+            "missing_wages": 4674,
+            "quarantined": 0,
+            "resumed_rows": 183036,
+            "selected_rows": 15253,
+            "source_duplicate_rows": 0,
+            "source_rows": 413527,
+            "source_url": "https://www.bls.gov/oes/special-requests/oesm25all.zip"
+          }
+        }
+      ],
+      "artifacts": [
+        {
+          "url": "https://www.bls.gov/oes/special-requests/oesm21all.zip",
+          "sha256": "4dc5c9db9e111a06e612e848e107488a7beec0743853f02b1a3a069bb48207ce",
+          "bytes": 78047282,
+          "fetched_at": "2026-10-03T03:26:41.492053+00:00",
+          "destination_host": "www.bls.gov"
+        },
+        {
+          "url": "https://www.bls.gov/oes/special-requests/oesm22all.zip",
+          "sha256": "a3cf8a5c61d3c3910ad89ea7050ae033f592e370cb5b265d868e42f8e5888969",
+          "bytes": 78529122,
+          "fetched_at": "2026-10-03T03:26:55.117650+00:00",
+          "destination_host": "www.bls.gov"
+        },
+        {
+          "url": "https://www.bls.gov/oes/special-requests/oesm23all.zip",
+          "sha256": "9e0d5a320c7189b449708d4223c89bf7e8be1a6dd28613e1f1972d3b5dd60f2b",
+          "bytes": 80129309,
+          "fetched_at": "2026-10-03T03:27:08.082769+00:00",
+          "destination_host": "www.bls.gov"
+        },
+        {
+          "url": "https://www.bls.gov/oes/special-requests/oesm24all.zip",
+          "sha256": "7fe6409f04b73003404de933ecbcc2e4ce6e8440919634beedb237353cfc1d04",
+          "bytes": 79846301,
+          "fetched_at": "2026-10-03T03:27:21.067777+00:00",
+          "destination_host": "www.bls.gov"
+        },
+        {
+          "url": "https://www.bls.gov/oes/special-requests/oesm25all.zip",
+          "sha256": "86ffcbbeb27a96b7aa84d01801de71ee94ee9027452152caabebfdec9d764fde",
+          "bytes": 78754064,
+          "fetched_at": "2026-10-03T03:17:02.734649+00:00",
+          "destination_host": "www.bls.gov"
+        }
+      ]
+    },
+    "job_bank": {
+      "accepted": 14018,
+      "quarantined_versions": 0,
+      "missing_versions": 5074,
+      "national": 219,
+      "regional": 13799,
+      "new_regional_observations": 11378,
+      "new_historical_observations": 1716,
+      "baseline_differences": {
+        "new": 11524,
+        "duplicates": 2494
+      },
+      "by_period": {
+        "2023-2024": 12129,
+        "2024": 1713,
+        "2021": 176
+      },
+      "by_geography_type": {
+        "national": 219,
+        "province": 2421,
+        "economic_region": 11378
+      },
+      "sources": [
+        "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
+      ],
+      "acquisition_dates": [
+        "2026-10-03T03:28:11.411275+00:00"
+      ],
+      "acquisition_modes": [
+        "live_bulk"
+      ],
+      "releases": [
+        {
+          "dataset": "2025",
+          "initial_import": {
+            "accepted": 14018,
+            "acquired_at": "2026-10-03T03:28:11.411275+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "7bd29fb41b2a84eb61a4dbf49bfb63651a8a694c62ce42ac69cb785679d66328",
+            "catalogue_modified_at": "2025-11-19T15:21:45.787073",
+            "destination_host": "opencanada.blob.core.windows.net",
+            "duplicates": 0,
+            "excluded_rows": 41194,
+            "licence_url": "https://open.canada.ca/en/open-government-licence-canada",
+            "missing": 5074,
+            "missing_wages": 5074,
+            "quarantined": 0,
+            "resumed_rows": 0,
+            "selected_rows": 3182,
+            "source_rows": 44376,
+            "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
+          },
+          "latest_validation": {
+            "accepted": 0,
+            "acquired_at": "2026-10-03T03:28:11.411275+00:00",
+            "acquisition_mode": "live_bulk",
+            "artifact_sha256": "7bd29fb41b2a84eb61a4dbf49bfb63651a8a694c62ce42ac69cb785679d66328",
+            "catalogue_modified_at": "2025-11-19T15:21:45.787073",
+            "destination_host": "opencanada.blob.core.windows.net",
+            "duplicates": 0,
+            "excluded_rows": 41194,
+            "licence_url": "https://open.canada.ca/en/open-government-licence-canada",
+            "missing": 0,
+            "missing_wages": 5074,
+            "quarantined": 0,
+            "resumed_rows": 19092,
+            "selected_rows": 3182,
+            "source_rows": 44376,
+            "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv"
+          }
+        }
+      ],
+      "artifacts": [
+        {
+          "url": "https://open.canada.ca/data/api/action/package_show?id=adad580f-76b0-4502-bd05-20c125de9116",
+          "sha256": "3941929b6eb1c52e1f7c94b1a585244d06dc4fc74b7f51cdca9e6cbe3501dc67",
+          "bytes": 25682,
+          "fetched_at": "2026-10-03T03:28:07.943310+00:00",
+          "destination_host": "open.canada.ca"
+        },
+        {
+          "url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116/resource/9da94d63-b178-4a64-aeb3-b6a3bd721ad2/download/2a71-das-wage2025opendata-esdc-all-19nov2025-vf.csv",
+          "sha256": "7bd29fb41b2a84eb61a4dbf49bfb63651a8a694c62ce42ac69cb785679d66328",
+          "bytes": 17981889,
+          "fetched_at": "2026-10-03T03:28:11.411275+00:00",
+          "destination_host": "opencanada.blob.core.windows.net"
+        }
+      ]
+    }
+  },
+  "quarantine_phase4": {
+    "reviewed": 257,
+    "numerical_variation": 250,
+    "methodology_break": 7,
+    "assessment_categories": {
+      "crime_or_conflict_volatility_review": 124,
+      "monetary_unit_or_exchange_rate_review": 36,
+      "inflation_direction_or_scale_review": 27,
+      "survey_definition_or_series_review": 63,
+      "reported_methodology_break": 7
+    },
+    "automatically_approved": 0
+  },
+  "tests": {
+    "passed": 424,
+    "failed": 0,
+    "existing_tests_before_phase4b": 369,
+    "added_phase4b": 55,
+    "warning": "Existing Starlette TestClient/httpx deprecation"
+  },
+  "limitations": [
+    "No production inventory export supplied; actual production differences unavailable.",
+    "BLS 2021-2025 supported; earlier SOC/hybrid/XLS layouts not validated.",
+    "Job Bank 2025 only; multi-year reference periods retained unsplit.",
+    "Unmapped 11 US and 2 CA occupation IDs not inferred.",
+    "No API/production publication of staging salaries in this delivery."
+  ]
+}

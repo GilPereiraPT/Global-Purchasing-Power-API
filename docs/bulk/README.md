@@ -1,11 +1,12 @@
-# Aquisição em massa — Fase 4
+# Aquisição em massa — Fases 4 e 4B
 
-Esta entrega implementa a infraestrutura offline e dois conectores prioritários:
-Banco Mundial WDI e Eurostat TSV gzip. Parte de `main` (`1a57090`), numa branch
+Esta entrega implementa a infraestrutura offline, Banco Mundial WDI, Eurostat TSV
+gzip e a expansão salarial BLS/Job Bank. Ver o [relatório da Fase 4B](PHASE4B.md)
+para os resultados mais recentes. Os números seguintes documentam a Fase 4 original. Parte de `main` (`1a57090`), numa branch
 independente da PR fiscal #13. Não altera cálculos salariais, Android, token
 administrativo ou sistema de deployment.
 
-## Resultado observado em 3 de outubro de 2026
+## Resultado original da Fase 4, em 3 de outubro de 2026
 
 | Fonte | Observações aceites | Em quarentena |
 | --- | ---: | ---: |
@@ -25,7 +26,7 @@ que todas sejam inéditas relativamente à base de produção.** Não foi fornec
 exportação do inventário de produção. A baseline usa o inventário/catálogo e os
 snapshots do repositório; não inventa o estado de produção.
 
-**Não foram acrescentados salários de profissões individuais.** As 192 observações
+**Na Fase 4 original não tinham sido acrescentados salários de profissões individuais.** As 192 observações
 aceites de `earn_nt_net` são referências estatísticas nacionais, não salários
 profissionais nem resultados do motor fiscal português. Os 7 723 registos dos
 snapshots existentes incluem grupos, derivados e várias medidas; 202 pares têm
@@ -41,17 +42,13 @@ bases de produção.
 ## Inventário e relatórios
 
 - [Plano de fontes](PLAN.md): prioridades e tarefas seguintes.
-- [Baseline interativa](baseline/dashboard.html) e [JSON](baseline/inventory.json):
-  560 pares país/profissão, períodos originais, lacunas 2015–2025, regiões
-  configuradas, indicadores, snapshots, medidas e classificações.
-- [Depois da importação local](after/dashboard.html) e [JSON](after/inventory.json):
-  inclui as 15 136 observações económicas e distingue lacunas locais, ausências
-  publicadas e quarentena.
-- [Evidência de aquisição](acquisition-evidence.json): checksums, contagens,
-  cobertura por série/fonte e limites da validação.
-- [Relatório de execução](acquisition-report.md) e [JSON](acquisition-report.json):
-  estados, antes/depois de cada import, erros, retomadas, períodos ausentes e
-  observações a rever.
+- [Geração de inventários e autorização de exports](INVENTORY_EXPORT.md): os
+  dashboards/JSON completos são reproduzíveis e ficam em `docs/bulk/generated/`,
+  fora do Git. A matriz mantém 560 pares, períodos, regiões e classificações.
+- [Evidência original da Fase 4](acquisition-evidence.json): hashes e contagens.
+- [Revisão das 257 versões em quarentena](quarantine-review.csv): todos os casos,
+  motivos e categorias de avaliação manual, sem aprovação automática.
+- [Resultados da expansão salarial](PHASE4B.md), [BLS](BLS.md) e [Job Bank](JOB_BANK.md).
 - [Acesso às fontes](source-access.json): provas de conectividade; uma página
   HTTP 200 não prova que todo o dataset seja acessível ou reutilizável.
 
@@ -153,10 +150,10 @@ como datasets completos.
 - INSEE, INE Espanha e FSO: os primeiros testes foram bloqueados pelo proxy do
   ambiente; os domínios necessários foram acrescentados ao rascunho, sem afirmar
   que a sua aplicação já tenha sido verificada.
-- Job Bank: redireciona o CSV para armazenamento público; o host de destino precisa
+- Job Bank (situação original da Fase 4, entretanto resolvida na 4B): redireciona o CSV para armazenamento público; o host de destino precisa
   de autorização no ambiente antes de uma aquisição completa. Os relatórios
   conservam o URL público do catálogo, não URLs temporários assinados.
-- BLS: nesta sessão o ZIP oficial respondeu 200 e anunciou 78 754 064 bytes; apenas
+- BLS (situação original da Fase 4, entretanto ampliada na 4B): o ZIP oficial respondeu 200 e anunciou 78 754 064 bytes; apenas
   uma pequena amostra foi lida. Não foi feita nova importação completa nem afirmado
   que as antigas restrições 403 se mantêm em todas as redes.
 - RAIS/ECB: alguns URLs de descoberta sem seleção completa responderam 404;
@@ -167,7 +164,7 @@ implementar os próximos conectores. Não houve contorno de autenticação/restr
 A allowlist e instruções do worker foram guardadas no rascunho do ambiente; não
 alteram segredos, rede ou configuração de produção.
 
-## Validação automatizada
+## Validação automatizada da Fase 4 original
 
 A suite de `main` contém 265 testes; os testes da PR fiscal #13 não foram copiados
 para esta branch. Esta fase acrescenta testes de limites/retry/cache, atomicidade,
@@ -181,10 +178,10 @@ bases configuradas e isolamento do workflow. **Suite completa: 369 testes aprova
 
 1. Confirmar a exportação do inventário produtivo e calcular novidades efetivas
    relativamente a produção, sem lhe escrever.
-2. Validar metadados/licença e host de download Job Bank; ampliar o importador
-   existente para regiões económicas com IDs oficiais, mantendo separado de províncias.
-3. Usar o ZIP BLS acessível e o parser existente para histórico incremental,
-   preservando versões SOC e salários suprimidos/censurados.
+2. Validar releases históricos Job Bank anteriores a 2025, com versões NOC e
+   esquemas próprios; a aquisição nacional/provincial/regional 2025 está concluída.
+3. Validar os layouts e crosswalks SOC dos releases BLS anteriores a 2021;
+   o histórico 2021–2025 e cobertura regional estão adquiridos na Fase 4B.
 4. Adicionar catálogo/release metadata Eurostat para reduzir downloads sem ETag.
 5. Ampliar INE/GEP e INSEE a anos disponíveis, depois de validar todos os códigos
    profissionais e definições; cada conector numa alteração própria.

@@ -50,3 +50,7 @@ def test_aggregate_inventory_is_insufficient(tmp_path):
 def test_symlink_rejected(tmp_path):
     p=export(tmp_path,[row()]);q=tmp_path/'link';q.symlink_to(p)
     with pytest.raises(ValueError):read_inventory(q,authorization='explicit')
+
+
+def test_unregistered_dimensions_are_not_silently_discarded(tmp_path):
+    with pytest.raises(ValueError):read_inventory(export(tmp_path,[row(sex='female')]),authorization='explicit')

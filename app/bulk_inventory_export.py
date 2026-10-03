@@ -1,5 +1,6 @@
 """Read an explicitly authorized, local JSON inventory; never connects to production."""
 import json
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from app.bulk_core import KEY_FIELDS, observation_key
@@ -15,12 +16,18 @@ def read_inventory(path, *, authorization):
         data=json.load(stream)
     if data.get('schema')!='earnwage-observation-inventory-v1' or data.get('scope') not in ('complete','partial') or not data.get('exported_at'):
         raise ValueError('Observation-level export schema and scope required')
+    try:
+        datetime.fromisoformat(data['exported_at'])
+    except (TypeError,ValueError):
+        raise ValueError('Explicit ISO export date required') from None
     records=data.get('observations')
     if not isinstance(records,list):raise ValueError('Missing observations')
     indexed={}
     for row in records:
         if not isinstance(row,dict) or not set(KEY_FIELDS)|{'value'} <= row.keys():
             raise ValueError('Incomplete observation identity')
+        if set(row)-set(KEY_FIELDS)-{'value','dimensions'}:
+            raise ValueError('Unregistered fields; relevant scope must use dimensions')
         if any((not isinstance(row[k],str) or not row[k]) and not (k in ('classification','currency') and row[k] is None) for k in KEY_FIELDS):
             raise ValueError('Invalid identity')
         key=observation_key(row)

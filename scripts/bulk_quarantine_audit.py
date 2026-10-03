@@ -27,9 +27,15 @@ def audit(staging,output):
             old=Decimal(str(near['value']));delta=Decimal(str(r['value']))-old
             if old:relative=abs(delta/old)
         cause='methodology_break' if 'b' in r['flags'] else 'provider_flag' if reason=='provider_quality_or_methodology_flag' else 'numerical_variation'
+        indicator=r['indicator']
+        category=('reported_methodology_break' if cause=='methodology_break' else
+                  'crime_or_conflict_volatility_review' if indicator.startswith('intentional_homicides') or indicator=='battle_related_deaths' else
+                  'monetary_unit_or_exchange_rate_review' if indicator in ('gdp_per_capita','ppp_private_consumption','net_annual_earnings_reference') else
+                  'inflation_direction_or_scale_review' if indicator=='inflation_annual' else
+                  'survey_definition_or_series_review')
         results.append({'provider':r['provider'],'dataset':r['dataset'],'country':r['country'],
                         'indicator':r['indicator'],'period':r['period'],'value':r['value'],
-                        'flags':r['flags'],'cause':cause,'ledger_reason':reason,
+                        'flags':r['flags'],'cause':cause,'assessment_category':category,'ledger_reason':reason,
                         'comparison_period':near['period'] if near else '',
                         'comparison_value':near['value'] if near else '',
                         'absolute_delta':str(delta) if delta is not None else '',
@@ -38,8 +44,9 @@ def audit(staging,output):
                         'source_url':r['source_url'],'artifact_sha256':r['artifact_sha256']})
     output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
     with output.open('w',newline='',encoding='utf-8') as f:
-        w=csv.DictWriter(f,fieldnames=list(results[0]) if results else ['cause']);w.writeheader();w.writerows(results)
+        w=csv.DictWriter(f,fieldnames=list(results[0]) if results else ['cause'],lineterminator='\n');w.writeheader();w.writerows(results)
     return {'reviewed':len(results),'causes':dict(Counter(r['cause'] for r in results)),
+            'assessment_categories':dict(Counter(r['assessment_category'] for r in results)),
             'manual_assessment_required':len(results),'automatically_approved':0,
             'note':'Adjacent source values provide review context, not independent validation or automatic acceptance.'}
 
