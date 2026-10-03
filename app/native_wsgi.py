@@ -699,6 +699,7 @@ def application(environ, start_response):
         "/v1/admin/data-manager/bulk-publish": "bulk_publish",
         "/v1/admin/data-manager/bulk-rollback": "bulk_rollback",
         "/v1/admin/data-manager/salary-inventory": "salary_inventory",
+        "/v1/admin/data-manager/salary-upload": "salary_upload",
     }
     if normalized in data_manager_actions and method == "OPTIONS":
         if origin != "https://gilpereirapt.github.io":
@@ -706,7 +707,7 @@ def application(environ, start_response):
         start_response("204 No Content", [
             ("Access-Control-Allow-Origin", origin),
             ("Access-Control-Allow-Methods", "POST, OPTIONS"),
-            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token"),
+            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token, X-EarnWage-Package-SHA256"),
             ("Access-Control-Max-Age", "600"),
             ("Vary", "Origin"),
             ("Cache-Control", "no-store"),
@@ -724,7 +725,7 @@ def application(environ, start_response):
         start_response("204 No Content", [
             ("Access-Control-Allow-Origin", origin),
             ("Access-Control-Allow-Methods", "POST, OPTIONS"),
-            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token"),
+            ("Access-Control-Allow-Headers", "Content-Type, X-EarnWage-Admin-Token, X-EarnWage-Package-SHA256"),
             ("Access-Control-Max-Age", "600"),
             ("Vary", "Origin"),
             ("Cache-Control", "no-store"),

@@ -21,7 +21,7 @@ def package():return {'schema':pub.SCHEMA,'observations':source_rows()}
 def checksum(p):return hashlib.sha256(pub.encode(p)).hexdigest()
 
 
-@pytest.mark.parametrize('action', ['bulk-preview', 'bulk-publish', 'bulk-rollback'])
+@pytest.mark.parametrize('action', ['bulk-publish', 'bulk-rollback'])
 @pytest.mark.parametrize('enabled', [None, 'false', 'TRUE', '1', ''])
 def test_every_bulk_action_requires_exact_explicit_activation(tmp_path, monkeypatch, action, enabled):
  secret=setup(monkeypatch,tmp_path)

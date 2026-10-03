@@ -36,7 +36,7 @@ MANAGER_VERSION = "0.3.0"
 BACKUP_DIR = ROOT / "_earnwage_backups"
 
 ALLOWED_ACTIONS = ("backup", "import", "status", "deploy",
-                   "bulk_preview", "bulk_publish", "bulk_rollback", "salary_inventory")
+                   "bulk_preview", "bulk_publish", "bulk_rollback", "salary_inventory", "salary_upload")
 ALLOWED_SOURCES = ("world_bank", "eurostat")
 GITHUB_REPOSITORY = "GilPereiraPT/Global-Purchasing-Power-API"
 GITHUB_API = "https://api.github.com/repos/" + GITHUB_REPOSITORY
@@ -454,7 +454,7 @@ def _bulk_publication(action, payload):
     """Explicit, disabled-by-default publication through existing admin controls."""
     from app import bulk_publication
     from app.store import DB_PATH
-    if os.environ.get("EARNWAGE_BULK_PUBLICATION_ENABLED") != "true":
+    if action != "bulk_preview" and os.environ.get("EARNWAGE_BULK_PUBLICATION_ENABLED") != "true":
         return {"status": "publication_disabled"}
     expected = {"checksum"} if action == "bulk_preview" else {"checksum", "confirm"}
     checksum = payload.get("checksum")
@@ -490,7 +490,11 @@ def _bulk_publication(action, payload):
     package = bulk_publication.load(directory / (checksum + ".json"), checksum)
     result = bulk_publication.preview(DB_PATH, package)
     if action == "bulk_preview":
-        return {"status": "review_required", "checksum": checksum, **result}
+        return {"status": "review_required", "checksum": checksum, **result,
+                "publication_enabled": os.environ.get("EARNWAGE_BULK_PUBLICATION_ENABLED") == "true",
+                "publication_authorized": False, "backup_readiness": _backup_readiness(),
+                "backups": _backups(), "recovery_verified": False,
+                "operational_checks": "Confirmar espaço/quota, permissões e ensaio de recuperação. Uma cópia existente não comprova recuperação."}
     if payload["confirm"] != "publish_reviewed_salary_package":
         raise ValueError("Explicit publication confirmation required")
     if not _backup_readiness()["ready"]:
@@ -585,6 +589,23 @@ def handle(environ, start_response, origin, action, reply):
     if action not in ALLOWED_ACTIONS:
         return _response(reply, start_response, origin, 404,
                          {"error": "unknown_manager_action"})
+    if action == "salary_upload":
+        from app.salary_inventory_export import private_path
+        from app.salary_package_upload import accept
+        try:
+            private_path(BACKUP_DIR)
+            with _exclusive_operation():
+                result = accept(environ, BACKUP_DIR)
+            return _response(reply, start_response, origin, 200, result)
+        except FileExistsError:
+            code, error, message = 409, "package_exists", "Este pacote já existe; não foi substituído. Pode pré-visualizá-lo pelo checksum."
+        except (ValueError, TypeError, KeyError, UnicodeError, ArithmeticError, RecursionError):
+            code, error, message = 422, "invalid_salary_package", "Pacote recusado: confirme JSON canónico, limite de 2 MiB, esquema e SHA-256."
+        except RuntimeError as exc:
+            code, error, message = 409, "package_unavailable", "Operação ocupada ou limite de armazenamento/espaço atingido. Tente novamente após verificação."
+        except OSError:
+            code, error, message = 503, "package_storage_failed", "Não foi possível guardar o pacote privado. Verifique espaço e permissões."
+        return _response(reply, start_response, origin, code, {"error": error, "message": message})
     if action == "salary_inventory":
         from app.salary_inventory_export import private_path
         try:
