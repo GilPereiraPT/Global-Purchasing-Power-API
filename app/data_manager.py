@@ -36,7 +36,7 @@ MANAGER_VERSION = "0.3.0"
 BACKUP_DIR = ROOT / "_earnwage_backups"
 
 ALLOWED_ACTIONS = ("backup", "import", "status", "deploy",
-                   "bulk_preview", "bulk_publish", "bulk_rollback")
+                   "bulk_preview", "bulk_publish", "bulk_rollback", "salary_inventory")
 ALLOWED_SOURCES = ("world_bank", "eurostat")
 GITHUB_REPOSITORY = "GilPereiraPT/Global-Purchasing-Power-API"
 GITHUB_API = "https://api.github.com/repos/" + GITHUB_REPOSITORY
@@ -532,6 +532,49 @@ def _safe_backup_failure(exc):
     return "backup_preparation_failed"
 
 
+def _salary_inventory(payload):
+    from app import salary_inventory_download
+    from app.store import DB_PATH
+    if payload != {"confirm": "export_read_only_salary_inventory"}:
+        raise ValueError("Explicit read-only inventory confirmation required")
+    configured = os.environ.get("GPP_CACHE_DB", "")
+    path = Path(configured)
+    if (not configured or not path.is_absolute() or not path.is_file()
+        or path.resolve() != Path(DB_PATH).resolve()):
+        raise RuntimeError("salary_inventory_database_unavailable")
+    return salary_inventory_download.prepare(path, BACKUP_DIR / "salary-inventory-exports",
+        forbidden_values=(os.environ.get("EARNWAGE_ADMIN_TOKEN", ""), str(ROOT), str(BACKUP_DIR)))
+
+
+def _salary_inventory_error(exc):
+    reason = str(exc)
+    if reason in ("Inventory exceeds 100 MiB export limit", "Inventory exceeds row limit",
+                  "Inventory archive exceeds byte limit"):
+        return 422, "inventory_limit_exceeded", "O inventário excede os limites de 100 MiB de JSON ou 200 000 linhas. A exportação foi cancelada sem disponibilizar um ZIP parcial."
+    if reason in ("Unsafe stored source filename", "Unsafe stored source URL",
+                  "Sensitive stored salary metadata", "Private path in stored salary metadata"):
+        return 422, "inventory_sensitive_metadata", "A exportação foi recusada porque os metadados salariais contêm informação não segura. Reveja a origem dos dados sem alterar a base nesta operação."
+    if reason == "insufficient_inventory_disk_space":
+        return 503, "inventory_insufficient_space", "Espaço livre insuficiente para gerar o ZIP privado. São necessários pelo menos 265 MiB, além das quotas do hosting."
+    if str(exc) == "salary_inventory_database_unavailable":
+        return 409, "inventory_database_unavailable", "A base salarial existente não está configurada correctamente. Não foi criada nem alterada nenhuma base."
+    if str(exc) == "another_import_is_running":
+        return 409, "another_import_is_running", "Existe outra operação em curso. Aguarde e tente novamente."
+    if str(exc) == "too_many_inventory_downloads":
+        return 409, "inventory_downloads_busy", "Existem descargas de inventário em curso. Aguarde antes de repetir."
+    if isinstance(exc, TimeoutError):
+        return 503, "inventory_timeout", "A exportação excedeu o tempo permitido. Não foi disponibilizado um ZIP incompleto."
+    if isinstance(exc, PermissionError):
+        return 503, "inventory_permissions", "Sem permissão para ler a base ou criar o ficheiro privado. A base não foi alterada."
+    if isinstance(exc, OSError):
+        return 503, "inventory_storage_failed", "Não foi possível criar o inventário. Verifique o espaço e as permissões da pasta privada."
+    if isinstance(exc, sqlite3.Error):
+        return 503, "inventory_database_failed", "Não foi possível ler a base salarial. Verifique o estado e os bloqueios SQLite."
+    if isinstance(exc, (ValueError, TypeError, KeyError, UnicodeError)):
+        return 422, "inventory_validation_failed", "Exportação recusada: confirme o pedido, o schema, os limites e a segurança dos dados. Nenhum ZIP parcial foi disponibilizado."
+    return 503, "inventory_export_failed", "Não foi possível exportar o inventário salarial. Tente novamente após verificar o servidor."
+
+
 def handle(environ, start_response, origin, action, reply):
     """Entry from the production WSGI adapter; never return internal tracebacks."""
     auth = _authorize(environ)
@@ -542,6 +585,19 @@ def handle(environ, start_response, origin, action, reply):
     if action not in ALLOWED_ACTIONS:
         return _response(reply, start_response, origin, 404,
                          {"error": "unknown_manager_action"})
+    if action == "salary_inventory":
+        from app.salary_inventory_export import private_path
+        try:
+            payload = _parse(environ)
+            private_path(BACKUP_DIR)  # Reject unsafe paths before taking the manager lock.
+            with _exclusive_operation():
+                download = _salary_inventory(payload)
+        except Exception as exc:
+            LOG.warning("Salary inventory export failed (%s)", type(exc).__name__)
+            code, error, message = _salary_inventory_error(exc)
+            return _response(reply, start_response, origin, code, {"error": error, "message": message})
+        # Do not retry headers if the WSGI server fails/disconnects here.
+        return download.response(start_response, origin)
     try:
         payload = _parse(environ)
         if action == "status":

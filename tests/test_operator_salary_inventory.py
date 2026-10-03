@@ -1,17 +1,14 @@
 """Operator export runs only against isolated databases, never application init."""
 import hashlib
-import importlib.util
 import json
 from pathlib import Path
 import sqlite3
 import pytest
 from app import north_america, us_oews, ca_province_wages
 from scripts.deploy_runtime import allowed
+from app import salary_inventory_export as operator
 
 PATH = Path(__file__).resolve().parents[1] / 'docs/bulk/operator/export_salary_inventory.py'
-spec = importlib.util.spec_from_file_location('operator_export', PATH)
-operator = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(operator)
 
 
 def source(tmp_path):
