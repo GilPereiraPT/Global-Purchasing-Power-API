@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Reproducible offline bulk dashboards and inventories
+docs/bulk/generated/
