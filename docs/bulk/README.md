@@ -41,6 +41,8 @@ bases de produção.
 
 ## Inventário e relatórios
 
+- [Preparação da primeira publicação — Phase 4E](PHASE4E.md): exportação pelo
+  operador, pacote candidato, gates de autorização e procedimento Data Manager.
 - [Plano de fontes](PLAN.md): prioridades e tarefas seguintes.
 - [Geração de inventários e autorização de exports](INVENTORY_EXPORT.md): os
   dashboards/JSON completos são reproduzíveis e ficam em `docs/bulk/generated/`,
