@@ -1,0 +1,314 @@
+{
+  "schema": "earnwage-missing-mapping-review-v1",
+  "reviewed_missing_pairs": 13,
+  "new_verified_country_occupation_pairs": 0,
+  "approved_new_mappings": 0,
+  "acquired_at": "2026-10-03",
+  "review": [
+    {
+      "country": "US",
+      "occupation": "agricultural_worker",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "45-2092",
+          "official_title": "Farmworkers and Laborers, Crop, Nursery, and Greenhouse"
+        },
+        {
+          "code": "45-2093",
+          "official_title": "Farmworkers, Farm, Ranch, and Aquacultural Animals"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Generic agricultural worker spans several skilled and farmworker SOC occupations.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "cleaner",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "37-2011",
+          "official_title": "Janitors and Cleaners, Except Maids and Housekeeping Cleaners"
+        },
+        {
+          "code": "37-2012",
+          "official_title": "Maids and Housekeeping Cleaners"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Generic cleaner spans janitors/building cleaners and maids/housekeeping cleaners.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "cook",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "35-2011",
+          "official_title": "Cooks, Fast Food"
+        },
+        {
+          "code": "35-2012",
+          "official_title": "Cooks, Institution and Cafeteria"
+        },
+        {
+          "code": "35-2013",
+          "official_title": "Cooks, Private Household"
+        },
+        {
+          "code": "35-2014",
+          "official_title": "Cooks, Restaurant"
+        },
+        {
+          "code": "35-2015",
+          "official_title": "Cooks, Short Order"
+        },
+        {
+          "code": "35-2019",
+          "official_title": "Cooks, All Other"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Generic cook spans restaurant, institutional, fast-food, private-household and other cook SOC occupations.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "data_analyst",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "15-2051",
+          "official_title": "Data Scientists"
+        },
+        {
+          "code": "15-2041",
+          "official_title": "Statisticians"
+        },
+        {
+          "code": "15-2031",
+          "official_title": "Operations Research Analysts"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Data analyst is not a single SOC 2018 detailed occupation; duties may align with data scientists, statisticians or other analysts.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "doctor",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "29-1215",
+          "official_title": "Family Medicine Physicians"
+        },
+        {
+          "code": "29-1216",
+          "official_title": "General Internal Medicine Physicians"
+        },
+        {
+          "code": "29-1229",
+          "official_title": "Physicians, All Other"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Generic doctor spans multiple physician and surgeon SOC occupations.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "industrial_operator",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "51-9161",
+          "official_title": "Computer Numerically Controlled Tool Operators"
+        },
+        {
+          "code": "51-9023",
+          "official_title": "Mixing and Blending Machine Setters, Operators, and Tenders"
+        },
+        {
+          "code": "51-9199",
+          "official_title": "Production Workers, All Other"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Industrial machine operator requires the machine/process to select a detailed SOC occupation.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "manager",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "11-1021",
+          "official_title": "General and Operations Managers"
+        },
+        {
+          "code": "11-2022",
+          "official_title": "Sales Managers"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Generic manager spans many detailed management SOC occupations.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "psychologist",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "19-3032",
+          "official_title": "Industrial-Organizational Psychologists"
+        },
+        {
+          "code": "19-3033",
+          "official_title": "Clinical and Counseling Psychologists"
+        },
+        {
+          "code": "19-3034",
+          "official_title": "School Psychologists"
+        },
+        {
+          "code": "19-3039",
+          "official_title": "Psychologists, All Other"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Generic psychologist spans clinical/counseling, school, industrial-organizational and other SOC occupations.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "supermarket_worker",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "41-2011",
+          "official_title": "Cashiers"
+        },
+        {
+          "code": "41-2031",
+          "official_title": "Retail Salespersons"
+        },
+        {
+          "code": "53-7065",
+          "official_title": "Stockers and Order Fillers"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Supermarket work can be cashier, retail sales, stock/order filling, management or another occupation.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "teacher",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "25-2021",
+          "official_title": "Elementary School Teachers, Except Special Education"
+        },
+        {
+          "code": "25-2022",
+          "official_title": "Middle School Teachers, Except Special and Career/Technical Education"
+        },
+        {
+          "code": "25-2031",
+          "official_title": "Secondary School Teachers, Except Special and Career/Technical Education"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Generic teacher spans preschool, elementary, middle, secondary, postsecondary and special-education SOC occupations.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "US",
+      "occupation": "warehouse_operator",
+      "classification": "SOC2018",
+      "candidates": [
+        {
+          "code": "53-7051",
+          "official_title": "Industrial Truck and Tractor Operators"
+        },
+        {
+          "code": "53-7062",
+          "official_title": "Laborers and Freight, Stock, and Material Movers, Hand"
+        },
+        {
+          "code": "53-7065",
+          "official_title": "Stockers and Order Fillers"
+        }
+      ],
+      "decision": "reject_ambiguous_mapping",
+      "reason": "Warehouse operator can map to stock/order filling, material moving, forklift or clerical occupations depending on duties.",
+      "source_url": "https://www.bls.gov/soc/2018/soc_2018_definitions.pdf",
+      "source_sha256": "95aae3dfa22fc74e99f6fe48eb9c465ec8170ad209af8bdd6a7482cf54461297"
+    },
+    {
+      "country": "CA",
+      "occupation": "agricultural_worker",
+      "classification": "NOC2021",
+      "candidates": [
+        {
+          "code": "85100",
+          "official_title": "Livestock labourers"
+        },
+        {
+          "code": "85101",
+          "official_title": "Harvesting labourers"
+        },
+        {
+          "code": "84120",
+          "official_title": "Specialized livestock workers and farm machinery operators"
+        }
+      ],
+      "decision": "unavailable_pending_original_classification_validation",
+      "reason": "Generic agricultural work requires livestock/crop/skill duties; the official wage CSV has distinct unit groups. Original NOC definitions remain network-blocked.",
+      "source_url": "https://www.statcan.gc.ca/en/subjects/standard/noc/2021/indexV1",
+      "title_evidence": "official Job Bank 2025 full CSV; titles only, not validated NOC duty definitions",
+      "title_evidence_sha256": "7bd29fb41b2a84eb61a4dbf49bfb63651a8a694c62ce42ac69cb785679d66328"
+    },
+    {
+      "country": "CA",
+      "occupation": "manager",
+      "classification": "NOC2021",
+      "candidates": [
+        {
+          "code": "10010",
+          "official_title": "Financial managers"
+        },
+        {
+          "code": "60020",
+          "official_title": "Retail and wholesale trade managers"
+        },
+        {
+          "code": "80020",
+          "official_title": "Managers in agriculture"
+        }
+      ],
+      "decision": "unavailable_pending_original_classification_validation",
+      "reason": "Management requires industry and responsibilities; generic label does not identify an individual NOC group. Original NOC definitions remain network-blocked.",
+      "source_url": "https://www.statcan.gc.ca/en/subjects/standard/noc/2021/indexV1",
+      "title_evidence": "official Job Bank 2025 full CSV; titles only, not validated NOC duty definitions",
+      "title_evidence_sha256": "7bd29fb41b2a84eb61a4dbf49bfb63651a8a694c62ce42ac69cb785679d66328"
+    }
+  ]
+}
