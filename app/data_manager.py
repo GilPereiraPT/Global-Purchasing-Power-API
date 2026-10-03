@@ -36,7 +36,8 @@ MANAGER_VERSION = "0.3.0"
 BACKUP_DIR = ROOT / "_earnwage_backups"
 
 ALLOWED_ACTIONS = ("backup", "import", "status", "deploy",
-                   "bulk_preview", "bulk_publish", "bulk_rollback", "salary_inventory", "salary_upload")
+                   "bulk_preview", "bulk_publish", "bulk_rollback", "salary_inventory", "salary_upload",
+                   "publication_conditions", "recovery_test")
 ALLOWED_SOURCES = ("world_bank", "eurostat")
 GITHUB_REPOSITORY = "GilPereiraPT/Global-Purchasing-Power-API"
 GITHUB_API = "https://api.github.com/repos/" + GITHUB_REPOSITORY
@@ -454,6 +455,7 @@ def _bulk_publication(action, payload):
     """Explicit, disabled-by-default publication through existing admin controls."""
     from app import bulk_publication
     from app.store import DB_PATH
+    from app import publication_control as control
     if action != "bulk_preview" and os.environ.get("EARNWAGE_BULK_PUBLICATION_ENABLED") != "true":
         return {"status": "publication_disabled"}
     expected = {"checksum"} if action == "bulk_preview" else {"checksum", "confirm"}
@@ -474,6 +476,7 @@ def _bulk_publication(action, payload):
             if size > bulk_publication.MAX_DATABASE_BYTES:
                 raise ValueError("Database exceeds bounded backup budget")
     if action == "bulk_rollback":
+        control.require_ready(BACKUP_DIR, ROOT, checksum)
         if payload["confirm"] != "rollback_reviewed_salary_package":
             raise ValueError("Explicit rollback confirmation required")
         # Existing manager lock is held. Only journalled unchanged inserted rows
@@ -490,11 +493,23 @@ def _bulk_publication(action, payload):
     package = bulk_publication.load(directory / (checksum + ".json"), checksum)
     result = bulk_publication.preview(DB_PATH, package)
     if action == "bulk_preview":
+        control.record_preview(BACKUP_DIR, checksum, result)
+        conditions = control.conditions(BACKUP_DIR, ROOT)
         return {"status": "review_required", "checksum": checksum, **result,
                 "publication_enabled": os.environ.get("EARNWAGE_BULK_PUBLICATION_ENABLED") == "true",
                 "publication_authorized": False, "backup_readiness": _backup_readiness(),
-                "backups": _backups(), "recovery_verified": False,
+                "backups": _backups(), "recovery_verified": conditions["recovery_verified"],
+                "publication_conditions": conditions, "review_valid_for_seconds": control.PREVIEW_TTL,
                 "operational_checks": "Confirmar espaço/quota, permissões e ensaio de recuperação. Uma cópia existente não comprova recuperação."}
+    if payload.get("confirm") == "publish_reviewed_salary_package":
+        with sqlite3.connect(Path(DB_PATH).resolve().as_uri() + "?mode=ro", uri=True) as db:
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='bulk_publications' AND type='table'").fetchone():
+                prior = db.execute("SELECT status FROM bulk_publications WHERE checksum=?", (checksum,)).fetchone()
+                if prior:
+                    return {"status": "already_" + prior[0], "checksum": checksum, **result}
+    control.require_ready(BACKUP_DIR, ROOT, checksum, publication=True)
+    if result["protected_existing_rows"] or result["duplicate_rows"] or result["inserted_rows"] <= 0:
+        raise ValueError("Publication requires entirely new conflict-free rows")
     if payload["confirm"] != "publish_reviewed_salary_package":
         raise ValueError("Explicit publication confirmation required")
     if not _backup_readiness()["ready"]:
@@ -503,7 +518,7 @@ def _bulk_publication(action, payload):
     backup = _backup({})
     if backup.get("status") != "available":
         raise RuntimeError("fresh_backup_failed")
-    result = bulk_publication.apply(DB_PATH, package, checksum, backup["backup_id"])
+    result = bulk_publication.apply(DB_PATH, package, checksum, backup["backup_id"], require_clean=True)
     with economic_connect() as db:
         _record(db, "reviewed_salary_package", "MULTI", "occupational_salary",
                 "missing", result["status"], result["inserted_rows"])
@@ -589,6 +604,31 @@ def handle(environ, start_response, origin, action, reply):
     if action not in ALLOWED_ACTIONS:
         return _response(reply, start_response, origin, 404,
                          {"error": "unknown_manager_action"})
+    if action in ("publication_conditions", "recovery_test", "bulk_preview", "bulk_publish", "bulk_rollback"):
+        from app.salary_inventory_export import private_path
+        from app import publication_control as control
+        try:
+            payload = _parse(environ)
+            private_path(BACKUP_DIR)
+            with _exclusive_operation():
+                if action == "publication_conditions":
+                    if payload:raise ValueError("No parameters allowed")
+                    result = control.conditions(BACKUP_DIR, ROOT)
+                elif action == "recovery_test":
+                    if payload != {"confirm": "test_isolated_backup_recovery"}:raise ValueError("Recovery confirmation required")
+                    result = control.test_recovery(BACKUP_DIR)
+                else:
+                    result = _bulk_publication(action, payload)
+            code = 409 if result.get("status") in ("recovery_blocked", "prerequisites_missing") else 200
+            return _response(reply, start_response, origin, code, result)
+        except (ValueError, TypeError, KeyError, UnicodeError, ArithmeticError):
+            return _response(reply, start_response, origin, 409, {"error": "publication_review_required", "message": "Operação recusada. Verifique condições, backup e recuperação; repita a pré-visualização e confirme o checksum exacto."})
+        except RuntimeError as exc:
+            if str(exc) == "another_import_is_running":
+                return _response(reply, start_response, origin, 409, {"error": "another_import_is_running"})
+            return _response(reply, start_response, origin, 503, {"error": "manager_operation_failed", "message": "Operação não concluída; confirme o estado antes de repetir."})
+        except (OSError, sqlite3.Error):
+            return _response(reply, start_response, origin, 503, {"error": "manager_operation_failed", "message": "Operação não concluída. Verifique espaço, permissões e operações concorrentes. Uma falha de resposta não garante ausência de escrita."})
     if action == "salary_upload":
         from app.salary_inventory_export import private_path
         from app.salary_package_upload import accept

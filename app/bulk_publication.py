@@ -211,13 +211,15 @@ def preview(path,package):
         return result
 
 
-def apply(path,package,checksum,backup_id):
+def apply(path,package,checksum,backup_id,*,require_clean=False):
     if not backup_id or not re.fullmatch('[0-9a-f]{64}',checksum) or hashlib.sha256(encode(package)).hexdigest()!=checksum:raise ValueError('Verified package and fresh backup required')
     with closing(_connect(path)) as db:
         db.execute('BEGIN IMMEDIATE')
         try:
             # Validate schema BEFORE init/migration, and recheck plan under writer lock.
             targets=_targets(package);changes,result=_plan(db,targets)
+            if require_clean and (result["protected_existing_rows"] or result["duplicate_rows"] or not changes):
+                raise ValueError("Publication conflicts under transaction lock")
             from app.us_oews import init as us_init
             from app.north_america import init as ca_init
             from app.ca_province_wages import init as province_init

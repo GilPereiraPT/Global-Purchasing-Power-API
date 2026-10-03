@@ -57,9 +57,12 @@ def request(path,payload=None):
 paths=['/v1/health','/v1/countries','/v1/occupations','/v1/wages/US/software_developer',
        '/v1/wages/CA/nurse','/v1/ca/provinces/nurse/ON']
 before={p:request(p) for p in paths}
+dm.BACKUP_DIR.mkdir(mode=0o700,exist_ok=True)
 index=export(staging,dm.BACKUP_DIR/'bulk-packages')
 assert len(index['packages'])==1
 sha=index['packages'][0]['checksum'];prefix='/v1/admin/data-manager/'
+request(prefix+'backup',{})
+assert request(prefix+'recovery-test',{'confirm':'test_isolated_backup_recovery'})['recovery_verified']
 assert request(prefix+'bulk-preview',{'checksum':sha})['inserted_rows']==1
 published=request(prefix+'bulk-publish',{'checksum':sha,'confirm':'publish_reviewed_salary_package'})
 assert published['status']=='published'
@@ -69,6 +72,7 @@ native_wsgi.INITIALIZED=False
 assert {p:request(p) for p in paths}==before
 with sqlite3.connect(os.environ['GPP_CACHE_DB']) as db:
  assert db.execute("SELECT count(*) FROM us_oews WHERE published_year=2024").fetchone()[0]==1
+assert request(prefix+'recovery-test',{'confirm':'test_isolated_backup_recovery'})['recovery_verified']
 assert request(prefix+'bulk-rollback',{'checksum':sha,'confirm':'rollback_reviewed_salary_package'})['removed_rows']==1
 recovered=restore(dm.BACKUP_DIR/published['backup_id'],root/'recovered')
 with sqlite3.connect(recovered/'wages_cache.sqlite3') as db:

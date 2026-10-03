@@ -700,6 +700,8 @@ def application(environ, start_response):
         "/v1/admin/data-manager/bulk-rollback": "bulk_rollback",
         "/v1/admin/data-manager/salary-inventory": "salary_inventory",
         "/v1/admin/data-manager/salary-upload": "salary_upload",
+        "/v1/admin/data-manager/publication-conditions": "publication_conditions",
+        "/v1/admin/data-manager/recovery-test": "recovery_test",
     }
     if normalized in data_manager_actions and method == "OPTIONS":
         if origin != "https://gilpereirapt.github.io":

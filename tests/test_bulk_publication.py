@@ -111,22 +111,27 @@ def test_data_manager_auth_confirmation_fresh_backup_and_restore(tmp_path,monkey
  assert request('bulk-publish',token=None)[0]==401
  assert request('bulk-publish',token=secret)[1]['status']=='publication_disabled'
  monkeypatch.setenv('EARNWAGE_BULK_PUBLICATION_ENABLED','true')
- p=package();digest=checksum(p);directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(parents=True)
+ p=package();digest=checksum(p);dm.BACKUP_DIR.mkdir(mode=0o700,exist_ok=True);directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(mode=0o700)
  (directory/(digest+'.json')).write_bytes(pub.encode(p))
  payload={'checksum':digest}
  assert request('bulk-preview',payload,token=secret)[1]['status']=='review_required'
- assert request('bulk-publish',payload,token=secret)[0]==422
+ assert request('bulk-publish',payload,token=secret)[0]==409
+ from tests.test_publication_control import approve
+ approve(secret,digest)
  code,result,_=request('bulk-publish',{**payload,'confirm':'publish_reviewed_salary_package'},token=secret)
  assert code==200 and result['status']=='published'
  recovered=restore(dm.BACKUP_DIR/result['backup_id'],tmp_path/'recovered')
  with sqlite3.connect(recovered/'wages_cache.sqlite3') as c:assert c.execute("SELECT count(*) FROM sqlite_master WHERE name='north_america_wages'").fetchone()[0]==0
+ assert request('recovery-test',{'confirm':'test_isolated_backup_recovery'},token=secret)[0]==200
  assert request('bulk-rollback',{**payload,'confirm':'rollback_reviewed_salary_package'},token=secret)[1]['status']=='rolled_back'
  assert store.DB_PATH==str(tmp_path/'real_wages.sqlite3')
 
 
 def test_backup_failure_cannot_write(tmp_path,monkeypatch):
  secret=setup(monkeypatch,tmp_path);monkeypatch.setenv('EARNWAGE_BULK_PUBLICATION_ENABLED','true')
- p=package();digest=checksum(p);directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(parents=True);(directory/(digest+'.json')).write_bytes(pub.encode(p))
+ p=package();digest=checksum(p);dm.BACKUP_DIR.mkdir(mode=0o700,exist_ok=True);directory=dm.BACKUP_DIR/'bulk-packages';directory.mkdir(mode=0o700);(directory/(digest+'.json')).write_bytes(pub.encode(p))
+ from tests.test_publication_control import approve
+ approve(secret,digest)
  monkeypatch.setattr(dm,'_backup',lambda _: (_ for _ in ()).throw(OSError('failure')))
  assert request('bulk-publish',{'checksum':digest,'confirm':'publish_reviewed_salary_package'},token=secret)[0]==503
  with sqlite3.connect(store.DB_PATH) as c:assert c.execute("SELECT count(*) FROM sqlite_master WHERE name='bulk_publications'").fetchone()[0]==0
