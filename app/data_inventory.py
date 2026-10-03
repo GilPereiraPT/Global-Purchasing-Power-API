@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from app.fx_policy import CACHE_TTL, ECB_CURRENCIES, valid_quote
 from app.catalog import COUNTRY_MAP, OCCUPATIONS
 from app.country_insights import INDICATORS, SOURCE as WB_SOURCE
 from app.country_insights_store import connect as insights_connect, read_indicator
@@ -27,7 +28,7 @@ from app.store import connect as cache_connect
 
 ROOT = Path(__file__).resolve().parent.parent
 CURRENCIES = ("EUR", "USD", "GBP", "CAD", "CHF", "BRL", "INR", "PKR")
-FX_TTL_SECONDS = 86400
+FX_TTL_SECONDS = CACHE_TTL
 
 
 def _history(db, table, column, country, indicator):
@@ -125,6 +126,11 @@ def _rates(db):
             "SELECT response,fetched_at FROM cache WHERE cache_key=?",
             ("ecb:exchange:" + code,),
         ).fetchone()
+        if code not in ECB_CURRENCIES:
+            data[code] = {"status":"unsupported", "period":None, "source":"ECB", "fetched_at":None,
+                          "age_seconds":None, "cache_status":"stored_but_unusable" if record else "not_cached",
+                          "note":"No supported ECB reference currency; no inferred or alternate FX."}
+            continue
         if not record:
             data[code] = {"status": "not_cached", "period": None,
                           "source": "ECB", "fetched_at": None, "age_seconds": None}
@@ -133,11 +139,19 @@ def _rates(db):
             content = json.loads(record[0])
         except (ValueError, TypeError):
             content = {}
-        age = max(0, now - int(record[1]))
+        if not isinstance(content,dict):content={}
+        try:
+            fetched=int(record[1])
+            fetched_iso=datetime.fromtimestamp(fetched,timezone.utc).isoformat()
+        except (ValueError,TypeError,OverflowError,OSError):
+            data[code]={"status":"invalid_or_stale_observation","period":content.get("period"),
+                        "source":"ECB","fetched_at":None,"age_seconds":None}
+            continue
+        age = max(0, now - fetched)
         data[code] = {
-            "status": "cached" if age <= FX_TTL_SECONDS else "expired",
+            "status": "expired" if age > FX_TTL_SECONDS else "cached" if valid_quote(content,code) and fetched<=now else "invalid_or_stale_observation",
             "period": content.get("period"), "source": content.get("source", "ECB"),
-            "fetched_at": datetime.fromtimestamp(int(record[1]), timezone.utc).isoformat(),
+            "fetched_at": fetched_iso,
             "age_seconds": age,
         }
     return data

@@ -25,7 +25,7 @@ def get(key, ttl):
     if not row:
         return None
     # Expired values are not served as current observations.
-    if time.time() - row[1] > ttl:
+    if not 0 <= time.time() - row[1] <= ttl:
         return None
     return json.loads(row[0])
 
