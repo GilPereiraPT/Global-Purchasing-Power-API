@@ -2,8 +2,9 @@
 
 Para o operador: seguir o [guia Phase 4E](PHASE4E.md). O dashboard público e
 `/v1/data-inventory` são agregados e **não** fornecem este protocolo observacional.
-O helper de documentação exporta as três tabelas salariais em leitura, sem
-inicializar a aplicação. Essa exportação bruta preserva as identidades do modelo
+O botão «Exportar inventário salarial» do Data Manager ([Phase 4F](PHASE4F.md))
+exporta as três tabelas salariais em leitura, sem inicializar a aplicação.
+A alternativa CLI usa a mesma implementação partilhada. Essa exportação bruta preserva as identidades do modelo
 existente; será normalizada offline e revista antes de usar os comandos abaixo.
 Não confundir o seu `manifest.json` com um inventário observacional já normalizado.
 

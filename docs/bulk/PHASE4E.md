@@ -40,63 +40,47 @@ A fonte suíça publica grupos profissionais; não entra no primeiro pacote US/C
 
 ## A. O que o operador fornece agora: só inventário autorizado
 
-1. Registar autorização do proprietário **para exportar o inventário**, com data
-   e referência de aprovação. Isto não autoriza backup, importação ou publicação.
-2. Confirmar no cPanel o caminho **já utilizado pela aplicação** em `GPP_CACHE_DB`.
-   Não procurar bases automaticamente, criar bases vazias, trocar caminhos ou
-   imprimir `.env`/token. O Python do terminal deve ser o da aplicação instalada.
-3. Criar uma pasta privada de trabalho, fora de `public_html`, com permissões 0700.
-   Copiar apenas o helper de documentação abaixo para essa pasta. Não actualizar
-   o runtime para o executar: é autónomo, usa a biblioteca standard e não importa app.
-4. Executar uma única exportação com o caminho explícito e uma pasta de saída nova.
-   A conta do operador deve já ter autorização e leitura da base e do WAL/SHM.
-   Não alterar permissões da base, executar checkpoint, VACUUM ou usar `immutable=1`;
-   esse último poderia omitir dados recentes em WAL.
+Actualização Phase 4F: o procedimento preferido passa a ser o botão
+**«Exportar inventário salarial» no Data Manager existente**. Seguir
+[PHASE4F.md](PHASE4F.md) para a descarga privada, limites e retenção. Só funciona
+quando o backend que inclui esta funcionalidade estiver instalado; esta tarefa
+não o instala nem activa publicação. O botão de actualização e o backup mantêm-se.
 
-Helper: [operator/export_salary_inventory.py](operator/export_salary_inventory.py).
-SHA-256 do helper revisto:
-`71d943701c0d704bc59079ec1d132ebea5b0a11f2fd43d386a9b6bf3a0d44e17`.
+1. Registar autorização do proprietário para **exportar o inventário**, com data
+   e referência. Esta autorização não permite publicar/importar salários.
+2. Abrir o Data Manager e introduzir o token administrativo já existente no campo
+   próprio. Clicar em «Exportar inventário salarial» e confirmar a leitura.
+3. Guardar o ZIP privado descarregado. Contém `manifest.json` e os JSON salariais
+   referenciados, com checksums; nunca SQLite/WAL/SHM, configuração ou credenciais.
+4. Fornecer o ZIP e a referência de autorização para normalização/comparação
+   offline. O dashboard público continua a ser agregado e insuficiente.
 
-Exemplo a adaptar pelo operador, nunca executado por esta revisão:
+Não é necessário abrir um terminal, copiar helpers, escolher caminhos de bases
+ou activar a flag de publicação bulk. A API usa o caminho salarial já configurado
+em `GPP_CACHE_DB`, verifica que corresponde à base activa e lê-a em modo read-only,
+sem inicializar a aplicação. Se o hosting impedir a operação, parar e rever
+configuração/permissões; não criar bases vazias nem trocar caminhos.
+
+A exportação tem schema `earnwage-salary-table-inventory-v1`: é bruta e preserva
+as identidades das três tabelas existentes. Ainda não é o protocolo normalizado
+`earnwage-observation-inventory-v1`. **Não passar o ZIP/manifest directamente ao
+comparador**. A normalização e avaliação de completude continuam na etapa B.
+
+Como alternativa offline já autorizada, a mesma implementação pode ser executada
+no runtime instalado, pelo Python da aplicação, sem imports que inicializem bases:
 
 ```bash
-umask 077
-mkdir -m 700 /ABSOLUTO/PRIVADO/phase4e-operador
-sha256sum /ABSOLUTO/PRIVADO/phase4e-operador/export_salary_inventory.py
-/PYTHON/DA/APLICACAO/python /ABSOLUTO/PRIVADO/phase4e-operador/export_salary_inventory.py \
+cd /APP_ROOT_EXISTENTE
+/PYTHON/DA/APLICACAO/python -m app.salary_inventory_export \
   --wages-db /CAMINHO/REAL/JA/CONFIGURADO/wages.sqlite3 \
-  --output /ABSOLUTO/PRIVADO/phase4e-operador/inventario-novo \
+  --output /ABSOLUTO/PRIVADO/inventario-novo \
   --authorization 'referencia-da-aprovacao-apenas-do-inventario'
 ```
 
-O helper abre a base com `mode=ro`, `query_only=ON` e uma transacção de leitura
-consistente para as três tabelas: `us_oews`, `north_america_wages` e
-`ca_province_wages`. Exporta todas as linhas dessas tabelas, só as colunas salariais
-enumeradas, incluindo identidades, unidades, períodos originais, fontes e NULL.
-Não exporta tabelas económicas, caches, utilizadores ou credenciais. Tabelas
-ausentes são assinaladas; schemas inesperados recusam a operação, sem inicializar
-ou corrigir a base. A leitura pode ter locks de curta duração; em WAL utiliza a
-coordenação SQLite existente, sem checkpoint/escritas lógicas na base ou WAL.
-Se o modo/SHM/permissões do hosting impedirem leitura, parar, não forçar mudanças.
-
-Limites: **100 MiB, 200 000 linhas no total, deadline cooperativa de 30 s**, espera
-SQLite até 5 s; memória por linha/chunk, não por base. Exige 164 MiB livres na pasta
-de saída (limite + reserva). Ficheiros 0600/directório 0700. Uma falha remove só o
-directório novo incompleto; nunca se entrega inventário parcial como completo.
-SIGKILL pode deixar pasta sem manifest: não é um export válido. Se ultrapassar
-limites, rever uma exportação explicitamente circunscrita, sem contornar limites.
-
-Entregar **manifest.json e todos os JSON de tabelas referenciados no manifest**,
-com a referência de autorização. Podem ser enviados juntos num ZIP privado;
-não enviar SQLite/WAL/SHM, backups, configuração, token nem arquivos BLS/Job Bank.
-O manifest contém hashes individuais, presença/contagens/schema das tabelas,
-versão SQLite, data UTC e tamanhos de base/WAL, sem caminhos privados.
-Os hashes verificam integridade; não substituem a confirmação da origem pelo operador.
-
-**Não serve:** o JSON/CSV do dashboard `/v1/data-inventory`, por ser agregado.
-Esta exportação bruta tem schema `earnwage-salary-table-inventory-v1`; ainda não
-é o protocolo `earnwage-observation-inventory-v1` descrito em
-[INVENTORY_EXPORT.md](INVENTORY_EXPORT.md). Não passá-la directamente ao comparador.
+O antigo helper em `docs/bulk/operator` delega agora neste módulo partilhado,
+quando executado num checkout completo; não existe um segundo exportador.
+A autorização passada é uma referência, **nunca o token**. Os ficheiros da via
+CLI são propriedade do operador e não estão sujeitos à retenção automática HTTP.
 
 ## B. Comparação e escolha offline, após receber o export
 
@@ -316,8 +300,9 @@ Validação desta preparação: **498 testes aprovados, 0 falhados**, incluindo
 11 casos novos do exportador (WAL, valores/NULL, fonte intacta, exclusão de dados
 privados, permissões, ausência de tabelas e falhas/limites). Mantém-se um aviso
 herdado TestClient/httpx. Os 35 workflows passam no actionlint 1.7.12, sem
-ShellCheck/Pyflakes. Todos os novos ficheiros docs/testes são recusados pela
-allowlist produtiva existente; não se altera nenhum módulo app/scripts ou workflow.
+ShellCheck/Pyflakes. Na entrega Phase 4E todos os novos ficheiros eram docs/testes excluídos do
+runtime. A actualização Phase 4F acrescenta dois módulos app partilhados e uma
+rota administrativa WSGI; não altera scripts/workflows de deployment. Ver PHASE4F.md.
 
 - Inventário produtivo e autorização da sua utilização ainda não fornecidos.
 - Novidade do candidato, pacote seleccionado e autorização de publicação pendentes.
