@@ -57,32 +57,29 @@ def _observation(item, history):
 
 
 def _wages(db):
-    init_salary_db(db)
-    init_north_america(db)
-    init_pt_wages(db)
-    init_uk_ashe(db)
-    init_de_entgeltatlas(db)
-    init_fr_insee(db)
-    init_nl_cbs(db)
-    ilo = db.execute(
+    tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    def read(sql):
+        table = sql.split('FROM ',1)[1].split()[0]
+        return db.execute(sql).fetchall() if table in tables else []
+    ilo = read(
         """SELECT country,occupation,COUNT(*),MAX(period)
            FROM salary_observations GROUP BY country,occupation"""
-    ).fetchall()
-    na = db.execute(
+    )
+    na = read(
         """SELECT country,occupation,COUNT(*),MAX(reference_period)
            FROM north_america_wages GROUP BY country,occupation"""
-    ).fetchall()
-    pt = db.execute("""SELECT country,occupation,COUNT(*),MAX(period)
-         FROM pt_occupation_wages GROUP BY country,occupation""").fetchall()
-    uk = db.execute("""SELECT country,occupation,COUNT(*),MAX(reference_period)
-         FROM uk_ashe_wages GROUP BY country,occupation""").fetchall()
-    de = db.execute("""SELECT country,occupation,COUNT(*),MAX(reference_period)
-         FROM de_entgeltatlas_wages GROUP BY country,occupation""").fetchall()
-    fr = db.execute("""SELECT country,occupation,COUNT(*),MAX(reference_period)
-         FROM fr_insee_wages GROUP BY country,occupation""").fetchall()
-    nl = db.execute("""SELECT country,occupation,COUNT(*),MAX(reference_period)
-         FROM nl_cbs_wages GROUP BY country,occupation""").fetchall()
-    return {
+    )
+    pt = read("""SELECT country,occupation,COUNT(*),MAX(period)
+         FROM pt_occupation_wages GROUP BY country,occupation""")
+    uk = read("""SELECT country,occupation,COUNT(*),MAX(reference_period)
+         FROM uk_ashe_wages GROUP BY country,occupation""")
+    de = read("""SELECT country,occupation,COUNT(*),MAX(reference_period)
+         FROM de_entgeltatlas_wages GROUP BY country,occupation""")
+    fr = read("""SELECT country,occupation,COUNT(*),MAX(reference_period)
+         FROM fr_insee_wages GROUP BY country,occupation""")
+    nl = read("""SELECT country,occupation,COUNT(*),MAX(reference_period)
+         FROM nl_cbs_wages GROUP BY country,occupation""")
+    result = {
         "INE_GEP": {(country, occupation): (count, str(period))
                     for country, occupation, count, period in pt},
         "ILOSTAT": {(country, occupation): (count, str(period))
@@ -99,6 +96,22 @@ def _wages(db):
         "CBS_NL_BRC": {(country, occupation): (count, str(period))
                        for country, occupation, count, period in nl},
     }
+
+    from app.north_america import US_SOC
+    bls = {}
+    if 'us_oews' in tables:
+        for code, count, year in db.execute("""SELECT occ_code,COUNT(*),MAX(published_year)
+            FROM us_oews WHERE area='99' AND area_type='1' AND naics='000000'
+            AND own_code='1235' AND o_group='detailed'
+            AND (a_mean IS NOT NULL OR a_median IS NOT NULL OR a_pct10 IS NOT NULL
+              OR a_pct25 IS NOT NULL OR a_pct75 IS NOT NULL OR a_pct90 IS NOT NULL
+              OR h_mean IS NOT NULL OR h_median IS NOT NULL OR h_pct10 IS NOT NULL
+              OR h_pct25 IS NOT NULL OR h_pct75 IS NOT NULL OR h_pct90 IS NOT NULL)
+            GROUP BY occ_code"""):
+            for occupation,(soc,title) in US_SOC.items():
+                if soc == code:bls[('US',occupation)] = (count, 'May '+str(year))
+    result['BLS_OEWS'] = bls
+    return result
 
 
 def _rates(db):
@@ -152,6 +165,11 @@ def build_inventory():
                 continue
             groups.setdefault((country, group), []).append(row)
 
+        bls_rows = 0
+        if wage_db.execute("SELECT 1 FROM sqlite_master WHERE name='us_oews' AND type='table'").fetchone():
+            from app.north_america import US_SOC
+            codes=sorted({v[0] for v in US_SOC.values()})
+            bls_rows=wage_db.execute("SELECT COUNT(*) FROM us_oews WHERE area='99' AND area_type='1' AND naics='000000' AND own_code='1235' AND o_group='detailed' AND occ_code IN ("+','.join('?' for _ in codes)+") AND (a_mean IS NOT NULL OR a_median IS NOT NULL OR h_mean IS NOT NULL OR h_median IS NOT NULL OR a_pct10 IS NOT NULL OR a_pct25 IS NOT NULL OR a_pct75 IS NOT NULL OR a_pct90 IS NOT NULL OR h_pct10 IS NOT NULL OR h_pct25 IS NOT NULL OR h_pct75 IS NOT NULL OR h_pct90 IS NOT NULL)", codes).fetchone()[0]
         result = []
         summary = {
             "world_bank": {"available": 0, "possible": len(COUNTRY_MAP) * len(INDICATORS),
@@ -164,7 +182,7 @@ def build_inventory():
                 "observed_pairs": 0,
                 "possible_pairs": len(COUNTRY_MAP) * len(OCCUPATIONS),
                 "stored_observations": 0,
-                "by_source_observations": {"ILOSTAT": 0, "BLS_Canada_Job_Bank": 0, "INE_GEP": 0, "ONS_ASHE": 0, "BA_ENTGELTATLAS": 0, "INSEE_FR_PCS_ESE": 0, "CBS_NL_BRC": 0}},
+                "by_source_observations": {"BLS_OEWS": 0, "ILOSTAT": 0, "BLS_Canada_Job_Bank": 0, "INE_GEP": 0, "ONS_ASHE": 0, "BA_ENTGELTATLAS": 0, "INSEE_FR_PCS_ESE": 0, "CBS_NL_BRC": 0}},
             "uk_ons_ashe": {
                 "observed_occupations": len(salaries["ONS_ASHE"]),
                 "stored_observations": sum(v[0] for v in salaries["ONS_ASHE"].values()),
@@ -203,6 +221,11 @@ def build_inventory():
                 "group_count": es_groups.get("group_count", 0),
                 "precision": "cno11_major_group_not_exact_occupation"},
         }
+        summary['exact_occupational_wages']['stored_observations'] += bls_rows
+        summary['exact_occupational_wages']['by_source_observations']['BLS_OEWS'] = bls_rows
+        summary['bls_oews'] = {'national_mapped_rows':bls_rows,
+            'mapped_occupations':len(salaries['BLS_OEWS']),
+            'methodology':'National detailed cross-industry all-ownership rows with an observed wage; approved SOC2018 mappings only. Country/occupation coverage is a union across sources. Physical BLS rows counted once even for aliases; measures and regional rows are not individual occupations.'}
         for country, details in COUNTRY_MAP.items():
             wb = {}
             for name in INDICATORS:
@@ -235,9 +258,9 @@ def build_inventory():
                         count, period = records[key]
                         sources.append({"source": provider, "observations": count,
                                         "latest_period": period})
-                        summary["exact_occupational_wages"]["stored_observations"] += count
+                        summary["exact_occupational_wages"]["stored_observations"] += count if provider != "BLS_OEWS" else 0
                         summary["exact_occupational_wages"]["by_source_observations"][
-                            provider] += count
+                            provider] += count if provider != "BLS_OEWS" else 0
                 if sources:
                     exact_available += 1
                     summary["exact_occupational_wages"]["observed_pairs"] += 1
