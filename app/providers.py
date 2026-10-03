@@ -1,11 +1,13 @@
 """Official, free upstream connectors. No invented or silently extrapolated observations."""
 import csv
 import math
+import json
 from io import StringIO
 
 import httpx
 
 from app import store
+from app.fx_policy import CACHE_TTL, ECB_CURRENCIES, valid_quote
 
 EUROSTAT = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr"
 ECB = "https://data-api.ecb.europa.eu/service/data/EXR"
@@ -97,29 +99,38 @@ async def inflation_series(country):
 async def exchange_rate(currency):
     if currency == "EUR":
         return {"currency": "EUR", "units_per_eur": 1.0, "period": None, "source": "identity"}
+    if currency not in ECB_CURRENCIES:
+        return None
     key = f"ecb:exchange:{currency}"
-    cached = store.get(key, 86400)
-    if cached is not None:
+    try:
+        cached = store.get(key, CACHE_TTL)
+    except (ValueError,TypeError):
+        cached = None
+    if cached is not None and valid_quote(cached,currency):
         return cached
     url = f"{ECB}/D.{currency}.EUR.SP00.A"
     try:
         async with httpx.AsyncClient(timeout=25, headers=HEADERS, follow_redirects=True) as client:
-            response = await client.get(url, params={"format": "csvdata", "lastNObservations": 1})
-            if response.status_code == 404:
-                return None
-            response.raise_for_status()
-            rows = list(csv.DictReader(StringIO(response.text)))
-    except httpx.HTTPError as exc:
+            async with client.stream('GET',url,params={"format":"csvdata","lastNObservations":1}) as response:
+                if response.status_code in (404,204):return None
+                response.raise_for_status()
+                body=bytearray()
+                async for chunk in response.aiter_bytes():
+                    if len(body)+len(chunk)>65536:raise UpstreamUnavailable("ECB response exceeds bounded size")
+                    body.extend(chunk)
+        rows=list(csv.DictReader(StringIO(body.decode('utf-8-sig'))))
+    except (httpx.HTTPError,UnicodeError) as exc:
         raise UpstreamUnavailable("ECB unavailable") from exc
-    if not rows:
-        return None
-    row = rows[-1]
-    try:
-        value = float(row["OBS_VALUE"])
-    except (KeyError, ValueError, TypeError) as exc:
-        raise UpstreamUnavailable("Unexpected ECB data structure") from exc
-    result = {"currency": currency, "units_per_eur": value, "period": row.get("TIME_PERIOD"),
-              "source": "ECB", "source_url": url,
-              "note": "Reference rate; not a retail money-transfer rate."}
-    store.set_value(key, result)
+    if not rows:return None
+    if len(rows)!=1:raise UpstreamUnavailable("Unexpected ECB observation count")
+    row=rows[0]
+    dimensions={'FREQ':'D','CURRENCY':currency,'CURRENCY_DENOM':'EUR','EXR_TYPE':'SP00','EXR_SUFFIX':'A'}
+    if any(row.get(k)!=v for k,v in dimensions.items()):raise UpstreamUnavailable("Unexpected ECB dimensions")
+    try:value=float(row['OBS_VALUE'])
+    except (KeyError,ValueError,TypeError) as exc:raise UpstreamUnavailable("Unexpected ECB data structure") from exc
+    result={"currency":currency,"units_per_eur":value,"period":row.get('TIME_PERIOD'),
+            "source":"ECB","source_url":url,
+            "note":"Dated reference rate; not a live or retail money-transfer rate. No stale fallback."}
+    if not valid_quote(result,currency):raise UpstreamUnavailable("ECB reference observation is invalid or too old")
+    store.set_value(key,result)
     return result
