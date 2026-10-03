@@ -149,3 +149,172 @@ de o catálogo publicar edições anteriores. Quarentena nova BLS requer revisã
 de promoção. Valores ausentes, grupos incompatíveis e profissões sem mapeamento não
 são estimados. Não foi publicada a aquisição em endpoints produtivos: os contratos
 FastAPI/WSGI existentes permanecem, e não houve merge ou deploy.
+
+## Phase 4C — publicação segura (2026-10-03)
+
+### Auditoria de Actions
+
+Foram revistos **35 workflows**, incluindo chamadas a módulos/scripts, permissões,
+triggers e comandos de publicação. O workflow herdado
+`import-canada-province-wages.yml` fazia `git rebase origin/main` seguido de
+`git push origin HEAD:main` a partir de triggers `push` por caminhos, inclusive
+numa feature branch. Podia publicar também o histórico da branch. Não era um
+canal seguro de revisão. Nove outros workflows tinham `git push` equivalente.
+
+Os dez passam a ter aquisição/validação com `contents: read`, checkout sem
+credenciais persistentes e um **job de escrita separado**, limitado a execução
+manual, no repositório original e com ref `main`. Preservam-se flags manuais já
+existentes e jobs de leitura. O job testa a suite completa sobre o dataset proposto
+e cria via GitHub API uma branch `data-review/<run>-<attempt>` e PR. A árvore tem
+como base o SHA exacto do `main` que originou o dispatch; se este avançou, aborta.
+Só ficheiros JSON de dados explicitamente autorizados podem mudar. Não se copiam
+commits da feature branch nem se actualiza qualquer ref `main`.
+
+Ver [auditoria por workflow](workflow-publication-audit.json).
+O workflow de refresh produtivo continua a usar exclusivamente o Data Manager
+existente e a sua variável de activação. Nenhum cron foi activado. O sistema de
+SSH/deployment não foi modificado. `actionlint 1.7.12` aprovou **34 workflows**,
+incluindo os dez alterados. No 35.º, `deploy-production.yml` inalterado, assinalou
+`if-cond` por whitespace em torno de `${{ }}` num bloco `if: >`. Os cinco últimos
+runs consultados estavam `skipped`. Este alerta requer revisão separada; não se
+alteraram condições, segredos ou activação do deployment nesta fase.
+
+Antes de usar as novas publicações, um administrador deve permitir ao
+`GITHUB_TOKEN` criar PRs nas definições Actions do repositório. PRs criados com esse
+token podem não desencadear CI automaticamente; validar os checks antes de merge.
+A publicação é uma proposta revista em Git, não um import produtivo. Ficheiros
+maiores que 4 MiB (ou 10 MiB no total) são recusados por esta via e exigem revisão
+de estratégia de artefactos.
+
+### Quarentena BLS: análise completa, sem aprovações automáticas
+
+Foram percorridas **13 565 versões/observações**, agrupadas conjuntamente em
+**3 253 grupos** por ano, SOC, nível geográfico, medida/unidade, motivo e magnitude.
+O relatório agregado e **28 exemplos estratificados** estão em
+[bls-quarantine-summary.json](bls-quarantine-summary.json). O relatório completo é
+reproduzível e fica ignorado em `docs/bulk/generated/`, não inflaciona o PR.
+
+| Dimensão | Resultado |
+| --- | --- |
+| Releases | 2022: 3 863; 2023: 3 565; 2024: 2 781; 2025: 3 356 |
+| SOC | 28 códigos detalhados SOC 2018; nenhum grupo amplo promovido |
+| Geografia | Estados: 751; territórios: 117; metropolitanas: 8 640; não metropolitanas: 4 057; nacional: 0 |
+| Motivo | 13 565 `unexpected_revision_or_temporal_variation` |
+| Variação absoluta | >30–50%: 9 898; >50–100%: 3 208; >100%: 459 |
+| Aprovações após revisão | **0**; todas permanecem em quarentena |
+
+A magnitude é recalculada contra a observação **anterior finita mais próxima** da
+mesma série/dimensões, incluindo valores oficiais em quarentena. É uma métrica
+retrospectiva, não uma reconstrução presumida do comparador original do importador.
+Nenhuma ficou <=30% nesta comparação. Os exemplos são extremos estratificados por
+medida/unidade, ano/geografia e magnitude; não são uma amostra aleatória estatística.
+
+Há concentração em dentistas (2 557), advogados (1 620) e empregados de mesa
+(1 289), bem como nos percentis 10/90 (7 263 células somadas). Hora/ano mantêm-se
+separados, embora possam reflectir o mesmo movimento da distribuição original.
+A ausência de alertas nacionais e a concentração regional são factos observados;
+não se atribui causalidade individual apenas por correlação.
+
+A [FAQ oficial BLS](https://www.bls.gov/oes/oes_ques.htm), secção de comparabilidade,
+afirma que o BLS **não encoraja análise de séries temporais OEWS** e que alterações
+geográficas podem tornar séries do mesmo código não directamente comparáveis.
+Documenta também a mudança de intervalos salariais para taxas exactas em maio de
+2022 e a publicação de novos percentis superiores em 2025. O
+[Handbook de estimação](https://www.bls.gov/opub/hom/oews/calculation.htm) documenta
+MB3, modelação e seis painéis em três anos. Estes factores sustentam dúvidas sobre
+um corte temporal genérico de 30% como certificado de erro salarial. Não validam,
+por si, cada observação sinalizada. Por isso **não se relaxou o limiar nem se aprovou
+quarentena** para aumentar cobertura. Revisão futura deve confrontar definições
+geográficas por release, quantis/variância e o registo original verificável.
+
+```bash
+python scripts/bls_quarantine_review.py \
+  --staging /ABSOLUTO/PRIVADO/bls/staging.sqlite3 \
+  --output docs/bulk/generated/phase4c/bls-quarantine.json
+```
+
+### Profissões em falta
+
+As **11 US e duas CA** foram registadas individualmente em
+[missing-occupation-review.json](missing-occupation-review.json), com códigos
+candidatos, títulos oficiais e motivo da decisão. A classificação original
+[SOC 2018, definições BLS](https://www.bls.gov/soc/2018/soc_2018_definitions.pdf)
+foi descarregada e verificada nesta fase; checksum no relatório. Os títulos
+EarnWage são genéricos e abrangem vários códigos com âmbito distinto: por exemplo,
+limpeza doméstica e de edifícios, diferentes cozinheiros, diferentes especialidades
+médicas e diferentes tarefas de armazém. Não há autorização estatística para
+escolher só um código e apresentar o salário como se cobrisse toda a profissão.
+
+No Canadá, o CSV oficial já adquirido confirma títulos separados para trabalho
+agrícola e gestão. As páginas originais NOC de Statistics Canada/ESDC continuam
+inacessíveis nesta sessão (`ProxyError`); títulos não substituem definições de
+funções. Foram acrescentados ao **rascunho** de configuração cloud, preservando os
+restantes destinos, `www.statcan.gc.ca`, `www23.statcan.gc.ca` e `noc.esdc.gc.ca`.
+O acesso voltou a falhar no teste; a gravação do rascunho não prova activação runtime.
+Ambos os mapeamentos ficam pendentes, sem aprovação.
+
+**Novos pares país/profissão verificados: 0.** Mantêm-se 29 US e 38 CA (67 pares
+existentes); os 13 em falta exigem âmbito ocupacional mais preciso e/ou validação
+oficial, não substituição por grandes grupos.
+
+### Publicação eficiente: ensaio exclusivamente local
+
+Ver [procedimento operacional](PUBLICATION.md) e
+[evidência do ensaio](publication-validation.json). Os componentes reutilizam o
+staging Phase 4B, tabelas salariais existentes, lock/autenticação/backups do Data
+Manager e ferramenta de recuperação já existente. Novos endpoints administrativos
+ficam **desactivados por omissão**, exigem checksum exacto, token existente e
+confirmação explícita. Nenhum endpoint público salarial muda.
+
+Prepararam-se **cinco pacotes**, com **4 126 células** aceites e **3 464 907 bytes**:
+BLS nacional 1 632; Job Bank nacional/provincial 2 494. O limite é 1 000 células e
+2 MiB por pedido. Não se transferem os ZIP completos nem o ledger de vários GB.
+As células de uma linha OEWS não são divididas entre pacotes. Cada base, incluindo
+WAL, tem limite de 256 MiB nesta via; limites e lock de 5 segundos protegem o
+hosting partilhado. Schema e chaves primárias são verificados antes da escrita.
+
+O ensaio criou bases SQLite locais apenas com snapshots Git: 1 448 linhas OEWS,
+85 nacionais norte-americanas e 2 493 provinciais canadianas. Os cinco pacotes:
+
+- Inseriram **112 linhas OEWS históricas** que faltavam na cópia local.
+- Identificaram **2 596 linhas duplicadas**, incluindo aliases ocupacionais CA.
+- Encontraram **0 conflitos** nessa baseline. Testes adicionais comprovam protecção
+  de conflitos/NULL existentes e recusa de sobrescrita.
+- Passaram repetição idempotente, backups frescos, recuperação para directório
+  novo e rollback integral das únicas linhas inseridas. As contagens iniciais
+  foram repostas e `PRAGMA integrity_check` devolveu `ok`.
+
+As contagens de linhas SQL não são as contagens de células salariais ou pares:
+uma linha OEWS contém várias medidas e códigos partilhados CA geram mais de uma
+linha por célula oficial. Não existe inventário produtivo autorizado, pelo que
+estes números **não representam diferenças efectivas em produção**.
+
+Mantêm-se fora do pacote: 866 569 células BLS regionais (metadados históricos
+`prim_state` original incompletos), 11 378 Job Bank de regiões económicas (sem modelo
+API/tabela existente equivalente) e 146 medidas nacionais CA fora do contrato
+média/mediana. Não são descartadas nem convertidas em dados nacionais: permanecem
+no staging e no dashboard com as unidades e proveniência originais.
+
+O dashboard pode ser reproduzido com `--publication-review docs/bulk/phase4c-review.json`
+além dos argumentos Phase 4B. Inclui a análise de quarentena, pares novos, pacotes,
+âmbitos excluídos e ensaio local, mantendo a ausência de inventário produtivo explícita.
+
+Pré-requisitos produtivos: integração revista, exportação produtiva autorizada,
+validação de compatibilidade e recursos, transferência privada dos pacotes revistos,
+backups/recuperação testados pelo operador e activação **manual** da via Data Manager.
+Nenhum deles foi activado remotamente nesta entrega. Não houve merge, deploy,
+alteração de Android, dados económicos, token ou bases de produção. PR #13 continua
+independente.
+
+### Validação final Phase 4C
+
+**455 testes aprovados, 0 falhados**, incluindo todos os 424 anteriores e 31 novos.
+Cobertura nova: gates de workflows/branches, árvore do PR limitada a dados, recusa
+quando `main` avança, classificação completa da quarentena read-only, pacotes e
+checksums, supressões, schema/PK, limites, autenticação/confirmacão, backup antes de
+escrita, idempotência, conflitos protegidos, atomicidade, rollback após edições,
+recuperação e dashboard com distinção explícita entre ensaio local e produção.
+Mantém-se **um aviso herdado** Starlette TestClient/httpx. `pip check` passou.
+YAML dos 35 workflows foi analisado; `actionlint` validou os 34 sem o alerta de
+whitespace herdado no deployment, já descrito acima. O lint foi executado sem
+integração externa ShellCheck/Pyflakes; não se afirma que esses analisadores passaram.

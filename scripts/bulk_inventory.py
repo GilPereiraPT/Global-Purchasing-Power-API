@@ -15,6 +15,7 @@ def main():
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--acquisition-report',type=Path)
     p.add_argument('--staging',type=Path,action='append',default=[])
+    p.add_argument('--publication-review',type=Path,help='Explicit offline Phase 4C aggregate review')
     p.add_argument('--production-inventory',type=Path)
     p.add_argument('--inventory-authorization')
     a=p.parse_args()
@@ -23,6 +24,12 @@ def main():
     if a.staging:
         from app.bulk_salary_coverage import summarize,attach
         attach(report,summarize(a.staging,a.snapshot_dir,a.production_inventory,a.inventory_authorization))
+    if a.publication_review:
+        path=a.publication_review
+        if path.is_symlink() or not path.is_file() or path.stat().st_size>1_000_000:raise ValueError('Unsafe publication review')
+        review=json.loads(path.read_text())
+        if review.get('schema')!='earnwage-phase4c-review-v1':raise ValueError('Unknown publication review schema')
+        report['publication_review']=review
     a.output.mkdir(parents=True,exist_ok=True)
     (a.output/'inventory.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     (a.output/'inventory.md').write_text(markdown(report))

@@ -62,3 +62,16 @@ def test_baseline_aliases_deduplicate_and_revisions_are_separate(tmp_path):
     assert summary['baseline_not_in_accepted']==12
     assert summary['baseline_observation_differences']['new']==0
     assert summary['baseline_observation_differences']['revisions']==12
+
+
+def test_publication_review_dashboard_keeps_local_and_production_distinct(tmp_path):
+    report=build_report(snapshot_dir=tmp_path)
+    review=json.loads(Path('docs/bulk/phase4c-review.json').read_text())
+    review['excluded_publication_scopes']={'<script>':'unrepresentable'}
+    report['publication_review']=review
+    html=html_report(report)
+    assert 'nenhuma publicação em produção' in html
+    assert '13565' in html and '112' in html
+    assert '&lt;script&gt;' in html
+    from app.bulk_coverage import markdown
+    assert 'Sem comparação ou publicação em produção' in markdown(report)

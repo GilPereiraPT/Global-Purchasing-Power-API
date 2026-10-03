@@ -218,6 +218,14 @@ def markdown(report):
         lines.append(f"| {c['country']} | {sum(o['stored_observations']>0 for o in c['occupations'])} | {sum(o['snapshot_records']>0 for o in c['occupations'])} | {c['unmapped_or_group_snapshot_records']} |")
     lines.extend(['','## Limitações','',*('- '+v for v in report['limitations']),
                   '', 'O JSON associado contém cada profissão, períodos, lacunas, fontes e códigos originais.'])
+    review=report.get('publication_review')
+    if review:
+        lines.extend(['','## Publicação segura — validação local','',
+          f"Quarentena BLS revista: {review['quarantined_reviewed']}; aprovações: {review['quarantine_approved']}.",
+          f"Novos pares país/profissão validados: {review['new_verified_pairs']}.",
+          f"Pacotes: {review['package_observations']} observações; {review['package_bytes']} bytes.",
+          f"Ensaio local: {review['local_inserted_rows']} linhas inseridas, {review['local_duplicate_rows']} duplicadas; rollback e recuperação verificados.",
+          'Sem comparação ou publicação em produção. Âmbitos não representáveis permanecem no staging.'])
     return '\n'.join(lines)+'\n'
 
 
@@ -249,6 +257,11 @@ def html_report(report):
             economic+='<p>Datas de aquisição: '+escape(', '.join(source['acquisition_dates']))+'</p><ul>'
             economic+=''.join('<li>'+escape(url)+'</li>' for url in source['sources'])+'</ul></details>'
         economic+='<p>Execuções incompletas excluídas: '+str(bulk['excluded_incomplete_run_observations'])+'. Amostras de testes não contam como aquisição live.</p>'
+    review=report.get('publication_review')
+    if review:
+        economic+='<h2>Publicação segura — ensaio local</h2><p>'+escape(str(review['quarantined_reviewed']))+' observações BLS revistas; '+escape(str(review['quarantine_approved']))+' aprovadas. Novos pares validados: '+escape(str(review['new_verified_pairs']))+'.</p>'
+        economic+='<p>Pacotes: '+escape(str(review['package_observations']))+' observações / '+escape(str(review['package_bytes']))+' bytes. Ensaio local: '+escape(str(review['local_inserted_rows']))+' linhas inseridas e '+escape(str(review['local_duplicate_rows']))+' duplicadas. Rollback e recuperação verificados; nenhuma publicação em produção.</p>'
+        economic+='<p>Âmbitos excluídos: '+escape(str(review['excluded_publication_scopes']))+'</p>'
     economic+='<p>'+str(summary['stored_economic_observations'])+' observações locais · '+str(acquisition.get('quarantined_versions') or 0)+' versões em quarentena · '+str(len(report['failed_updates']))+' atualizações falhadas.</p>'
     if acquisition.get('by_source'):
         economic+='<p>'+escape(' · '.join(source+': '+str(count) for source,count in acquisition['by_source'].items()))+'</p>'

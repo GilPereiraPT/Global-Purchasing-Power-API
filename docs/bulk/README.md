@@ -191,3 +191,8 @@ bases configuradas e isolamento do workflow. **Suite completa: 369 testes aprova
    moedas ou populações; só depois integrar promoção autorizada no Data Manager.
 8. Validar dataflows OECD e layouts oficiais RAIS/IBGE/MoSPI/PBS/CSO; não preencher
    profissões incompatíveis ou ausentes.
+
+Phase 4C: ver a secção final de [PHASE4B.md](PHASE4B.md) e o
+[procedimento de publicação](PUBLICATION.md). A revisão completa BLS e os pacotes
+reutilizam os arquivos adquiridos, sem transferência para produção. A via Data
+Manager fica desactivada por omissão e requer confirmação/checksum explícitos.

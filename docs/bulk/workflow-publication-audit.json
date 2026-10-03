@@ -1,0 +1,727 @@
+{
+  "workflows_reviewed": 35,
+  "direct_main_writers_after_change": 0,
+  "dataset_review_publishers": 10,
+  "scheduled_acquisition_activated_by_change": false,
+  "ssh_deployment_modified": false,
+  "workflows": [
+    {
+      "file": "android-apk.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "apk",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "audit-canada-noc.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "audit",
+          "permissions": {},
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "bulk-data-acquisition.yml",
+      "events": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "acquire",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": "github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && (github.event_name == 'workflow_dispatch' ||\n (github.event_name == 'schedule' && vars.EARNWAGE_BULK_CHECKS_ENABLED == 'true'))",
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "cleanup-actions.yml",
+      "events": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "cleanup",
+          "permissions": {
+            "actions": "write",
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "deploy-production.yml",
+      "events": [
+        "workflow_run"
+      ],
+      "jobs": [
+        {
+          "job": "deploy",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": "${{\n  vars.EARNWAGE_DEPLOY_ENABLED == 'true' &&\n  github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' &&\n  github.event.workflow_run.event == 'push' &&\n  github.event.workflow_run.status == 'completed' &&\n  github.event.workflow_run.conclusion == 'success' &&\n  github.event.workflow_run.head_branch == 'main' &&\n  github.event.workflow_run.head_repository.full_name == 'GilPereiraPT/Global-Purchasing-Power-API'\n}}\n",
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "existing_SSH_deployment_unchanged"
+    },
+    {
+      "file": "diagnose-ilostat-salaries.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "salary-diagnostic",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "diagnose-ilostat.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "probe",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "diagnose-rilostat-client.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "catalogue",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "earnwage-lab-pages.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "deploy",
+          "permissions": {
+            "contents": "read",
+            "pages": "write",
+            "id-token": "write"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "earnwage-production-data.yml",
+      "events": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "world-bank",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": "(github.event_name == 'workflow_dispatch' && inputs.source == 'world_bank') || (github.event_name == 'schedule' && github.event.schedule == '21 4 * * *' &&\n vars.EARNWAGE_SCHEDULE_ENABLED == 'true')",
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "eurostat",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": "(github.event_name == 'workflow_dispatch' && inputs.source == 'eurostat') || (github.event_name == 'schedule' && github.event.schedule == '21 5 * * *' &&\n vars.EARNWAGE_SCHEDULE_ENABLED == 'true')",
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "existing_authenticated_Data_Manager_refresh"
+    },
+    {
+      "file": "import-brazil-rais-states.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "import",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "import-canada-groups.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "import",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "import-canada-province-wages.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "provincial",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "import-canada-wages.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "canada",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "import-ch-bfs-wages.yml",
+      "events": [
+        "push",
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "import",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "import-india-plfs-2025.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "import",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "import-us-bls.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "verified",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "import-us-oews-complete.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "import",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-ch-it-ilostat-exact.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-ch-it-official-sources.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-fr-insee-national-v2.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-fr-insee-national.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-fr-insee-wages-v2.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-fr-insee-wages-v3.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-fr-insee-wages.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-india-plfs-2025.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-ine-pt-wages.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect-official-source",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-nl-cbs-wages.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-north-america.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {},
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "inspect-ons-uk-ashe.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "inspect",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "prepare-ilostat-groups.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "prepare",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' && (inputs.publish_snapshot == true) }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "refresh-ilostat.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "import",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        },
+        {
+          "job": "propose-review",
+          "permissions": {
+            "contents": "write",
+            "pull-requests": "write"
+          },
+          "condition": "${{ github.event_name == 'workflow_dispatch' && github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' && github.ref == 'refs/heads/main' && (inputs.catalogue_only == false) }}",
+          "publication": "manual_data_only_pr"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "tests.yml",
+      "events": [
+        "pull_request",
+        "push",
+        "workflow_run"
+      ],
+      "jobs": [
+        {
+          "job": "tests",
+          "permissions": {},
+          "condition": "${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}",
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "verify-ilostat-bulk.yml",
+      "events": [
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "probe",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    },
+    {
+      "file": "verify-uhc-source.yml",
+      "events": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "jobs": [
+        {
+          "job": "validate-official-revised-service-coverage",
+          "permissions": {
+            "contents": "read"
+          },
+          "condition": null,
+          "publication": "no_git_dataset_publication"
+        }
+      ],
+      "production_effect": "no_production_database_import"
+    }
+  ]
+}
