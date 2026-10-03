@@ -41,7 +41,9 @@ code{word-break:break-word}
 <p>O painel utiliza apenas a API EarnWage em produção. As operações de escrita exigem a chave de administração já configurada no servidor como <code>EARNWAGE_ADMIN_TOKEN</code> (mínimo 32 caracteres). A chave não é guardada em ficheiros, cookies ou localStorage. Não a coloques no GitHub nem a envies por mensagem.</p>
 <label for="token">Chave privada da API — apenas na memória desta página</label>
 <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="Chave de administração">
-<div class="actions"><button id="check">Verificar acesso e estado</button><button class="secondary" id="inventory">Consultar dados existentes</button></div>
+<div class="actions"><button id="check">Verificar acesso e estado</button><button class="secondary" id="inventory">Consultar dados existentes</button><button class="secondary" id="salaryInventory">Exportar inventário salarial</button></div>
+<p class="muted">A exportação exige autorização administrativa e lê apenas a base salarial existente. Descarrega um ZIP privado com manifest e JSON, sem publicar salários ou incluir bases SQLite, configuração ou a chave.</p>
+<p id="salaryInventoryResult" class="muted" role="status" aria-live="polite">Inventário salarial por exportar.</p>
 <p id="status" class="muted" role="status" aria-live="polite">A aguardar consulta.</p>
 <div id="counts" class="grid"></div>
 </section>
@@ -143,7 +145,7 @@ function log(t){const el=$("log");el.textContent+= "\n"+t;el.scrollTop=el.scroll
 function report(t){$("status").textContent=t}
 function busy(on){
 working=on;
-for(const id of ["check","inventory","backup","preview","one","countryAll","essentials",
+for(const id of ["check","inventory","salaryInventory","backup","preview","one","countryAll","essentials",
                  "history","gdpAll","uhcAll","waveCountry","waveAll","source","country","indicator","mode"])$(id).disabled=on;
 $("stop").disabled=!on;
 }
@@ -356,6 +358,56 @@ await publicInventory();
 await status();
 report("API de produção atualizada e reiniciada · versão "+r.version+".");
 },"A atualizar a API a partir do GitHub…");
+
+async function exportSalaryInventory(){
+const token=$("token").value;
+if(token.length<32){
+$("salaryInventoryResult").textContent="Inventário NÃO exportado: introduz a chave de administração já configurada na API.";
+throw Error("Introduz a chave de administração já configurada na API.");
+}
+const controller=new AbortController();
+const timer=setTimeout(()=>controller.abort(),90000);
+try{
+$("salaryInventoryResult").textContent="A gerar o inventário salarial privado. Mantém esta página aberta…";
+const response=await fetch(API+"/v1/admin/data-manager/salary-inventory",{
+method:"POST",mode:"cors",cache:"no-store",signal:controller.signal,
+headers:{"Content-Type":"application/json","X-EarnWage-Admin-Token":token},
+body:JSON.stringify({confirm:"export_read_only_salary_inventory"})});
+if(!response.ok){
+let error={};try{error=await response.json()}catch{}
+const names={unauthorized:"A chave de administração não foi aceite.",
+admin_not_configured:"A administração não está configurada no servidor.",
+forbidden_origin:"Esta origem não está autorizada a exportar o inventário.",
+another_import_is_running:"Existe outra operação em curso. Aguarda e tenta novamente."};
+if(response.status===404)throw Error("A API instalada ainda não suporta a exportação salarial. Nenhum inventário foi descarregado.");
+throw Error(error.message||names[error.error]||"A exportação falhou (HTTP "+response.status+").");
+}
+const length=Number(response.headers.get("Content-Length"));
+const checksum=response.headers.get("X-EarnWage-Inventory-SHA256")||"";
+if(response.headers.get("Content-Type")?.split(";")[0]!=="application/zip" ||
+ !Number.isSafeInteger(length)||length<22||length>101*1024*1024||!/^[a-f0-9]{64}$/.test(checksum))
+throw Error("A API não devolveu um ZIP de inventário válido. Nenhum ficheiro foi descarregado.");
+const blob=await response.blob();
+if(blob.size!==length)throw Error("A descarga ficou incompleta. Repete a exportação; não uses um ficheiro parcial.");
+const name=response.headers.get("Content-Disposition")?.match(/filename="(earnwage-salary-inventory-[0-9TZ]+\.zip)"/)?.[1]||"inventario-salarial.zip";
+const url=URL.createObjectURL(blob),link=document.createElement("a");
+link.href=url;link.download=name;document.body.append(link);
+try{link.click()}finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+$("salaryInventoryResult").textContent="Inventário salarial gerado; descarga iniciada · "+blob.size.toLocaleString("pt-PT")+" bytes. Guarda o ZIP em local privado.";
+log("Inventário salarial · "+name+" · SHA-256 "+checksum);
+report("Inventário salarial exportado. Nenhum salário foi publicado ou alterado.");
+}catch(error){
+const message=error.name==="AbortError"?"A exportação demorou demasiado ou a ligação foi interrompida. Não foi descarregado um ZIP parcial.":
+error.name==="TypeError"?"Não foi possível contactar a API ou concluir a descarga. Verifica a ligação e tenta novamente.":error.message;
+$("salaryInventoryResult").textContent="Inventário NÃO exportado: "+message;
+throw Error(message);
+}finally{clearTimeout(timer)}
+}
+$("salaryInventory").onclick=()=>{
+if(working)return;
+if(!confirm("Autorizas a leitura da base salarial existente e a descarga de um inventário privado? Esta operação não publica nem altera salários."))return;
+return standalone(exportSalaryInventory,"A exportar o inventário salarial…");
+};
 
 $("backup").onclick=()=>standalone(async()=>{
 try{

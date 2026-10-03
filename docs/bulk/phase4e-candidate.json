@@ -1,0 +1,42 @@
+{
+  "status": "candidate_only_not_authorized_not_proven_new",
+  "baseline": "production inventory not provided",
+  "file": "dbf36d12a63427e77a4d60d076bd55ef844faa5bd47bd5bc3d4ec67e886f60c9.json",
+  "sha256": "dbf36d12a63427e77a4d60d076bd55ef844faa5bd47bd5bc3d4ec67e886f60c9",
+  "bytes": 9182,
+  "observations": 12,
+  "target_rows": 1,
+  "provider": "bls",
+  "dataset": "OEWS",
+  "country": "US",
+  "geography": "national",
+  "period": "2021",
+  "original_period": "May 2021",
+  "classification": "SOC2018:15-1252",
+  "occupations": [
+    "software_developer"
+  ],
+  "measures": [
+    "mean",
+    "median",
+    "pct10",
+    "pct25",
+    "pct75",
+    "pct90"
+  ],
+  "units": [
+    "USD/hour",
+    "USD/year"
+  ],
+  "source_url": "https://www.bls.gov/oes/special-requests/oesm21all.zip",
+  "artifact_sha256": "4dc5c9db9e111a06e612e848e107488a7beec0743853f02b1a3a069bb48207ce",
+  "expected_new_observations": null,
+  "publication_authorized": false,
+  "acquired_at": "2026-10-03T03:26:41.492053+00:00",
+  "isolated_git_snapshot_preview": {
+    "inserted_rows": 1,
+    "duplicate_rows": 0,
+    "protected_existing_rows": 0
+  },
+  "preview_is_not_production": true
+}
