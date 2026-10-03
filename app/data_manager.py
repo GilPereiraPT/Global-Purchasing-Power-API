@@ -509,6 +509,10 @@ def _bulk_publication(action, payload):
 def _safe_backup_failure(exc):
     """Classify known backup issues without revealing paths or internals."""
     reason = str(exc)
+    if reason == "insufficient_backup_disk_space":
+        return "insufficient_backup_disk_space"
+    if reason == "backup_timeout":
+        return "backup_timeout"
     if isinstance(exc, PermissionError):
         return "backup_permission_denied"
     if isinstance(exc, FileNotFoundError):
