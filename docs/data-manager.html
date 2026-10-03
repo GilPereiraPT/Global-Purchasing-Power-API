@@ -61,6 +61,15 @@ code{word-break:break-word}
 <p id="backupResult" class="muted">Por executar. Sem uma cópia verificada, o Data Manager recusa novas importações.</p>
 </section>
 <section>
+<h2>Publicação salarial</h2>
+<p>Carrega um pacote JSON validado e revê o resultado. Estas operações não publicam salários nem ativam a publicação.</p>
+<div class="grid"><div><label for="salaryFile">Pacote salarial JSON (máximo 2 MiB)</label><input id="salaryFile" type="file" accept=".json,application/json"></div>
+<div><label for="salaryChecksum">SHA-256 esperado (fornecido com o pacote)</label><input id="salaryChecksum" type="text" maxlength="64" autocomplete="off" spellcheck="false"></div></div>
+<div class="actions"><button id="salaryUpload">Carregar pacote privado</button><button class="secondary" id="salaryPreview">Pré-visualizar publicação</button></div>
+<p id="salaryResult" class="muted">Nenhum pacote revisto. Cada pacote exige revisão e autorização explícita.</p>
+<p id="salarySafety" class="notice">Antes de qualquer publicação: verificar espaço livre e quota (3 × bases e WAL + snapshots + 64 MiB por backup), permissões e bloqueios SQLite; criar backup verificado e ensaiar recuperação numa pasta isolada. A existência de uma cópia não comprova recuperação. Não existe botão de publicação nesta secção.</p>
+</section>
+<section>
 <h2>4. Escolher o que atualizar</h2>
 <div class="grid">
 <div><label for="source">Fonte</label><select id="source">
@@ -146,7 +155,7 @@ function report(t){$("status").textContent=t}
 function busy(on){
 working=on;
 for(const id of ["check","inventory","salaryInventory","backup","preview","one","countryAll","essentials",
-                 "history","gdpAll","uhcAll","waveCountry","waveAll","source","country","indicator","mode"])$(id).disabled=on;
+                 "salaryFile","salaryChecksum","salaryUpload","salaryPreview","history","gdpAll","uhcAll","waveCountry","waveAll","source","country","indicator","mode"])$(id).disabled=on;
 $("stop").disabled=!on;
 }
 function smallCard(title,value,note){
@@ -213,7 +222,7 @@ if(action==="backup" && body.error==="invalid_manager_request")
  throw Error("A API de produção devolveu a mensagem genérica da versão anterior do Data Manager. Atualiza apenas app/data_manager.py através do Gestor de Ficheiros do cPanel e reinicia em Setup Python App. Se persistir, consulta o error_log.");
 if(action==="deploy" && body.error==="github_tests_not_green")
  throw Error("A versão mais recente do GitHub ainda não tem os API tests verdes. Aguarda a conclusão dos testes e tenta novamente.");
-throw Error((body.error||body.detail||"HTTP "+r.status)+
+throw Error((body.message||body.error||body.detail||"HTTP "+r.status)+
  (body.note?" · "+body.note:""));
 }
 return body;
@@ -324,6 +333,47 @@ try{await status();await publicInventory()}catch(e){log("Estado: "+e.message)}
 finally{busy(false)}
 }
 $("source").onchange=updateOptions;
+function salaryChecksum(){
+const checksum=$("salaryChecksum").value.trim();
+if(!/^[0-9a-f]{64}$/.test(checksum))throw Error("Introduz o SHA-256 esperado: 64 caracteres hexadecimais minúsculos.");
+return checksum;
+}
+async function uploadSalaryPackage(){
+const file=$("salaryFile").files[0],checksum=salaryChecksum(),token=$("token").value;
+if(token.length<32)throw Error("Introduz a chave de administração no campo próprio.");
+if(!file || !file.name.toLowerCase().endsWith(".json") || !file.size || file.size>2*1024*1024)
+ throw Error("Seleciona um ficheiro JSON com tamanho entre 1 byte e 2 MiB.");
+const bytes=await file.arrayBuffer();
+const actual=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),b=>b.toString(16).padStart(2,"0")).join("");
+if(actual!==checksum)throw Error("O SHA-256 do ficheiro não corresponde ao checksum esperado. Não foi enviado.");
+const response=await fetch(API+"/v1/admin/data-manager/salary-upload",{
+method:"POST",mode:"cors",cache:"no-store",headers:{"Content-Type":"application/json",
+"X-EarnWage-Admin-Token":token,"X-EarnWage-Package-SHA256":checksum},body:bytes});
+const result=await response.json();
+if(!response.ok)throw Error(result.message||"Não foi possível carregar o pacote (HTTP "+response.status+").");
+$("salaryResult").textContent="Pacote guardado em privado · SHA-256: "+result.checksum+
+" · "+result.observations+" medidas · "+result.target_rows+" registos. Ainda sem revisão ou autorização de publicação.";
+return result;
+}
+async function previewSalaryPackage(){
+const result=await admin("bulk-preview",{checksum:salaryChecksum()});
+if(result.status!=="review_required")throw Error("A pré-visualização não foi concluída. Não publicar.");
+$("salaryResult").textContent="SHA-256: "+result.checksum+" · Registos novos: "+result.inserted_rows+
+" · Duplicados: "+result.duplicate_rows+" · Registos protegidos: "+result.protected_existing_rows+
+" · Publicação "+(result.publication_enabled?"ativada no servidor":"desativada")+"; autorização deste pacote ainda necessária.";
+$("salarySafety").textContent="Cópias privadas listadas: "+(result.backups||[]).length+
+" · Pré-requisitos de configuração: "+(result.backup_readiness?.ready?"prontos para tentativa":"por verificar")+
+". Espaço/quota, permissões e ensaio de recuperação continuam a exigir verificação. Uma cópia existente não comprova recuperação. Não publicar se o resultado diferir do aprovado.";
+return result;
+}
+$("salaryUpload").onclick=()=>standalone(async()=>{
+$("salaryResult").textContent="A validar e carregar o pacote…";
+try{return await uploadSalaryPackage()}catch(e){$("salaryResult").textContent="Carregamento recusado: "+e.message;throw e}
+},"A carregar pacote salarial...");
+$("salaryPreview").onclick=()=>standalone(async()=>{
+$("salaryResult").textContent="A pré-visualizar sem alterar salários…";
+try{return await previewSalaryPackage()}catch(e){$("salaryResult").textContent="Pré-visualização não concluída: "+e.message;throw e}
+},"A pré-visualizar pacote salarial...");
 $("inventory").onclick=()=>standalone(publicInventory,"A consultar base de dados...");
 $("check").onclick=()=>standalone(async()=>{
 await publicInventory();await status();report("Ligação protegida verificada · Data Manager disponível.");
