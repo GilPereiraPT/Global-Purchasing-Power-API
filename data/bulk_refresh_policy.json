@@ -28,6 +28,11 @@
       "check_interval_days": 90,
       "dataset_frequency": "annual",
       "conditional_requests": true
+    },
+    "job_bank": {
+      "check_interval_days": 90,
+      "dataset_frequency": "annual",
+      "conditional_requests": true
     }
   },
   "series_overrides": {

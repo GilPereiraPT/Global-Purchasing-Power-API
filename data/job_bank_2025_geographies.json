@@ -1,0 +1,350 @@
+{
+  "source_url": "https://open.canada.ca/data/dataset/adad580f-76b0-4502-bd05-20c125de9116",
+  "release": "2025",
+  "geographies": {
+    "ER00": {
+      "province": "NAT",
+      "name": "Canada"
+    },
+    "ER10": {
+      "province": "NL",
+      "name": "Newfoundland and Labrador"
+    },
+    "ER1010": {
+      "province": "NL",
+      "name": "Avalon Peninsula"
+    },
+    "ER1020": {
+      "province": "NL",
+      "name": "South Coast--Burin Peninsula"
+    },
+    "ER1030": {
+      "province": "NL",
+      "name": "West Coast--Northern Peninsula--Labrador"
+    },
+    "ER1040": {
+      "province": "NL",
+      "name": "Notre Dame--Central Bonavista Bay"
+    },
+    "ER1110": {
+      "province": "PEI",
+      "name": "Prince Edward Island"
+    },
+    "ER12": {
+      "province": "NS",
+      "name": "Nova Scotia"
+    },
+    "ER1210": {
+      "province": "NS",
+      "name": "Cape Breton"
+    },
+    "ER1220": {
+      "province": "NS",
+      "name": "North Shore"
+    },
+    "ER1230": {
+      "province": "NS",
+      "name": "Annapolis Valley"
+    },
+    "ER1240": {
+      "province": "NS",
+      "name": "Southern"
+    },
+    "ER1250": {
+      "province": "NS",
+      "name": "Halifax"
+    },
+    "ER13": {
+      "province": "NB",
+      "name": "New Brunswick"
+    },
+    "ER1310": {
+      "province": "NB",
+      "name": "Campbellton--Miramichi"
+    },
+    "ER1320": {
+      "province": "NB",
+      "name": "Moncton--Richibucto"
+    },
+    "ER1330": {
+      "province": "NB",
+      "name": "Saint John--St. Stephen"
+    },
+    "ER1340": {
+      "province": "NB",
+      "name": "Fredericton--Oromocto"
+    },
+    "ER1350": {
+      "province": "NB",
+      "name": "Edmundston--Woodstock"
+    },
+    "ER24": {
+      "province": "QC",
+      "name": "Quebec"
+    },
+    "ER2410": {
+      "province": "QC",
+      "name": "Gasp\u00e9sie--\u00celes-de-la-Madeleine"
+    },
+    "ER2415": {
+      "province": "QC",
+      "name": "Bas-Saint-Laurent"
+    },
+    "ER2420": {
+      "province": "QC",
+      "name": "Capitale-Nationale"
+    },
+    "ER2425": {
+      "province": "QC",
+      "name": "Chaudi\u00e8re-Appalaches"
+    },
+    "ER2430": {
+      "province": "QC",
+      "name": "Estrie"
+    },
+    "ER2433": {
+      "province": "QC",
+      "name": "Centre-du-Qu\u00e9bec"
+    },
+    "ER2435": {
+      "province": "QC",
+      "name": "Mont\u00e9r\u00e9gie"
+    },
+    "ER2440": {
+      "province": "QC",
+      "name": "Montr\u00e9al"
+    },
+    "ER2445": {
+      "province": "QC",
+      "name": "Laval"
+    },
+    "ER2450": {
+      "province": "QC",
+      "name": "Lanaudi\u00e8re"
+    },
+    "ER2455": {
+      "province": "QC",
+      "name": "Laurentides"
+    },
+    "ER2460": {
+      "province": "QC",
+      "name": "Outaouais"
+    },
+    "ER2465": {
+      "province": "QC",
+      "name": "Abitibi-T\u00e9miscamingue"
+    },
+    "ER2470": {
+      "province": "QC",
+      "name": "Mauricie"
+    },
+    "ER2475": {
+      "province": "QC",
+      "name": "Saguenay--Lac-Saint-Jean"
+    },
+    "ER2480": {
+      "province": "QC",
+      "name": "C\u00f4te-Nord"
+    },
+    "ER2490": {
+      "province": "QC",
+      "name": "Nord-du-Qu\u00e9bec"
+    },
+    "ER35": {
+      "province": "ON",
+      "name": "Ontario"
+    },
+    "ER3510": {
+      "province": "ON",
+      "name": "Ottawa"
+    },
+    "ER3515": {
+      "province": "ON",
+      "name": "Kingston--Pembroke"
+    },
+    "ER3520": {
+      "province": "ON",
+      "name": "Muskoka--Kawarthas"
+    },
+    "ER3530": {
+      "province": "ON",
+      "name": "Toronto"
+    },
+    "ER3540": {
+      "province": "ON",
+      "name": "Kitchener--Waterloo--Barrie"
+    },
+    "ER3550": {
+      "province": "ON",
+      "name": "Hamilton--Niagara Peninsula"
+    },
+    "ER3560": {
+      "province": "ON",
+      "name": "London"
+    },
+    "ER3570": {
+      "province": "ON",
+      "name": "Windsor--Sarnia"
+    },
+    "ER3580": {
+      "province": "ON",
+      "name": "Stratford--Bruce Peninsula"
+    },
+    "ER3590": {
+      "province": "ON",
+      "name": "Northeast"
+    },
+    "ER3595": {
+      "province": "ON",
+      "name": "Northwest"
+    },
+    "ER46": {
+      "province": "MB",
+      "name": "Manitoba"
+    },
+    "ER4610": {
+      "province": "MB",
+      "name": "Southeast"
+    },
+    "ER4620": {
+      "province": "MB",
+      "name": "South Central"
+    },
+    "ER4630": {
+      "province": "MB",
+      "name": "Southwest"
+    },
+    "ER4640": {
+      "province": "MB",
+      "name": "North Central"
+    },
+    "ER4650": {
+      "province": "MB",
+      "name": "Winnipeg"
+    },
+    "ER4660": {
+      "province": "MB",
+      "name": "Interlake"
+    },
+    "ER4670": {
+      "province": "MB",
+      "name": "Parklands"
+    },
+    "ER4680": {
+      "province": "MB",
+      "name": "North"
+    },
+    "ER47": {
+      "province": "SK",
+      "name": "Saskatchewan"
+    },
+    "ER4710": {
+      "province": "SK",
+      "name": "Regina--Moose Mountain"
+    },
+    "ER4720": {
+      "province": "SK",
+      "name": "Swift Current--Moose Jaw"
+    },
+    "ER4730": {
+      "province": "SK",
+      "name": "Saskatoon--Biggar"
+    },
+    "ER4740": {
+      "province": "SK",
+      "name": "Yorkton--Melville"
+    },
+    "ER4750": {
+      "province": "SK",
+      "name": "Prince Albert"
+    },
+    "ER4760": {
+      "province": "SK",
+      "name": "Northern"
+    },
+    "ER48": {
+      "province": "AB",
+      "name": "Alberta"
+    },
+    "ER4810": {
+      "province": "AB",
+      "name": "Lethbridge--Medicine Hat"
+    },
+    "ER4820": {
+      "province": "AB",
+      "name": "Camrose--Drumheller"
+    },
+    "ER4830": {
+      "province": "AB",
+      "name": "Calgary"
+    },
+    "ER4840": {
+      "province": "AB",
+      "name": "Banff--Jasper--Rocky Mountain House"
+    },
+    "ER4850": {
+      "province": "AB",
+      "name": "Red Deer"
+    },
+    "ER4860": {
+      "province": "AB",
+      "name": "Edmonton"
+    },
+    "ER4870": {
+      "province": "AB",
+      "name": "Athabasca--Grande Prairie--Peace River"
+    },
+    "ER4880": {
+      "province": "AB",
+      "name": "Wood Buffalo--Cold Lake"
+    },
+    "ER59": {
+      "province": "BC",
+      "name": "British Columbia"
+    },
+    "ER5910": {
+      "province": "BC",
+      "name": "Vancouver Island and Coast"
+    },
+    "ER5920": {
+      "province": "BC",
+      "name": "Lower Mainland"
+    },
+    "ER5930": {
+      "province": "BC",
+      "name": "Thompson--Okanagan"
+    },
+    "ER5940": {
+      "province": "BC",
+      "name": "Kootenay"
+    },
+    "ER5950": {
+      "province": "BC",
+      "name": "Cariboo"
+    },
+    "ER5960": {
+      "province": "BC",
+      "name": "North Coast"
+    },
+    "ER5970": {
+      "province": "BC",
+      "name": "Nechako"
+    },
+    "ER5980": {
+      "province": "BC",
+      "name": "Northeast"
+    },
+    "ER6010": {
+      "province": "YK",
+      "name": "Yukon Territory"
+    },
+    "ER6110": {
+      "province": "NWT",
+      "name": "Northwest Territories"
+    },
+    "ER6210": {
+      "province": "NU",
+      "name": "Nunavut"
+    }
+  }
+}
