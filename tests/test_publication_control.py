@@ -62,7 +62,7 @@ def test_real_preflight_recovery_publish_and_rollback(tmp_path,monkeypatch):
     assert result['status']=='rolled_back' and result['removed_rows']>0
 
 
-@pytest.mark.parametrize('case',['no_backup','no_recovery','no_preview','expired_preview','expired_recovery','changed_database','changed_backup','disabled','space','permissions','conflict'])
+@pytest.mark.parametrize('case',['no_backup','no_recovery','no_preview','expired_preview','expired_recovery','changed_database','changed_backup','new_backup','disabled','space','permissions','conflict'])
 def test_server_gates_cannot_be_bypassed(tmp_path,monkeypatch,case):
     token,p,sha=configured(tmp_path,monkeypatch)
     if case!='no_backup':request('backup',token=token)
@@ -75,6 +75,9 @@ def test_server_gates_cannot_be_bypassed(tmp_path,monkeypatch,case):
         with sqlite3.connect(store.DB_PATH) as db:db.execute('CREATE TABLE later(value TEXT)')
     if case=='changed_backup':
         f=dm.BACKUP_DIR/control.backup_identity(dm.BACKUP_DIR)['backup_id']/'manifest.json';f.write_text(f.read_text()+' ')
+    if case=='new_backup':
+        request('backup',token=token)
+        request('recovery-test',{'confirm':'test_isolated_backup_recovery'},token=token)
     if case=='disabled':monkeypatch.delenv('EARNWAGE_BULK_PUBLICATION_ENABLED')
     if case=='space':monkeypatch.setattr(control.shutil,'disk_usage',lambda _:SimpleNamespace(free=0))
     if case=='permissions':monkeypatch.setattr(control,'_probe',lambda *_:(_ for _ in ()).throw(PermissionError()))
@@ -119,3 +122,12 @@ def test_concurrency_and_no_recovery_confirmation(tmp_path,monkeypatch):
     assert request('recovery-test',{},token=token)[0]==409
     with dm._exclusive_operation():
         assert request('recovery-test',{'confirm':'test_isolated_backup_recovery'},token=token)[0]==409
+
+
+def test_incomplete_latest_backup_cannot_use_older_proof(tmp_path,monkeypatch):
+    token,_,sha=configured(tmp_path,monkeypatch);approve(token,sha)
+    incomplete=dm.BACKUP_DIR/'backup-99999999T999999Z';incomplete.mkdir(mode=0o700)
+    code,state,_=request('publication-conditions',token=token)
+    assert code==200 and not state['ready'] and not state['recovery_verified']
+    assert state['backup']['backup_id']==incomplete.name and state['backup']['status']=='unavailable_or_invalid'
+    assert request('bulk-publish',{'checksum':sha,'confirm':'publish_reviewed_salary_package'},token=token)[0]==409

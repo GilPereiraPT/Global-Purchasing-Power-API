@@ -89,7 +89,7 @@ def backup_identity(root):
     root = _private(root)
     candidates=sorted((p for p in root.iterdir() if re.fullmatch(r'backup-[0-9TZ]+',p.name) and p.is_dir()),reverse=True)
     for folder in candidates:
-        if not (folder/'manifest.json').exists():continue
+        if not (folder/'manifest.json').exists():raise ValueError('Latest backup incomplete')
         private_path(folder)
         m=_json(folder/'manifest.json')
         if set(m['databases']) != {'insights','wages_cache'}:raise ValueError('Incomplete backup')
@@ -127,6 +127,8 @@ def conditions(root, app_root):
         required=3*total+snapshots+RESERVE
         free=shutil.disk_usage(root).free
         result.update(free_bytes=free,required_backup_bytes=required,space_sufficient=free>=required)
+        latest=sorted((p.name for p in root.iterdir() if re.fullmatch(r'backup-[0-9TZ]+',p.name) and p.is_dir()),reverse=True)
+        if latest:result['backup']['backup_id']=latest[0]
         evidence=backup_identity(root)
         if evidence:
             result['backup']={'status':'available','backup_id':evidence['backup_id'],'bytes':evidence['bytes']}
@@ -189,7 +191,9 @@ def test_recovery(root):
 
 def record_preview(root, checksum, result):
     _,fingerprint,_=database_state()
-    _write(root,'salary-review.json',{'checksum':checksum,'result':result,'databases':fingerprint,'reviewed_at':time.time()})
+    try:evidence=backup_identity(root)
+    except (OSError,ValueError,KeyError,TypeError):evidence=None
+    _write(root,'salary-review.json',{'checksum':checksum,'result':result,'databases':fingerprint,'backup':evidence,'reviewed_at':time.time()})
 
 
 def require_ready(root,app_root,checksum,publication=False):
@@ -199,6 +203,6 @@ def require_ready(root,app_root,checksum,publication=False):
         review=_json(root/'salary-review.json');_,fingerprint,_=database_state()
         counts=review['result']
         if (review['checksum']!=checksum or not 0<=time.time()-review['reviewed_at']<PREVIEW_TTL
-            or review['databases']!=fingerprint or counts['inserted_rows']<=0
+            or review['databases']!=fingerprint or review.get('backup')!=backup_identity(root) or counts['inserted_rows']<=0
             or counts['duplicate_rows'] or counts['protected_existing_rows']):raise ValueError('Fresh conflict-free preview required')
     return state
