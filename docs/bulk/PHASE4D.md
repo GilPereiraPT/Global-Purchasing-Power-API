@@ -40,11 +40,17 @@ escrita de conteúdo em `main`. Não se activou qualquer variável ou cron.
 
 Testes negativos cobrem push, schedule, PR, fork, refs diferentes e SHA inválido.
 A [auditoria por workflow](workflow-publication-audit.json) foi actualizada.
-`actionlint 1.7.12`, sem ShellCheck/Pyflakes, aprova 34 workflows. Persiste **um
-alerta herdado** em `deploy-production.yml`: whitespace à volta da expressão
-`${{ }}` no `if: >`. Os runs consultados na fase anterior estavam `skipped`, mas
-isso não substitui uma revisão do alerta. O workflow SSH e a respectiva variável
-ficam inalterados; resolver ou justificar este alerta antes de aprovar a release.
+`actionlint 1.7.12`, sem ShellCheck/Pyflakes, aprova agora os **35 workflows,
+sem alertas**. Na revisão final corrigiu-se apenas `if: >` para `if: >-` em
+`deploy-production.yml`: elimina a quebra de linha literal fora de `${{ }}`,
+que o linter interpretava como uma condição sempre verdadeira. Comparação YAML
+antes/depois confirmou que o predicado é exactamente igual, excepto esse sufixo.
+A correcção torna explícita a condição booleana pretendida; não alarga a autorização.
+Mantêm-se todos os critérios: activação explícita, repositório original, push,
+testes concluídos com sucesso, main e origem original. Não se alterou a variável
+de activação, os passos SSH, segredos ou o deployment pelo Data Manager.
+Acrescentou-se regressão para impedir o reaparecimento de texto fora da expressão.
+Os runs SSH desta branch devem continuar `skipped`; não se executou deployment.
 Não se verificaram regras de branch protection, permissões administrativas ou
 segredos do repositório. A análise garante o comportamento dos workflows versionados;
 protecção de `main` contra outros actores exige regras externas do GitHub.
@@ -176,9 +182,9 @@ Para revisão/integração:
 - [x] Nenhum workflow sem permissões explícitas; escritores manuais separados.
 - [x] Sequência completa WSGI/arquivo de deployment validada localmente.
 - [x] Falhas/interrupções/locks testados; espaço e deadline de backup corrigidos.
-- [x] Suite completa: **468 aprovados, 0 falhados**, um aviso herdado TestClient/httpx.
-- [ ] Resolver ou justificar o alerta herdado de `if-cond` do workflow SSH antes
-      de aprovação final. Esta fase não altera/activa esse workflow.
+- [x] Suite completa: **487 aprovados, 0 falhados**, um aviso herdado TestClient/httpx.
+- [x] Alerta herdado `if-cond` resolvido por chomping YAML, sem alterar os
+      critérios de autorização nem activar SSH; 35 workflows sem alertas.
 - [ ] Revisão humana do PR e checks do commit final; **não fazer merge nesta tarefa**.
 
 Para autorizar uma futura publicação produtiva:
@@ -203,3 +209,26 @@ Não se apresentam observações sintéticas ou grupos amplos como novos salári
 
 O PR #13 mantém-se independente. Android, cálculos económicos/fiscais, segredos,
 base produtiva e activações de schedules/deployment não foram alterados.
+
+## Revisão final de integração
+
+A publicação bulk continua desactivada com variável ausente, vazia, `false`,
+`TRUE` ou `1`; só o valor exacto `true` permite prosseguir. Os três endpoints
+(preview/publicação/rollback) exigem o token administrativo existente mesmo quando
+activados. Dezoito novos casos cobrem esses controlos; a autorização é anterior
+ao processamento da operação. Publicar e reverter exigem ainda confirmação
+explícita, checksum, bases compatíveis e backup fresco. Não há publicação agendada.
+
+O empacotador usa apenas ficheiros Git autorizados: Python em app/scripts,
+requirements, entrada WSGI e JSON imediatamente sob data. Os snapshots JSON
+versionados existentes são necessários para preservar a API; não são os arquivos
+de aquisição. Dashboards gerados, staging SQLite, pacotes de publicação, caches,
+CSV/ZIP/XLSX e arquivos completos de aquisição ficam fora do deployment. O arquivo
+real e o WSGI extraído foram testados em isolamento, incluindo backup/restauração.
+O workflow de deployment existente do Data Manager conserva o seu filtro de
+ficheiros e a verificação do commit main com testes aprovados.
+
+Os bloqueios produtivos da checklist mantêm-se: exportação autorizada para
+comparação, validação do hosting, retenção/recuperação e configuração externa de
+protecção/PRs do GitHub. O alerta actionlint deixou de ser bloqueio. A revisão
+local não autoriza merge, activação, publicação ou deployment.

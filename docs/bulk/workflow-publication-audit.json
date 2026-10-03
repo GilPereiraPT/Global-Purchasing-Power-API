@@ -3,7 +3,7 @@
   "direct_main_writers_after_change": 0,
   "dataset_review_publishers": 10,
   "scheduled_acquisition_activated_by_change": false,
-  "ssh_deployment_modified": false,
+  "ssh_deployment_modified": true,
   "workflows": [
     {
       "file": "android-apk.yml",
@@ -89,7 +89,7 @@
           "permissions": {
             "contents": "read"
           },
-          "condition": "${{\n  vars.EARNWAGE_DEPLOY_ENABLED == 'true' &&\n  github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' &&\n  github.event.workflow_run.event == 'push' &&\n  github.event.workflow_run.status == 'completed' &&\n  github.event.workflow_run.conclusion == 'success' &&\n  github.event.workflow_run.head_branch == 'main' &&\n  github.event.workflow_run.head_repository.full_name == 'GilPereiraPT/Global-Purchasing-Power-API'\n}}\n",
+          "condition": "${{\n  vars.EARNWAGE_DEPLOY_ENABLED == 'true' &&\n  github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' &&\n  github.event.workflow_run.event == 'push' &&\n  github.event.workflow_run.status == 'completed' &&\n  github.event.workflow_run.conclusion == 'success' &&\n  github.event.workflow_run.head_branch == 'main' &&\n  github.event.workflow_run.head_repository.full_name == 'GilPereiraPT/Global-Purchasing-Power-API'\n}}",
           "publication": "no_git_dataset_publication"
         }
       ],
@@ -730,5 +730,6 @@
       "production_effect": "no_production_database_import"
     }
   ],
-  "phase4d": "All 35 workflows have explicit contents: read at workflow level; only gated manual review jobs request contents: write."
+  "phase4d": "All 35 workflows have explicit contents: read at workflow level; only gated manual review jobs request contents: write.",
+  "ssh_deployment_change": "Final integration: YAML chomping > to >- only; authorization predicate and activation variable unchanged; no activation."
 }
