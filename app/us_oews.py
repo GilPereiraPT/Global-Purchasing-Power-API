@@ -143,6 +143,10 @@ def workbook_records(path: str | Path, year: int = DEFAULT_YEAR, *, bulk=False) 
                         break
                 if not found:
                     continue
+            if bulk and ws.title.casefold()!=f'All May {year} data'.casefold():
+                raise ValueError('Workbook observation period does not match release')
+            if bulk and any(h.startswith(('H_','A_')) and h not in WAGE_FIELDS for h in headers):
+                raise ValueError('Unexpected salary measure')
             if bulk and not set(IDENTITY_FIELDS + WAGE_FIELDS) <= set(headers):
                 raise ValueError("Incomplete bulk OEWS schema")
             for values in rows:

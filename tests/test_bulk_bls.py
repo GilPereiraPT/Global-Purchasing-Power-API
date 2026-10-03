@@ -9,7 +9,7 @@ from app.bulk_core import BulkStore
 
 def release(tmp_path, rows=None, headers=None):
     headers=headers or list(IDENTITY_FIELDS+WAGE_FIELDS)
-    wb=Workbook();ws=wb.active;ws.append(headers)
+    wb=Workbook();ws=wb.active;ws.title='All May 2025 data';ws.append(headers)
     base=dict(AREA='99',AREA_TITLE='U.S.',AREA_TYPE='1',PRIM_STATE='US',NAICS='000000',
               NAICS_TITLE='Cross-industry',I_GROUP='cross-industry',OWN_CODE='1235',
               OCC_CODE='15-1252',OCC_TITLE='Software Developers',O_GROUP='detailed',
@@ -17,7 +17,7 @@ def release(tmp_path, rows=None, headers=None):
     for extra in rows or [{}]:
         r={**base,**extra};ws.append([r.get(f) for f in headers])
     x=tmp_path/'source.xlsx';wb.save(x);z=tmp_path/'release.zip'
-    with zipfile.ZipFile(z,'w') as a:a.write(x,x.name)
+    with zipfile.ZipFile(z,'w') as a:a.write(x,'oesm25all/all_data_M_2025.xlsx')
     return z,x
 
 
@@ -75,8 +75,14 @@ def test_missing_salary_ledger_and_resume(tmp_path):
     finally:s.close()
 
 
-def test_duplicate_source_identity_is_not_silently_a_revision(tmp_path):
-    z,_=release(tmp_path,[{},{}])
+def test_identical_source_duplicate_is_reported_without_double_counting(tmp_path):
+    z,_=release(tmp_path,[{},{}]);stats={}
+    assert len(list(observations(z,2025,stats)))==12
+    assert stats['source_rows']==2 and stats['source_duplicate_rows']==1
+
+
+def test_conflicting_source_duplicate_is_not_silently_a_revision(tmp_path):
+    z,_=release(tmp_path,[{}, {'A_MEAN':250000}])
     with pytest.raises(ValueError):list(observations(z,2025,{}))
 
 
@@ -110,3 +116,14 @@ def test_published_missing_revision_does_not_leave_stale_current_salary(tmp_path
             assert s.count()==(0 if value is None else 1)
         assert s.db.execute('select count(*) from bulk_versions').fetchone()[0]==3
     finally:s.close()
+
+
+def test_same_source_code_can_have_distinct_official_group_levels(tmp_path):
+    z,_=release(tmp_path,[{'O_GROUP':'broad'},{}]);stats={}
+    assert len(list(observations(z,2025,stats)))==12
+    assert stats['excluded_rows']==1
+
+
+def test_wrong_release_year_cannot_be_assigned_silently(tmp_path):
+    z,_=release(tmp_path)
+    with pytest.raises(ValueError):list(observations(z,2024,{}))

@@ -6,6 +6,7 @@ Validates all source rows; stages approved EarnWage codes, cross-industry,
 all ownerships, national/state/metro/nonmetro. No inferred wages.
 """
 import hashlib
+import json
 import tempfile
 import zipfile
 from pathlib import Path
@@ -25,12 +26,14 @@ def url(year):
 def observations(path,year,stats):
     by_code={}
     for occupation,(code,title) in US_SOC.items():by_code.setdefault(code,[]).append(occupation)
-    seen=set()
-    stats.update(source_rows=0,selected_rows=0,excluded_rows=0,missing_wages=0)
+    seen={}
+    stats.update(source_rows=0,selected_rows=0,excluded_rows=0,missing_wages=0,source_duplicate_rows=0)
     with zipfile.ZipFile(path) as z, tempfile.TemporaryDirectory(prefix='earnwage-oews-') as tmp:
         members=list(_safe_zip_members(z))
         if not members:raise ValueError('No XLSX release member')
         for member in members:
+            if Path(member.filename).name!=f'all_data_M_{year}.xlsx':
+                raise ValueError('Release member does not match requested year')
             target=Path(tmp)/Path(member.filename).name
             with z.open(member) as source,target.open('wb') as dest:
                 import shutil
@@ -41,10 +44,14 @@ def observations(path,year,stats):
             for row in workbook_records(target,year,bulk=True):
                 stats['source_rows']+=1
                 if stats['source_rows']>1_000_000:raise ValueError('Release exceeds row limit')
-                identity=tuple(row[k] for k in ('area','area_type','prim_state','naics','i_group','own_code','occ_code'))
+                identity=tuple(row[k] for k in ('area','area_type','prim_state','naics','i_group','own_code','occ_code','o_group'))
                 key=hashlib.sha256(repr(identity).encode()).digest()
-                if key in seen:raise ValueError('Duplicate BLS source identity')
-                seen.add(key)
+                fingerprint=hashlib.sha256(json.dumps(row,sort_keys=True).encode()).digest()
+                if key in seen:
+                    if seen[key]!=fingerprint:raise ValueError('Conflicting BLS source identity')
+                    stats['source_duplicate_rows']+=1;stats['excluded_rows']+=1
+                    continue
+                seen[key]=fingerprint
                 area_type=row['area_type']
                 if area_type not in ('1','2','3','4','6'):raise ValueError('Unvalidated BLS geography type')
                 if not row['area'].isdigit() or not row['area_title']:raise ValueError('Invalid BLS geography')

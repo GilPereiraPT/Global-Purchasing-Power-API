@@ -20,7 +20,9 @@ neste adaptador**: SOC 2010/transição híbrida e layouts XLS exigem validaçã
 Não se aplica retrospectivamente a classificação actual. Novas edições exigem
 validação e registo explícito, não descoberta seguida de importação automática.
 
-Todos os registos do workbook completo são lidos e validados. A selecção admitida
+Todos os registos do workbook completo são lidos e validados. O nome do membro
+e o título da folha têm de confirmar o ano pedido; uma nova medida salarial
+desconhecida provoca rejeição, evitando perda silenciosa de estatísticas. A selecção admitida
 é: códigos SOC detalhados previamente aprovados para EarnWage, `NAICS=000000`
 (cross-industry), `OWN_CODE=1235` (all ownerships). Outras profissões, grupos,
 indústrias e âmbitos de propriedade não expandem cobertura individual. Os contadores
@@ -34,7 +36,10 @@ SOC, unidade horária/anual e medidas mean/median/p10/p25/p75/p90 são preservad
 Não se infere uma cidade nem se substitui nacional por regional. Não se anualizam
 salários horários. `*`, `**`, `#` e outros tokens reconhecidos ficam `value=null`
 no ledger, com o token original; valores arbitrários não numéricos fazem falhar a
-validação. O período original `May YYYY` permanece ao lado do ano de observação.
+validação. Linhas idênticas na origem são contabilizadas em `source_duplicate_rows`
+e não duplicam observações; identidades com valores divergentes são rejeitadas.
+O nível `O_GROUP` faz parte da identidade de origem, pois um código pode existir
+como broad e detailed. O período original `May YYYY` permanece ao lado do ano de observação.
 
 ```bash
 .venv/bin/python -m scripts.bulk_acquire --workspace /caminho/privado/bls \
