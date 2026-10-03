@@ -20,6 +20,18 @@ def test_original_main_push_is_allowed():
     assert permitted()
 
 
+def test_deployment_condition_has_no_literal_suffix():
+    # Folded YAML must strip its final newline: literal text outside ${{ }}
+    # can turn an intended boolean condition into a truthy string.
+    text = WORKFLOW.read_text()
+    block = text.split('  deploy:\n', 1)[1].split('    runs-on:', 1)[0]
+    header, expression = block.split('\n', 1)
+    assert header == '    if: >-'
+    expression = expression.strip()
+    assert expression.startswith('${{') and expression.endswith('}}')
+    assert expression.count('${{') == expression.count('}}') == 1
+
+
 @pytest.mark.parametrize('changes', [dict(event='pull_request'), dict(event='workflow_run'),
     dict(event='workflow_dispatch'), dict(head_branch='feature'), dict(conclusion='failure'),
     dict(status='in_progress'), dict(head_repository=NS(full_name='fork/project'))])

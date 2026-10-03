@@ -20,6 +20,26 @@ def package():return {'schema':pub.SCHEMA,'observations':source_rows()}
 
 def checksum(p):return hashlib.sha256(pub.encode(p)).hexdigest()
 
+
+@pytest.mark.parametrize('action', ['bulk-preview', 'bulk-publish', 'bulk-rollback'])
+@pytest.mark.parametrize('enabled', [None, 'false', 'TRUE', '1', ''])
+def test_every_bulk_action_requires_exact_explicit_activation(tmp_path, monkeypatch, action, enabled):
+ secret=setup(monkeypatch,tmp_path)
+ if enabled is None:monkeypatch.delenv('EARNWAGE_BULK_PUBLICATION_ENABLED',raising=False)
+ else:monkeypatch.setenv('EARNWAGE_BULK_PUBLICATION_ENABLED',enabled)
+ monkeypatch.setattr(dm,'_backup',lambda *a:pytest.fail('disabled action attempted a backup'))
+ assert request(action,token=secret)[:2]==(200,{'status':'publication_disabled'})
+ with sqlite3.connect(store.DB_PATH) as db:
+  assert db.execute("SELECT count(*) FROM sqlite_master WHERE name='bulk_publications'").fetchone()[0]==0
+
+
+@pytest.mark.parametrize('action', ['bulk-preview', 'bulk-publish', 'bulk-rollback'])
+def test_enabled_bulk_actions_still_require_admin_authentication(tmp_path, monkeypatch, action):
+ setup(monkeypatch,tmp_path)
+ monkeypatch.setenv('EARNWAGE_BULK_PUBLICATION_ENABLED','true')
+ monkeypatch.setattr(dm,'_bulk_publication',lambda *a:pytest.fail('unauthenticated action reached publication'))
+ assert request(action,token=None)[0]==401
+
 def database(tmp_path):
  p=tmp_path/'wages.sqlite3'
  with sqlite3.connect(p) as db:db.execute('CREATE TABLE unrelated (value TEXT)');db.execute("INSERT INTO unrelated VALUES ('keep')")
