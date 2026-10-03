@@ -135,6 +135,14 @@ compressão/checksum falhados, limpeza/desconexão e órfãos, concorrência, Ja
 real do botão com DOM/rede isolados e o Passenger extraído do arquivo real.
 Os testes do browser são um harness Node, não um ensaio de rede/hosting real.
 
+Validação final: **544 testes aprovados, 0 falhados**, incluindo 46 novos casos
+Phase 4F; os 11 casos Phase 4E mantêm-se e passam com o exportador partilhado.
+Persiste um aviso herdado de depreciação TestClient/httpx. Os **35 workflows**
+passam no actionlint 1.7.12 (sem ShellCheck/Pyflakes); o JavaScript completo do
+Data Manager passa em `node --check`. O ensaio WSGI usa o pacote criado pelo
+bloco de build real do workflow de deployment, com os dois módulos novos,
+autenticação, ZIP/CRC/checksums, fonte intacta e limpeza de temporários.
+
 Continua necessário receber o inventário produtivo, normalizá-lo e comparar o
 staging antes de seleccionar/autorizarem qualquer publicação. O candidato Phase
 4E continua apenas candidato; esta funcionalidade não o publica nem transfere.
