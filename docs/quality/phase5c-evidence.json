@@ -1,0 +1,720 @@
+{
+  "schema": "earnwage-economic-gap-research-v1",
+  "scope": "Research only; no observations approved or staged",
+  "baseline": {
+    "reported_available": 387,
+    "total": 406,
+    "production_export_confirmed": false,
+    "india_gini": "Resolved by operator; excluded from requests and imports"
+  },
+  "cells": [
+    {
+      "country": "DE",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/DEU/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:55.921311+00:00",
+      "http_status": 200,
+      "response_sha256": "dd1d4b5a286a61ee36fedc3f00b863fafc9905b594ee7d078275ba97d95e1688",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "FR",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/FRA/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:55.921836+00:00",
+      "http_status": 200,
+      "response_sha256": "c96085bf2259bac96ae9f5008706d5491b57adfa5869679de0ae4f6cdc24d840",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "GB",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/GBR/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:55.922372+00:00",
+      "http_status": 200,
+      "response_sha256": "7398e9a64428812f9546d318f11a6932a0a69f9911eadada007037932a67d35f",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "NL",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/NLD/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:55.922820+00:00",
+      "http_status": 200,
+      "response_sha256": "acad402cda3817d1a4b5ba48155973aded9e25b6880e14a3dc13e63136c19c50",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "CH",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/CHE/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.152511+00:00",
+      "http_status": 200,
+      "response_sha256": "9ded0546619c381094580fcb07fe26ac1523d603f69f1489c4b830bebdf64db9",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "IE",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/IRL/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.168750+00:00",
+      "http_status": 200,
+      "response_sha256": "43fc10b6b513ec087046b14f0f76478739d1e5d23284647bea57d6a4c2ecb83a",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "US",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/USA/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.277416+00:00",
+      "http_status": 200,
+      "response_sha256": "e123dbb76314b049aa929f69739f3e236fab55505744e1eec2c5a65ce5027abd",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "CA",
+      "indicator": "adult_literacy",
+      "code": "SE.ADT.LITR.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/CAN/indicator/SE.ADT.LITR.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.286321+00:00",
+      "http_status": 200,
+      "response_sha256": "faf6096dd82b7670d011613bab65d001d768d1453c3893577c51cdf188fe100a",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_adults_15_plus",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "PT",
+      "indicator": "battle_related_deaths",
+      "code": "VC.BTL.DETH",
+      "source_url": "https://api.worldbank.org/v2/country/PRT/indicator/VC.BTL.DETH?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.292817+00:00",
+      "http_status": 200,
+      "response_sha256": "2eeb65d8b863fba7618b14f64278575e6504c3a3da931c2019616b259d32487a",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "persons",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "BR",
+      "indicator": "battle_related_deaths",
+      "code": "VC.BTL.DETH",
+      "source_url": "https://api.worldbank.org/v2/country/BRA/indicator/VC.BTL.DETH?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.349083+00:00",
+      "http_status": 200,
+      "response_sha256": "ad827049b69f95ee7fd82aad03c47d675a732532f00c25bb93faec5d9cacbfb5",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "persons",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "CH",
+      "indicator": "battle_related_deaths",
+      "code": "VC.BTL.DETH",
+      "source_url": "https://api.worldbank.org/v2/country/CHE/indicator/VC.BTL.DETH?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.353023+00:00",
+      "http_status": 200,
+      "response_sha256": "a7767e083287fb04e9a3c899bcf270ab6bd4f4f008aaca8ac0e3a769f4dd89a6",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "persons",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "IE",
+      "indicator": "battle_related_deaths",
+      "code": "VC.BTL.DETH",
+      "source_url": "https://api.worldbank.org/v2/country/IRL/indicator/VC.BTL.DETH?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.393252+00:00",
+      "http_status": 200,
+      "response_sha256": "ceb0bfb4385f0dbc4a1ecd84af82c12782977ef19b0de6305a53a133ed0b6da2",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "persons",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "CA",
+      "indicator": "battle_related_deaths",
+      "code": "VC.BTL.DETH",
+      "source_url": "https://api.worldbank.org/v2/country/CAN/indicator/VC.BTL.DETH?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.526315+00:00",
+      "http_status": 200,
+      "response_sha256": "eaeb94e5cc44a372f1371af1bbc0a449ffb622973830936c37f1342df2c10af1",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "persons",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "FR",
+      "indicator": "primary_completion",
+      "code": "SE.PRM.CMPT.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/FRA/indicator/SE.PRM.CMPT.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.531760+00:00",
+      "http_status": 200,
+      "response_sha256": "151734f44b321abbe3caacd4de0467b5d23fcdec19b31e593a85faed8ca5c90e",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_relevant_age_group",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "BR",
+      "indicator": "primary_completion",
+      "code": "SE.PRM.CMPT.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/BRA/indicator/SE.PRM.CMPT.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.550550+00:00",
+      "http_status": 200,
+      "response_sha256": "507add503d41baf2aa89ebaf24eb82a1d008aac9cf122db58465d5cddf493272",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_relevant_age_group",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "NL",
+      "indicator": "primary_completion",
+      "code": "SE.PRM.CMPT.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/NLD/indicator/SE.PRM.CMPT.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.591220+00:00",
+      "http_status": 200,
+      "response_sha256": "8d12af7b27a7a4ed98b7027e09696d97f543de2144f19d0d5f235e35614e868f",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_relevant_age_group",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "PK",
+      "indicator": "safe_sanitation",
+      "code": "SH.STA.SMSS.ZS",
+      "source_url": "https://api.worldbank.org/v2/country/PAK/indicator/SH.STA.SMSS.ZS?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.595393+00:00",
+      "http_status": 200,
+      "response_sha256": "34643a911bc4018a409f3766e0c17cc5bbd9fa687f69080437b6f8526a3666be",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "percent_of_population",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "PK",
+      "indicator": "intentional_homicides_female",
+      "code": "VC.IHR.PSRC.FE.P5",
+      "source_url": "https://api.worldbank.org/v2/country/PAK/indicator/VC.IHR.PSRC.FE.P5?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.608326+00:00",
+      "http_status": 200,
+      "response_sha256": "d242241d2cabf846b2a2cd1cd49b56850907976dda98d270f62b1aba6255a092",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "per_100000_female",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    },
+    {
+      "country": "PK",
+      "indicator": "intentional_homicides_male",
+      "code": "VC.IHR.PSRC.MA.P5",
+      "source_url": "https://api.worldbank.org/v2/country/PAK/indicator/VC.IHR.PSRC.MA.P5?format=json&per_page=1000",
+      "checked_at": "2026-10-03T20:53:56.664510+00:00",
+      "http_status": 200,
+      "response_sha256": "8fcd849ce73a9db8b535ed7f75399883cb2fac1b536eef034cfc1cfdc25afd2c",
+      "source_last_updated": "2026-07-13",
+      "pages": 1,
+      "non_null_observations": 0,
+      "observations": [],
+      "status": "no_values_in_official_response",
+      "classification": "Unavailable",
+      "reason": "Official alternative access blocked; no verified non-null observation",
+      "unit": "per_100000_male",
+      "row_count": 66,
+      "sourceid": "2",
+      "integration_approved": false,
+      "period_range": {
+        "first": "1960",
+        "last": "2025",
+        "consecutive": true
+      }
+    }
+  ],
+  "definitions": [
+    {
+      "indicator": "adult_literacy",
+      "url": "https://api.worldbank.org/v2/indicator/SE.ADT.LITR.ZS?format=json",
+      "acquired_at": "2026-10-03T20:54:12.881907+00:00",
+      "status": 200,
+      "sha256": "1d14ffeda10a9189e2dd257422fca00d6f09a6217205e83ad44516c470c71518",
+      "wdi_definition": {
+        "id": "SE.ADT.LITR.ZS",
+        "name": "Literacy rate, adult total (% of people ages 15 and above)",
+        "unit": "",
+        "source": {
+          "id": "2",
+          "value": "World Development Indicators"
+        },
+        "sourceNote": "Adult literacy rate is the percentage of people ages 15 and above who can both read and write with understanding a short simple statement about their everyday life.",
+        "sourceOrganization": "Data API, UN Educational, Scientific and Cultural Organization (UNESCO), uri: https://databrowser.uis.unesco.org/resources, note: The data are obtained through the UIS API.  Detailed documentation is available at: https://api.uis.unesco.org/api/public/documentation/, publisher: UNESCO Institute for Statistics (UIS), type: Excel (bulk file), date accessed: 2026-03-19, date published: 2026-02",
+        "topics": [
+          {
+            "id": "4",
+            "value": "Education "
+          }
+        ]
+      }
+    },
+    {
+      "indicator": "battle_related_deaths",
+      "url": "https://api.worldbank.org/v2/indicator/VC.BTL.DETH?format=json",
+      "acquired_at": "2026-10-03T20:54:12.962433+00:00",
+      "status": 200,
+      "sha256": "788ad96babd36a3d30c09cd77050bcb6076c430868b29bab98f95b604ca3c31c",
+      "wdi_definition": {
+        "id": "VC.BTL.DETH",
+        "name": "Battle-related deaths (number of people)",
+        "unit": "",
+        "source": {
+          "id": "2",
+          "value": "World Development Indicators"
+        },
+        "sourceNote": "Battle-related deaths are deaths in battle-related conflicts between warring parties in the conflict dyad (two conflict units that are parties to a conflict). Battle-related deaths refer to those deaths caused by the warring parties that can be directly related to combat. This includes battlefield fighting, guerrilla activities (e.g. hit and-run attacks/ambushes) and all kinds of bombardments of military bases, cities and villages etc. The target for the attacks is either the military forces or representatives for the parties, though there is often substantial collateral damage in the form of civilians being killed in the crossfire, indiscriminate bombings, etc. All fatalities, military as well as civilian, incurred in such situations are counted as battle-related deaths.",
+        "sourceOrganization": "UCDP Battle-related Deaths Dataset , Uppsala Conflict Data Program (UCDP), uri: https://ucdp.uu.se/downloads/, publisher: Uppsala University",
+        "topics": [
+          {
+            "id": "13",
+            "value": "Public Sector "
+          }
+        ]
+      }
+    },
+    {
+      "indicator": "primary_completion",
+      "url": "https://api.worldbank.org/v2/indicator/SE.PRM.CMPT.ZS?format=json",
+      "acquired_at": "2026-10-03T20:54:13.119137+00:00",
+      "status": 200,
+      "sha256": "c244029e9879052a234377e7e25eed4a2febbd7036bbc1157c6a173701f2c64f",
+      "wdi_definition": {
+        "id": "SE.PRM.CMPT.ZS",
+        "name": "Primary completion rate, total (% of relevant age group)",
+        "unit": "",
+        "source": {
+          "id": "2",
+          "value": "World Development Indicators"
+        },
+        "sourceNote": "Primary completion rate, or gross intake ratio to the last grade of primary education, is the number of new entrants (enrollments minus repeaters) in the last grade of primary education, regardless of age, divided by the population at the entrance age for the last grade of primary education. Data limitations preclude adjusting for students who drop out during the final year of primary education.",
+        "sourceOrganization": "Data API, UN Educational, Scientific and Cultural Organization (UNESCO), uri: https://databrowser.uis.unesco.org/resources, note: The data are obtained through the UIS API.  Detailed documentation is available at: https://api.uis.unesco.org/api/public/documentation/, publisher: UNESCO Institute for Statistics (UIS), type: Bulk file (csv), date accessed: 2026-03-19, date published: 2026-02",
+        "topics": [
+          {
+            "id": "2",
+            "value": "Aid Effectiveness "
+          },
+          {
+            "id": "19",
+            "value": "Climate Change"
+          },
+          {
+            "id": "4",
+            "value": "Education "
+          }
+        ]
+      }
+    },
+    {
+      "indicator": "safe_sanitation",
+      "url": "https://api.worldbank.org/v2/indicator/SH.STA.SMSS.ZS?format=json",
+      "acquired_at": "2026-10-03T20:54:13.183069+00:00",
+      "status": 200,
+      "sha256": "9b186aa72504764172407ff5016666414e0794d3cd2c2fdd370ddb79386d7acf",
+      "wdi_definition": {
+        "id": "SH.STA.SMSS.ZS",
+        "name": "People using safely managed sanitation services (% of population)",
+        "unit": "",
+        "source": {
+          "id": "2",
+          "value": "World Development Indicators"
+        },
+        "sourceNote": "The percentage of people using improved sanitation facilities that are not shared with other households and where excreta are safely disposed of in situ or transported and treated offsite. Improved sanitation facilities include flush/pour flush to piped sewer systems, septic tanks or pit latrines: ventilated improved pit latrines, composting toilets or pit latrines with slabs.",
+        "sourceOrganization": "WHO/UNICEF Joint Monitoring Programme (JMP) for Water Supply, Sanitation and Hygiene, World Health Organization (WHO), uri: washdata.org, note: Aggregate data by groups are computed based on the groupings for the World Bank fiscal year in which the data was released by the WHO/UNICEF Joint Monitoring Programme (JMP) for Water Supply, Sanitation and Hygiene., publisher: WHO/UNICEF Joint Monitoring Programme (JMP) for Water Supply, Sanitation and Hygiene (washdata.org), date accessed: 2025-09-30, date published: 2025-08-25;\nUN Children's Fund (UNICEF), uri: washdata.org, note: WHO/UNICEF Joint Monitoring Programme (JMP) for Water Supply, Sanitation and Hygiene",
+        "topics": [
+          {
+            "id": "8",
+            "value": "Health "
+          },
+          {
+            "id": "6",
+            "value": "Environment "
+          }
+        ]
+      }
+    },
+    {
+      "indicator": "intentional_homicides_female",
+      "url": "https://api.worldbank.org/v2/indicator/VC.IHR.PSRC.FE.P5?format=json",
+      "acquired_at": "2026-10-03T20:54:13.406321+00:00",
+      "status": 200,
+      "sha256": "0e7a71243d73192681dd69aa0f7bae575e349133b176525b275b0ef930f5c9f0",
+      "wdi_definition": {
+        "id": "VC.IHR.PSRC.FE.P5",
+        "name": "Intentional homicides, female (per 100,000 female)",
+        "unit": "",
+        "source": {
+          "id": "2",
+          "value": "World Development Indicators"
+        },
+        "sourceNote": "An intentional homicide is defined as an unlawful death inflicted upon a person with the intent to cause death or serious injury.",
+        "sourceOrganization": "UNODC Research - Data Portal – Intentional Homicide, UN Office on Drugs and Crime (UNODC)",
+        "topics": [
+          {
+            "id": "13",
+            "value": "Public Sector "
+          }
+        ]
+      }
+    },
+    {
+      "indicator": "intentional_homicides_male",
+      "url": "https://api.worldbank.org/v2/indicator/VC.IHR.PSRC.MA.P5?format=json",
+      "acquired_at": "2026-10-03T20:54:13.705012+00:00",
+      "status": 200,
+      "sha256": "8f10edf5cabc6b41993d315329a5633d7accef53b9a89f2b494d4daae37bc797",
+      "wdi_definition": {
+        "id": "VC.IHR.PSRC.MA.P5",
+        "name": "Intentional homicides, male (per 100,000 male)",
+        "unit": "",
+        "source": {
+          "id": "2",
+          "value": "World Development Indicators"
+        },
+        "sourceNote": "An intentional homicide is defined as an unlawful death inflicted upon a person with the intent to cause death or serious injury.",
+        "sourceOrganization": "UNODC Research - Data Portal – Intentional Homicide, UN Office on Drugs and Crime (UNODC)",
+        "topics": [
+          {
+            "id": "13",
+            "value": "Public Sector "
+          }
+        ]
+      }
+    }
+  ],
+  "official_portal_attempts": [
+    {
+      "url": "https://databrowser.uis.unesco.org/resources/bulk",
+      "acquired_at": "2026-10-03T20:53:34.783867+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://databrowser.uis.unesco.org/resources",
+      "acquired_at": "2026-10-03T20:53:34.784377+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://washdata.org/countries/pakistan",
+      "acquired_at": "2026-10-03T20:53:34.784850+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://washdata.org/data/downloads",
+      "acquired_at": "2026-10-03T20:53:34.785167+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://data.unodc.org/datasearch",
+      "acquired_at": "2026-10-03T20:53:34.823900+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://ucdp.uu.se/downloads/",
+      "acquired_at": "2026-10-03T20:53:34.830026+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://ucdp.uu.se/apidocs/",
+      "acquired_at": "2026-10-03T20:53:34.830533+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.unesco.org/en/legal-affairs/open-access",
+      "acquired_at": "2026-10-03T20:53:34.830862+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.unicef.org/legal",
+      "acquired_at": "2026-10-03T20:53:34.851772+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://data.unodc.org/",
+      "acquired_at": "2026-10-03T20:53:34.853905+00:00",
+      "error_type": "ProxyError"
+    }
+  ],
+  "followup_attempts": [
+    {
+      "url": "https://api.uis.unesco.org/api/public/documentation/",
+      "acquired_at": "2026-10-03T20:54:36.476957+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://api.ucdp.uu.se/",
+      "acquired_at": "2026-10-03T20:54:36.477740+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://ucdp.uu.se/downloads/brd/ucdp-brd-conf-261.csv",
+      "acquired_at": "2026-10-03T20:54:36.478254+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://ucdp.uu.se/downloads/brd/ucdp-brd-dyad-261.csv",
+      "acquired_at": "2026-10-03T20:54:36.478906+00:00",
+      "error_type": "ProxyError"
+    }
+  ],
+  "followup_note": "UIS documentation URL is cited by WDI metadata. UCDP API root and CSV paths are discovery attempts, not verified download contracts. No blocked response is a downloaded dataset or proof of absence."
+}
