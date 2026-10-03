@@ -217,6 +217,9 @@ def bulk_rows(stream, geographies):
     from decimal import Decimal, InvalidOperation
     reader=csv.DictReader(stream)
     required=REQUIRED | {'ER_Name','Data_Source_E','Revision_Date_Date_revision'}
+    allowed=required | {'NOC_Title_fra','Nom_RE','Source2025_NHQ','Data_Source_F','Wage_Comment_E','Wage_Comment_F','EmployeesWithNonWageBenefit_Pct'}
+    if reader.fieldnames and (len(reader.fieldnames)!=len(set(reader.fieldnames)) or set(reader.fieldnames)-allowed):
+        raise ValueError('Unexpected or duplicate Job Bank columns')
     if not required <= set(reader.fieldnames or []):
         raise ValueError('Unexpected Job Bank bulk layout')
     seen=set()

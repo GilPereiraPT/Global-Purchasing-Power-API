@@ -63,3 +63,9 @@ def test_public_blob_redirect_is_bounded_and_query_is_not_saved(tmp_path):
         assert 'do-not-log' not in ''.join(p.read_text() for p in tmp_path.glob('*.json'))
         with pytest.raises(ValueError):valid_url('https://opencanada.blob.core.windows.net/private/container.csv')
     finally:d.close()
+
+
+def test_unexpected_scope_dimension_is_not_ignored(tmp_path):
+    data=FIXTURE.read_text();lines=data.splitlines();lines[0]+=',Sex';lines[1:]=[r+',female' for r in lines[1:]]
+    p=tmp_path/'unexpected.csv';p.write_text('\n'.join(lines)+'\n')
+    with pytest.raises(ValueError):list(observations(p,{}))
