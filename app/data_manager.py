@@ -35,7 +35,8 @@ ALLOW_ORIGIN = "https://gilpereirapt.github.io"
 MANAGER_VERSION = "0.3.0"
 BACKUP_DIR = ROOT / "_earnwage_backups"
 
-ALLOWED_ACTIONS = ("backup", "import", "status", "deploy")
+ALLOWED_ACTIONS = ("backup", "import", "status", "deploy",
+                   "bulk_preview", "bulk_publish", "bulk_rollback")
 ALLOWED_SOURCES = ("world_bank", "eurostat")
 GITHUB_REPOSITORY = "GilPereiraPT/Global-Purchasing-Power-API"
 GITHUB_API = "https://api.github.com/repos/" + GITHUB_REPOSITORY
@@ -449,6 +450,62 @@ def _deploy(payload):
         ),
     }
 
+def _bulk_publication(action, payload):
+    """Explicit, disabled-by-default publication through existing admin controls."""
+    from app import bulk_publication
+    from app.store import DB_PATH
+    if os.environ.get("EARNWAGE_BULK_PUBLICATION_ENABLED") != "true":
+        return {"status": "publication_disabled"}
+    expected = {"checksum"} if action == "bulk_preview" else {"checksum", "confirm"}
+    checksum = payload.get("checksum")
+    if set(payload) != expected or not isinstance(checksum, str) or not re.fullmatch("[0-9a-f]{64}", checksum):
+        raise ValueError("Exact package checksum required")
+    # Bound backup I/O including WAL files before either write or rollback.
+    if action != "bulk_preview":
+        for variable in ("GPP_CACHE_DB", "EARNWAGE_INSIGHTS_DB"):
+            raw = os.environ.get(variable, "")
+            path = Path(raw)
+            if not raw or not path.is_absolute() or not path.is_file():
+                return {"status": "prerequisites_missing", "backup_readiness": _backup_readiness()}
+            size = path.stat().st_size
+            wal = Path(str(path) + "-wal")
+            if wal.is_file():
+                size += wal.stat().st_size
+            if size > bulk_publication.MAX_DATABASE_BYTES:
+                raise ValueError("Database exceeds bounded backup budget")
+    if action == "bulk_rollback":
+        if payload["confirm"] != "rollback_reviewed_salary_package":
+            raise ValueError("Explicit rollback confirmation required")
+        # Existing manager lock is held. Only journalled unchanged inserted rows
+        # are removed; unrelated data and all configuration are preserved.
+        if not _backup_readiness()["ready"]:
+            return {"status": "prerequisites_missing", "backup_readiness": _backup_readiness()}
+        backup = _backup({})
+        if backup.get("status") != "available":
+            raise RuntimeError("fresh_backup_failed")
+        return {**bulk_publication.rollback(DB_PATH, checksum), "backup_id": backup["backup_id"]}
+    directory = BACKUP_DIR / "bulk-packages"
+    if directory.is_symlink() or "public_html" in directory.resolve().parts:
+        raise ValueError("Unsafe package directory")
+    package = bulk_publication.load(directory / (checksum + ".json"), checksum)
+    result = bulk_publication.preview(DB_PATH, package)
+    if action == "bulk_preview":
+        return {"status": "review_required", "checksum": checksum, **result}
+    if payload["confirm"] != "publish_reviewed_salary_package":
+        raise ValueError("Explicit publication confirmation required")
+    if not _backup_readiness()["ready"]:
+        return {"status": "prerequisites_missing", "backup_readiness": _backup_readiness()}
+    # Reuse the established backup service, before every attempted write.
+    backup = _backup({})
+    if backup.get("status") != "available":
+        raise RuntimeError("fresh_backup_failed")
+    result = bulk_publication.apply(DB_PATH, package, checksum, backup["backup_id"])
+    with economic_connect() as db:
+        _record(db, "reviewed_salary_package", "MULTI", "occupational_salary",
+                "missing", result["status"], result["inserted_rows"])
+    return result
+
+
 def _safe_backup_failure(exc):
     """Classify known backup issues without revealing paths or internals."""
     reason = str(exc)
@@ -489,6 +546,8 @@ def handle(environ, start_response, origin, action, reply):
             with _exclusive_operation():
                 if action == "backup":
                     result = _backup(payload)
+                elif action.startswith("bulk_"):
+                    result = _bulk_publication(action, payload)
                 elif action == "deploy":
                     result = _deploy(payload)
                 else:
