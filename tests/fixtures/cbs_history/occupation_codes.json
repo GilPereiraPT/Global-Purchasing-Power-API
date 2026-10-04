@@ -1,0 +1,152 @@
+{
+  "@odata.context": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/$metadata#BeroepCodes",
+  "value": [
+    {
+      "Identifier": "A000165",
+      "Index": 11,
+      "Title": "0113 Docenten algemene vakken secunda...",
+      "Description": "Docenten algemene vakken secundair onderwijs: Deze beroepsgroep omvat de docenten aardrijkskunde, geschiedenis, economische vakken, talen, biologie, natuur- en scheikunde, wiskunde en informatica, techniek, beroepenoriëntatie, kunst- en creatieve vakken en godsdienst",
+      "DimensionGroupId": "21"
+    },
+    {
+      "Identifier": "A059350",
+      "Index": 17,
+      "Title": "0132 (Pedagogisch) medewerkers kinder...",
+      "Description": "(Pedagogisch) medewerkers kinderopvang: Deze beroepsgroep omvat de peuterwerkers, groepsleiders kinderdagverblijf, oppasouders, en au-pairs.",
+      "DimensionGroupId": "21"
+    },
+    {
+      "Identifier": "A000189",
+      "Index": 36,
+      "Title": "0332 Verkoopmedewerkers detailhandel",
+      "Description": "Verkoopmedewerkers detailhandel: Deze beroepsgroep omvat de verkoopmedewerkers in winkels",
+      "DimensionGroupId": "23"
+    },
+    {
+      "Identifier": "A000194",
+      "Index": 41,
+      "Title": "0411 Accountants",
+      "Description": "Accountants: Deze beroepsgroep omvat de accountants, registeraccountants, controllers, fiscalisten, belastingadviseurs en auditors",
+      "DimensionGroupId": "24"
+    },
+    {
+      "Identifier": "A000204",
+      "Index": 51,
+      "Title": "0431 Administratief medewerkers",
+      "Description": "Administratief medewerkers: Deze beroepsgroep omvat de administratief medewerkers, administratief assistenten en kantoorassistenten, bibliotheekmedewerkers, postbezorgers, -bestellers, -sorteerders, medewerkers postkamer, codeurs, correctoren, archiefmedewerkers, dossierbeheerders, medewerkers kopieer-, printbedrijf, medewerkers personeelsadministratie, medewerker personeelszaken en handelscorrespondenten",
+      "DimensionGroupId": "24"
+    },
+    {
+      "Identifier": "A000206",
+      "Index": 53,
+      "Title": "0433 Klantenservice medewerkers en re...",
+      "Description": "Klantenservice medewerkers en receptionisten: Deze beroepsgroep omvat de klantvoorlichters, reisconsulenten en reisbureaumedewerkers, de callcentermedewerkers inbound, zoals de callcentermedewerker klantenservice, de meldkamermedewerkers alarmcentrale (reizen), de telefonisten zoals de centralisten 112, centralisten brandweer, centralisten alarmcentrale, marconisten en medewerkers telefooncentrale, de hotelreceptionisten, informatieverstrekkers zoals de customerservicemedewerkers, servicebaliemedewerkers, medewerkers publiekszaken, receptionisten, werkplaatsreceptionisten, interviewers voor enquêtes en marktonderzoek, indicatiestellers, bemiddelaars kinderopvang en indicatieadviseurs gezondheidszorg.",
+      "DimensionGroupId": "24"
+    },
+    {
+      "Identifier": "A000237",
+      "Index": 84,
+      "Title": "0633 Beveiligingspersoneel",
+      "Description": "Beveiligingspersoneel: Deze beroepsgroep omvat de gevangenbewaarders, beveiligingspersoneel, parkeerwachters en strandwachten",
+      "DimensionGroupId": "26"
+    },
+    {
+      "Identifier": "A000244",
+      "Index": 91,
+      "Title": "0714 Architecten en planologen",
+      "Description": "Architecten en planologen: Deze beroepsgroep omvat de architecten, planologen, landmeetkundigen en vormgevers, bouwkundig- en interieurarchitecten, landschapsarchitecten, stedenbouwkundigen en verkeersplanologen, cartografen en landmeetkundigen.",
+      "DimensionGroupId": "27"
+    },
+    {
+      "Identifier": "A000258",
+      "Index": 105,
+      "Title": "0743 Automonteurs",
+      "Description": "Automonteurs: Deze beroepsgroep omvat de automonteurs, bandenmonteurs, uitlijnspecialisten, apk-keurmeesters en scootermonteurs",
+      "DimensionGroupId": "27"
+    },
+    {
+      "Identifier": "A000267",
+      "Index": 113,
+      "Title": "0761 Elektriciens en elektromonteurs",
+      "Description": "Elektriciens en elektromonteurs: Deze beroepsgroep omvat de installateurs en reparateurs van elektrische, elektronische en telecommunicatieapparatuur.",
+      "DimensionGroupId": "27"
+    },
+    {
+      "Identifier": "A000269",
+      "Index": 115,
+      "Title": "0771 Machine operators",
+      "Description": "Machine operators: Deze beroepsgroep omvat de machine operators vervaardiging voedingsmiddelen, textiel-, bont-, en leerproducten, rubber, kunststof of papierproducten, chemische en fotografische producten, delfstoffenwinnaar en bedieners vaste installaties en machines mineralen-, metaal en houtbewerking.",
+      "DimensionGroupId": "27"
+    },
+    {
+      "Identifier": "A000276",
+      "Index": 121,
+      "Title": "0812 Systeembeheerders en netwerkspec...",
+      "Description": "Systeembeheerders en netwerkspecialisten: Deze beroepsgroep omvat de ontwerpers en beheerders van databases, systeembeheerders, netwerkspecialisten, netwerkbeveiligers en adviseurs informatiebeveiliging.",
+      "DimensionGroupId": "28"
+    },
+    {
+      "Identifier": "A059354",
+      "Index": 123,
+      "Title": "0814 Software- en applicatieontwikkel...",
+      "Description": "Software- en applicatieontwikkelaars: Deze groep omvat de softwareontwikkelaars, webdevelopers, applicatieprogrammeurs en testers ICT-systemen.",
+      "DimensionGroupId": "28"
+    },
+    {
+      "Identifier": "A000278",
+      "Index": 125,
+      "Title": "0821 Gebruikersondersteuning ICT",
+      "Description": "Gebruikersondersteuning ICT: Deze beroepsgroep omvat de gebruikersondersteuning ICT, websitebeheerders, systeem technici, pc installateurs",
+      "DimensionGroupId": "28"
+    },
+    {
+      "Identifier": "A000291",
+      "Index": 138,
+      "Title": "1013 Fysiotherapeuten",
+      "Description": "Fysiotherapeuten: Deze beroepsgroep omvat de fysiotherapeuten, audiologen en logopedisten, optometristen en orthoptisten, diëtisten, physician assistents, alternatief genezers en arbeidshygiënisten",
+      "DimensionGroupId": "30"
+    },
+    {
+      "Identifier": "A000304",
+      "Index": 151,
+      "Title": "1051 Verzorgenden",
+      "Description": "Verzorgenden: Deze beroepsgroep omvat het verzorgend personeel in de gezondheidszorg",
+      "DimensionGroupId": "30"
+    },
+    {
+      "Identifier": "A000308",
+      "Index": 155,
+      "Title": "1112 Koks",
+      "Description": "Koks: Deze beroepsgroep omvat de koks en chef-koks",
+      "DimensionGroupId": "31"
+    },
+    {
+      "Identifier": "A000309",
+      "Index": 156,
+      "Title": "1113 Medewerkers bediening horeca en ...",
+      "Description": "Medewerkers bediening horeca en barpersoneel: Deze beroepsgroep omvat de medewerkers bediening horeca en barpersoneel.",
+      "DimensionGroupId": "31"
+    },
+    {
+      "Identifier": "A000314",
+      "Index": 161,
+      "Title": "1121 Schoonmakers",
+      "Description": "Schoonmakers: Deze beroepsgroep omvat de schoonmakers in huishoudens, hotels en kantoren, autowassers, glazenwassers en overige schoonmakers",
+      "DimensionGroupId": "31"
+    },
+    {
+      "Identifier": "A000321",
+      "Index": 168,
+      "Title": "1214 Vrachtwagenchauffeurs",
+      "Description": "Vrachtwagenchauffeurs: Deze beroepsgroep omvat de vrachtwagenchauffeurs",
+      "DimensionGroupId": "32"
+    },
+    {
+      "Identifier": "A059355",
+      "Index": 171,
+      "Title": "1223 Laders, lossers en vakkenvullers...",
+      "Description": "Laders, lossers en vakkenvullers: Deze beroepsgroep omvat de laders, lossers, magazijnmedewerkers en vakkenvullers.",
+      "DimensionGroupId": "32"
+    }
+  ]
+}
