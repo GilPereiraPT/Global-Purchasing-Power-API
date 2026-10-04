@@ -109,12 +109,12 @@ def exact_history(country, occupation, start_year, end_year):
             nl.init(db)
             rows = db.execute(
                 """SELECT reference_period,currency,measure,unit,value,source,
-                          source_url,brc_code
+                          source_url,brc_code,publication_status,precision
                    FROM nl_cbs_wages
                    WHERE country='NL' AND occupation=?""",
                 (occupation,)).fetchall()
         entries = []
-        for period,currency,measure,unit,value,source,url,brc_code in rows:
+        for period,currency,measure,unit,value,source,url,brc_code,publication_status,precision in rows:
             try:
                 year = int(str(period)[:4])
             except ValueError:
@@ -123,7 +123,9 @@ def exact_history(country, occupation, start_year, end_year):
                 entries.append({"year":year, "currency":currency,
                                 "measure":measure, "unit":unit, "value":value,
                                 "source":source, "source_url":url,
-                                "classification":"BRC 2014 editie 2025:"+brc_code})
+                                "classification":"BRC 2014 editie 2025:"+brc_code,
+                                "reference_period":period, "publication_status":publication_status,
+                                "precision":precision})
     else:
         with connect() as db:
             init_salary_db(db)
@@ -163,7 +165,7 @@ def exact_history(country, occupation, start_year, end_year):
                         "currency":e["currency"], "unit":"per_hour",
                         "kind":"reported_hourly", "reference_period":e.get("reference_period", str(year)),
                         "source":e["source"], "measure":e["measure"],
-                        "precision":"exact_occupation"
+                        "precision":e.get("precision", "exact_occupation")
                     },
                     "source_observations":candidates,
                 })
@@ -189,7 +191,10 @@ def exact_history(country, occupation, start_year, end_year):
             status = "unavailable"
         observations.append({"year":year, "status":status, "annual_presentation":display,
                              "source_observations":candidates})
-    return {"country":country, "occupation":occupation, "precision":"exact_occupation",
+    return {"country":country, "occupation":occupation,
+            "precision":nl.PRECISION if country == "NL" and occupation in nl.APPROVED else "exact_occupation",
             "start_year":start_year, "end_year":end_year,
             "observations":observations,
-            "note":"Only imported exact-occupation observations; hourly-only observations are not annualized without validated hours."}
+            "note":("Only imported approved CBS occupational-group observations; hourly wages are not annualized without validated hours."
+                    if country == "NL" and occupation in nl.APPROVED else
+                    "Only imported exact-occupation observations; hourly-only observations are not annualized without validated hours.")}
