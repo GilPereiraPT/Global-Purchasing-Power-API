@@ -92,3 +92,9 @@ A matriz detalhada atual está no [relatório dos originais](US_TX_FL_UPLOADED_S
 Não há alterações de cálculo, API, parâmetros, ficheiros de testes, BD ou deployment nesta revisão final: apenas documentação. Reutiliza-se a suite completa já concluída (1000 aprovados, 0 falhados, 20 subtestes), a validação dos originais e o arquivo WSGI isolado. Executa-se apenas o conjunto contributivo dirigido para confirmar a matriz; o CI normal da PR verificará o SHA final. Sem novas pesquisas, aquisições, merge ou deployment.
 
 Resultado do conjunto dirigido nesta revisão: **41 aprovados, 0 falhados**; permanece um aviso herdado Starlette/httpx. `git diff --check` aprovado. A suite completa de referência e o ensaio WSGI não foram repetidos localmente porque não houve alteração do runtime, parâmetros ou testes.
+
+## Segundo pacote: seguros privados e prova local
+
+O [relatório adicional](US_TX_FL_LOCAL_PRIVATE_INSURANCE_REVIEW_2026.md) substitui o estado documental anterior: nove originais validados, seguro privado distinto de contribuição pública, questão ambiental/data da Florida fechada por enrolled/histórico. Impostos locais e aplicabilidade de contribuições públicas continuam sem cobertura completa; `net_income=null`. Nenhuma obrigação foi presumida.
+
+Validação desta revisão: **1009 testes aprovados, zero falhados, 20 subtestes aprovados**, 91,76 s; 107 testes específicos aprovados. Arquivo WSGI de deployment testado exclusivamente em instalação isolada. Um aviso herdado Starlette/httpx permanece. `git diff --check` aprovado. CI deve ser confirmado no SHA final.

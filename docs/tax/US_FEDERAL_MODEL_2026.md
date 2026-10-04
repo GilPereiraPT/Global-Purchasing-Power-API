@@ -34,3 +34,7 @@ For the next TX/FL validation, use [the concrete official-source request](US_TX_
 
 
 Uploaded official bodies now substantiate TX employee UI and conditional TX/FL workers-compensation non-chargebacks. See [the uploaded-source review](US_TX_FL_UPLOADED_SOURCES_2026.md). Optional `employment_type` and `workers_compensation_exception_agreement` facts must match ordinary private employment and exclude coverage agreements before the newly scoped zeros appear. Missing/unsupported facts remain partial; local taxes and 2026 paid leave still block total net. Texas Tax Code 302 is corrected as property/occupation taxation, not an income-tax prohibition.
+
+## Segundo pacote: seguros privados e prova local
+
+O [relatório adicional](US_TX_FL_LOCAL_PRIVATE_INSURANCE_REVIEW_2026.md) substitui o estado documental anterior: nove originais validados, seguro privado distinto de contribuição pública, questão ambiental/data da Florida fechada por enrolled/histórico. Impostos locais e aplicabilidade de contribuições públicas continuam sem cobertura completa; `net_income=null`. Nenhuma obrigação foi presumida.

@@ -1,0 +1,133 @@
+{
+  "review_date": "2026-10-04",
+  "zip_sha256": "9e9ae29bc87415b8c1b3cfc1893dc2c89b30d8a6d2eba10bcdb6c9dc4f764f04",
+  "zip_bytes": 216531,
+  "crc_and_paths_validated": true,
+  "original_bodies_verified": 9,
+  "authentication_limitation": "Operator-supplied originals: hashes and original content verified offline; no independent live retrieval claimed",
+  "records": [
+    {
+      "name": "fl_2026_45",
+      "url": "https://laws.flrules.org/2026/45",
+      "error": "HTTP Error 403: Forbidden",
+      "decision": "No body: cannot validate rule",
+      "original_checksum_and_size_match": null
+    },
+    {
+      "name": "tx_insurance_1255",
+      "url": "https://tcss.legis.texas.gov/resources/IN/htm/IN.1255.htm",
+      "final_url": "https://tcss.legis.texas.gov/resources/IN/htm/IN.1255.htm",
+      "status": 200,
+      "file": "tx_insurance_1255.html",
+      "bytes": 23497,
+      "sha256": "88c5a4123ac4d5f76848519bc12f6d19082cdcca290882d9d5c8313e11246506",
+      "retrieved_at": "2026-10-04T22:01:13.814976+00:00",
+      "decision": "Private employer group family leave insurance; no universal public levy established",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "tx_work_family",
+      "url": "https://www.twc.texas.gov/employer-resources/texas-work-family-policies",
+      "error": "HTTP Error 403: Forbidden",
+      "decision": "No body: cannot validate rule",
+      "original_checksum_and_size_match": null
+    },
+    {
+      "name": "fl_family_insurance",
+      "url": "https://www.flsenate.gov/Laws/Statutes/2026/627.445",
+      "final_url": "https://www.flsenate.gov/Laws/Statutes/2026/627.445",
+      "status": 200,
+      "file": "fl_family_insurance.html",
+      "bytes": 56958,
+      "sha256": "8c9a86013bf346876badcd30b6f958a024b51e278d0e80d5eac1530b80583f69",
+      "retrieved_at": "2026-10-04T22:01:11.817185+00:00",
+      "decision": "Private policy benefits and insurance standards; not payroll tax rates",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "fl_revenue_pit_faq",
+      "url": "https://www.floridarevenue.com/faq/Pages/FAQDetails.aspx?FAQID=1466",
+      "final_url": "https://www.floridarevenue.com/faq/Pages/FAQDetails.aspx?FAQID=1466",
+      "status": 200,
+      "file": "fl_revenue_pit_faq.html",
+      "bytes": 22333,
+      "sha256": "7baffd8e1d6ad5b9dc24bda13541761093d22f32e274d3194a4661240002af37",
+      "retrieved_at": "2026-10-04T22:02:09.779453+00:00",
+      "decision": "Corroborates state personal income tax absence only",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "fl_1217_enrolled",
+      "url": "https://www.flsenate.gov/Session/Bill/2026/1217/BillText/er/PDF",
+      "final_url": "https://www.flsenate.gov/Session/Bill/2026/1217/BillText/er/PDF",
+      "status": 200,
+      "file": "fl_1217_enrolled.pdf",
+      "bytes": 118583,
+      "sha256": "63cb67ab9a027db42470f99057a0a7b2aab091137abe52a38f25158aae731da0",
+      "retrieved_at": "2026-10-04T22:02:11.813221+00:00",
+      "decision": "Environmental amendment; section 5 effective July 1 2026; enrolled text, not promulgated original",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "fl_1217_history",
+      "url": "https://www.flsenate.gov/Session/Bill/2026/1217",
+      "final_url": "https://www.flsenate.gov/Session/Bill/2026/1217",
+      "status": 200,
+      "file": "fl_1217_history.html",
+      "bytes": 67892,
+      "sha256": "ed43cf7220d8bfce631c65ff9b4e68bcdfb9502e661bfb2f806ab69e3fd146c3",
+      "retrieved_at": "2026-10-04T22:02:11.623219+00:00",
+      "decision": "Official history links enrolled version, approval and chapter 2026-45, July 1 effective date",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "tx_tdi_bulletin",
+      "url": "https://www.tdi.texas.gov/bulletins/2023/B-0012-23.html",
+      "final_url": "https://www.tdi.texas.gov/bulletins/2023/B-0012-23.html",
+      "status": 200,
+      "file": "tx_tdi_bulletin.html",
+      "bytes": 39843,
+      "sha256": "f14beb451d744de2136bda1281645b34db1eeb362ee0d1a12da5be10ac4c96bf",
+      "retrieved_at": "2026-10-04T22:02:07.011404+00:00",
+      "decision": "Private insurance product context, effective 2023/2024; no complete 2026 public-program inventory",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "fl_624_6086",
+      "url": "https://www.flsenate.gov/Laws/Statutes/2026/624.6086",
+      "final_url": "https://www.flsenate.gov/Laws/Statutes/2026/624.6086",
+      "status": 200,
+      "file": "fl_624_6086.html",
+      "bytes": 44453,
+      "sha256": "b6135bf55546bdf8dfbed29cd38d5a3ec82c27111dc8d001c6be8706cc1b4a5f",
+      "retrieved_at": "2026-10-04T22:02:11.392000+00:00",
+      "decision": "Employer may purchase private insurance; no universal public levy established",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "tx_star_1996",
+      "url": "https://star.comptroller.texas.gov/view/9610803L",
+      "final_url": "https://star.comptroller.texas.gov/view/9610803L",
+      "status": 200,
+      "file": "tx_star_1996.html",
+      "bytes": 1651,
+      "sha256": "0d101ba490ae10d8945095d301548ee13e00bea2e0992a511a308a69241901a0",
+      "retrieved_at": "2026-10-04T22:02:43.353737+00:00",
+      "content_validation": "REJECTED for rule validation: SPA shell without letter body. Search located historic 1996 letter; not current 2026 proof.",
+      "decision": "Rejected: HTML SPA shell without original letter body",
+      "original_checksum_and_size_match": true
+    },
+    {
+      "name": "tx_payroll_state_local",
+      "url": "https://fmx.cpa.texas.gov/fm/pubs/paypol/tax_information/index.php?page=state&section=withholding",
+      "final_url": "https://fmx.cpa.texas.gov/fm/pubs/paypol/tax_information/index.php?page=state&section=withholding",
+      "status": 200,
+      "file": "tx_payroll_state_local.html",
+      "bytes": 19897,
+      "sha256": "c15aa424b1554d05a2e76010fab60c1dd943034b66b7b40444ca8888ca517dd3",
+      "retrieved_at": "2026-10-04T22:02:40.018839+00:00",
+      "decision": "State employees outside Texas; not private Texas local-tax coverage",
+      "original_checksum_and_size_match": true
+    }
+  ]
+}
