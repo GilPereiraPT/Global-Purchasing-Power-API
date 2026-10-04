@@ -75,6 +75,8 @@ def test_zip_checksums_privacy_headers_and_read_only_wal(tmp_path, monkeypatch):
             assert str(tmp_path).encode() not in contents and b'never-export' not in contents
             assert (info.external_attr>>16)&0o777==0o600
         for record in manifest['tables'].values():
+            if record['status'] == 'absent':
+                continue
             assert hashlib.sha256(archive.read(record['file'])).hexdigest()==record['sha256']
         row=json.loads(archive.read('us_oews.json'))['records'][0]
         assert row['a_mean']==125000 and row['a_median'] is None and row['reference_period']=='May 2021'

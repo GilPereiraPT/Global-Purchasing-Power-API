@@ -22,6 +22,7 @@ MAX_BYTES = 100 * 1024 * 1024
 MAX_ROWS = 200_000
 TIMEOUT_SECONDS = 30
 PRIMARY_KEYS = {
+    'nl_cbs_wages': ('country', 'occupation', 'reference_period', 'source'),
     'us_oews': ('reference_period', 'source_file', 'area', 'area_type',
         'prim_state', 'naics', 'i_group', 'own_code', 'occ_code'),
     'north_america_wages': ('country', 'occupation', 'geography', 'classification',
@@ -30,6 +31,10 @@ PRIMARY_KEYS = {
         'reference_period', 'measure', 'source'),
 }
 TABLE_COLUMNS = {
+    'nl_cbs_wages': ('country', 'occupation', 'geography', 'reference_period',
+        'publication_status', 'currency', 'measure', 'unit', 'value', 'source',
+        'source_url', 'source_page', 'dataset', 'classification', 'brc_code',
+        'cbs_identifier', 'brc_label', 'employees_thousand', 'salary_concept', 'precision'),
     'us_oews': ('reference_period', 'published_year', 'source_file', 'area',
         'area_title', 'area_type', 'prim_state', 'naics', 'naics_title', 'i_group',
         'own_code', 'occ_code', 'occ_title', 'o_group', 'h_mean', 'a_mean',
@@ -74,15 +79,22 @@ def safe_record(record, forbidden_values):
                 raise ValueError('Invalid stored numeric salary')
     url = urlsplit(record['source_url'])
     if (url.scheme != 'https' or url.hostname not in
-        ('www.bls.gov', 'open.canada.ca', 'opencanada.blob.core.windows.net')
+        ('www.bls.gov', 'open.canada.ca', 'opencanada.blob.core.windows.net', 'datasets.cbs.nl')
         or url.username or url.password or url.query or url.fragment
         or url.port not in (None, 443)):
         raise ValueError('Unsafe stored source URL')
+    if url.hostname == 'datasets.cbs.nl' and url.path != '/odata/v1/CBS/86355NED':
+        raise ValueError('Unsafe stored CBS dataset URL')
+    if 'source_page' in record and record['source_page'] != 'https://www.cbs.nl/nl-nl/cijfers/detail/86355NED':
+        raise ValueError('Unsafe stored CBS source page')
+    employees = record.get('employees_thousand')
+    if 'employees_thousand' in record and (isinstance(employees, bool) or not isinstance(employees, (int, float)) or not math.isfinite(employees) or employees <= 0):
+        raise ValueError('Invalid stored CBS employee count')
     for value in record.values():
         if isinstance(value, str) and any(secret and secret in value for secret in forbidden_values):
             raise ValueError('Sensitive stored salary metadata')
     for field, value in record.items():
-        if field != 'source_url' and isinstance(value, str) and re.search(r'(^|\s)/\S|[A-Za-z]:[\\/]', value):
+        if field not in ('source_url', 'source_page') and isinstance(value, str) and re.search(r'(^|\s)/\S|[A-Za-z]:[\\/]', value):
             raise ValueError('Private path in stored salary metadata')
 
 
