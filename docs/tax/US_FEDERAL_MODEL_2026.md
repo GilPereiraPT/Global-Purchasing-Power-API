@@ -25,3 +25,7 @@ The named component `income_after_federal_components_before_state_local_and_othe
 ## Remaining work
 
 TX/FL: finish source-backed local/premium applicability and independent complete reference cases before promoting a result. Federal: extend eligibility, refundable EITC, special deductions, high-income AMT and final annual rounding. NY/CA/PA: complete their specific annual/local/credit and mandatory contribution rules. Do not route source archives or tax rules into salary publication packages.
+
+## TX/FL follow-up review
+
+See [the release review](US_TX_FL_RELEASE_REVIEW_2026.md) for the state/scenario coverage matrix, attempted official acquisitions, precise blockers, database/runtime distinction and browser-based operator instructions. Reviewed TX/FL state wage-tax zeroes and FL employee reemployment non-deduction are now separately exposed when federal facts match. Local taxes and the complete mandatory employee contribution aggregate remain unavailable; total net stays null. These scoped parameter values do not promote the source evidence to complete verification.

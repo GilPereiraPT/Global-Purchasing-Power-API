@@ -1,0 +1,65 @@
+[
+  {
+    "id": "tx_local",
+    "url": "https://statutes.capitol.texas.gov/Docs/TX/htm/TX.302.htm",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "tx_ui_law",
+    "url": "https://statutes.capitol.texas.gov/Docs/LA/htm/LA.204.htm",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "fl_local",
+    "url": "https://www.flsenate.gov/Laws/Statutes/2026/166.231",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "fl_const",
+    "url": "https://www.flsenate.gov/Laws/Constitution",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "ssa2026",
+    "url": "https://www.ssa.gov/news/press/factsheets/colafacts2026.pdf",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "tx_employer",
+    "url": "https://www.twc.texas.gov/programs/unemployment-tax/tax-rates",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "ca2026",
+    "url": "https://www.ftb.ca.gov/forms/2026/2026-540-tax-rate-schedules.pdf",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "ny2026",
+    "url": "https://www.tax.ny.gov/pit/file/tax-tables/2026.htm",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "pa2026",
+    "url": "https://www.pa.gov/agencies/dli/programs-services/unemployment/for-employers/uc-tax-information",
+    "consulted_on": "2026-10-04",
+    "tax_year": 2026,
+    "error": "403 Forbidden"
+  }
+]

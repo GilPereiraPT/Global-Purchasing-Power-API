@@ -8,6 +8,7 @@ from app.tax_engine import TaxOutcome, annual_amount, monetary, progressive_tax
 from app.tax_components import US_SINGLE_BRACKETS, IRS_FICA, IRS_ADDITIONAL_MEDICARE
 from app.us_tax_evidence import sources_for
 from app import us_federal_benchmark as federal_model
+from app.us_tax_jurisdictions import coverage as jurisdiction_coverage
 IRS_2026 = "https://www.irs.gov/irb/2025-45_IRB"
 IRS_2026_FICA = "https://www.irs.gov/publications/p15"
 
@@ -61,7 +62,8 @@ class USAdapter:
                               'scope':'Federal component estimate only; total net unavailable',
                               'required_us_facts':list(federal_model.REQUIRED),
                               'annual_gross_range':['19540.00','500000.00'],
-                              'assumptions':list(federal_model.ASSUMPTIONS)},
+                              'assumptions':list(federal_model.ASSUMPTIONS),
+                              'jurisdiction_coverage':[jurisdiction_coverage(state) for state in ('TX','FL')]},
                              {'id':SCENARIO,'status':'partial','regions':['TX','FL'],
                               'supported_tax_years':[], 'benchmark_tax_years':[]}],
                 'assumptions':list(ASSUMPTIONS), 'missing_rules':list(MISSING),
@@ -90,15 +92,18 @@ class USAdapter:
                 return TaxOutcome('partial', reason='Explicit TX or FL required for this first federal model',
                                   assumptions=federal_model.ASSUMPTIONS)
             modeled, missing = federal_model.components(request.annual_gross, request.us_facts)
-            unknown = tuple({'name': name, 'amount': None, 'status': 'unavailable'} for name in (
-                'state_income_tax_final', 'local_income_tax', 'mandatory_state_employee_contributions'))
+            jurisdiction = jurisdiction_coverage(request.region)
+            # Even reviewed rule parameters are withheld when the federal facts
+            # do not establish this scenario. A state zero never completes net.
+            unknown = tuple(dict(component, amount=component['amount'] if modeled else None)
+                            for component in jurisdiction['components'])
             return TaxOutcome('partial', sources=sources_for(SOURCE_URLS + (
                 'https://www.irs.gov/instructions/i6251',
                 'https://www.irs.gov/publications/p505',
-                'https://www.irs.gov/taxtopics/tc506')),
+                'https://www.irs.gov/taxtopics/tc506')) + tuple(jurisdiction['sources']),
                 applicable_rules=('Explicit ordinary-wage federal component model; not complete take-home pay',),
                 assumptions=federal_model.ASSUMPTIONS,
-                limitations=missing + ('State/local taxes and employee premiums not yet included',
+                limitations=missing + tuple(jurisdiction['missing_rules']) + ('Complete state/local taxes and employee premiums not yet included',
                                        'Annual model cents, not payroll withholding or a final tax return'),
                 reason='Federal model available' if modeled else 'Federal model facts incomplete or unsupported',
                 components=modeled + unknown)

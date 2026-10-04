@@ -27,7 +27,8 @@ def test_scoped_federal_results_and_total_net_withheld(gross,tax,fica,residual,s
     assert c['federal_contributions_model'] == fica
     assert c['income_after_federal_components_before_state_local_and_other_deductions'] == residual
     assert c['federal_childless_eitc_model'] == c['federal_additional_amt_model'] == '0.00'
-    assert c['state_income_tax_final'] is c['local_income_tax'] is c['mandatory_state_employee_contributions'] is None
+    assert c['state_income_tax_final'] == '0.00'
+    assert c['local_income_tax'] is c['mandatory_state_employee_contributions'] is None
     assert r['status'] == 'partial' and r['net_income'] is r['income_tax'] is None
 
 
