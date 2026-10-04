@@ -1,0 +1,159 @@
+{
+  "schema": "earnwage-ie-ch-review-v1",
+  "reviewed_at": "2026-10-04",
+  "base_commit": "092bc2f",
+  "production_inventory_status": "not_supplied_for_this_task; prior Issue25-only export not reused",
+  "database_scope": "explicit local development database, not production",
+  "local_database_records": {
+    "IE": 0,
+    "CH": 0
+  },
+  "ireland": {
+    "public_sector_code_entries": 22,
+    "public_periods": [
+      "2025-03-01",
+      "2026",
+      "2026-06-01"
+    ],
+    "group_context_code_occupations": 39,
+    "group_context_period": "2022",
+    "new_official_observations": 0,
+    "public_entry_jobs": [
+      "accountant",
+      "administrative_assistant",
+      "architect",
+      "auditor",
+      "cleaner",
+      "cook",
+      "cybersecurity_specialist",
+      "dentist",
+      "doctor",
+      "electrician",
+      "healthcare_assistant",
+      "it_technician",
+      "lawyer",
+      "nurse",
+      "pharmacist",
+      "physiotherapist",
+      "plumber",
+      "psychologist",
+      "secondary_teacher",
+      "security_guard",
+      "software_developer",
+      "teacher"
+    ],
+    "missing_public_entry_jobs": [
+      "agricultural_worker",
+      "automotive_mechanic",
+      "bus_driver",
+      "civil_engineer",
+      "construction_worker",
+      "data_analyst",
+      "financial_analyst",
+      "industrial_operator",
+      "manager",
+      "mechanical_engineer",
+      "preschool_teacher",
+      "receptionist",
+      "sales_assistant",
+      "supermarket_worker",
+      "truck_driver",
+      "waiter",
+      "warehouse_operator",
+      "welder"
+    ],
+    "acquisition_status": "blocked official salary bodies; existing code values not revalidated"
+  },
+  "switzerland": {
+    "active_bfs_snapshot_exists": false,
+    "active_bfs_observations": 0,
+    "mapping_jobs": 40,
+    "mapped_distinct_groups": 22,
+    "acquired_groups": 38,
+    "years": [
+      "2012",
+      "2014",
+      "2016",
+      "2018",
+      "2020",
+      "2022",
+      "2024"
+    ],
+    "geographies": [
+      "CH:great_region:1",
+      "CH:great_region:2",
+      "CH:great_region:3",
+      "CH:great_region:4",
+      "CH:great_region:5",
+      "CH:great_region:6",
+      "CH:great_region:7",
+      "Switzerland"
+    ],
+    "observations": 10640,
+    "quality_counts": {
+      "accepted": 10020,
+      "review_required": 430,
+      "suppressed": 190
+    },
+    "national_quality_counts": {
+      "accepted": 1320,
+      "review_required": 10
+    },
+    "regional_quality_counts": {
+      "accepted": 8700,
+      "review_required": 420,
+      "suppressed": 190
+    },
+    "group_year_geography_records": 2128,
+    "national_latest_accepted_group_context_jobs": 40,
+    "exact_occupation_pairs_added": 0,
+    "private_snapshot_sha256": "074cd304aa906af606479a8b7fd9b8d6f9d4bd86b24f7a389cf8589f06497dc5",
+    "private_snapshot_bytes": 4001355,
+    "distribution_status": "blocked_pending_reuse_terms; private staging only",
+    "source": {
+      "url": "https://www.pxweb.bfs.admin.ch/api/v1/fr/px-x-0304010000_205/px-x-0304010000_205.px",
+      "method": "POST",
+      "query_sha256": "4b813aee6d0f13a0e81a29083256091b983a98fcf314018d3e610438f76dc297",
+      "sha256": "1188ba467a970ae19cfcb7dcbc1c99b14624aeaf2de5a5f6b4ec4adf6dba6301",
+      "bytes": 66715,
+      "acquired_at": "2026-10-04T22:48:25.409711+00:00",
+      "status": 200,
+      "metadata_sha256": "909d817e69a9f21839e2bf80350a3a34435e9ca8a3af4e5e33b165318cdfeb17"
+    },
+    "raw_dimension_cells_independently_checked": 10640,
+    "source_reported_updated": "2019-11-08T07:30:00Z",
+    "methodology_database_date": "2026-02-24"
+  },
+  "existing_ilostat_snapshots": {
+    "IE": {
+      "observations": 162,
+      "periods": [
+        "2020",
+        "2021",
+        "2022",
+        "2023",
+        "2024",
+        "2025"
+      ]
+    },
+    "CH": {
+      "observations": 162,
+      "periods": [
+        "2020",
+        "2021",
+        "2022",
+        "2023",
+        "2024",
+        "2025"
+      ]
+    }
+  },
+  "tests": {
+    "full_passed": 1026,
+    "full_failed": 0,
+    "subtests_passed": 20,
+    "targeted_passed": 29,
+    "warnings": 1,
+    "isolated_wsgi_archive": "passed; private staging absent, IE public entry preserved"
+  }
+}
