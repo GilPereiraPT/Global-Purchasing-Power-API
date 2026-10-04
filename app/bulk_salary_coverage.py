@@ -10,13 +10,19 @@ from app.us_oews import WAGE_FIELDS
 from app.north_america import CANADA_URL,US_SOC
 
 
-def baseline_index(directory):
-    """Only snapshots with reconstructible official observation identities count."""
+def baseline_index(directory, *, normalized=None):
+    """Only snapshots with reconstructible official observation identities count.
+
+    ``normalized`` optionally collects the same source-qualified rows by key for
+    an explicitly authorized raw-table export. The caller validates provenance
+    and completeness first; this function does not assert production scope.
+    """
     index={};pairs=set();files=[]
     def add(r):
         key=observation_key(r);value=numeric(r['value'])
         if key in index and index[key]!=value:raise ValueError('Conflicting baseline aliases')
         index[key]=value
+        if normalized is not None:normalized[key]=r
     for name in ('us_oews_curated.json','north_america_wages.json','ca_province_wages.json'):
         path=Path(directory)/name
         if not path.exists():continue
