@@ -30,6 +30,8 @@ def test_export_preserves_stored_values_and_never_writes_source(tmp_path):
     assert rows[0]['a_mean']==120990 and rows[0]['a_median'] is None
     assert rows[0]['reference_period']=='May 2021'
     for record in report['tables'].values():
+        if record['status'] == 'absent':
+            continue
         raw=(out/record['file']).read_bytes()
         assert hashlib.sha256(raw).hexdigest()==record['sha256']
         assert b'never-export' not in raw

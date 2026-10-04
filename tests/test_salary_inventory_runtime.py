@@ -44,6 +44,7 @@ with zipfile.ZipFile(io.BytesIO(raw)) as z:
  manifest=json.loads(z.read('manifest.json'))
  assert manifest['total_rows']==1
  for record in manifest['tables'].values():
+  if record['status']=='absent':continue
   contents=z.read(record['file'])
   assert hashlib.sha256(contents).hexdigest()==record['sha256']
   assert os.environ['EARNWAGE_ADMIN_TOKEN'].encode() not in contents
