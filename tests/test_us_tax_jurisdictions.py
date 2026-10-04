@@ -128,3 +128,21 @@ print(body.decode())
         tables = {row[0] for row in db.execute(
             "SELECT name FROM sqlite_master WHERE type='table'")}
         assert not {'tax_parameters','tax_rules'} & tables
+
+
+@pytest.mark.parametrize('invalid', [
+    {'sha256':'z'*64}, {'sha256':'0'*63}, {'sha256':None},
+    {'bytes':0}, {'bytes':True}, {'tax_year':2025},
+    {'url':'https://www.irs.gov/irb/2025-45_IRB'},
+    {'scope':''}, {'scope':None}, {'status':403},
+    {'verification_status':'acquired_not_reviewed'},
+])
+@pytest.mark.parametrize('state', ['TX', 'FL'])
+def test_incomplete_or_unrelated_evidence_cannot_authorize_scoped_zero(monkeypatch,invalid,state):
+    from app.us_tax_evidence import sources_for
+    def corrupted(urls):
+        return tuple(dict(source, **invalid) for source in sources_for(urls))
+    monkeypatch.setattr('app.us_tax_jurisdictions.sources_for',corrupted)
+    assert all(component['amount'] is None for component in coverage(state)['components'])
+    result = calculate('US','100000',2026,SCENARIO,state,us_facts=facts('100000'))
+    assert result['net_income'] is None and result['status']=='partial'

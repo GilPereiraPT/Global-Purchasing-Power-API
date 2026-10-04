@@ -3,6 +3,7 @@
 Only previously reviewed official rule parameters may produce scoped zeroes.
 Unknown local charges or employment coverage never inherit the state zero.
 """
+import re
 from app.us_tax_evidence import sources_for
 
 RULES = {
@@ -20,16 +21,29 @@ RULES = {
 UNKNOWN = ('local_income_tax', 'mandatory_state_employee_contributions')
 
 
+def _reviewed_parameter(source, expected_url):
+    """A scoped zero needs intact evidence for this exact rule, not a placeholder.
+
+    Metadata checks cannot replace legal review or prove raw-source integrity.
+    They only reject incomplete, malformed or unrelated review declarations.
+    """
+    return (source.get('verification_status') == 'parameters_reviewed'
+            and type(source.get('tax_year')) is int and source['tax_year'] == 2026
+            and source.get('status') == 200
+            and source.get('url') == expected_url
+            and isinstance(source.get('scope'), str) and bool(source['scope'].strip())
+            and type(source.get('bytes')) is int and source['bytes'] > 0
+            and isinstance(source.get('sha256'), str)
+            and re.fullmatch(r'[0-9a-f]{64}', source['sha256']) is not None)
+
+
 def coverage(state):
     """Fresh metadata, no IO or DB mutation; wage-only full-year resident scope."""
     rules = RULES.get(state, {})
     components, sources = [], []
     for name, (url, rule) in rules.items():
         source = sources_for((url,))[0]
-        reviewed = (source.get('verification_status') == 'parameters_reviewed'
-                    and source.get('tax_year') == 2026
-                    and source.get('status') == 200
-                    and len(source.get('sha256', '')) == 64)
+        reviewed = _reviewed_parameter(source, url)
         components.append({'name': name, 'amount': '0.00' if reviewed else None,
                            'status': 'reviewed_rule_parameter' if reviewed else 'unavailable',
                            'rule': rule, 'source_url': url})
