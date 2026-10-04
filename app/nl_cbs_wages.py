@@ -206,6 +206,253 @@ def wages(country, occupation):
             "main job. Gross wage excludes special payments and overtime pay. "
             "No monthly or annual salary is inferred from the hourly observation. "
             + ("2025 is provisional." if publication_status == "provisional"
-               else "2024 is definitive.")
+               else period + " is definitive.")
         ),
     }
+
+
+# Official files obtained during PR #34; no network requests on API paths.
+# Updating this release requires a new source/license/classification review.
+HISTORY_VERSION = '202608180000'
+HISTORY_LICENCE = 'https://creativecommons.org/licenses/by/4.0/'
+HISTORY_SOURCES = {
+    'properties': ('Properties', 'fd21a86a3decc9f2943a4309d0cea2e33e5bf0b08a2e5a250158277a2e130b55'),
+    'occupation_codes': ('BeroepCodes', 'f8c5404dadcf35b5f2d41d3c1763335cb8ab8861c8e1ced359dcef8c214b724f'),
+    'period_codes': ('PeriodenCodes', '9f36fe7c9f8075bb7e82bf5ae61285f1e66a9b2749a01935b88ce08099ff1a61'),
+    'measure_codes': ('MeasureCodes', '8f4f7bf1299f18e92b9632a3d6b1fbafc4a5efa4ce7d632ecdad4c801307ba71'),
+    'observations': ('Observations', '097c2dbe156374aee00623f86570a0c5808e26a1329cff3566b7d2f30453053c'),
+}
+# Metadata timestamps are recorded request starts; the observations timestamp
+# records completion of the complete download. They are not inferred from mtime.
+HISTORY_SOURCE_DATES = {
+    'properties': '2026-10-04T13:41:45.795218+00:00',
+    'occupation_codes': '2026-10-04T13:41:46.881516+00:00',
+    'period_codes': '2026-10-04T13:41:47.732447+00:00',
+    'measure_codes': '2026-10-04T13:41:47.929349+00:00',
+    'observations': '2026-10-04T13:43:35.954865+00:00',
+}
+
+# Canonical derived records are pinned independently of caller-supplied hashes.
+HISTORY_RECORDS_SHA256 = 'db0749c813011b5515b66f76fab769f64071e7511d32af8c200bff7fd932df66'
+
+
+def _history_json(raw):
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError('Duplicate CBS JSON key')
+            result[key] = value
+        return result
+
+    def invalid_constant(value):
+        raise ValueError('Non-finite CBS JSON constant')
+
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid_constant)
+
+
+def _records_digest(records):
+    import hashlib
+    return hashlib.sha256(json.dumps(records, sort_keys=True, separators=(',', ':'),
+                                    ensure_ascii=False, allow_nan=False).encode()).hexdigest()
+
+
+def build_history_review(source_directory, acquired_at):
+    """Reproduce a private review from complete, independently pinned files.
+
+    No download, DB connection, mapping expansion or production publication.
+    Missing source observations remain exclusions, never fabricated zeros.
+    """
+    import hashlib
+    from datetime import datetime
+    from decimal import Decimal
+    acquired = datetime.fromisoformat(acquired_at)
+    if acquired.tzinfo is None or acquired != datetime.fromisoformat(HISTORY_SOURCE_DATES['observations']):
+        raise ValueError('Original reviewed acquisition timestamp with timezone required')
+    root = Path(source_directory)
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError('Explicit regular source directory required')
+    objects, artifacts = {}, []
+    for name, (entity, checksum) in HISTORY_SOURCES.items():
+        path = root / ('NL-' + name + '.body')
+        if path.is_symlink() or not path.is_file() or not 0 < path.stat().st_size <= 5 * 1024 * 1024:
+            raise ValueError('Missing or unsafe CBS source file: ' + name)
+        with path.open('rb') as source:
+            raw = source.read(5 * 1024 * 1024 + 1)
+        if len(raw) > 5 * 1024 * 1024:
+            raise ValueError('CBS source exceeds size limit')
+        if hashlib.sha256(raw).hexdigest() != checksum:
+            raise ValueError('Unreviewed CBS source checksum: ' + name)
+        objects[name] = _history_json(raw)
+        artifacts.append({'url': SOURCE_URL + '/' + entity, 'sha256': checksum,
+                          'bytes': len(raw), 'fetched_at': HISTORY_SOURCE_DATES[name],
+                          'timestamp_basis': 'download_completion' if name == 'observations' else 'recorded_request_start',
+                          'source_version': HISTORY_VERSION, 'licence_url': HISTORY_LICENCE,
+                          'acquisition_mode': 'previous_live_download_reused'})
+    properties = objects['properties']
+    if (properties.get('Identifier') != DATASET or properties.get('Source') != 'CBS.'
+            or properties.get('Version') != HISTORY_VERSION
+            or properties.get('License') != HISTORY_LICENCE
+            or properties.get('TemporalCoverage') != '2013-2025'
+            or 'BRC 2014 editie 2025' not in properties.get('Description', '')):
+        raise ValueError('Unreviewed CBS release metadata, licence or classification')
+
+    def codes(name):
+        obj = objects[name]
+        if '@odata.nextLink' in obj or not isinstance(obj.get('value'), list):
+            raise ValueError('Incomplete CBS metadata')
+        result = {}
+        for row in obj['value']:
+            if row['Identifier'] in result:
+                raise ValueError('Duplicate CBS metadata identifier')
+            result[row['Identifier']] = row
+        return result
+
+    periods, occupations, measures = codes('period_codes'), codes('occupation_codes'), codes('measure_codes')
+    if set(periods) != {str(year) + 'JJ00' for year in range(2013, 2026)}:
+        raise ValueError('Unexpected CBS period universe')
+    for code, period in periods.items():
+        year = code[:4]
+        expected = 'Voorlopig' if year == '2025' else 'Definitief'
+        if period.get('Title') != year or period.get('Status') != expected:
+            raise ValueError('Unreviewed CBS period/status')
+    median, workers = measures.get('A043068', {}), measures.get('A045285', {})
+    if (median.get('Title') != '50e percentiel (mediaan)' or median.get('Unit') != 'euro'
+            or workers.get('Unit') != 'x 1 000'):
+        raise ValueError('Unexpected CBS salary or employee-count measure')
+    templates = {row['occupation']: row for row in _history_json(DEFAULT.read_bytes())['records']}
+    indexed_jobs = {identifier: (occupation, brc)
+                    for occupation, (brc, identifier, _, _) in APPROVED.items()}
+    for identifier, (_, brc) in indexed_jobs.items():
+        if not occupations.get(identifier, {}).get('Title', '').startswith(brc + ' '):
+            raise ValueError('CBS occupation identity drift')
+    obj = objects['observations']
+    source_rows = obj.get('value')
+    if ('@odata.nextLink' in obj or not isinstance(source_rows, list)
+            or type(properties.get('ObservationCount')) is not int
+            or len(source_rows) != properties['ObservationCount']):
+        raise ValueError('Incomplete CBS observations')
+    indexed, seen_ids = {}, set()
+    fields = {'Id', 'Measure', 'ValueAttribute', 'Value', 'StringValue', 'Beroep', 'Perioden'}
+    for row in source_rows:
+        if (set(row) != fields or type(row['Id']) is not int or row['Id'] < 0
+                or row['Id'] in seen_ids or row['Measure'] not in measures
+                or row['Beroep'] not in occupations or row['Perioden'] not in periods):
+            raise ValueError('Unexpected CBS observation schema or dimension')
+        seen_ids.add(row['Id'])
+        key = (row['Beroep'], row['Perioden'], row['Measure'])
+        if key in indexed:
+            raise ValueError('Duplicate CBS observation dimensions')
+        indexed[key] = row
+    records, provenance, exclusions = [], [], []
+    for identifier, (occupation, _) in sorted(indexed_jobs.items()):
+        for code, period in sorted(periods.items()):
+            median = indexed.get((identifier, code, 'A043068'))
+            workers = indexed.get((identifier, code, 'A045285'))
+            if median is None:
+                exclusions.append({'occupation': occupation, 'period': period['Title'],
+                                   'reason': 'absent_source_observation', 'value': None})
+                continue
+            if (median['ValueAttribute'] != 'None' or median['StringValue'] is not None
+                    or median['Value'] is None):
+                exclusions.append({'occupation': occupation, 'period': period['Title'],
+                                   'reason': 'missing_or_flagged_source_observation', 'value': None,
+                                   'original': median})
+                continue
+            value = _positive(median['Value'])
+            if (type(median['Value']) not in (int, float) or value is None
+                    or workers is None or workers['ValueAttribute'] != 'None'
+                    or workers['StringValue'] is not None
+                    or type(workers['Value']) not in (int, float) or _positive(workers['Value']) is None):
+                raise ValueError('Invalid CBS salary or employee count')
+            record = {**templates[occupation], 'reference_period': period['Title'],
+                      'publication_status': 'provisional' if period['Status'] == 'Voorlopig' else 'definitive',
+                      'value': str(Decimal(str(median['Value']))),
+                      'employees_thousand': str(Decimal(str(workers['Value'])))}
+            records.append(record)
+            provenance.append({'occupation': occupation, 'period': period['Title'],
+                               'original_period': code, 'period_status': period['Status'],
+                               'period_description': period['Description'],
+                               'salary_observation': median, 'employee_observation': workers})
+    records.sort(key=lambda row: (row['occupation'], row['reference_period']))
+    provenance.sort(key=lambda row: (row['occupation'], row['period']))
+    if not records:
+        raise ValueError('No CBS historical salaries')
+    return {'schema': 'earnwage-cbs-history-review-v1', 'dataset': DATASET,
+            'source_version': HISTORY_VERSION, 'licence_url': HISTORY_LICENCE,
+            'acquired_at': acquired_at, 'artifacts': artifacts, 'records': records,
+            'records_sha256': _records_digest(records), 'provenance': provenance,
+            'exclusions': exclusions, 'source_observations': len(source_rows),
+            'scope': 'offline_review_not_production_publication'}
+
+
+def validate_history_review(review):
+    """Fail closed on caller-rehashed modifications to the reviewed release."""
+    if not isinstance(review, dict):
+        raise ValueError('CBS history review must be an object')
+    from datetime import datetime
+    if not isinstance(review.get('acquired_at'), str) or datetime.fromisoformat(review['acquired_at']) != datetime.fromisoformat(HISTORY_SOURCE_DATES['observations']):
+        raise ValueError('Explicit acquisition timestamp and timezone required')
+    dates = {SOURCE_URL + '/' + entity: HISTORY_SOURCE_DATES[name]
+             for name, (entity, _) in HISTORY_SOURCES.items()}
+    if not isinstance(review.get('artifacts'), list) or any(
+            not isinstance(item, dict) or item.get('fetched_at') != dates.get(item.get('url'))
+            for item in review['artifacts']):
+        raise ValueError('Inconsistent CBS acquisition provenance')
+    if (review.get('schema') != 'earnwage-cbs-history-review-v1'
+            or review.get('dataset') != DATASET or review.get('source_version') != HISTORY_VERSION
+            or review.get('licence_url') != HISTORY_LICENCE
+            or _records_digest(review.get('records')) != HISTORY_RECORDS_SHA256
+            or review.get('records_sha256') != HISTORY_RECORDS_SHA256):
+        raise ValueError('Unreviewed or modified CBS historical release')
+    # Provenance, exclusions and metadata must also reproduce the reviewed bundle.
+    if history_review_digest(review) != HISTORY_REVIEW_SHA256:
+        raise ValueError('Modified CBS history provenance or completeness')
+    return [tuple(row[field] for field in FIELDS) for row in review['records']]
+
+
+def history_review_digest(review):
+    # Acquisition timestamp is explicitly supplied; it cannot authenticate values.
+    normalized = {key: value for key, value in review.items() if key != 'acquired_at'}
+    normalized['artifacts'] = [{key: value for key, value in item.items() if key != 'fetched_at'}
+                               for item in review.get('artifacts', [])]
+    return _records_digest(normalized)
+
+
+HISTORY_REVIEW_SHA256 = '00f7f8952473278b930becb1771337b23ccc6bfbb4b3c75ec8631b9a91dce02c'
+
+
+def stage_history_review(store, review):
+    """Use the existing BulkStore ledger, checkpoints and quarantine policy."""
+    validate_history_review(review)
+    run_id = store.start('cbs', DATASET)
+    try:
+        for artifact in review['artifacts']:
+            store.artifact(artifact)
+        original = {(r['occupation'], r['period']): r for r in review['provenance']}
+        def observations():
+            for row in review['records']:
+                source = original[row['occupation'], row['reference_period']]
+                yield {'provider': 'cbs', 'dataset': DATASET, 'country': 'NL',
+                       'geography': 'national', 'indicator': 'occupational_salary',
+                       'classification': 'BRC2014_ed2025:' + row['brc_code'],
+                       'occupations': [row['occupation']], 'measure': 'median',
+                       'unit': 'EUR/hour', 'currency': 'EUR', 'period': row['reference_period'],
+                       'value': row['value'], 'source_url': SOURCE_URL + '/Observations',
+                       'source_version': HISTORY_VERSION, 'licence_url': HISTORY_LICENCE,
+                       'publication_status': row['publication_status'], 'flags': '',
+                       'precision': PRECISION, 'original': source,
+                       'dimensions': {'classification_version': 'BRC2014_ed2025',
+                                      'salary_concept': row['salary_concept'],
+                                      'population': 'employees_15_74_main_job'}}
+        counts = store.ingest('cbs:' + DATASET + ':' + HISTORY_VERSION,
+                              HISTORY_SOURCES['observations'][1], observations())
+        result = {**counts, 'selected': len(review['records']),
+                  'excluded': len(review['exclusions']), 'source_version': HISTORY_VERSION,
+                  'acquisition_mode': 'previous_live_download_reused',
+                  'production_compared': False, 'publication_eligible': False}
+        store.finish(run_id, 'complete', result=result)
+        return result
+    except Exception as error:
+        store.finish(run_id, 'failed', type(error).__name__)
+        raise

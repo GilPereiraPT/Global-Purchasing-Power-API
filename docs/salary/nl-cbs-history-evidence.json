@@ -1,0 +1,105 @@
+{
+  "scope": "isolated compatibility simulation; not a production publication mechanism",
+  "review_records": 265,
+  "accepted_stage_records": 264,
+  "quarantined": 1,
+  "existing_rows": 21,
+  "inserted_local_rows": 243,
+  "duplicate_local_rows": 21,
+  "repeat_inserted_local_rows": 0,
+  "unchanged_existing_rows": 21,
+  "production_compared": false,
+  "database_integrity": "ok",
+  "source_version": "202608180000",
+  "records_sha256": "db0749c813011b5515b66f76fab769f64071e7511d32af8c200bff7fd932df66",
+  "review_metadata_sha256": "00f7f8952473278b930becb1771337b23ccc6bfbb4b3c75ec8631b9a91dce02c",
+  "source_artifacts": [
+    {
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/Properties",
+      "sha256": "fd21a86a3decc9f2943a4309d0cea2e33e5bf0b08a2e5a250158277a2e130b55",
+      "bytes": 13200,
+      "fetched_at": "2026-10-04T13:41:45.795218+00:00",
+      "timestamp_basis": "recorded_request_start",
+      "source_version": "202608180000",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "acquisition_mode": "previous_live_download_reused"
+    },
+    {
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/BeroepCodes",
+      "sha256": "f8c5404dadcf35b5f2d41d3c1763335cb8ab8861c8e1ced359dcef8c214b724f",
+      "bytes": 58059,
+      "fetched_at": "2026-10-04T13:41:46.881516+00:00",
+      "timestamp_basis": "recorded_request_start",
+      "source_version": "202608180000",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "acquisition_mode": "previous_live_download_reused"
+    },
+    {
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/PeriodenCodes",
+      "sha256": "9f36fe7c9f8075bb7e82bf5ae61285f1e66a9b2749a01935b88ce08099ff1a61",
+      "bytes": 1608,
+      "fetched_at": "2026-10-04T13:41:47.732447+00:00",
+      "timestamp_basis": "recorded_request_start",
+      "source_version": "202608180000",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "acquisition_mode": "previous_live_download_reused"
+    },
+    {
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/MeasureCodes",
+      "sha256": "8f4f7bf1299f18e92b9632a3d6b1fbafc4a5efa4ce7d632ecdad4c801307ba71",
+      "bytes": 1509,
+      "fetched_at": "2026-10-04T13:41:47.929349+00:00",
+      "timestamp_basis": "recorded_request_start",
+      "source_version": "202608180000",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "acquisition_mode": "previous_live_download_reused"
+    },
+    {
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/Observations",
+      "sha256": "097c2dbe156374aee00623f86570a0c5808e26a1329cff3566b7d2f30453053c",
+      "bytes": 962681,
+      "fetched_at": "2026-10-04T13:43:35.954865+00:00",
+      "timestamp_basis": "download_completion",
+      "source_version": "202608180000",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "acquisition_mode": "previous_live_download_reused"
+    }
+  ],
+  "schema": "earnwage-nl-cbs-history-evidence-v1",
+  "base_commit": "d2e0fdbbd04f96b06e50e5432e815d059b0ae041",
+  "reviewed_on": "2026-10-04",
+  "source_observations": 7465,
+  "absent_combinations": 8,
+  "acquisition": "previous_live_download_reused_no_new_downloads",
+  "current_snapshot_sha256": "122b59f237f7acaf5aebc471d46cc1ff504a9c24f72f7fa51e4508219298153c",
+  "unchanged_default_snapshot_rows": 21,
+  "review_file_sha256": "2e2aefe6059f2cf1e36e8594cf19fba549134bd3627b5bb193d702b2fa1e32f0",
+  "staging_bytes": 1224704,
+  "staging_sha256": "e677626eeb3a7a611784279cfc22420d363f6e1f2b5912918fdc7f47db172a77",
+  "resume_result": {
+    "accepted": 0,
+    "quarantined": 0,
+    "resumed_rows": 265
+  },
+  "warehouse_quarantine": {
+    "occupation": "warehouse_operator",
+    "year": 2023,
+    "value": "11.7",
+    "previous_year": 2022,
+    "previous_value": "8.8",
+    "unit": "EUR/hour",
+    "reason": "unexpected_revision_or_temporal_variation",
+    "approved": false
+  },
+  "publication_eligible": false,
+  "production_packages": [],
+  "new_country_occupation_pairs": 0,
+  "tests": {
+    "full_suite_passed": 697,
+    "failed": 0,
+    "subtests_passed": 20,
+    "targeted_passed": 39,
+    "warning": "inherited StarletteDeprecationWarning"
+  },
+  "runtime_test": "actual deployment archive installed and WSGI queried exclusively in isolated test databases"
+}

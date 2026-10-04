@@ -1,0 +1,149 @@
+{
+  "@odata.context": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/$metadata#Observations",
+  "value": [
+    {
+      "Id": 787,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 86.0,
+      "StringValue": null,
+      "Beroep": "A059350",
+      "Perioden": "2019JJ00"
+    },
+    {
+      "Id": 789,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 19.3,
+      "StringValue": null,
+      "Beroep": "A059350",
+      "Perioden": "2019JJ00"
+    },
+    {
+      "Id": 807,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 114.0,
+      "StringValue": null,
+      "Beroep": "A059350",
+      "Perioden": "2024JJ00"
+    },
+    {
+      "Id": 809,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 21.9,
+      "StringValue": null,
+      "Beroep": "A059350",
+      "Perioden": "2024JJ00"
+    },
+    {
+      "Id": 1747,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 60.0,
+      "StringValue": null,
+      "Beroep": "A000194",
+      "Perioden": "2013JJ00"
+    },
+    {
+      "Id": 1749,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 28.8,
+      "StringValue": null,
+      "Beroep": "A000194",
+      "Perioden": "2013JJ00"
+    },
+    {
+      "Id": 1795,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 106.0,
+      "StringValue": null,
+      "Beroep": "A000194",
+      "Perioden": "2025JJ00"
+    },
+    {
+      "Id": 1797,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 38.0,
+      "StringValue": null,
+      "Beroep": "A000194",
+      "Perioden": "2025JJ00"
+    },
+    {
+      "Id": 5144,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 116.0,
+      "StringValue": null,
+      "Beroep": "A059354",
+      "Perioden": "2019JJ00"
+    },
+    {
+      "Id": 5146,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 26.3,
+      "StringValue": null,
+      "Beroep": "A059354",
+      "Perioden": "2019JJ00"
+    },
+    {
+      "Id": 5168,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 176.0,
+      "StringValue": null,
+      "Beroep": "A059354",
+      "Perioden": "2025JJ00"
+    },
+    {
+      "Id": 5170,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 34.5,
+      "StringValue": null,
+      "Beroep": "A059354",
+      "Perioden": "2025JJ00"
+    },
+    {
+      "Id": 7241,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 259.0,
+      "StringValue": null,
+      "Beroep": "A059355",
+      "Perioden": "2022JJ00"
+    },
+    {
+      "Id": 7243,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 8.8,
+      "StringValue": null,
+      "Beroep": "A059355",
+      "Perioden": "2022JJ00"
+    },
+    {
+      "Id": 7245,
+      "Measure": "A045285",
+      "ValueAttribute": "None",
+      "Value": 266.0,
+      "StringValue": null,
+      "Beroep": "A059355",
+      "Perioden": "2023JJ00"
+    },
+    {
+      "Id": 7247,
+      "Measure": "A043068",
+      "ValueAttribute": "None",
+      "Value": 11.7,
+      "StringValue": null,
+      "Beroep": "A059355",
+      "Perioden": "2023JJ00"
+    }
+  ]
+}

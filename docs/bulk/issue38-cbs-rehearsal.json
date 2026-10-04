@@ -1,0 +1,39 @@
+{
+  "inventory_sha256": "65635416ce783a2d0bed3dba6f279243c872f9d3d9855a7bf23735d95c783d25",
+  "package_sha256": "5b1e8c2dd407ef10b54845a553c9bdca56a6da6a43af8dfa30cf0a6d6cf5476f",
+  "package_bytes": 595371,
+  "initial_plan": {
+    "inserted_rows": 243,
+    "duplicate_rows": 21,
+    "protected_existing_rows": 0
+  },
+  "missing_only_preview": {
+    "inserted_rows": 243,
+    "duplicate_rows": 0,
+    "protected_existing_rows": 0
+  },
+  "published_rehearsal": {
+    "inserted_rows": 243,
+    "duplicate_rows": 0,
+    "protected_existing_rows": 0,
+    "status": "published",
+    "checksum": "5b1e8c2dd407ef10b54845a553c9bdca56a6da6a43af8dfa30cf0a6d6cf5476f",
+    "backup_id": "isolated-rehearsal-backup"
+  },
+  "repeated_rehearsal_status": "already_published",
+  "rollback_rehearsal": {
+    "status": "rolled_back",
+    "removed_rows": 243
+  },
+  "existing_rows_preserved": 21,
+  "post_rehearsal_count": 264,
+  "quarantine_excluded": [
+    [
+      "warehouse_operator",
+      "2023"
+    ]
+  ],
+  "production_written": false,
+  "excluded": {},
+  "source_recovery": "Five fresh HTTP downloads matched all pinned PR35 raw hashes; original review timestamps identify the earlier acquisition, not fresh downloads."
+}

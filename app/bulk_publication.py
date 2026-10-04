@@ -21,8 +21,9 @@ SCHEMA='earnwage-reviewed-salary-package-v1'
 MAX_BYTES=2*1024*1024
 MAX_OBSERVATIONS=1000
 MAX_DATABASE_BYTES=256*1024*1024
-TABLES={'us_oews','north_america_wages','ca_province_wages'}
+TABLES={'us_oews','north_america_wages','ca_province_wages','nl_cbs_wages'}
 PRIMARY_KEYS={
+ 'nl_cbs_wages':('country','occupation','reference_period','source'),
  'us_oews':('reference_period','source_file','area','area_type','prim_state','naics','i_group','own_code','occ_code'),
  'north_america_wages':('country','occupation','geography','classification','reference_period','measure','source'),
  'ca_province_wages':('occupation','province','classification','reference_period','measure','source'),
@@ -33,7 +34,7 @@ def encode(package):
     return (json.dumps(package,sort_keys=True,separators=(',',':'),ensure_ascii=False)+'\n').encode()
 
 
-def projection(row):
+def projection(row, cbs_index=None):
     """Return an existing-table projection, or an explicit unsupported reason."""
     provider=row['provider']; country=row['country']
     jobs=row.get('occupations',[])
@@ -46,6 +47,9 @@ def projection(row):
     if row.get('flags'):raise ValueError('Flagged salary cannot be published')
     if not re.fullmatch('[0-9a-f]{64}',row.get('artifact_sha256','')):raise ValueError('Source checksum required')
     if row['indicator']!='occupational_salary':raise ValueError('Unsupported indicator')
+    if provider=='cbs':
+        from app.bulk_cbs_publication import projection as cbs_projection
+        return cbs_projection(row, cbs_index)
     if provider=='bls':
         year=int(row['period'])
         if country!='US' or row['dataset']!='OEWS' or row['source_url']!=bls_url(year) or row['currency']!='USD':raise ValueError('Unverified BLS release')
@@ -94,7 +98,8 @@ def projection(row):
 
 
 def validate(package):
-    if set(package)!={'schema','observations'} or package['schema']!=SCHEMA:raise ValueError('Unknown publication schema')
+    if set(package) not in ({'schema','observations'}, {'schema','observations','cbs_review'}) or package['schema']!=SCHEMA:raise ValueError('Unknown publication schema')
+    cbs_index = _cbs_index(package.get('cbs_review'))
     rows=package['observations']
     if not isinstance(rows,list) or not 0<len(rows)<=MAX_OBSERVATIONS:raise ValueError('Publication observation limit')
     keys=set()
@@ -102,7 +107,7 @@ def validate(package):
         key=observation_key(row)
         if key in keys:raise ValueError('Duplicate package observation')
         keys.add(key)
-        targets,reason=projection(row)
+        targets,reason=projection(row, cbs_index)
         if reason or not targets:raise ValueError('Unrepresentable publication scope')
     return rows
 
@@ -117,7 +122,7 @@ def load(path,checksum):
     return package
 
 
-def build(staging,limit=MAX_OBSERVATIONS):
+def build(staging,limit=MAX_OBSERVATIONS,*,cbs_review=None):
     """Export complete target rows in bounded batches from accepted staging only.
 
     Deterministic grouping keeps one OEWS row's accepted measures together.
@@ -126,6 +131,7 @@ def build(staging,limit=MAX_OBSERVATIONS):
     if not isinstance(limit,int) or not 1<=limit<=MAX_OBSERVATIONS:raise ValueError('Invalid package limit')
     path=Path(staging)
     if path.is_symlink() or not path.is_file():raise ValueError('Explicit regular staging file required')
+    cbs_index = _cbs_index(cbs_review)
     groups=defaultdict(list);excluded=defaultdict(int)
     with closing(sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True)) as db:
         db.execute('PRAGMA query_only=ON')
@@ -133,11 +139,13 @@ def build(staging,limit=MAX_OBSERVATIONS):
         # Unsupported regional scopes are counted in SQL, not loaded into RAM.
         for payload, in db.execute("SELECT payload FROM bulk_current WHERE json_extract(payload,'$.geography')='national' OR json_extract(payload,'$.geography') LIKE 'CA:province:%' ORDER BY key"):
             row=json.loads(payload)
-            if row['provider'] not in ('bls','job_bank'):continue
+            if row['provider'] not in ('bls','job_bank','cbs'):continue
+            if row['provider']=='cbs' and cbs_index is None:
+                excluded['cbs_pinned_review_required']+=1;continue
             version=db.execute('SELECT status FROM bulk_versions WHERE key=? AND version=(SELECT version FROM bulk_current WHERE key=?)',(observation_key(row),observation_key(row))).fetchone()
             if not version or version[0]!='accepted':raise ValueError('Staging status mismatch')
             if not db.execute('SELECT 1 FROM bulk_artifacts WHERE sha256=? AND url=?',(row['artifact_sha256'],row['source_url'])).fetchone():raise ValueError('Unregistered source artifact')
-            targets,reason=projection(row)
+            targets,reason=projection(row, cbs_index)
             if reason:excluded[reason]+=1;continue
             identity=(row['provider'],row['classification'],row['geography'],row['period'])
             groups[identity].append(row)
@@ -153,6 +161,8 @@ def build(staging,limit=MAX_OBSERVATIONS):
         batch.extend(sorted(rows,key=observation_key))
     if batch:packages.append({'schema':SCHEMA,'observations':batch})
     for package in packages:
+        if any(row['provider']=='cbs' for row in package['observations']):
+            package['cbs_review']=cbs_review
         validate(package)
         if len(encode(package))>MAX_BYTES:raise ValueError('Package exceeds byte budget')
     return packages,dict(excluded)
@@ -167,10 +177,17 @@ def _connect(path, readonly=False):
     return db
 
 
+def _cbs_index(review):
+    if review is None:return None
+    from app.bulk_cbs_publication import reviewed_index
+    return reviewed_index(review)
+
+
 def _targets(package):
     grouped={}
+    cbs_index = _cbs_index(package.get('cbs_review'))
     for row in validate(package):
-        for table,identity,base,field,value in projection(row)[0]:
+        for table,identity,base,field,value in projection(row, cbs_index)[0]:
             key=(table,json.dumps(identity,sort_keys=True))
             if key not in grouped:grouped[key]=(table,identity,dict(base),{})
             values=grouped[key][3]
@@ -196,7 +213,11 @@ def _plan(db,targets):
         if len(existing)>1:raise ValueError('Ambiguous existing target observations')
         if not existing:changes.append((table,base));continue
         metadata_ok=True
-        if table!='us_oews':
+        if table=='nl_cbs_wages':
+            fields=[k for k in base if k not in values]
+            metadata=db.execute('SELECT '+','.join(fields)+' FROM '+table+' WHERE '+where,tuple(identity.values())).fetchone()
+            metadata_ok=all((a is not None and Decimal(str(a))==Decimal(str(base[k]))) if k=='employees_thousand' else a==base[k] for k,a in zip(fields,metadata))
+        elif table!='us_oews':
             metadata=db.execute('SELECT unit,source_url FROM '+table+' WHERE '+where,tuple(identity.values())).fetchone()
             metadata_ok=metadata==(base['unit'],base['source_url'])
         if metadata_ok and all(a is not None and Decimal(str(a))==Decimal(values[k]) for k,a in zip(values,existing[0])):duplicate+=1
@@ -223,7 +244,8 @@ def apply(path,package,checksum,backup_id,*,require_clean=False):
             from app.us_oews import init as us_init
             from app.north_america import init as ca_init
             from app.ca_province_wages import init as province_init
-            initializers={"us_oews":us_init,"north_america_wages":ca_init,"ca_province_wages":province_init}
+            from app.nl_cbs_wages import init as nl_init
+            initializers={"us_oews":us_init,"north_america_wages":ca_init,"ca_province_wages":province_init,"nl_cbs_wages":nl_init}
             for table in sorted({t[0] for t in changes}):initializers[table](db)
             db.execute('CREATE TABLE IF NOT EXISTS bulk_publications (checksum TEXT PRIMARY KEY, backup_id TEXT NOT NULL, inserted_json TEXT NOT NULL, status TEXT NOT NULL)')
             prior=db.execute('SELECT status FROM bulk_publications WHERE checksum=?',(checksum,)).fetchone()
@@ -262,3 +284,29 @@ def rollback(path,checksum):
             db.execute("UPDATE bulk_publications SET status='rolled_back' WHERE checksum=?",(checksum,))
             db.commit();return {'status':'rolled_back','removed_rows':len(journal)}
         except Exception:db.rollback();raise
+
+
+def missing_only(path, package):
+    """Filter unchanged duplicates against an explicitly supplied isolated target.
+
+    Never updates existing rows. Any revision or metadata conflict aborts; the
+    authenticated Data Manager repeats the plan under its writer lock later.
+    """
+    index = _cbs_index(package.get('cbs_review'))
+    selected = []
+    with closing(_connect(path, readonly=True)) as db:
+        db.execute('PRAGMA query_only=ON')
+        for row in validate(package):
+            targets = []
+            for table, identity, base, field, value in projection(row, index)[0]:
+                targets.append((table, identity, base, {field: value}))
+            _, result = _plan(db, targets)
+            if result['protected_existing_rows']:
+                raise ValueError('Existing salary or metadata revision requires review')
+            if result['inserted_rows'] and result['duplicate_rows']:
+                raise ValueError('Partially duplicated multi-target observation requires review')
+            if result['inserted_rows']:selected.append(row)
+    if not selected:return None
+    result={**package,'observations':selected}
+    validate(result)
+    return result
