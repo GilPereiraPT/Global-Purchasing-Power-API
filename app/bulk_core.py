@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-HOSTS = {'api.worldbank.org','ec.europa.eu','www.bls.gov','open.canada.ca','opencanada.blob.core.windows.net'}
+HOSTS = {'api.worldbank.org','ec.europa.eu','www.bls.gov','open.canada.ca','opencanada.blob.core.windows.net','datasets.cbs.nl'}
 MAX_FILE = 96 * 1024 * 1024
 BATCH_SIZE = 250
 
@@ -31,6 +31,11 @@ def digest(path):
 
 def valid_url(url):
     p=urlsplit(url)
+    if p.hostname == 'datasets.cbs.nl' and not (
+            p.path in {'/odata/v1/CBS/86355NED' + suffix for suffix in
+                       ('', '/Properties', '/BeroepCodes', '/PeriodenCodes',
+                        '/MeasureCodes', '/Observations', '/$metadata')}):
+        raise ValueError('Unregistered CBS dataset destination')
     if p.hostname=='opencanada.blob.core.windows.net' and not p.path.startswith('/opengovprod/resources/'):
         raise ValueError('Unregistered public catalogue destination')
     if p.scheme!='https' or p.hostname not in HOSTS or p.username or p.password or p.port not in (None,443):
