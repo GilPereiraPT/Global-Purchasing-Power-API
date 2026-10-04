@@ -8,8 +8,8 @@ Consulta: **4 de outubro de 2026**. Base: main `6f5837b73babef810bd3dcf3779def82
 
 | Estado | Cenário/ano | Federal | Estadual | Local | Contribuições estaduais do trabalhador | Líquido |
 |---|---|---|---|---|---|---|
-| Texas | solteiro, salário ordinário, 2026; factos completos | modelo federal condicionado | zero salarial fundamentado no parâmetro constitucional revisto | indisponível | desemprego e abrangência de regimes obrigatórios não validados | `partial`, `null` |
-| Florida | mesmo cenário | modelo federal condicionado | zero salarial fundamentado na exclusão legal revista | indisponível | financiamento do reemployment pelo trabalhador proibido; completude dos restantes regimes não validada | `partial`, `null` |
+| Texas | solteiro, salário ordinário, 2026; factos completos | modelo federal condicionado | zero salarial fundamentado no parâmetro constitucional revisto | indisponível | UI/workers’ compensation com zeros condicionados revistos; paid leave e completude por validar | `partial`, `null` |
+| Florida | mesmo cenário | modelo federal condicionado | zero salarial fundamentado na exclusão legal revista | indisponível | reemployment e workers’ compensation com zeros específicos/condicionados; paid leave e completude por validar | `partial`, `null` |
 | Nova Iorque | componente isolada: residente solteiro, apenas salário, 2026 | não integrado no cenário TX/FL | ilustração herdada até AGI 107650; não liquidação | NYC/Yonkers indisponíveis | DBL/PFL e condições indisponíveis | `partial`, `null` |
 | Califórnia | componente isolada: mesmo agregado, 2026 | não integrado | tabelas anuais FTB, dedução, créditos e tributação adicional indisponíveis | não validado | parâmetro SDI 1,3% revisto; cobertura/arredondamento por pagamento indisponíveis | `partial`, `null` |
 | Pensilvânia | componente isolada: mesmo agregado, 2026 | não integrado | 3,07% antes de créditos, apenas com remuneração tributável explícita | EIT/LST/Philadelphia indisponíveis | contribuição UC indisponível | `partial`, `null` |
@@ -38,7 +38,7 @@ A evidência previamente adquirida está em `data/us_tax_2026_source_evidence.js
 
 Novas tentativas, registadas em `us_2026_jurisdiction_access.json`, foram recusadas pelo gateway HTTP (túnel 403; não é prova de indisponibilidade da fonte oficial):
 
-1. TX Tax Code capítulo 302, Labor Code capítulo 204 e TWC: verificar proibições/competência tributária local e não transferência de contribuições de desemprego. Sem estes textos e confirmação de âmbito do emprego, não atribuir zero local/contributivo global.
+1. Pedido histórico corrigido: Tax Code 302 não proíbe imposto salarial local; o original recebido trata de property/occupation taxes. Labor Code 204 foi entretanto fornecido e revisto. Persiste a necessidade de fundamento local correto e da completude contributiva.
 2. FL constituição, competência local e §166.231: verificar impostos locais aplicáveis ao rendimento salarial, não confundir ausência de PIT estadual com ausência de todos os encargos. Delimitar trabalhadores privados ordinários versus regimes públicos/ocupacionais obrigatórios.
 3. SSA COLA factsheet 2026: confirmar diretamente taxa/teto/base de cobertura, além da corroboração IRS existente.
 4. NY: obter tabela anual final de 2026, lei §601/recapture acima de 107650, créditos, residência/trabalho NYC/Yonkers, DBL/PFL e períodos/pagamento patronal. Localidade ausente impede o total mesmo que o imposto estadual seja calculável.
@@ -76,3 +76,10 @@ O [pedido concreto de fontes de 2026](US_TX_FL_SOURCE_REQUEST_2026.md) identific
 O controlo de evidência dos zeros específicos rejeita agora hashes malformados, fontes de URL/ano diferente, ausência de âmbito/tamanho e respostas não adquiridas/revistas. Não transforma metadados completos em verificação jurídica ou validação do documento bruto.
 
 Validação desta continuação: **958 testes aprovados, 0 falhados e 20 subtestes aprovados**; 99 testes fiscais dirigidos aprovados, incluindo a instalação WSGI isolada. Os 22 novos casos verificam evidência malformada/incompleta ou de outra URL/ano em ambos os estados. `git diff --check` aprovado. Mantém-se o aviso herdado de depreciação Starlette/httpx. Não foram criados casos de líquido completo nem atribuídos novos zeros sem fontes: essas condições de ativação continuam pendentes dos documentos pedidos.
+
+
+## Originais oficiais recebidos nesta continuação
+
+O [relatório dos originais e exceções](US_TX_FL_UPLOADED_SOURCES_2026.md) substitui os bloqueios documentais já resolvidos e corrige a referência errada a Tax Code 302. Foram validados os hashes/tamanhos de dez corpos originais, rejeitadas duas respostas HTML em lugar de PDFs e incorporados quatro corpos como evidência contributiva limitada. API: factos opcionais `employment_type` e `workers_compensation_exception_agreement`; novos zeros condicionados de UI TX e workers’ compensation TX/FL. Impostos locais, paid leave e agregação contributiva continuam desconhecidos; nenhum líquido foi ativado. O pedido de fontes foi atualizado para não repetir aquisições já fornecidas.
+
+Resultado final após os originais: **1000 testes aprovados, 0 falhados, 20 subtestes aprovados**. Os 42 casos novos incluem regras contributivas e contraexemplos, falta/tipo dos factos, fonte não revista e arquivo WSGI isolado com os novos factos. Nenhum teste ou observação salarial existente foi removido. O CI será confirmado no SHA desta continuação; sem merge, deployment ou importação em BD.

@@ -1,68 +1,33 @@
-# Documentos necessários para concluir Texas e Florida — 2026
+# Fontes ainda necessárias — Texas e Florida 2026
 
-Pedido de revisão de 4 de outubro de 2026, PR #41. **Nenhum líquido total foi ativado.** Todas as 13 consultas desta continuação foram recusadas pelo gateway do ambiente; a evidência das tentativas está em `us_tx_fl_followup_access.json`. Um erro do túnel não confirma nem desmente o conteúdo da fonte e não confirma que um endereço de documento anual esteja publicado.
+Atualizado após leitura dos originais do ZIP fornecido em 4 de outubro de 2026. O [relatório de validação](US_TX_FL_UPLOADED_SOURCES_2026.md) identifica os dez corpos originais, hashes, rejeições e regras incorporadas. **Desemprego e workers’ compensation já têm regras revistas; líquido total continua indisponível.**
 
-## Cenário a validar
+## Correção do pedido anterior
 
-Empregado ordinário do setor privado, não ferroviário, solteiro, sem dependentes, residente fiscal dos EUA durante todo o ano de 2026, com residência e trabalho exclusivamente no mesmo estado selecionado (TX ou FL). Salário de um empregador; sem trabalho noutros estados, estatuto público, regime ocupacional especial, plano previdencial obrigatório, ordens judiciais de retenção ou outra circunstância fora deste cenário. As bases federal, Social Security e Medicare devem ser fornecidas e iguais ao bruto. Mantêm-se os factos e o intervalo federal existentes: idade 25–64, bruto 19540–500000, elegibilidade SSN declarada, sem tips/overtime/charity ou outras deduções/créditos especiais.
+O pedido anterior atribuía incorretamente ao Texas Tax Code, capítulo 302, uma proibição de imposto municipal sobre rendimento. O original https://tcss.legis.texas.gov/resources/TX/htm/TX.302.htm trata de property taxes e occupation taxes. **Não é fundamento para zero de imposto salarial local.** A referência anterior foi retirada dos pedidos de prova de proibição; o capítulo permanece apenas no relatório como evidência da correção.
 
-Este é o **âmbito proposto para a validação**, não uma extensão já autorizada dos factos da API. Atualmente o modelo não recolhe confirmação específica de emprego privado, residência/trabalho no mesmo estado e ausência de regimes obrigatórios especiais. Esses dados terão de ser explícitos e testados antes de ativar o líquido; a seleção do estado ou a confirmação federal não os substitui.
+Os capítulos Texas Labor Code 204, 406 e 415 e Florida §440.21 foram fornecidos e revistos. Não é necessário repetir essa aquisição. Também foram recebidos a Constituição da Florida, §166.201 e a página DOL paid leave, mas estes não fecham as lacunas abaixo.
 
-## O que fornecer primeiro
+## Documentos para fechar os bloqueios
 
-Fornecer os documentos completos abaixo como PDF ou HTML guardado a partir da fonte oficial. Conservar URL, título, data de obtenção e data de vigência; enviar o texto/versão aplicável a 2026, incluindo alterações com efeitos durante o ano. Capturas parciais, resumos de motores de pesquisa e tabelas de retenção não bastam. Não são necessários tokens, documentos pessoais, salários reais, configuração ou acesso à produção.
-
-| Prioridade / documento oficial | URL | Regra que precisa de ser confirmada |
-|---|---|---|
-| 1 — Texas Tax Code, capítulo 302 | https://statutes.capitol.texas.gov/Docs/TX/htm/TX.302.htm | Texto e âmbito da proibição de imposto municipal sobre rendimento; confirmar alcance sobre o salário do residente e que não fica outra categoria local salarial por cobrir. Não extrapolar a proibição estadual para municípios sem esta revisão. |
-| 1 — Texas Labor Code, capítulo 204 | https://statutes.capitol.texas.gov/Docs/LA/htm/LA.204.htm | Quem financia unemployment insurance e eventual proibição de cobrar/deduzir contribuições do trabalhador; vigência em 2026. O texto do capítulo deve permitir identificar a disposição exata, sem presumir o número de uma secção não lida. |
-| 1 — Constituição da Florida, artigo VII §§1 e 5 | https://www.flsenate.gov/Laws/Constitution | Proibição/limites sobre rendimento de pessoas singulares residentes e competência tributária de municípios/condados. Confirmar conjuntamente que nenhuma autorização permite imposto salarial local neste cenário. |
-| 1 — Florida Statutes 2026, §166.201 | https://www.flsenate.gov/Laws/Statutes/2026/166.201 | Limites da competência tributária municipal e necessidade de autorização geral; distinguir poder de cobrar taxas/serviços de imposto sobre salário. Isoladamente esta secção não prova ausência de todos os tributos locais. |
-| 2 — Texas Labor Code, capítulos 406 e 415 | https://statutes.capitol.texas.gov/Docs/LA/htm/LA.406.htm e https://statutes.capitol.texas.gov/Docs/LA/htm/LA.415.htm | Âmbito do workers’ compensation para emprego privado; financiamento e eventual proibição de transferir prémios/custos para o trabalhador. Confirmar a disposição aplicável no texto, sem inventar uma secção. |
-| 2 — Florida Statutes 2026, §440.21 | https://www.flsenate.gov/Laws/Statutes/2026/440.21 | Regra sobre acordos que fazem o empregado pagar prémios de workers’ compensation; distinguir custo patronal de contribuição legal do trabalhador. |
-| 2 — U.S. Department of Labor, paid leave | https://www.dol.gov/agencies/wb/featured-paid-leave | Inventário oficial dos programas estaduais de licença familiar/médica remunerada e financiamento, com referência temporal de 2026. Verificar se TX/FL têm programas com contribuição obrigatória do empregado. Ausência numa página incompleta ou sem data não basta: fornecer, nesse caso, publicação oficial atualizada ou confirmação dos organismos estaduais. |
-| 3 — Florida Statutes 2026, §443.041 | https://www.flsenate.gov/Laws/Statutes/2026/443.041 | Reconfirmar o texto completo anteriormente revisto: não transferir para empregados as contribuições patronais de reemployment. O zero desta parcela já existe; não é evidência de zero em todas as contribuições. |
-
-O primeiro envio útil é o grupo de prioridade 1; para ativar o total, também são necessárias as regras de prioridade 2 e a delimitação completa da cobertura laboral. A legislação geral tem de ser lida em conjunto: uma permissão de desconto salarial não cria, por si, uma obrigação de contribuição.
-
-## Fontes de apoio e referências completas
-
-| Documento oficial | URL | Utilidade e limite |
-|---|---|---|
-| Texas Constitution, artigo VIII §24-a | https://tlc.texas.gov/docs/legref/TxConst.pdf | Reobter o texto integral que sustenta o zero estadual já revisto. Não prova, isoladamente, todas as componentes locais ou contribuições. |
-| Texas Labor Code, capítulo 61 | https://statutes.capitol.texas.gov/Docs/LA/htm/LA.61.htm | Payday Law: distinguir retenções legalmente exigidas, autorização do trabalhador e ordens judiciais. Autorizar um desconto não o torna um imposto nem demonstra que seja facultativo em qualquer contrato. |
-| DOL, Comparison of State Unemployment Insurance Laws 2026 — Financing | https://oui.doleta.gov/unemploy/comparison/2026/financing.pdf | Corroboração oficial das contribuições estaduais patronais/do empregado. O URL anual é um localizador candidato, não um download confirmado. Se não existir, obter a edição 2026 através de https://oui.doleta.gov/unemploy/comparison.asp, com capítulo Financing e data. Não substituir por 2025 sem verificar a vigência. |
-| DOL/EBSA, Retirement Plans and ERISA FAQ | https://www.dol.gov/agencies/ebsa/about-ebsa/our-activities/resource-center/faqs/retirement-plans-and-erisa | Distinguir benefícios/planos de emprego privado de imposto/contribuição pública; não prova ausência de todos os regimes ou de contribuições contratuais. Não substituir análise da situação de emprego. |
-| SSA, COLA factsheet 2026 | https://www.ssa.gov/news/press/factsheets/colafacts2026.pdf | Confirmar diretamente a base máxima e a taxa Social Security 2026; a Publication 15 já corrobora os parâmetros, pelo que este documento não substitui as lacunas estaduais/locais. |
-| IRS, Publication 15 (2026) | https://www.irs.gov/publications/p15 | Texto integral das taxas/bases FICA e do financiamento patronal FUTA; separar contribuições patronais das que reduzem líquido do empregado. |
-| IRS, Publication 505 (2026) e Rev. Proc. 2025-32 | https://www.irs.gov/publications/p505 e https://www.irs.gov/irb/2025-45_IRB | Worksheets de estimativa anual e parâmetros publicados. Fornecer as páginas anuais completas para rever casos independentes de estimativa, incluindo AMT e créditos; não usar tabelas mensais de retenção como liquidação anual. |
-| IRS, Form 6251 instructions | https://www.irs.gov/instructions/i6251 | Confirmar o ano impresso no documento e as regras AMT aplicáveis. O documento anteriormente adquirido era de 2025 e sustenta apenas estrutura; não importar os seus limites anuais. |
-
-Se a revisão destes textos revelar uma autorização local excecional, será necessário recolher localidade de residência/trabalho e a respetiva fonte oficial municipal/condado. Não há ainda fundamento para escolher uma cidade e afirmar que ela representa todo o estado.
-
-Os corpos brutos adquiridos nas fases anteriores não foram localizados nesta instância. Os hashes e a revisão limitada persistem no repositório; não afirmamos ter recalculado os hashes de documentos indisponíveis. Documentos fornecidos serão guardados fora de Git; calcular SHA-256, registar proveniência e validar conteúdo/vigência antes de aceitar regras. Só evidência compacta sem dados privados deverá acompanhar a PR.
-
-## Obrigações legais versus descontos facultativos
-
-| Categoria | Tratamento no cenário |
+| Documento / URL oficial | Regra a confirmar e lacuna efetiva |
 |---|---|
-| Imposto federal, AMT e employee FICA/Additional Medicare | Componentes legais federais modeladas com factos explícitos. Continuam a ser estimativas anuais, não retenções por recibo. |
-| Imposto estadual sobre salário | Zero TX/FL no âmbito dos parâmetros anteriormente revistos; sem promoção a cobertura completa. |
-| Imposto local sobre salário | Desconhecido até confirmação da competência/proibição local. Nunca inferir zero a partir do estado. |
-| Unemployment/reemployment | FL: zero do empregado no parâmetro legal revisto; TX: ainda desconhecido. Os impostos patronais não devem ser subtraídos ao empregado. |
-| Workers’ compensation, licença médica/familiar e seguro obrigatório | Atribuição legal e cobertura ainda por confirmar para o cenário privado. Não chamar facultativo nem preencher zero antes da revisão. |
-| Plano de saúde, 401(k), seguro ou benefícios escolhidos | Excluídos da estimativa fiscal; não declarar que custam zero. Deduções pré-imposto que alterem bases saem do cenário de bases iguais. Adesão automática com opção de saída não equivale a imposto legal universal. |
-| Contribuições de pensão pública/ocupacional obrigatórias | Não são facultativas. Excluídas pela delimitação a emprego privado ordinário; emprego elegível nesses regimes terá de continuar parcial. |
-| Quotas contratuais, garnishment, manutenção/ordens judiciais | Podem ser obrigatórias na situação individual sem serem imposto/contribuição universal. Fora do cenário e do conceito de líquido fiscal; não anunciar saldo bancário ou recibo líquido efetivo. |
+| Texas: texto/posição oficial abrangente sobre competência e incidência de impostos locais sobre salários em 2026. Localizador legislativo candidato: https://tcss.legis.texas.gov/resources/LG/htm/LG.101.htm | Confirmar eventual proibição/ausência de imposto salarial municipal e de condados, incluindo competência home-rule e alcance a empregados. O capítulo 101 é um localizador a investigar, **não uma regra de proibição já verificada**. Se não contiver a resposta, fornecer a legislação ou orientação oficial pertinente; não usar o capítulo 302 nem listas incompletas de impostos como prova de ausência. |
+| Florida: Laws of Florida, capítulo 2026-45 — https://laws.flrules.org/2026/45 | Ler o diploma completo e a data de eficácia da alteração a §166.201/§377.8161, comparando o texto anterior e posterior durante 2026. O HTML de §166.201 mostra a referência à alteração, mas não fornece o ato ou a sua data de eficácia. |
+| Florida: fundamento oficial completo da não incidência de imposto local sobre salário do residente, articulado com https://www.flsenate.gov/Laws/Constitution e https://www.flsenate.gov/Laws/Statutes/2026/166.201 | Os documentos já fornecidos limitam competência e tributação, mas não são uma proibição absoluta sem ressalvas: VII.5(a) menciona montantes creditáveis/dedutíveis. Confirmar ausência de autorização local salarial aplicável e necessidade de identificação de município/condado; não concluir zero só por haver zero estadual. |
+| DOL: programa/lista de contribuições paid family/medical leave e disability com vigência em 2026; ponto de entrada https://www.dol.gov/agencies/wb/featured-paid-leave | O corpo fornecido inclui interativos e uma secção paid sick leave datada de dezembro de 2024; não contém prova completa e temporal de zero em TX/FL em 2026. Fornecer os dados originais dos interativos/publicação oficial atualizada ou confirmação dos organismos estaduais de que não existe contribuição obrigatória do trabalhador no âmbito definido. |
+| Texas/Florida: eventuais regimes de seguro de paid leave voluntário, se usados como fundamento para exclusão. Localizador FL candidato: https://www.flsenate.gov/Laws/Statutes/2026/627.445 | Confirmar no texto original se existe regime, se a adesão/financiamento é facultativa e se alguma lei impõe contribuição salarial. Este URL foi bloqueado e a disposição **não foi validada**; não inferir a regra a partir do número da secção. Seguro facultativo, se confirmado, será uma exclusão explícita do benchmark, não uma obrigação legal omitida. |
 
-A intenção é calcular um **benchmark de líquido fiscal anual**, antes de benefícios voluntários e outros descontos individuais explicitamente excluídos. Não é promessa de salário efetivamente pago. Um contributo que seja legalmente obrigatório no cenário não pode ser excluído por mera confirmação genérica.
+As quatro novas consultas constam de `us_tx_fl_uploaded_review_20261004.json`; foram bloqueadas pelo gateway. Não há nova aquisição bem-sucedida nem confirmação de validade dos localizadores candidatos. Quando necessário, fornecer texto oficial municipal/condado e identificar residência/trabalho em vez de afirmar cobertura estadual uniforme.
 
-## Critérios para ativar `net_income`
+Enviar PDF ou HTML completo, URL de origem, data de obtenção e versão/vigência aplicável a 2026. Não são necessários credenciais, configuração, documentos pessoais ou dados de produção. Os originais serão guardados fora de Git e comparados com os respetivos hashes; uma extração TXT é auxiliar e não substitui o original. Respostas HTML de página inicial a pedidos de PDF serão rejeitadas mesmo com HTTP 200 e checksum correto.
 
-1. Rever o conjunto oficial acima e confirmar a vigência em 2026 de todas as parcelas relevantes; justificar separadamente qualquer zero local ou contributivo. Um checksum identifica bytes, não valida uma regra.
-2. Introduzir confirmação explícita e validada do âmbito privado e da residência/trabalho, distinguindo-a da confirmação federal existente. Recusar ou manter parcial quando faltar algum facto ou houver regime especial.
-3. Rever créditos, exclusões, AMT e arredondamento para uma estimativa anual explicitamente limitada; não afirmar uma declaração fiscal final ou total de retenções salariais.
-4. Obter casos independentes completos com metodologia/evidência rastreável para ambos os estados, incluindo rendimentos baixos no intervalo, escalões, teto Social Security e limite Additional Medicare. Casos calculados só pelo próprio motor não são referências independentes. Enquanto as fontes locais/contributivas não existirem, o saldo federal é apenas um subtotal, não um caso completo validado.
-5. Testar líquido, factos ausentes/especiais, erros, fronteiras e paridade ASGI/WSGI; rever metadados de cobertura. Só então permitir `benchmark_estimate`, nunca ativação por nome do cenário, hashes, carregamento de documentos ou seleção de estado.
+## Factos e distinção de encargos
 
-Não se ampliam NY/CA/PA nesta continuação. Não há migração ou pacote de BD, publicação, merge ou deployment.
+O cenário proposto para um futuro líquido é empregado privado ordinário, solteiro, residente fiscal durante todo o ano, sem dependentes, salário de um empregador, trabalho e residência exclusivamente no mesmo estado, sem regime público/ocupacional/ferroviário, outros rendimentos ou deduções especiais. Mantém o intervalo federal 19540–500000 e os factos federais existentes.
+
+A API aceita agora `employment_type` e `workers_compensation_exception_agreement` em `us_facts`. Para zero de workers’ compensation, exige `employment_type="ordinary_private_employee"` e `workers_compensation_exception_agreement=false`. Independent contractor, subcontractor, owner operator, public employee, special regime ou acordo excecional não são cenário líquido suportado. A confirmação federal existente não substitui estes factos. A residência/trabalho exclusivamente no estado ainda não é um facto recolhido/validado pelo modelo; será necessário antes de ativar líquido.
+
+Desemprego/reemployment e prémios workers’ compensation são analisados segundo a atribuição legal ao empregador/trabalhador. Plano de saúde, 401(k) e benefícios facultativos ficam fora do benchmark fiscal, sem declarar custo zero; contribuições públicas/ocupacionais obrigatórias não são facultativas. Quotas contratuais, garnishment e ordens judiciais também não são impostos universais e ficam fora deste cenário explícito. Bases pré-imposto divergentes continuam sem suporte.
+
+Só após completar as fontes locais/paid leave, os factos de incidência, as demais obrigações aplicáveis e referências independentes completas poderá haver `benchmark_estimate` com `net_income`. Hashes, documentos carregados, seleção do estado ou o saldo federal não o ativam automaticamente. Não ampliar NY/CA/PA, importar BD, publicar, fazer merge ou deployment nesta etapa.

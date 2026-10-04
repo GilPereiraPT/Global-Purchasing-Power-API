@@ -1,0 +1,189 @@
+{
+  "schema": "earnwage-us-tx-fl-upload-review-v1",
+  "reviewed_on": "2026-10-04",
+  "source_zip_sha256": "d5cae18e8651806f65f371662dc78d84f58670d88c5ad14806381ebbd79586c2",
+  "source_zip_bytes": 334521,
+  "zip_crc_validated": true,
+  "original_bodies_validated": 10,
+  "runtime_parameter_bodies": 4,
+  "rejected_pdf_substitutions": 2,
+  "complete_tax_model": false,
+  "notes": [
+    "User-authorized uploaded sources; attached memo read as review guidance, original HTML independently examined",
+    "TXT extractions are auxiliary, not source bodies; raw originals retained privately outside Git",
+    "Sizes/hashes confirm uploaded-byte consistency, not independent network authentication or complete jurisdiction coverage"
+  ],
+  "sources": [
+    {
+      "name": "fl_constitution",
+      "url": "https://www.flsenate.gov/Laws/Constitution",
+      "final_url": "https://www.flsenate.gov/Laws/Constitution",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:24:23.423628+00:00",
+      "bytes": 622854,
+      "sha256": "78737f0d5b5476a3e6e3837685251ae84e71e323b7a484658d1ea4ba13c82e0d",
+      "file": "fl_constitution.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "reviewed_insufficient_for_local_zero",
+      "review_reason": "VII.1 local authorization and VII.5(a) credit/deduction-linked exception require broader local statutory analysis"
+    },
+    {
+      "name": "fl_166_201",
+      "url": "https://www.flsenate.gov/Laws/Statutes/2026/166.201",
+      "final_url": "https://www.flsenate.gov/Laws/Statutes/2026/166.201",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:24:23.263841+00:00",
+      "bytes": 42853,
+      "sha256": "be87af01a28a1955f7e8b11eb70046291dbd611452a9805ce06f6b010d975efd",
+      "file": "fl_166_201.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "reviewed_insufficient_for_local_zero",
+      "review_reason": "Authorization limited by constitution/general law; chapter 2026-45 effective date and full act missing"
+    },
+    {
+      "name": "fl_440_21",
+      "url": "https://www.flsenate.gov/Laws/Statutes/2026/440.21",
+      "final_url": "https://www.flsenate.gov/Laws/Statutes/2026/440.21",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:24:23.265013+00:00",
+      "bytes": 43184,
+      "sha256": "12461756ab3a5c5f703d5e3641690e8b567525164bbda9f62348f53fba7f002d",
+      "file": "fl_440_21.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "reviewed_conditional_rule_parameter",
+      "review_reason": "440.21(1) employee premium/compensation-medical-benefit fund agreement invalid"
+    },
+    {
+      "name": "tx_labor_code",
+      "url": "https://statutes.capitol.texas.gov/docs/sdocs/laborcode.pdf",
+      "final_url": "https://statutes.capitol.texas.gov/docs/sdocs/laborcode.pdf",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:24:23.059746+00:00",
+      "bytes": 250874,
+      "sha256": "dbfba8a96dc3cd584157ca66aaafdf67e0ed15dd5a0c8a58f3d4bd0f109fc646",
+      "file": "tx_labor_code.html",
+      "content_validation": "REJECTED: HTML home page, not the requested PDF; not legal evidence",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "rejected_format",
+      "review_reason": "HTML home page returned for PDF URL; no PDF signature or requested legislative body"
+    },
+    {
+      "name": "tx_tax_code",
+      "url": "https://statutes.capitol.texas.gov/docs/sdocs/taxcode.pdf",
+      "final_url": "https://statutes.capitol.texas.gov/docs/sdocs/taxcode.pdf",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:24:22.910099+00:00",
+      "bytes": 250874,
+      "sha256": "dbfba8a96dc3cd584157ca66aaafdf67e0ed15dd5a0c8a58f3d4bd0f109fc646",
+      "file": "tx_tax_code.html",
+      "content_validation": "REJECTED: HTML home page, not the requested PDF; not legal evidence",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "rejected_format",
+      "review_reason": "Same HTML home page returned for PDF URL; not legislative PDF evidence"
+    },
+    {
+      "name": "tx_ui",
+      "url": "https://www.twc.texas.gov/businesses/unemployment-benefits-basics-employers",
+      "error": "HTTP Error 403: Forbidden",
+      "review_decision": "acquisition_blocked",
+      "review_reason": "No original body supplied"
+    },
+    {
+      "name": "dol_paid_leave",
+      "url": "https://www.dol.gov/agencies/wb/featured-paid-leave",
+      "final_url": "https://www.dol.gov/agencies/wb/featured-paid-leave",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:24:23.446042+00:00",
+      "bytes": 63717,
+      "sha256": "55aa41da7b8f577aaa835c3d3102025a0002b2b8365924ed810b8f18889daa92",
+      "file": "dol_paid_leave.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "reviewed_insufficient_for_2026_zero",
+      "review_reason": "December 2024 date relates to paid sick leave; interactive paid-family/medical program evidence incomplete for 2026"
+    },
+    {
+      "name": "tx_302_actual",
+      "url": "https://tcss.legis.texas.gov/resources/TX/htm/TX.302.htm",
+      "final_url": "https://tcss.legis.texas.gov/resources/TX/htm/TX.302.htm",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:25:30.638127+00:00",
+      "bytes": 6110,
+      "sha256": "787f065cdf9950aa29a462f2e414bebd73c08728a3567209049e31fdcdc42d8c",
+      "file": "tx_302_actual.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "rejected_for_income_tax",
+      "review_reason": "Property and occupation taxation, not the alleged income-tax prohibition"
+    },
+    {
+      "name": "tx_204_actual",
+      "url": "https://tcss.legis.texas.gov/resources/LA/htm/LA.204.htm",
+      "final_url": "https://tcss.legis.texas.gov/resources/LA/htm/LA.204.htm",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:25:30.654550+00:00",
+      "bytes": 122132,
+      "sha256": "64e290bc1f7d679e60aa21bdc43801d341be9d19bfbb273f64097b415c6b7594",
+      "file": "tx_204_actual.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "reviewed_rule_parameter",
+      "review_reason": "204.002/204.003 employer contribution and prohibition of wage deduction"
+    },
+    {
+      "name": "tx_415_actual",
+      "url": "https://tcss.legis.texas.gov/resources/LA/htm/LA.415.htm",
+      "final_url": "https://tcss.legis.texas.gov/resources/LA/htm/LA.415.htm",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:25:30.661163+00:00",
+      "bytes": 49582,
+      "sha256": "4ca94d1a601e871f313864f69bdb83c167964b0d6383bd6d1ada98d0ce2385a4",
+      "file": "tx_415_actual.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "reviewed_conditional_rule_parameter",
+      "review_reason": "415.006 prohibition with explicit exceptions 406.123/406.144"
+    },
+    {
+      "name": "tx_406_actual",
+      "url": "https://tcss.legis.texas.gov/resources/LA/htm/LA.406.htm",
+      "final_url": "https://tcss.legis.texas.gov/resources/LA/htm/LA.406.htm",
+      "status": 200,
+      "retrieved_at": "2026-10-04T21:25:30.641862+00:00",
+      "bytes": 90225,
+      "sha256": "cd138a5250898042ecfcefaa100afcc47e363aff16fcc6a26a3d1e0fe1fb6b91",
+      "file": "tx_406_actual.html",
+      "body_sha256_validated": true,
+      "body_size_validated": true,
+      "review_decision": "reviewed_exclusions",
+      "review_reason": "Contractors, subcontractors and owner operators; premiums may be deducted from contract price under coverage agreements"
+    }
+  ],
+  "additional_access": [
+    {
+      "url": "https://tcss.legis.texas.gov/resources/LG/htm/LG.101.htm",
+      "consulted_at": "2026-10-04T21:29:48.169233+00:00",
+      "error": "403 Forbidden"
+    },
+    {
+      "url": "https://laws.flrules.org/2026/45",
+      "consulted_at": "2026-10-04T21:29:48.220192+00:00",
+      "error": "403 Forbidden"
+    },
+    {
+      "url": "https://www.twc.texas.gov/programs/unemployment-tax/tax-rates",
+      "consulted_at": "2026-10-04T21:29:48.238345+00:00",
+      "error": "403 Forbidden"
+    },
+    {
+      "url": "https://www.flsenate.gov/Laws/Statutes/2026/627.445",
+      "consulted_at": "2026-10-04T21:29:48.257192+00:00",
+      "error": "403 Forbidden"
+    }
+  ]
+}
