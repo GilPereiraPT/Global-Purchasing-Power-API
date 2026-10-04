@@ -1,0 +1,30 @@
+{
+  "scope": "Official PA/UC/Philadelphia source attempts; no rule bodies acquired",
+  "attempts": [
+    {
+      "url": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax",
+      "retrieved_at_utc": "2026-10-04T11:53:08.579200+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/tax-forgiveness",
+      "retrieved_at_utc": "2026-10-04T11:53:08.586375+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/working-pennsylvanians-tax-credit",
+      "retrieved_at_utc": "2026-10-04T11:53:08.588935+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.pa.gov/agencies/dli/programs-services/unemployment/for-employers/uc-tax-information",
+      "retrieved_at_utc": "2026-10-04T11:53:08.593744+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.phila.gov/services/payments-assistance-taxes/taxes/income-taxes/wage-tax-salaried-employees/",
+      "retrieved_at_utc": "2026-10-04T11:53:08.622520+00:00",
+      "error_type": "ProxyError"
+    }
+  ]
+}
