@@ -75,3 +75,40 @@ def test_publication_review_dashboard_keeps_local_and_production_distinct(tmp_pa
     assert '&lt;script&gt;' in html
     from app.bulk_coverage import markdown
     assert 'Sem comparação ou publicação em produção' in markdown(report)
+
+
+def test_authorized_table_normalization_reuses_keys_without_multiplying_aliases(tmp_path):
+    from app.north_america import CANADA_URL
+    from app.bulk_inventory_export import compare
+    row=dict(country='CA',occupation='accountant',geography='national',
+             classification='NOC2021:11100',measure='median',unit='CAD/hour',
+             reference_period='2023-2024',value=40,source_url=CANADA_URL)
+    alias={**row,'occupation':'auditor'}
+    (tmp_path/'north_america_wages.json').write_text(json.dumps({'records':[row,alias]}))
+    normalized={}
+    index,pairs,_=baseline_index(tmp_path,normalized=normalized)
+    assert len(index)==len(normalized)==1
+    assert pairs=={('CA','accountant'),('CA','auditor')}
+    export=tmp_path/'authorized.json'
+    export.write_text(json.dumps(dict(schema='earnwage-observation-inventory-v1',
+        scope='partial',exported_at='2026-10-03T22:10:35+00:00',observations=list(normalized.values()))))
+    staging=list(normalized.values())
+    result=compare(staging,export,authorization='offline owner authorization')
+    assert result['duplicates']==1 and result['new']==result['revisions']==0
+    assert result['scope']=='partial'
+    assert staging[0]['period']=='2023-2024'
+
+
+def test_normalization_rejects_conflicting_aliases_and_excludes_other_sources(tmp_path):
+    from app.north_america import CANADA_URL
+    row=dict(country='CA',occupation='accountant',geography='national',
+             classification='NOC2021:11100',measure='median',unit='CAD/hour',
+             reference_period='2023-2024',value=40,source_url=CANADA_URL)
+    target=tmp_path/'north_america_wages.json'
+    target.write_text(json.dumps({'records':[row,{**row,'occupation':'auditor','value':41}]}))
+    with pytest.raises(ValueError,match='Conflicting baseline aliases'):
+        baseline_index(tmp_path,normalized={})
+    target.write_text(json.dumps({'records':[{**row,'source_url':'https://example.org/salary'}]}))
+    normalized={}
+    assert baseline_index(tmp_path,normalized=normalized)[0]=={}
+    assert normalized=={}

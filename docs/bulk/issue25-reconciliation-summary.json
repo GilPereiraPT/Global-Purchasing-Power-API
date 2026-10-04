@@ -1,0 +1,210 @@
+{
+  "schema": "earnwage-issue25-reconciliation-summary-v1",
+  "audit_date": "2026-10-04",
+  "inventory_zip_sha256": "9cd8b2205d1f746625dae4d378db29298899f640ebb79890a68722fe5206aef0",
+  "inventory_exported_at_utc": "2026-10-03T22:10:35.794429+00:00",
+  "inventory_scope": "All rows of three exported salary tables at export time, not all production databases or live state",
+  "inventory_rows": {
+    "us_oews": 1560,
+    "north_america_wages": 85,
+    "ca_province_wages": 2493
+  },
+  "inventory_table_sha256": {
+    "us_oews": "8e579acd6ff5d1b62b2297652697c0a6640d066f12a4cd69b64c116f784643d6",
+    "north_america_wages": "cb6f8e0b2b2d3ddf2463c8f4b2c43809163f6be6ba9fb2bf05ab3408a1e093c6",
+    "ca_province_wages": "526a12fd9a200de00e5ee4791b1c88fafe29a7a905603bd9f2a638d97c4cceb4"
+  },
+  "normalized_inventory_sha256": "b54960e8dc7ea1bc870f6ea9cf654bc2b2a59d8c6ffe2dd1f4ed277b0ec471ac",
+  "normalized_identities": 20860,
+  "normalization_scope": "partial; full source-qualified identities where reconstructible; 10 national US Table1 rows assessed separately, dimensions not inferred",
+  "comparison": {
+    "bls": {
+      "comparison": {
+        "status": "compared",
+        "scope": "partial",
+        "exported_at": "2026-10-03T22:10:35.794429+00:00",
+        "new": 850011,
+        "revisions": 0,
+        "duplicates": 18190
+      },
+      "by_geography": {
+        "national": {
+          "duplicate": 1632
+        },
+        "bls_regional": {
+          "new_identity_in_export": 850011,
+          "duplicate": 16558
+        }
+      },
+      "by_period": {
+        "2021": {
+          "duplicate": 324,
+          "new_identity_in_export": 174366
+        },
+        "2022": {
+          "duplicate": 326,
+          "new_identity_in_export": 171527
+        },
+        "2023": {
+          "duplicate": 326,
+          "new_identity_in_export": 172537
+        },
+        "2024": {
+          "duplicate": 326,
+          "new_identity_in_export": 173463
+        },
+        "2025": {
+          "duplicate": 16888,
+          "new_identity_in_export": 158118
+        }
+      },
+      "stage_version_statuses": {
+        "accepted": 868201,
+        "missing": 28830,
+        "quarantined": 13565
+      },
+      "unsupported_publication_cells": {
+        "bls_regional_metadata_not_in_package_scope": 866569
+      }
+    },
+    "job_bank": {
+      "comparison": {
+        "status": "compared",
+        "scope": "partial",
+        "exported_at": "2026-10-03T22:10:35.794429+00:00",
+        "new": 11524,
+        "revisions": 0,
+        "duplicates": 2494
+      },
+      "by_geography": {
+        "national": {
+          "new_identity_in_export": 146,
+          "duplicate": 73
+        },
+        "province": {
+          "duplicate": 2421
+        },
+        "economic_region": {
+          "new_identity_in_export": 11378
+        }
+      },
+      "by_period": {
+        "2023-2024": {
+          "new_identity_in_export": 9808,
+          "duplicate": 2321
+        },
+        "2024": {
+          "new_identity_in_export": 1590,
+          "duplicate": 123
+        },
+        "2021": {
+          "new_identity_in_export": 126,
+          "duplicate": 50
+        }
+      },
+      "stage_version_statuses": {
+        "accepted": 14018,
+        "missing": 5074
+      },
+      "unsupported_publication_cells": {
+        "national_api_measure_not_supported": 146,
+        "canadian_economic_region_has_no_existing_api_table": 11378
+      }
+    }
+  },
+  "local_preview": {
+    "US": {
+      "representable_cells": 1632,
+      "preview_targets": {
+        "inserted_rows": 0,
+        "duplicate_rows": 140,
+        "protected_existing_rows": 0
+      },
+      "excluded_cells": {
+        "bls_regional_metadata_not_in_package_scope": 866569
+      },
+      "staging_sha256_after": "6be2fe4ae98659a031460a09234d1b334ebd47d63d0b104948fdb025f1ecc069"
+    },
+    "CA": {
+      "representable_cells": 2494,
+      "preview_targets": {
+        "inserted_rows": 0,
+        "duplicate_rows": 2568,
+        "protected_existing_rows": 0
+      },
+      "excluded_cells": {
+        "national_api_measure_not_supported": 146,
+        "canadian_economic_region_has_no_existing_api_table": 11378
+      },
+      "staging_sha256_after": "c48c29339823aa74b76fc2193b8126fc69207b3b53aa8b4dbcb45cdd03611a04"
+    }
+  },
+  "coverage": {
+    "US": {
+      "national_occupations": 29,
+      "regional_occupations": 29,
+      "occupation_ids_total": 29,
+      "occupation_original_period_pairs": 145,
+      "without_any_data": [
+        "agricultural_worker",
+        "cleaner",
+        "cook",
+        "data_analyst",
+        "doctor",
+        "industrial_operator",
+        "manager",
+        "psychologist",
+        "supermarket_worker",
+        "teacher",
+        "warehouse_operator"
+      ],
+      "approved_staging_without_mapping": [
+        "agricultural_worker",
+        "cleaner",
+        "cook",
+        "data_analyst",
+        "doctor",
+        "industrial_operator",
+        "manager",
+        "psychologist",
+        "supermarket_worker",
+        "teacher",
+        "warehouse_operator"
+      ]
+    },
+    "CA": {
+      "national_occupations": 38,
+      "regional_occupations": 38,
+      "occupation_ids_total": 38,
+      "occupation_original_period_pairs": 59,
+      "without_any_data": [
+        "agricultural_worker",
+        "manager"
+      ],
+      "approved_staging_without_mapping": [
+        "agricultural_worker",
+        "manager"
+      ]
+    }
+  },
+  "new_country_occupation_pairs": 0,
+  "first_package_already_present": true,
+  "eligible_new_package": null,
+  "candidate_package_created": false,
+  "production_accessed": false,
+  "production_modified": false,
+  "publication_authorized": false,
+  "tests": {
+    "passed": 642,
+    "failed": 0,
+    "warnings": 1,
+    "warning": "Inherited Starlette deprecation"
+  },
+  "method": "Existing Phase4E/4F ZIP validation and local target-model preview; bulk_salary_coverage.baseline_index and bulk_inventory_export.compare; staging read-only; original archives not downloaded again",
+  "exported_observations_outside_accepted_staging": {
+    "bls": {
+      "quarantined_only": 176
+    },
+    "job_bank": {}
+  }
+}
