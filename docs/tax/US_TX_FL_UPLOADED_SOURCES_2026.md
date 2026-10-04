@@ -51,16 +51,19 @@ As novas consultas dos localizadores Texas Local Government Code 101, Laws of Fl
 
 ## Cobertura final desta etapa
 
-| Parcela | TX | FL |
+| Parcela / âmbito comprovado | TX | FL |
 |---|---|---|
-| Federal | modelo anual condicionado já existente | igual |
-| Estadual salarial | zero específico previamente revisto | igual |
-| Unemployment/reemployment do empregado | zero condicionado revisto nesta tarefa | zero específico existente |
-| Workers’ compensation do empregado | zero condicionado; exceções excluídas explicitamente | zero condicionado no âmbito revisto |
-| Imposto local | desconhecido | desconhecido; falta ato 2026-45 e análise completa |
-| Paid leave/disability e completude dos regimes | desconhecido | desconhecido |
+| Federal: imposto regular, AMT, Social Security, Medicare e Additional Medicare | modelo anual condicionado 2026, com factos/range explícitos; não liquidação final | igual |
+| Imposto estadual sobre salário ordinário | zero específico anteriormente revisto, Constituição VIII §24-a | zero específico anteriormente revisto, §220.02 |
+| Contribuição do empregado unemployment/reemployment | **0.00** com `employment_type=ordinary_private_employee`, §§204.002/204.003; factos federais válidos | **0.00** no cenário federal válido, §443.041; evidência anterior |
+| Workers’ compensation do empregado | **0.00** com emprego privado ordinário e `workers_compensation_exception_agreement=false`, §415.006; §§406.123/406.144 excluídos | **0.00** com as mesmas declarações restritivas, §440.21(1) |
+| Imposto local | cobertura não validada; **não há imposto/dívida local presumida** | cobertura não validada; **não há imposto/dívida local presumida** |
+| Paid leave/disability | cobertura temporal/financiamento 2026 não validado; **nenhuma contribuição obrigatória estabelecida pela evidência** | igual |
+| Agregado das contribuições obrigatórias | `null`: UI/WC não comprovam completude; não é soma de obrigações presumidas | igual |
 | Líquido total | **`partial`, `net_income=null`** | **`partial`, `net_income=null`** |
 
-As referências contributivas independentes seguem o texto legal (zero por proibição de chargeback, não por algoritmo de taxa): casos no intervalo 19540–500000, incluindo teto Social Security e limite Additional Medicare, com contraexemplos de contratantes/acordos/factos ausentes. Não são referências de líquido completo e não permitem anunciar a fiscalidade TX/FL concluída. Testam também tipos inválidos, metadados, ASGI/WSGI e o arquivo WSGI real em instalação isolada, com e sem os novos factos. A suite completa será registada no relatório após execução.
+Zeros são parcelas jurídicas específicas dentro do cenário, não prova de todos os descontos ou de salário efetivamente pago. Factos ausentes/categorias excluídas não autorizam os zeros condicionados. O [pedido de fontes](US_TX_FL_SOURCE_REQUEST_2026.md) identifica quatro regras, organismos e documentos necessários, sem presumir contribuição nem repetir as aquisições concluídas.
+
+As referências contributivas independentes seguem o texto legal (zero por proibição de chargeback, não por algoritmo de taxa): casos no intervalo 19540–500000, incluindo teto Social Security e limite Additional Medicare, com contraexemplos de contratantes/acordos/factos ausentes. Não são referências de líquido completo e não permitem anunciar a fiscalidade TX/FL concluída. Testam também tipos inválidos, metadados, ASGI/WSGI e o arquivo WSGI real em instalação isolada, com e sem os novos factos. A execução completa está registada abaixo; não é necessário repetir a análise dos corpos ou os ensaios de arquivo sem alterações relevantes.
 
 Resultado local final: **1000 testes aprovados, 0 falhados, 20 subtestes aprovados** (Python 3.12, 89,50 s). Esta etapa acrescenta 41 casos contributivos e uma segunda variante do teste de arquivo WSGI: 42 novos testes desde a suite de 958. O arquivo real foi construído pela rotina existente e o endpoint executado fora do checkout em instalação isolada, com e sem declarações laborais. `git diff --check` aprovado. Mantém-se um aviso herdado Starlette/httpx; não houve alteração de dependências.
