@@ -34,6 +34,13 @@ BLS (SOC2018, 2021–2025) e 14 018 Job Bank (NOC2021, release 2025). **13 565 v
 BLS em quarentena**, 28 830 BLS e 5 074 Job Bank em falta continuam excluídos.
 Não houve descarregamento, importer, escrita no staging ou publicação.
 
+A comparação inversa encontrou **176 identidades BLS existentes no export mas
+apenas em quarentena no staging**, sem versão aceite actual. Não são propostas
+de revisão numérica entre valores aceites, nem dados a eliminar/substituir.
+No Job Bank não há identidades normalizadas existentes fora do staging aceite.
+As 20 860 identidades normalizadas correspondem a 20 684 duplicados aceites e
+a estas 176 observações em quarentena; a reconciliação preserva todas.
+
 ## Resultado por fonte e âmbito
 
 Contagens abaixo são **células estatísticas físicas**, não linhas SQL nem

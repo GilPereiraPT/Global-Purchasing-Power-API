@@ -200,5 +200,11 @@
     "warnings": 1,
     "warning": "Inherited Starlette deprecation"
   },
-  "method": "Existing Phase4E/4F ZIP validation and local target-model preview; bulk_salary_coverage.baseline_index and bulk_inventory_export.compare; staging read-only; original archives not downloaded again"
+  "method": "Existing Phase4E/4F ZIP validation and local target-model preview; bulk_salary_coverage.baseline_index and bulk_inventory_export.compare; staging read-only; original archives not downloaded again",
+  "exported_observations_outside_accepted_staging": {
+    "bls": {
+      "quarantined_only": 176
+    },
+    "job_bank": {}
+  }
 }
