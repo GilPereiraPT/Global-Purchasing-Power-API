@@ -24,6 +24,13 @@ RULES = {
                                                'Section 443.041: employer contributions cannot be financed by employee deductions'),
     },
 }
+PRIVATE_INSURANCE_RULES = {
+    'TX': ('https://tcss.legis.texas.gov/resources/IN/htm/IN.1255.htm',
+           'https://www.tdi.texas.gov/bulletins/2023/B-0012-23.html'),
+    'FL': ('https://www.flsenate.gov/Laws/Statutes/2026/624.6086',
+           'https://www.flsenate.gov/Laws/Statutes/2026/627.445'),
+}
+
 UNKNOWN = ('local_income_tax', 'employee_paid_leave_contribution', 'mandatory_state_employee_contributions')
 WORKERS_COMP_FACTS = ('employment_type', 'workers_compensation_exception_agreement')
 SCOPED_EMPLOYEE_RULES = frozenset({'employee_unemployment_contribution',
@@ -64,18 +71,27 @@ def coverage(state, facts=None):
         sources.append(source)
     if state == 'TX':
         sources.extend(sources_for(('https://tcss.legis.texas.gov/resources/LA/htm/LA.406.htm',)))
+    private_sources = sources_for(PRIVATE_INSURANCE_RULES.get(state, ()))
+    private_reviewed = (bool(private_sources)
+                        and len(private_sources) == len(PRIVATE_INSURANCE_RULES.get(state, ()))
+                        and all(
+        _reviewed_parameter(source, url) for source, url in
+        zip(private_sources, PRIVATE_INSURANCE_RULES.get(state, ()))))
+    sources.extend(private_sources)
+    if state == 'FL':
+        sources.extend(sources_for(('https://www.floridarevenue.com/faq/Pages/FAQDetails.aspx?FAQID=1466',)))
     components.extend({'name': name, 'amount': None, 'status': 'unavailable'}
                       for name in UNKNOWN)
     missing = [
         'Official local wage-tax/non-applicability evidence for residence and work jurisdiction',
-        '2026 paid leave/disability employee contribution applicability; DOL page has 2024 dated content and incomplete interactive data',
+        '2026 public paid leave/disability employee contribution applicability remains unvalidated; private insurance rules do not establish existence or absence of a public levy',
         'Mandatory employee contribution applicability: private/public employment, retirement and special regimes; no zero inferred',
         'Explicit full-year same-state residence/work and ordinary private-sector employment scope required before net activation',
     ]
     if state == 'TX':
         missing.append('Texas Tax Code 302 is NOT an income-tax prohibition; local wage-tax authority remains unvalidated')
     if state == 'FL':
-        missing.append('Florida Constitution VII.5(a) contains a credit/deduction-linked limit, not an unconditional zero; 166.201 amendment 2026-45 effective date requires the session law')
+        missing.append('Florida local salary-tax applicability remains unvalidated; 2026-45 environmental amendment effective 2026-07-01 was reviewed through enrolled text and official legislative history, not as a salary-tax rule')
     if facts.get('employment_type') != 'ordinary_private_employee':
         missing.append('Explicit ordinary_private_employee employment_type required for newly reviewed employee contribution rules; contracting/public/special regimes excluded')
     if facts.get('workers_compensation_exception_agreement') is not False:
@@ -87,4 +103,13 @@ def coverage(state, facts=None):
             'required_employee_contribution_facts': list(WORKERS_COMP_FACTS),
             'assumptions': ['Conditional state components assume selected state law governs the employment; multistate residence/work remains unvalidated',
                             'Ordinary private employee; voluntary benefits are excluded, not asserted to cost zero'],
+            'private_family_leave_insurance': {
+                'status': 'reviewed_private_insurance_rules' if private_reviewed else 'unavailable',
+                'kind': 'private_employer_group_insurance',
+                'these_rules_create_universal_public_employee_contribution': False if private_reviewed else None,
+                'public_contribution_applicability': 'not_established_by_these_documents',
+                'premium_amount': None,
+                'benchmark_treatment': 'Before private benefit premiums; not an assertion that premiums cost zero or that individual contracts are optional',
+                'source_urls': list(PRIVATE_INSURANCE_RULES.get(state, ()))},
+            'evidence_limitations': ['Missing evidence is not evidence that a levy exists; no presumed public contribution is calculated'],
             'employee_contribution_scope': 'Ordinary private employee only; no independent-contractor/subcontractor/owner-operator coverage agreement; no public or special occupational regime'}
