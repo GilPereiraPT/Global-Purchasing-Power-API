@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-04",
+  "scope": "Federal/TX/FL official-source access; no response bodies obtained",
+  "attempts": [
+    {
+      "url": "https://www.irs.gov/irb/2025-45_IRB",
+      "retrieved_at_utc": "2026-10-04T11:53:08.411704+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.irs.gov/taxtopics/tc751",
+      "retrieved_at_utc": "2026-10-04T11:53:08.412210+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.irs.gov/taxtopics/tc560",
+      "retrieved_at_utc": "2026-10-04T11:53:08.412575+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.ssa.gov/oact/cola/cbb.html",
+      "retrieved_at_utc": "2026-10-04T11:53:08.413110+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.irs.gov/newsroom/irs-provides-tax-inflation-adjustments-for-tax-year-2026",
+      "retrieved_at_utc": "2026-10-04T11:53:08.454985+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit/earned-income-and-earned-income-tax-credit-eitc-tables",
+      "retrieved_at_utc": "2026-10-04T11:53:08.457342+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://statutes.capitol.texas.gov/Docs/CN/htm/CN.8.htm",
+      "retrieved_at_utc": "2026-10-04T11:53:08.469961+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.twc.texas.gov/programs/unemployment-tax",
+      "retrieved_at_utc": "2026-10-04T11:53:08.471833+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://floridarevenue.com/taxes/taxesfees/Pages/income.aspx",
+      "retrieved_at_utc": "2026-10-04T11:53:08.480659+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://floridarevenue.com/taxes/taxesfees/Pages/reemployment.aspx",
+      "retrieved_at_utc": "2026-10-04T11:53:08.488273+00:00",
+      "error_type": "ProxyError"
+    }
+  ]
+}

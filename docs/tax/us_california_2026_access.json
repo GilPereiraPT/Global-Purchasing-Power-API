@@ -1,0 +1,20 @@
+{
+  "scope": "Official FTB/EDD access; no bodies obtained",
+  "attempts": [
+    {
+      "url": "https://www.ftb.ca.gov/forms/2026/2026-540-tax-rate-schedules.pdf",
+      "retrieved_at_utc": "2026-10-04T11:53:08.537450+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.ftb.ca.gov/forms/2026/2026-540-booklet.html",
+      "retrieved_at_utc": "2026-10-04T11:53:08.539452+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://edd.ca.gov/en/payroll_taxes/rates_and_withholding/",
+      "retrieved_at_utc": "2026-10-04T11:53:08.572251+00:00",
+      "error_type": "ProxyError"
+    }
+  ]
+}

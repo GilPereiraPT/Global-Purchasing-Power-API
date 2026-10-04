@@ -1,0 +1,159 @@
+{
+  "schema": "earnwage-us-tax-source-review-v1",
+  "reviewed_at": "2026-10-04",
+  "tax_year": 2026,
+  "acquisition_method": "Official pages opened and relevant sections inspected through web retrieval; no raw HTTP archive or independent downloaded checksum captured.",
+  "purpose": "Reference inputs for PRs 30-33; not a runtime import package or complete tax model.",
+  "activate_net_income": false,
+  "sources": [
+    {
+      "url": "https://www.irs.gov/irb/2025-45_IRB",
+      "section": "Rev. Proc. 2025-32, section 3.01 Table 3 and section 3.14",
+      "scope": "2026 single filer regular federal income tax and standard deduction",
+      "parameters": {
+        "standard_deduction": "16100.00",
+        "marginal_brackets": [
+          [
+            "12400",
+            "0.10"
+          ],
+          [
+            "50400",
+            "0.12"
+          ],
+          [
+            "105700",
+            "0.22"
+          ],
+          [
+            "201775",
+            "0.24"
+          ],
+          [
+            "256225",
+            "0.32"
+          ],
+          [
+            "640600",
+            "0.35"
+          ],
+          [
+            null,
+            "0.37"
+          ]
+        ]
+      },
+      "limitations": [
+        "Before credits, AMT and special deductions",
+        "Age, blindness and dependent deduction rules require separate scenario review"
+      ]
+    },
+    {
+      "url": "https://www.ssa.gov/oact/cola/cbb.html",
+      "scope": "2026 OASDI covered employee wages",
+      "parameters": {
+        "employee_rate": "0.062",
+        "wage_base": "184500.00",
+        "maximum_employee_contribution": "11439.00"
+      }
+    },
+    {
+      "url": "https://www.irs.gov/taxtopics/tc751",
+      "scope": "FICA employee rates",
+      "parameters": {
+        "social_security_rate": "0.062",
+        "medicare_rate": "0.0145"
+      },
+      "limitations": [
+        "Covered wage bases may differ from gross salary",
+        "Payroll withholding rounding is not validated here"
+      ]
+    },
+    {
+      "url": "https://www.irs.gov/taxtopics/tc560",
+      "scope": "Additional Medicare single taxpayer",
+      "parameters": {
+        "rate": "0.009",
+        "threshold": "200000.00"
+      },
+      "limitations": [
+        "Filing-status threshold differs for married taxpayers"
+      ]
+    },
+    {
+      "url": "https://edd.ca.gov/en/Payroll_Taxes/Rates_and_Withholding",
+      "scope": "2026 California SDI",
+      "parameters": {
+        "rate": "0.013",
+        "wage_ceiling": null
+      },
+      "limitations": [
+        "Exempt workers and voluntary plans require review",
+        "FTB annual state income tax remains unvalidated"
+      ]
+    },
+    {
+      "url": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax",
+      "scope": "PA personal income tax current statutory rate and deduction policy reviewed on date above",
+      "parameters": {
+        "rate": "0.0307",
+        "standard_deduction": "0.00"
+      },
+      "limitations": [
+        "Apply to PA taxable compensation, not automatically gross wages",
+        "Credits, Tax Forgiveness, WPTC, unemployment and local taxes pending"
+      ]
+    },
+    {
+      "url": "https://www.nysenate.gov/legislation/laws/TAX/601",
+      "section": "601(c)(1)(B)(vii)",
+      "scope": "2026 single resident statutory schedule",
+      "parameters": {
+        "schedule": [
+          {
+            "ceiling": "8500",
+            "base": "0",
+            "floor": "0",
+            "rate": "0.039"
+          },
+          {
+            "ceiling": "11700",
+            "base": "332",
+            "floor": "8500",
+            "rate": "0.044"
+          },
+          {
+            "ceiling": "13900",
+            "base": "473",
+            "floor": "11700",
+            "rate": "0.0515"
+          },
+          {
+            "ceiling": "80650",
+            "base": "586",
+            "floor": "13900",
+            "rate": "0.054"
+          },
+          {
+            "ceiling": "215400",
+            "base": "4191",
+            "floor": "80650",
+            "rate": "0.059"
+          }
+        ]
+      },
+      "limitations": [
+        "Schedule subset only; preserve statutory rounded bases",
+        "Recapture provisions present in source but applicability/version must be reviewed before implementing",
+        "Deduction, credits, NYC/Yonkers and worker premiums remain separate pending rules"
+      ]
+    }
+  ],
+  "remaining": [
+    "Obtain preserved official source snapshots and hashes in Codex-accessible acquisition workspace",
+    "Validate full scenario credits/AMT and independent reference cases",
+    "Complete state/local/employee premium rules",
+    "Review numeric and legal rounding",
+    "Fiscal adapters currently store rules in code; there is no approved fiscal database ingestion schema. Do not route fiscal rules through salary bulk packages."
+  ]
+}

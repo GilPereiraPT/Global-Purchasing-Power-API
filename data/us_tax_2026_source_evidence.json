@@ -1,0 +1,113 @@
+{
+  "schema": "earnwage-us-tax-evidence-v1",
+  "complete_tax_model": false,
+  "sources": [
+    {
+      "id": "irs_schedule",
+      "url": "https://www.irs.gov/irb/2025-45_IRB",
+      "final_url": "https://www.irs.gov/irb/2025-45_IRB",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "acquired_at": "2026-10-04T17:41:00.213428+00:00",
+      "file": "irs_schedule.html",
+      "bytes": 303938,
+      "sha256": "c79553511b1f5778e9dc03b2b2cee429bb625a1a36152a09732e5a340c4ffd2e",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "2026 single regular marginal schedule and basic standard deduction; before credits, special deductions and AMT",
+      "verification_status": "parameters_reviewed"
+    },
+    {
+      "id": "ssa_base",
+      "url": "https://www.ssa.gov/oact/cola/cbb.html",
+      "error": "<urlopen error timed out>",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "Source acquisition only; annual rules not validated",
+      "verification_status": "blocked"
+    },
+    {
+      "id": "irs_fica",
+      "url": "https://www.irs.gov/taxtopics/tc751",
+      "final_url": "https://www.irs.gov/taxtopics/tc751",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "acquired_at": "2026-10-04T17:41:00.287264+00:00",
+      "file": "irs_fica.html",
+      "bytes": 100010,
+      "sha256": "ebe006ef004c066df0463d2c6f1adb8e152b02b0fb31b6869c374ab1e7bb37d2",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "Employee FICA rates only; covered wage determination excluded",
+      "verification_status": "parameters_reviewed"
+    },
+    {
+      "id": "irs_additional_medicare",
+      "url": "https://www.irs.gov/taxtopics/tc560",
+      "final_url": "https://www.irs.gov/taxtopics/tc560",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "acquired_at": "2026-10-04T17:41:00.310497+00:00",
+      "file": "irs_additional_medicare.html",
+      "bytes": 103529,
+      "sha256": "8540ab8747088424ad3851ed349dc2e9fcf915946ab5490b19a7bf9500fc3450",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "Single taxpayer wage-only Additional Medicare rate and threshold; no self-employment or RRTA",
+      "verification_status": "parameters_reviewed"
+    },
+    {
+      "id": "ny_schedule",
+      "url": "https://www.nysenate.gov/legislation/laws/TAX/601",
+      "error": "HTTP Error 403: Forbidden",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "Source acquisition only; annual rules not validated",
+      "verification_status": "blocked"
+    },
+    {
+      "id": "ca_sdi",
+      "url": "https://edd.ca.gov/en/Payroll_Taxes/Rates_and_Withholding",
+      "final_url": "https://edd.ca.gov/en/Payroll_Taxes/Rates_and_Withholding",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "acquired_at": "2026-10-04T17:40:56.745789+00:00",
+      "file": "ca_sdi.html",
+      "bytes": 146493,
+      "sha256": "af420c6ecbd5eb91311092d1d078dcf995d8cbd2c278517aa3aa8d8eb26134f4",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "2026 SDI rate and absence of wage ceiling under ordinary state plan; coverage/exemptions and payroll rounding excluded",
+      "verification_status": "parameters_reviewed"
+    },
+    {
+      "id": "pa_income_tax",
+      "url": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax",
+      "final_url": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax",
+      "status": 200,
+      "content_type": "text/html;charset=utf-8",
+      "acquired_at": "2026-10-04T17:40:59.386701+00:00",
+      "file": "pa_income_tax.html",
+      "bytes": 421817,
+      "sha256": "6a281fb519d7fc155badfefd2e3119c22bf6d6ee4aac147bb54024158bbbd030",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "Current PA statutory PIT rate and absence of standard deduction, reviewed 2026-10-04; not taxable-compensation or credit determination",
+      "verification_status": "parameters_reviewed"
+    },
+    {
+      "id": "irs_p15",
+      "url": "https://www.irs.gov/publications/p15",
+      "final_url": "https://www.irs.gov/publications/p15",
+      "status": 200,
+      "acquired_at": "2026-10-04T17:42:22.914480+00:00",
+      "file": "irs_p15.html",
+      "bytes": 624239,
+      "sha256": "6a33ad9c4b172c824c54780aea4ae81199e6e142e7f1c0ac3f891fb82be61fe2",
+      "tax_year": 2026,
+      "reviewed_on": "2026-10-04",
+      "scope": "2026 employee Social Security rate and wage limit, Medicare rate and no Medicare limit; covered wage determination excluded",
+      "verification_status": "parameters_reviewed"
+    }
+  ]
+}
