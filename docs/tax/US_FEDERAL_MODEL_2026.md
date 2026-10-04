@@ -29,3 +29,5 @@ TX/FL: finish source-backed local/premium applicability and independent complete
 ## TX/FL follow-up review
 
 See [the release review](US_TX_FL_RELEASE_REVIEW_2026.md) for the state/scenario coverage matrix, attempted official acquisitions, precise blockers, database/runtime distinction and browser-based operator instructions. Reviewed TX/FL state wage-tax zeroes and FL employee reemployment non-deduction are now separately exposed when federal facts match. Local taxes and the complete mandatory employee contribution aggregate remain unavailable; total net stays null. These scoped parameter values do not promote the source evidence to complete verification.
+
+For the next TX/FL validation, use [the concrete official-source request](US_TX_FL_SOURCE_REQUEST_2026.md). It distinguishes employee statutory obligations, employer-only costs, voluntary deductions and special employment regimes; additional private-employment/residence/work facts remain necessary before any total-net activation.
