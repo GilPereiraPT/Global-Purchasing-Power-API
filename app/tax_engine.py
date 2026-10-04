@@ -66,9 +66,9 @@ def us_facts_input(value, gross):
             raise ValueError('us_facts must be a valid JSON object with unique keys') from None
     if not isinstance(value, dict):
         raise ValueError('us_facts must be an object')
-    booleans = {'blind', 'valid_ssn', 'can_be_claimed_as_dependent'}
+    booleans = {'blind', 'valid_ssn', 'can_be_claimed_as_dependent', 'ordinary_wage_model_confirmed'}
     money = {'federal_wages', 'social_security_wages', 'medicare_wages',
-             'qualified_tips', 'qualified_overtime'}
+             'qualified_tips', 'qualified_overtime', 'nonitemizer_charitable_contributions'}
     if set(value) - booleans - money - {'age'}:
         raise ValueError('Unexpected US facts; never supply an SSN')
     result = {}
