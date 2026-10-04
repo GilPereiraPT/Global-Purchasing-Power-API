@@ -1,0 +1,30 @@
+{
+  "scope": "Official NY 2026 source access, no downloaded rule bodies",
+  "attempts": [
+    {
+      "url": "https://www.nysenate.gov/legislation/laws/TAX/601",
+      "retrieved_at_utc": "2026-10-04T11:53:08.510419+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.tax.ny.gov/pit/file/tax-tables/2026.htm",
+      "retrieved_at_utc": "2026-10-04T11:53:08.516610+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.tax.ny.gov/pit/credits/household_credit.htm",
+      "retrieved_at_utc": "2026-10-04T11:53:08.516932+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://www.wcb.ny.gov/content/main/DisabilityBenefits/Employer/WhoPaysBenefits.jsp",
+      "retrieved_at_utc": "2026-10-04T11:53:08.526216+00:00",
+      "error_type": "ProxyError"
+    },
+    {
+      "url": "https://paidfamilyleave.ny.gov/2026",
+      "retrieved_at_utc": "2026-10-04T11:53:08.532882+00:00",
+      "error_type": "ProxyError"
+    }
+  ]
+}
