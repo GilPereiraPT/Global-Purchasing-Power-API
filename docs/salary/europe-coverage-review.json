@@ -740,5 +740,74 @@
     "absent_occupation_year_combinations": 8
   },
   "total_covered_pairs": 97,
-  "total_missing_pairs": 63
+  "total_missing_pairs": 63,
+  "uk_scope_candidates": [
+    {
+      "occupation": "agricultural_worker",
+      "classification": "SOC2020:9111",
+      "source_title": "Farm workers",
+      "period": "2025",
+      "mean": "27324.00",
+      "mean_cv_percent": "15",
+      "median": null,
+      "median_source_marker": "x",
+      "median_cv_percent": "23",
+      "unit": "GBP/year",
+      "decision": "scope_review_required_elementary_farm_work_not_all_skilled_agriculture",
+      "approved": false
+    },
+    {
+      "occupation": "lawyer",
+      "classification": "SOC2020:2412",
+      "source_title": "Solicitors and lawyers",
+      "period": "2025",
+      "mean": "68462.00",
+      "mean_cv_percent": "4.8",
+      "median": "53314.00",
+      "median_cv_percent": "4.6",
+      "unit": "GBP/year",
+      "decision": "scope_review_required_not_all_legal_professions",
+      "approved": false
+    },
+    {
+      "occupation": "it_technician",
+      "classification": "SOC2020:3131",
+      "source_title": "IT operations technicians",
+      "period": "2025",
+      "mean": "38507.00",
+      "mean_cv_percent": "3.7",
+      "median": "34656.00",
+      "median_cv_percent": "4.6",
+      "unit": "GBP/year",
+      "classification_20260827_title": "IT technicians",
+      "decision": "scope_and_classification_revision_review_required",
+      "approved": false
+    },
+    {
+      "occupation": "administrative_assistant",
+      "classification": "SOC2020:4159",
+      "source_title": "Other administrative occupations n.e.c.",
+      "period": "2025",
+      "mean": "22906.00",
+      "mean_cv_percent": "0.9",
+      "median": "23385.00",
+      "median_cv_percent": "1.4",
+      "unit": "GBP/year",
+      "decision": "reject_residual_category_as_exclusive_administrative_assistant_wage",
+      "approved": false
+    },
+    {
+      "occupation": "auditor",
+      "classification": "SOC2020:2421",
+      "source_title": "Chartered and certified accountants",
+      "period": "2025",
+      "mean": "50563.00",
+      "mean_cv_percent": "3.3",
+      "median": "45538.00",
+      "median_cv_percent": "5.8",
+      "unit": "GBP/year",
+      "decision": "shared_category_review_required_not_exclusive_auditors",
+      "approved": false
+    }
+  ]
 }

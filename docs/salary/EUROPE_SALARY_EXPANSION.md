@@ -54,6 +54,22 @@ incluindo o workbook indicado pela página, versão de ficheiro 20260827. Exempl
 - Lawyer: 2412 inclui lawyers/solicitors; validar a relação com 2411/2419 e o
   âmbito EarnWage antes de admitir uma série mais estreita.
 
+Uma leitura adicional das mesmas tabelas, reutilizando `_sheet_rows` e sem
+importações, identificou candidatos concretos para revisão:
+
+| Profissão / SOC | Valor publicado em GBP/ano | Qualidade | Impedimento restante |
+| --- | --- | --- | --- |
+| Agricultural worker / 9111 Farm workers | Média 27 324; mediana `x` | CV média 15%; CV mediana 23% | Restringir explicitamente a trabalho agrícola elementar; não toda a agricultura qualificada |
+| Lawyer / 2412 | Mediana 53 314; média 68 462 | CV 4,6% / 4,8% | Âmbito solicitors/lawyers, não todas as profissões jurídicas |
+| IT technician / 3131 | Mediana 34 656; média 38 507 | CV 4,6% / 3,7% | ASHE diz «IT operations technicians»; classificação 20260827 diz «IT technicians». Rever versão e âmbito |
+
+O valor médio dos farm workers cumpre o controlo de CV, mas isso **não valida por
+si só a correspondência profissional**. A mediana excluída continua ausente.
+Valores de 4159/2421 também existem, mas respetivamente a categoria administrativa
+residual e a categoria partilhada com accountants não resolvem um salário
+exclusivo de administrative_assistant/auditor. Estes dados de fonte constam como
+candidatos não aprovados no JSON, sem alimentar a API ou aumentar cobertura.
+
 A página ONS descarregada declara Open Government Licence v3.0. O acesso direto
 à página da licença nos National Archives falhou com ProxyError; a declaração
 ONS foi lida, mas o texto completo das condições não foi novamente obtido.
@@ -159,7 +175,8 @@ revisão de classificação, não como prova de indisponibilidade estatística.
 
 ## Tarefas pequenas seguintes, por prioridade
 
-1. **Reino Unido: avaliar história dos dentistas.** Adquirir um release anterior
+1. **Reino Unido: rever candidatos e história dos dentistas.** Priorizar 9111 e
+   2412 com âmbito explícito; resolver a revisão de 3131. Adquirir um release anterior
    oficial, validar SOC2020, tabelas 14.7a/b, ano e CV. Só depois generalizar o
    parser/leitor para histórico, com testes de não mistura de releases.
 2. **Alemanha: desbloquear e rever cinco profissões.** Uma correspondência e prova
