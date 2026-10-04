@@ -3,6 +3,8 @@
 Audited adapters may produce a verified result or an explicitly labelled benchmark estimate.
 Missing components never become zero and partial results never expose net income.
 """
+import json
+from urllib.parse import urlsplit
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP, localcontext
 from typing import Protocol
@@ -44,6 +46,68 @@ def eligible_expenses_amount(value):
         if amount != amount.quantize(CENT):
             raise ValueError('eligible_household_expenses must have at most two decimal places')
     return amount
+
+
+def us_facts_input(value, gross):
+    """Bounded optional facts; absence is never interpreted as false or zero."""
+    def pairs(items):
+        result = {}
+        for key, item in items:
+            if key in result:
+                raise ValueError('Duplicate US fact')
+            result[key] = item
+        return result
+    if isinstance(value, str):
+        if len(value.encode('utf-8')) > 2048:
+            raise ValueError('us_facts exceeds 2048 bytes')
+        try:
+            value = json.loads(value, object_pairs_hook=pairs)
+        except (ValueError, TypeError, RecursionError):
+            raise ValueError('us_facts must be a valid JSON object with unique keys') from None
+    if not isinstance(value, dict):
+        raise ValueError('us_facts must be an object')
+    booleans = {'blind', 'valid_ssn', 'can_be_claimed_as_dependent'}
+    money = {'federal_wages', 'social_security_wages', 'medicare_wages',
+             'qualified_tips', 'qualified_overtime'}
+    if set(value) - booleans - money - {'age'}:
+        raise ValueError('Unexpected US facts; never supply an SSN')
+    result = {}
+    for key, item in value.items():
+        if key in booleans:
+            if type(item) is not bool:
+                raise ValueError(key + ' must be a boolean')
+        elif key == 'age':
+            if type(item) is not int or not 0 <= item <= 120:
+                raise ValueError('age must be an integer from 0 to 120')
+        else:
+            if not isinstance(item, str):
+                raise ValueError(key + ' must be a monetary string')
+            amount = eligible_expenses_amount(item)
+            if amount > gross:
+                raise ValueError(key + ' exceeds gross wages in this restricted scenario')
+            item = monetary(amount)
+        result[key] = item
+    return result
+
+
+def source_evidence_complete(sources, year):
+    """Validate declared audit metadata; this does not independently verify law."""
+    if not sources:
+        return False
+    for source in sources:
+        if not isinstance(source, dict):
+            return False
+        try:
+            url = urlsplit(source.get('url', ''))
+            valid_url = url.scheme == 'https' and bool(url.hostname) and not url.username and not url.password
+        except (ValueError, TypeError):
+            return False
+        if (source.get('verification_status') != 'verified'
+                or type(source.get('tax_year')) is not int or source['tax_year'] != year
+                or not isinstance(source.get('scope'), str) or not source['scope'].strip()
+                or not valid_url):
+            return False
+    return True
 
 
 def monetary(value):
@@ -91,6 +155,7 @@ class TaxRequest:
     scenario: str
     region: str | None
     eligible_household_expenses: Decimal | None = None
+    us_facts: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -114,7 +179,8 @@ class CountryAdapter(Protocol):
 
 def _adapters():
     from app.tax_portugal import PortugalAdapter
-    return {'PT': PortugalAdapter()}
+    from app.tax_us import USAdapter
+    return {'PT': PortugalAdapter(), 'US': USAdapter()}
 
 
 def countries():
@@ -138,7 +204,7 @@ def years(country):
     return {key: details[key] for key in ('country', 'status', 'supported_tax_years')}
 
 
-def calculate(country, annual_gross, tax_year, scenario, region=None, eligible_household_expenses=None):
+def calculate(country, annual_gross, tax_year, scenario, region=None, eligible_household_expenses=None, us_facts=None):
     code = str(country).upper()
     if len(code) != 2 or not code.isascii() or not code.isalpha():
         raise ValueError('country must be a two-letter code')
@@ -148,7 +214,11 @@ def calculate(country, annual_gross, tax_year, scenario, region=None, eligible_h
         raise ValueError('scenario must be explicitly selected')
     expenses = (eligible_expenses_amount(eligible_household_expenses)
                 if eligible_household_expenses is not None else None)
-    request = TaxRequest(code, tax_year, annual_amount(annual_gross), scenario, region, expenses)
+    gross = annual_amount(annual_gross)
+    if us_facts is not None and code != 'US':
+        raise ValueError('us_facts applies only to US scenarios')
+    facts = us_facts_input(us_facts, gross) if us_facts is not None else None
+    request = TaxRequest(code, tax_year, gross, scenario, region, expenses, facts)
     adapter = _adapters().get(code)
     outcome = (adapter.calculate(request) if adapter else
                TaxOutcome('unavailable', reason='No validated country adapter'))
@@ -167,7 +237,7 @@ def present(request, outcome, currency):
     status = outcome.status
     reason = outcome.reason
     if status in ('verified', 'benchmark_estimate') and (any(v is None for v in amounts)
-                                 or not outcome.sources or not outcome.applicable_rules
+                                 or not source_evidence_complete(outcome.sources, request.tax_year) or not outcome.applicable_rules
                                  or not currency):
         status = 'partial' if any(v is not None for v in amounts) else 'unavailable'
         reason = 'Adapter evidence incomplete; net income withheld'
@@ -197,6 +267,8 @@ def present(request, outcome, currency):
             'reason': reason}
     if request.eligible_household_expenses is not None:
         result['eligible_household_expenses'] = monetary(request.eligible_household_expenses)
+    if request.us_facts is not None:
+        result['us_facts'] = dict(request.us_facts)
     if outcome.components:
         result['components'] = list(outcome.components)
     return result
@@ -204,7 +276,7 @@ def present(request, outcome, currency):
 
 def calculate_query(params):
     """Shared strict HTTP input validation for ASGI and native WSGI."""
-    allowed = {'country', 'annual_gross', 'tax_year', 'scenario', 'region', 'eligible_household_expenses'}
+    allowed = {'country', 'annual_gross', 'tax_year', 'scenario', 'region', 'eligible_household_expenses', 'us_facts'}
     if set(params) - allowed:
         raise ValueError('Unexpected tax calculation parameters')
     values = {}
@@ -219,4 +291,4 @@ def calculate_query(params):
     if len(raw_year) != 4 or not raw_year.isascii() or not raw_year.isdigit():
         raise ValueError('tax_year must be a four-digit year')
     return calculate(values['country'], values['annual_gross'], int(raw_year),
-                     values['scenario'], values.get('region'), values.get('eligible_household_expenses'))
+                     values['scenario'], values.get('region'), values.get('eligible_household_expenses'), values.get('us_facts'))

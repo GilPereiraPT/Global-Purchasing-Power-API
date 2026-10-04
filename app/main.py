@@ -539,7 +539,8 @@ def tax_assumptions(country: str):
 @app.get("/v1/tax/calculate")
 def tax_calculate(request: Request, country: str, annual_gross: str,
                   tax_year: str, scenario: str, region: str | None = None,
-                  eligible_household_expenses: str | None = None):
+                  eligible_household_expenses: str | None = None,
+                  us_facts: str | None = None):
     params = {}
     for key, value in request.query_params.multi_items():
         params.setdefault(key, []).append(value)
