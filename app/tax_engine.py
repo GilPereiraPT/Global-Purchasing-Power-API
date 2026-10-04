@@ -114,7 +114,8 @@ class CountryAdapter(Protocol):
 
 def _adapters():
     from app.tax_portugal import PortugalAdapter
-    return {'PT': PortugalAdapter()}
+    from app.tax_us import USAdapter
+    return {'PT': PortugalAdapter(), 'US': USAdapter()}
 
 
 def countries():
