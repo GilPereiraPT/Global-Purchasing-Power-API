@@ -74,7 +74,8 @@ class USAdapter:
                 'optional_us_facts':['age','blind','valid_ssn','can_be_claimed_as_dependent',
                                      'federal_wages','social_security_wages','medicare_wages',
                                      'qualified_tips','qualified_overtime','nonitemizer_charitable_contributions',
-                                     'ordinary_wage_model_confirmed']}
+                                     'ordinary_wage_model_confirmed', 'employment_type',
+                                     'workers_compensation_exception_agreement']}
 
     def calculate(self, request):
         if request.scenario not in (SCENARIO, federal_model.SCENARIO) or request.tax_year != 2026:
@@ -91,8 +92,13 @@ class USAdapter:
             if request.region not in ('TX','FL'):
                 return TaxOutcome('partial', reason='Explicit TX or FL required for this first federal model',
                                   assumptions=federal_model.ASSUMPTIONS)
-            modeled, missing = federal_model.components(request.annual_gross, request.us_facts)
-            jurisdiction = jurisdiction_coverage(request.region)
+            facts = request.us_facts or {}
+            if (('employment_type' in facts and facts['employment_type'] != 'ordinary_private_employee')
+                    or facts.get('workers_compensation_exception_agreement') is True):
+                modeled, missing = (), ('Employment category or workers-compensation coverage agreement is outside the ordinary private-employee scenario',)
+            else:
+                modeled, missing = federal_model.components(request.annual_gross, request.us_facts)
+            jurisdiction = jurisdiction_coverage(request.region, request.us_facts)
             # Even reviewed rule parameters are withheld when the federal facts
             # do not establish this scenario. A state zero never completes net.
             unknown = tuple(dict(component, amount=component['amount'] if modeled else None)
@@ -102,7 +108,7 @@ class USAdapter:
                 'https://www.irs.gov/publications/p505',
                 'https://www.irs.gov/taxtopics/tc506')) + tuple(jurisdiction['sources']),
                 applicable_rules=('Explicit ordinary-wage federal component model; not complete take-home pay',),
-                assumptions=federal_model.ASSUMPTIONS,
+                assumptions=federal_model.ASSUMPTIONS + tuple(jurisdiction['assumptions']),
                 limitations=missing + tuple(jurisdiction['missing_rules']) + ('Complete state/local taxes and employee premiums not yet included',
                                        'Annual model cents, not payroll withholding or a final tax return'),
                 reason='Federal model available' if modeled else 'Federal model facts incomplete or unsupported',

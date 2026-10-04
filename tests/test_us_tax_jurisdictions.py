@@ -84,7 +84,8 @@ def test_http_parity_complete_and_missing_jurisdiction(state):
     assert response.json() == body and body['net_income'] is None
 
 
-def test_production_archive_wsgi_in_isolated_installation(tmp_path):
+@pytest.mark.parametrize('employee_scope', [False, True])
+def test_production_archive_wsgi_in_isolated_installation(tmp_path, employee_scope):
     import os
     from pathlib import Path
     import subprocess
@@ -100,8 +101,12 @@ def test_production_archive_wsgi_in_isolated_installation(tmp_path):
     assert not any(name.endswith(('.sqlite3','.db')) for name in files)
     isolated = tmp_path / 'runtime'; isolated.mkdir()
     write_files(isolated, files)
+    model_facts = facts('100000')
+    if employee_scope:
+        model_facts.update(employment_type='ordinary_private_employee',
+                           workers_compensation_exception_agreement=False)
     params = dict(country='US', annual_gross='100000', tax_year='2026',
-                  scenario=SCENARIO, region='FL', us_facts=json.dumps(facts('100000')))
+                  scenario=SCENARIO, region='FL', us_facts=json.dumps(model_facts))
     script = '''import io,json,sys
 from urllib.parse import urlencode
 from app.native_wsgi import application
@@ -119,7 +124,7 @@ print(body.decode())
                                cwd=isolated,env=env,capture_output=True,text=True,
                                check=True,timeout=30)
     result = json.loads(completed.stdout)
-    assert result == calculate('US','100000',2026,SCENARIO,'FL',us_facts=facts('100000'))
+    assert result == calculate('US','100000',2026,SCENARIO,'FL',us_facts=model_facts)
     # Native WSGI bootstrap initializes its normal isolated fixture DBs.
     # The fiscal request must not insert cache entries or fiscal-rule tables.
     import sqlite3
