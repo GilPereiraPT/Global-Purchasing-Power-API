@@ -1,0 +1,76 @@
+{
+  "schema": "earnwage-portugal-2025-benchmark-cases-v1",
+  "tax_year": 2025,
+  "scenario": "single_employee_no_dependents",
+  "region": "mainland",
+  "eligible_household_expenses": "1000.00",
+  "benchmark_contract": {
+    "contribution": "annual gross fully subject × 11%; annualized benchmark, not payroll-period aggregation",
+    "other_personal_tax_credits": "0.00 by benchmark assumption, not a claim about the taxpayer",
+    "collection": "CIRS article 68(2) statutory arithmetic; presentation rounded HALF_UP only",
+    "minimum_existence": "CIRS article 70 statutory expression; benchmark precision, not official liquidation rounding",
+    "classification": "benchmark_estimate, not official personal liquidation"
+  },
+  "cases": [
+    {
+      "annual_gross": "15000.00",
+      "employee_contributions": "1650.00",
+      "specific_deduction": "4462.15",
+      "taxable_income": "10537.85",
+      "general_collection": "1403.99",
+      "solidarity": "0.00",
+      "general_expense_credit": "250.00",
+      "income_tax": "1153.99",
+      "annual_net": "12196.01",
+      "monthly_equivalent_12": "1016.33"
+    },
+    {
+      "annual_gross": "25000.00",
+      "employee_contributions": "2750.00",
+      "specific_deduction": "4462.15",
+      "taxable_income": "20537.85",
+      "general_collection": "3560.56",
+      "solidarity": "0.00",
+      "general_expense_credit": "250.00",
+      "income_tax": "3310.56",
+      "annual_net": "18939.44",
+      "monthly_equivalent_12": "1578.29"
+    },
+    {
+      "annual_gross": "40000.00",
+      "employee_contributions": "4400.00",
+      "specific_deduction": "4462.15",
+      "taxable_income": "35537.85",
+      "general_collection": "8396.61",
+      "solidarity": "0.00",
+      "general_expense_credit": "250.00",
+      "income_tax": "8146.61",
+      "annual_net": "27453.39",
+      "monthly_equivalent_12": "2287.78"
+    },
+    {
+      "annual_gross": "60000.00",
+      "employee_contributions": "6600.00",
+      "specific_deduction": "6600.00",
+      "taxable_income": "53400.00",
+      "general_collection": "15721.89",
+      "solidarity": "0.00",
+      "general_expense_credit": "250.00",
+      "income_tax": "15471.89",
+      "annual_net": "37928.11",
+      "monthly_equivalent_12": "3160.68"
+    },
+    {
+      "annual_gross": "100000.00",
+      "employee_contributions": "11000.00",
+      "specific_deduction": "11000.00",
+      "taxable_income": "89000.00",
+      "general_collection": "31780.10",
+      "solidarity": "225.00",
+      "general_expense_credit": "250.00",
+      "income_tax": "31755.10",
+      "annual_net": "57244.90",
+      "monthly_equivalent_12": "4770.41"
+    }
+  ]
+}
