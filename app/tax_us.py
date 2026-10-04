@@ -30,19 +30,23 @@ SOURCES = tuple({'url':url, 'tax_year':2026, 'verification_status':'blocked',
                 for url in SOURCE_URLS)
 
 
-def illustrations(gross):
+def illustrations(gross, facts=None):
     """Decimal re-expression of existing federal illustrations, not final tax."""
     gross = annual_amount(gross)
-    taxable = max(D(0), gross - D('16100'))
+    facts = facts or {}
+    federal = D(facts.get('federal_wages', gross))
+    social = D(facts.get('social_security_wages', gross))
+    medicare = D(facts.get('medicare_wages', gross))
+    taxable = max(D(0), federal - D('16100'))
     brackets = tuple((D(cap) if cap is not None else None, D(rate))
                      for cap,rate in US_SINGLE_BRACKETS)
     return (
         ('standard_deduction_candidate', D('16100')),
         ('taxable_income_before_credits', taxable),
         ('federal_schedule_before_credits', progressive_tax(taxable, brackets)),
-        ('employee_social_security_candidate', min(gross,D('184500')) * D('.062')),
-        ('employee_medicare_candidate', gross * D('.0145')),
-        ('employee_additional_medicare_candidate', max(D(0),gross-D('200000')) * D('.009')),
+        ('employee_social_security_candidate', min(social,D('184500')) * D('.062')),
+        ('employee_medicare_candidate', medicare * D('.0145')),
+        ('employee_additional_medicare_candidate', max(D(0),medicare-D('200000')) * D('.009')),
     )
 
 
@@ -55,7 +59,10 @@ class USAdapter:
                               'supported_tax_years':[], 'benchmark_tax_years':[]}],
                 'assumptions':list(ASSUMPTIONS), 'missing_rules':list(MISSING),
                 'limitations':['No verified/benchmark net, no withholding, no international net purchasing power'],
-                'source_candidates':list(SOURCES)}
+                'source_candidates':list(SOURCES),
+                'optional_us_facts':['age','blind','valid_ssn','can_be_claimed_as_dependent',
+                                     'federal_wages','social_security_wages','medicare_wages',
+                                     'qualified_tips','qualified_overtime']}
 
     def calculate(self, request):
         if request.scenario != SCENARIO or request.tax_year != 2026:
@@ -70,7 +77,7 @@ class USAdapter:
                 raise ValueError('Select a registered US state code')
         components = tuple({'name':name,'amount':monetary(value),
                             'status':'inherited_illustration_not_verified'}
-                           for name,value in illustrations(request.annual_gross))
+                           for name,value in illustrations(request.annual_gross, request.us_facts))
         components += tuple({'name':name,'amount':None,'status':'unavailable'} for name in (
             'federal_credits_and_adjustments','alternative_minimum_tax',
             'state_income_tax','local_income_tax','mandatory_state_employee_contributions'))
@@ -78,4 +85,8 @@ class USAdapter:
                   'Official 2026 and credit/local/contribution evidence incomplete; net income withheld')
         return TaxOutcome('partial',sources=SOURCES, applicable_rules=(
             'Inherited 2026 federal-only illustration; not independently verified in this review',),
-            assumptions=ASSUMPTIONS,limitations=MISSING,reason=reason,components=components)
+            assumptions=ASSUMPTIONS if request.us_facts is None else (
+                ASSUMPTIONS[0], ASSUMPTIONS[2], ASSUMPTIONS[4],
+                'Supplied facts are unverified; missing wage bases still use gross for illustrations only',
+                'Supplied age/credit/qualified-pay facts do not establish eligibility or activate deductions'),
+            limitations=MISSING,reason=reason,components=components)
