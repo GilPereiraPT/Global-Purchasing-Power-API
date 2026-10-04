@@ -222,6 +222,16 @@ HISTORY_SOURCES = {
     'measure_codes': ('MeasureCodes', '8f4f7bf1299f18e92b9632a3d6b1fbafc4a5efa4ce7d632ecdad4c801307ba71'),
     'observations': ('Observations', '097c2dbe156374aee00623f86570a0c5808e26a1329cff3566b7d2f30453053c'),
 }
+# Metadata timestamps are recorded request starts; the observations timestamp
+# records completion of the complete download. They are not inferred from mtime.
+HISTORY_SOURCE_DATES = {
+    'properties': '2026-10-04T13:41:45.795218+00:00',
+    'occupation_codes': '2026-10-04T13:41:46.881516+00:00',
+    'period_codes': '2026-10-04T13:41:47.732447+00:00',
+    'measure_codes': '2026-10-04T13:41:47.929349+00:00',
+    'observations': '2026-10-04T13:43:35.954865+00:00',
+}
+
 # Canonical derived records are pinned independently of caller-supplied hashes.
 HISTORY_RECORDS_SHA256 = 'db0749c813011b5515b66f76fab769f64071e7511d32af8c200bff7fd932df66'
 
@@ -256,11 +266,9 @@ def build_history_review(source_directory, acquired_at):
     import hashlib
     from datetime import datetime
     from decimal import Decimal
-    import re
-
     acquired = datetime.fromisoformat(acquired_at)
-    if acquired.tzinfo is None:
-        raise ValueError('Explicit timezone required for acquisition timestamp')
+    if acquired.tzinfo is None or acquired != datetime.fromisoformat(HISTORY_SOURCE_DATES['observations']):
+        raise ValueError('Original reviewed acquisition timestamp with timezone required')
     root = Path(source_directory)
     if root.is_symlink() or not root.is_dir():
         raise ValueError('Explicit regular source directory required')
@@ -269,12 +277,16 @@ def build_history_review(source_directory, acquired_at):
         path = root / ('NL-' + name + '.body')
         if path.is_symlink() or not path.is_file() or not 0 < path.stat().st_size <= 5 * 1024 * 1024:
             raise ValueError('Missing or unsafe CBS source file: ' + name)
-        raw = path.read_bytes()
+        with path.open('rb') as source:
+            raw = source.read(5 * 1024 * 1024 + 1)
+        if len(raw) > 5 * 1024 * 1024:
+            raise ValueError('CBS source exceeds size limit')
         if hashlib.sha256(raw).hexdigest() != checksum:
             raise ValueError('Unreviewed CBS source checksum: ' + name)
         objects[name] = _history_json(raw)
         artifacts.append({'url': SOURCE_URL + '/' + entity, 'sha256': checksum,
-                          'bytes': len(raw), 'fetched_at': acquired_at,
+                          'bytes': len(raw), 'fetched_at': HISTORY_SOURCE_DATES[name],
+                          'timestamp_basis': 'download_completion' if name == 'observations' else 'recorded_request_start',
                           'source_version': HISTORY_VERSION, 'licence_url': HISTORY_LICENCE,
                           'acquisition_mode': 'previous_live_download_reused'})
     properties = objects['properties']
@@ -379,8 +391,14 @@ def validate_history_review(review):
     if not isinstance(review, dict):
         raise ValueError('CBS history review must be an object')
     from datetime import datetime
-    if not isinstance(review.get('acquired_at'), str) or datetime.fromisoformat(review['acquired_at']).tzinfo is None:
+    if not isinstance(review.get('acquired_at'), str) or datetime.fromisoformat(review['acquired_at']) != datetime.fromisoformat(HISTORY_SOURCE_DATES['observations']):
         raise ValueError('Explicit acquisition timestamp and timezone required')
+    dates = {SOURCE_URL + '/' + entity: HISTORY_SOURCE_DATES[name]
+             for name, (entity, _) in HISTORY_SOURCES.items()}
+    if not isinstance(review.get('artifacts'), list) or any(
+            not isinstance(item, dict) or item.get('fetched_at') != dates.get(item.get('url'))
+            for item in review['artifacts']):
+        raise ValueError('Inconsistent CBS acquisition provenance')
     if (review.get('schema') != 'earnwage-cbs-history-review-v1'
             or review.get('dataset') != DATASET or review.get('source_version') != HISTORY_VERSION
             or review.get('licence_url') != HISTORY_LICENCE
@@ -401,7 +419,7 @@ def history_review_digest(review):
     return _records_digest(normalized)
 
 
-HISTORY_REVIEW_SHA256 = 'a4a12b4a5e4fd76f4ea3befc02cce4f08ba93a33efc1397c9f74aae47f00e433'
+HISTORY_REVIEW_SHA256 = '00f7f8952473278b930becb1771337b23ccc6bfbb4b3c75ec8631b9a91dce02c'
 
 
 def stage_history_review(store, review):
