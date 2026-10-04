@@ -66,16 +66,21 @@ def us_facts_input(value, gross):
             raise ValueError('us_facts must be a valid JSON object with unique keys') from None
     if not isinstance(value, dict):
         raise ValueError('us_facts must be an object')
-    booleans = {'blind', 'valid_ssn', 'can_be_claimed_as_dependent'}
+    booleans = {'blind', 'valid_ssn', 'can_be_claimed_as_dependent', 'ordinary_wage_model_confirmed',
+                'workers_compensation_exception_agreement'}
     money = {'federal_wages', 'social_security_wages', 'medicare_wages',
-             'qualified_tips', 'qualified_overtime'}
-    if set(value) - booleans - money - {'age'}:
+             'qualified_tips', 'qualified_overtime', 'nonitemizer_charitable_contributions'}
+    if set(value) - booleans - money - {'age', 'employment_type'}:
         raise ValueError('Unexpected US facts; never supply an SSN')
     result = {}
     for key, item in value.items():
         if key in booleans:
             if type(item) is not bool:
                 raise ValueError(key + ' must be a boolean')
+        elif key == 'employment_type':
+            if item not in ('ordinary_private_employee', 'independent_contractor',
+                            'subcontractor', 'owner_operator', 'public_employee', 'special_regime'):
+                raise ValueError('employment_type must identify a supported or explicitly excluded employment category')
         elif key == 'age':
             if type(item) is not int or not 0 <= item <= 120:
                 raise ValueError('age must be an integer from 0 to 120')

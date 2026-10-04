@@ -7,6 +7,8 @@ from decimal import Decimal as D
 from app.tax_engine import TaxOutcome, annual_amount, monetary, progressive_tax
 from app.tax_components import US_SINGLE_BRACKETS, IRS_FICA, IRS_ADDITIONAL_MEDICARE
 from app.us_tax_evidence import sources_for
+from app import us_federal_benchmark as federal_model
+from app.us_tax_jurisdictions import coverage as jurisdiction_coverage
 IRS_2026 = "https://www.irs.gov/irb/2025-45_IRB"
 IRS_2026_FICA = "https://www.irs.gov/publications/p15"
 
@@ -55,7 +57,14 @@ class USAdapter:
         return {'country':'US', 'currency':'USD', 'status':'partial',
                 'supported_tax_years':[], 'benchmark_tax_years':[], 'candidate_tax_years':[2026],
                 'validated_component_tax_years':[],
-                'scenarios':[{'id':SCENARIO,'status':'partial','regions':['TX','FL'],
+                'scenarios':[{'id':federal_model.SCENARIO,'status':'partial',
+                              'regions':['TX','FL'],'supported_tax_years':[],
+                              'scope':'Federal component estimate only; total net unavailable',
+                              'required_us_facts':list(federal_model.REQUIRED),
+                              'annual_gross_range':['19540.00','500000.00'],
+                              'assumptions':list(federal_model.ASSUMPTIONS),
+                              'jurisdiction_coverage':[jurisdiction_coverage(state) for state in ('TX','FL')]},
+                             {'id':SCENARIO,'status':'partial','regions':['TX','FL'],
                               'supported_tax_years':[], 'benchmark_tax_years':[]}],
                 'assumptions':list(ASSUMPTIONS), 'missing_rules':list(MISSING),
                 'limitations':['No verified/benchmark net, no withholding, no international net purchasing power'],
@@ -64,10 +73,12 @@ class USAdapter:
                 'parameter_review_scope':'Federal single brackets/basic deduction and covered-wage contribution rates only',
                 'optional_us_facts':['age','blind','valid_ssn','can_be_claimed_as_dependent',
                                      'federal_wages','social_security_wages','medicare_wages',
-                                     'qualified_tips','qualified_overtime']}
+                                     'qualified_tips','qualified_overtime','nonitemizer_charitable_contributions',
+                                     'ordinary_wage_model_confirmed', 'employment_type',
+                                     'workers_compensation_exception_agreement']}
 
     def calculate(self, request):
-        if request.scenario != SCENARIO or request.tax_year != 2026:
+        if request.scenario not in (SCENARIO, federal_model.SCENARIO) or request.tax_year != 2026:
             return TaxOutcome('unavailable',reason='Unsupported US scenario or tax year',
                               assumptions=ASSUMPTIONS,limitations=MISSING)
         if request.eligible_household_expenses is not None:
@@ -77,6 +88,31 @@ class USAdapter:
             states = {code for code, _ in REGIONS['US']['options']}
             if request.region not in states:
                 raise ValueError('Select a registered US state code')
+        if request.scenario == federal_model.SCENARIO:
+            if request.region not in ('TX','FL'):
+                return TaxOutcome('partial', reason='Explicit TX or FL required for this first federal model',
+                                  assumptions=federal_model.ASSUMPTIONS)
+            facts = request.us_facts or {}
+            if (('employment_type' in facts and facts['employment_type'] != 'ordinary_private_employee')
+                    or facts.get('workers_compensation_exception_agreement') is True):
+                modeled, missing = (), ('Employment category or workers-compensation coverage agreement is outside the ordinary private-employee scenario',)
+            else:
+                modeled, missing = federal_model.components(request.annual_gross, request.us_facts)
+            jurisdiction = jurisdiction_coverage(request.region, request.us_facts)
+            # Even reviewed rule parameters are withheld when the federal facts
+            # do not establish this scenario. A state zero never completes net.
+            unknown = tuple(dict(component, amount=component['amount'] if modeled else None)
+                            for component in jurisdiction['components'])
+            return TaxOutcome('partial', sources=sources_for(SOURCE_URLS + (
+                'https://www.irs.gov/instructions/i6251',
+                'https://www.irs.gov/publications/p505',
+                'https://www.irs.gov/taxtopics/tc506')) + tuple(jurisdiction['sources']),
+                applicable_rules=('Explicit ordinary-wage federal component model; not complete take-home pay',),
+                assumptions=federal_model.ASSUMPTIONS + tuple(jurisdiction['assumptions']),
+                limitations=missing + tuple(jurisdiction['missing_rules']) + ('Complete state/local taxes and employee premiums not yet included',
+                                       'Annual model cents, not payroll withholding or a final tax return'),
+                reason='Federal model available' if modeled else 'Federal model facts incomplete or unsupported',
+                components=modeled + unknown)
         components = tuple({'name':name,'amount':monetary(value),
                             'status':'reviewed_parameters_assumed_facts'}
                            for name,value in illustrations(request.annual_gross, request.us_facts))

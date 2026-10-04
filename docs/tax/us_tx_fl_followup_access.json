@@ -1,0 +1,106 @@
+[
+  {
+    "id": "tx_local_income",
+    "url": "https://statutes.capitol.texas.gov/Docs/TX/htm/TX.302.htm",
+    "consulted_at": "2026-10-04T20:05:06.371305+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "tx_ui",
+    "url": "https://statutes.capitol.texas.gov/Docs/LA/htm/LA.204.htm",
+    "consulted_at": "2026-10-04T20:05:06.371741+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "tx_payday",
+    "url": "https://statutes.capitol.texas.gov/Docs/LA/htm/LA.61.htm",
+    "consulted_at": "2026-10-04T20:05:06.372239+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "tx_workers_comp",
+    "url": "https://statutes.capitol.texas.gov/Docs/LA/htm/LA.415.htm",
+    "consulted_at": "2026-10-04T20:05:06.372613+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "tx_workers_comp_scope",
+    "url": "https://statutes.capitol.texas.gov/Docs/LA/htm/LA.406.htm",
+    "consulted_at": "2026-10-04T20:05:06.372886+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "fl_constitution",
+    "url": "https://www.flsenate.gov/Laws/Constitution",
+    "consulted_at": "2026-10-04T20:05:06.373202+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "fl_local_authority",
+    "url": "https://www.flsenate.gov/Laws/Statutes/2026/166.201",
+    "consulted_at": "2026-10-04T20:05:06.412084+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "fl_workers_comp",
+    "url": "https://www.flsenate.gov/Laws/Statutes/2026/440.21",
+    "consulted_at": "2026-10-04T20:05:06.414026+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "fl_reemployment",
+    "url": "https://www.flsenate.gov/Laws/Statutes/2026/443.041",
+    "consulted_at": "2026-10-04T20:05:06.426738+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "dol_ui_financing",
+    "url": "https://oui.doleta.gov/unemploy/comparison/2026/financing.pdf",
+    "consulted_at": "2026-10-04T20:05:06.427436+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "dol_erisa",
+    "url": "https://www.dol.gov/agencies/ebsa/about-ebsa/our-activities/resource-center/faqs/retirement-plans-and-erisa",
+    "consulted_at": "2026-10-04T20:05:06.427935+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "ssa_facts",
+    "url": "https://www.ssa.gov/news/press/factsheets/colafacts2026.pdf",
+    "consulted_at": "2026-10-04T20:05:06.437376+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  },
+  {
+    "id": "dol_paid_leave",
+    "url": "https://www.dol.gov/agencies/wb/featured-paid-leave",
+    "consulted_at": "2026-10-04T20:08:36.123410+00:00",
+    "applicable_tax_year": 2026,
+    "verification_status": "blocked",
+    "error": "403 Forbidden"
+  }
+]
