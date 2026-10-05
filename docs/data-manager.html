@@ -51,7 +51,7 @@ code{word-break:break-word}
 <h2>2. Atualizar a API a partir do GitHub</h2>
 <p>Atualiza o servidor com a versão <code>main</code> do repositório EarnWage. O servidor só aceita a atualização quando os <strong>API tests</strong> dessa versão terminaram com sucesso.</p>
 <p class="notice"><strong>Proteção:</strong> são atualizados apenas <code>app/*.py</code>, <code>data/*.json</code>, <code>scripts/*.py</code>, <code>passenger_wsgi.py</code> e <code>requirements.txt</code>. Bases SQLite, <code>.htaccess</code>, variáveis privadas e backups nunca são substituídos.</p>
-<div class="actions"><button id="deployApi">Atualizar API com a versão testada do GitHub</button></div>
+<div class="actions"><button id="diagnoseConnection" class="secondary" type="button">Diagnosticar ligação (sem chave)</button><button id="deployApi">Atualizar API com a versão testada do GitHub</button></div>
 <p id="deployResult" class="muted">Por executar. Esta operação cria primeiro uma cópia do código atual e pede o reinício do Passenger.</p>
 </section>
 <section>
@@ -279,9 +279,27 @@ $("indicator").replaceChildren(...keys.map(x=>new Option(labels[x]||x,x)));
 if(cc.includes(previousCountry))$("country").value=previousCountry;
 if(keys.includes(previousIndicator))$("indicator").value=previousIndicator;
 }
+async function diagnoseConnection(){
+const results=[];
+async function probe(label,path,method='GET'){
+const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+try{
+const response=await fetch(API+path,{method,mode:'cors',cache:'no-store',signal:controller.signal});
+let result=label+': HTTP '+response.status;
+if(path==='/v1/health'&&response.ok){const data=await response.json();result+=' · '+data.status+' · '+data.version+' · '+String(data.commit||'').slice(0,8)}
+results.push(result);log(result);
+}catch(error){const result=label+': '+(error.name==='AbortError'?'sem resposta em 15 segundos':'o navegador não conseguiu ler a resposta (ligação/TLS/CORS)');results.push(result);log(result)}
+finally{clearTimeout(timer)}
+}
+await probe('Leitura pública de saúde','/v1/health');
+await probe('Leitura pública de países','/v1/countries');
+await probe('OPTIONS administrativo sem chave','/v1/admin/data-manager/status','OPTIONS');
+report(results.join(' | '));
+}
+$("diagnoseConnection").onclick=()=>standalone(diagnoseConnection,"A diagnosticar a ligação, sem enviar a chave…");
 async function standalone(work,label){
 if(working)return;busy(true);report(label);
-try{await work()}catch(e){log("ERRO · "+e.message);report("Erro: "+e.message)}
+try{await work()}catch(e){log("ERRO · "+e.message);report("Erro: "+e.message+(/Failed to fetch|NetworkError|Load failed/.test(e.message)?" · Usa «Diagnosticar ligação (sem chave)» na secção de atualização. Uma falha de resposta não confirma se uma operação de escrita foi concluída.":""))}
 finally{busy(false)}
 }
 function selection(country,indicator){
