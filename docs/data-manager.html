@@ -463,7 +463,9 @@ $("salaryChecksum").oninput=()=>{salaryReview=null;updatePublicationButtons()};
 $("salaryFile").onchange=()=>{salaryReview=null;updatePublicationButtons()};
 $("inventory").onclick=()=>standalone(publicInventory,"A consultar base de dados...");
 $("check").onclick=()=>standalone(async()=>{
-await publicInventory();await status();report("Ligação protegida verificada · Data Manager disponível.");
+try{await status()}catch(error){throw Error("Verificação administrativa: "+error.message)}
+report("Ligação protegida verificada · Data Manager disponível.");
+try{await publicInventory()}catch(error){throw Error("A autenticação funcionou; falhou a consulta do inventário público: "+error.message)}
 },"A verificar acesso protegido...");
 function releaseHealthy(response,health,release){
 return response.ok && health.status==="ok" && health.version===release.version &&
