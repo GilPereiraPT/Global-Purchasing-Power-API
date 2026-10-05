@@ -18,7 +18,7 @@ def load(country, path=None):
     path = Path(path) if path else ROOT / FILES[country]
     if path.stat().st_size > 1_000_000:
         raise ValueError("Oversized group snapshot")
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     if (data.get("schema_version") != 1 or data.get("country") != country
             or data.get("precision") != "published_major_occupation_group"
             or data.get("source") != SOURCES[country]
