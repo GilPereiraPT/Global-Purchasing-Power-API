@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "precision": "published_major_occupation_group",
+  "publication_status": "public_with_attribution",
+  "unit": "reported monthly earnings",
+  "country": "PT",
+  "currency": "EUR",
+  "source": "INE/GEP Quadros de Pessoal",
+  "source_url": "https://www.ine.pt/xurl/indx/0012655/PT",
+  "groups": {
+    "9": "Trabalhadores não qualificados",
+    "5": "Trabalhadores dos serviços pessoais, de proteção e segurança e vendedores",
+    "6": "Agricultores e trabalhadores qualificados da agricultura, da pesca e da floresta",
+    "7": "Trabalhadores qualificados da indústria, construção e artífices",
+    "8": "Operadores de instalações e máquinas e trabalhadores da montagem",
+    "4": "Pessoal administrativo",
+    "T": "Total",
+    "3": "Técnicos e profissões de nível intermédio",
+    "2": "Especialistas das atividades intelectuais e científicas",
+    "1": "Representantes do poder legislativo e de órgãos executivos, dirigentes, diretores e gestores executivos"
+  },
+  "periods": [
+    "2024"
+  ],
+  "salary_concept": "monthly_gain",
+  "gross_net_basis": "gross",
+  "population": "Quadros de Pessoal employees; full-time with complete remuneration",
+  "geography_note": "Portugal as labelled by INE; do not infer public-sector coverage",
+  "observations": [
+    {
+      "period": "2024",
+      "group": "9",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1060.2,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "5",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1161.88,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "6",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1163.39,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "7",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1246.67,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "8",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1341.19,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "4",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1389.62,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "T",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1576.03,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "3",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 1949.11,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "2",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 2395.88,
+      "status": "available"
+    },
+    {
+      "period": "2024",
+      "group": "1",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 3279.52,
+      "status": "available"
+    }
+  ],
+  "provenance": {
+    "raw_sha256": "427159831fb9f8fd272e768cb5b3a2f941630983eb430cf1d8ce50ab218a2dfc",
+    "url": "https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0012655&lang=PT&Dim2=PT",
+    "acquired_at": "2026-10-05",
+    "licence": "CC BY 4.0",
+    "licence_url": "https://dados.gov.pt/pt/datasets/687052028c1cd0da86631ab2/",
+    "attribution": "Fonte: INE/GEP, Quadros de Pessoal, indicador 0012655. Dados tratados pela EarnWage."
+  },
+  "classification": "CPP2010 major groups"
+}

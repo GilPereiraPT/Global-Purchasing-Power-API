@@ -1,0 +1,131 @@
+{
+  "acquired_at": "2026-10-05",
+  "files": [
+    {
+      "file": "ch-meta",
+      "url": "https://www.pxweb.bfs.admin.ch/api/v1/fr/px-x-0304010000_205/px-x-0304010000_205.px",
+      "bytes": 4345,
+      "sha256": "909d817e69a9f21839e2bf80350a3a34435e9ca8a3af4e5e33b165318cdfeb17"
+    },
+    {
+      "file": "ch-data",
+      "url": "https://www.pxweb.bfs.admin.ch/api/v1/fr/px-x-0304010000_205/px-x-0304010000_205.px",
+      "bytes": 66715,
+      "sha256": "1188ba467a970ae19cfcb7dcbc1c99b14624aeaf2de5a5f6b4ec4adf6dba6301"
+    },
+    {
+      "file": "es-data",
+      "url": "https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/28186?tip=AM",
+      "bytes": 160936,
+      "sha256": "b63c56492874951b3eca51f179dfa4cc64553f3541b9d55a451ce9f402b71ae0"
+    },
+    {
+      "file": "pt-meta",
+      "url": "https://www.ine.pt/ine/json_indicador/pindicaMeta.jsp?varcd=0010385&lang=PT",
+      "bytes": 82750,
+      "sha256": "100f9449472b5cccb97858f8211a421a037088b04233cb20825978f11c825c2e"
+    },
+    {
+      "file": "pt-national",
+      "url": "https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0010385&lang=PT&Dim2=PT",
+      "bytes": 2679,
+      "sha256": "a26b276df40a0d6a07d34ee2975722efd446aab858609edfe69ecce7923cd1ec"
+    },
+    {
+      "file": "pt-latest",
+      "url": "https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0012655&lang=PT&Dim2=PT",
+      "bytes": 2687,
+      "sha256": "427159831fb9f8fd272e768cb5b3a2f941630983eb430cf1d8ce50ab218a2dfc"
+    },
+    {
+      "file": "pt-licence",
+      "url": "https://dados.gov.pt/api/1/datasets/?q=0012655&page_size=5",
+      "bytes": 5280,
+      "sha256": "6ddab51a22de5befe3c2aeddc08ebb578df9c7d15cb83dc882c63396f6af1189"
+    },
+    {
+      "file": "pk-report",
+      "url": "https://www.pbs.gov.pk/wp-content/uploads/2020/07/LFS-2024-25-Annual-Report.pdf",
+      "bytes": 9425530,
+      "sha256": "79950b81ce4d738d48ff64f5e192f7905b112724a71b5d3018f4ff5991a57d48"
+    },
+    {
+      "file": "pk-page",
+      "url": "https://www.pbs.gov.pk/labour-force-statistics/",
+      "bytes": 1365963,
+      "sha256": "bd1499c2faaca2b52655e6b4b164c58690fd5925d22914bc90af299a1e12a503"
+    },
+    {
+      "file": "pk-terms",
+      "url": "https://www.pbs.gov.pk/data-dissemination/",
+      "bytes": 211752,
+      "sha256": "aba0304791eedb229d8ca4e0e994d9980618e7082ff59ea8aa414985ae040cb3"
+    },
+    {
+      "file": "in-plfs",
+      "url": "https://microdata.gov.in/NADA/index.php/catalog/284/related-materials",
+      "bytes": 113417,
+      "sha256": "227a6be475689148c1b9a8d6b50a34d6d68b50ce74c7f4e7d0033beb34a407dc"
+    },
+    {
+      "file": "in-layout",
+      "url": "https://microdata.gov.in/NADA/index.php/catalog/284/download/5919",
+      "bytes": 70514,
+      "sha256": "11bc1a96141d05690543296127ec117faef4354574ab04a15e612637c9574fce"
+    },
+    {
+      "file": "in-readme",
+      "url": "https://microdata.gov.in/NADA/index.php/catalog/284/download/5924",
+      "bytes": 31547,
+      "sha256": "523269a809ac01f9fc2c94a701a10541f0dd57af3abab72b5c37aa6a95195e9e"
+    },
+    {
+      "file": "in-get-microdata",
+      "url": "https://microdata.gov.in/NADA/index.php/catalog/284/get-microdata",
+      "bytes": 24204,
+      "sha256": "734253d35bf2b183996738867b5413938e1b5bda4746c244e8215e268d432428"
+    },
+    {
+      "file": "in-rural",
+      "url": "https://www.labourbureau.gov.in/rural-wages",
+      "bytes": 7772744,
+      "sha256": "3074fee6f3050454d10abb156f36f94fe2f64c3162a819aa43fba038fa8ff412"
+    },
+    {
+      "file": "in-rural-csv",
+      "url": "https://www.labourbureau.gov.in/home/excel_download_ruralWage_data?state_id=1",
+      "bytes": 10215153,
+      "sha256": "0dc50576aab61d4041619ba9b7eb3ad2e0db1415189c55ec6fd25365b171fc34"
+    },
+    {
+      "file": "in-rural-brief",
+      "url": "https://www.labourbureau.gov.in/uploads/pdf/Wage_Rates_Rural_India_A_Brief.pdf",
+      "bytes": 231554,
+      "sha256": "6840d46b7b0dfb55c659553fda87f4647455e68e771835058481c36c0dbc19eb"
+    },
+    {
+      "file": "in-occupation",
+      "url": "https://www.labourbureau.gov.in/occupation-wages",
+      "bytes": 171437,
+      "sha256": "f6f04f5e5711d0d0ff382f091739d2ea018bc75e57093fdfc5db1ae9863fa970"
+    },
+    {
+      "file": "in-ows-engineering",
+      "url": "https://www.labourbureau.gov.in/assets/images/pdf/OWS_9_ENGG_IND.pdf",
+      "bytes": 952762,
+      "sha256": "d7432b5de2b413ee77b67d6e97a922d3f4a11efba574db0ed5827c5b4f7c8c0d"
+    },
+    {
+      "file": "in-websitepolicy",
+      "url": "https://www.labourbureau.gov.in/websitepolicy",
+      "bytes": 77986,
+      "sha256": "45615be6c7c5c1bf9632041a42f1e1e72d4a1a0f11c4a4f765e58545eed7fed3"
+    },
+    {
+      "file": "in-terms",
+      "url": "https://www.labourbureau.gov.in/termsandconditions",
+      "bytes": 74464,
+      "sha256": "29efcca32feb0ae1a529fa72aa0fbd8e6d7c58bad68c409b59d2834081fe339c"
+    }
+  ]
+}

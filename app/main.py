@@ -245,6 +245,36 @@ def sources():
                  "role": "national wages and taxing wages", "status": "planned"},
     }
 
+@app.get("/v1/pt/earnings/groups")
+def pt_official_group_catalogue():
+    from app.official_group_earnings import catalogue
+    return catalogue("PT")
+
+
+@app.get("/v1/pk/earnings/groups")
+def pk_official_group_catalogue():
+    from app.official_group_earnings import catalogue
+    return catalogue("PK")
+
+
+@app.get("/v1/pt/earnings/groups/{group}")
+def pt_official_group_history(group: str, sex: str = "both", period: str | None = None):
+    from app.official_group_earnings import history
+    try:
+        return history("PT", group, sex, period)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/v1/pk/earnings/groups/{group}")
+def pk_official_group_history(group: str, sex: str = "both", period: str | None = None):
+    from app.official_group_earnings import history
+    try:
+        return history("PK", group, sex, period)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 @app.get("/v1/es/earnings/groups")
 def es_eaes_group_catalogue():
     """Spanish INE CNO-11 major groups A–Q, NOT individual job wages."""

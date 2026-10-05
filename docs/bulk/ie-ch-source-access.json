@@ -1,0 +1,78 @@
+{
+  "consulted_on": "2026-10-04",
+  "records": [
+    {
+      "url": "https://www.pxweb.bfs.admin.ch/api/v1/en/",
+      "consulted_at": "2026-10-04T22:44:14.048869+00:00",
+      "status": 200,
+      "bytes": 38641,
+      "sha256": "a56310101b702ff1380b2ad17788232c6de8face0d3dee37a777bc3f9eb882c8",
+      "file": "original-0"
+    },
+    {
+      "url": "https://www.pxweb-admin-a.bfs.admin.ch/api/v1/en/px-x-0304010000_205/px-x-0304010000_205.px",
+      "consulted_at": "2026-10-04T22:44:14.793272+00:00",
+      "status": 400,
+      "error_body": "Bad Request"
+    },
+    {
+      "url": "https://www.cso.ie/en/releasesandpublications/ep/p-ses/structureofearningssurvey2022/occupationandeducation/",
+      "consulted_at": "2026-10-04T22:44:15.798830+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://data.cso.ie/",
+      "consulted_at": "2026-10-04T22:44:15.802826+00:00",
+      "status": 200,
+      "bytes": 21537,
+      "sha256": "17ec152d6145bd4947d21bc4c19b1ec534e0de8edbd77a97c454d8bcc775a269",
+      "file": "original-3"
+    },
+    {
+      "url": "https://www.gov.ie/en/department-of-education/circulars/",
+      "consulted_at": "2026-10-04T22:44:17.337073+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://ws.cso.ie/public/api.restful/PxStat.Data.Cube_API.ReadDataset/EHA07/JSON-stat/2.0/en",
+      "result": "proxy tunnel 403; unverified candidate dataset"
+    },
+    {
+      "url": "https://healthservice.hse.ie/documents/10686/1_June_2026_pay_scales.pdf",
+      "result": "proxy tunnel 403"
+    },
+    {
+      "url": "https://www.publicjobs.ie/en/information-hub/latest-news-and-events/1125-now-open-trainee-auditor",
+      "result": "proxy tunnel 403"
+    },
+    {
+      "url": "https://www.bfs.admin.ch/bfs/en/home/bfs/usage-rules.html",
+      "result": "proxy tunnel 403"
+    },
+    {
+      "url": "https://opendata.swiss/api/3/action/package_search?q=px-x-0304010000_205",
+      "result": "proxy tunnel 403"
+    },
+    {
+      "url": "https://www.pxweb.bfs.admin.ch/api/v1/fr/px-x-0304010000_205/px-x-0304010000_205.px",
+      "status": 200,
+      "bytes": 4345,
+      "sha256": "909d817e69a9f21839e2bf80350a3a34435e9ca8a3af4e5e33b165318cdfeb17",
+      "body_scope": "official metadata/page/config, not salary data"
+    },
+    {
+      "url": "https://www.pxweb.bfs.admin.ch/pxweb/en/px-x-0304010000_205/-/px-x-0304010000_205.px/",
+      "status": 200,
+      "bytes": 175481,
+      "sha256": "6b83868237c167d34f4fa433da3cbc2e78f9c0955216f87ae1b31d6e24589a44",
+      "body_scope": "official metadata/page/config, not salary data"
+    },
+    {
+      "url": "https://data.cso.ie/js/env/app.env.js",
+      "status": 200,
+      "bytes": 247,
+      "sha256": "b032b88866b733afec690100d4ae9e369e26868c8a8a2ab8340ea7e6a79bc139",
+      "body_scope": "official metadata/page/config, not salary data"
+    }
+  ]
+}
