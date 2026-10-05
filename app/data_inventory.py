@@ -168,6 +168,10 @@ def build_inventory():
         salaries = _wages(wage_db)
         rates = _rates(wage_db)
         es_groups = es_eaes_catalogue()
+        from app.official_group_earnings import catalogue as official_group_catalogue
+        from app.ch_bfs_wages import load_snapshot as swiss_rows
+        official_groups = {code: official_group_catalogue(code) for code in ("PT", "PK")}
+        swiss = swiss_rows()
         raw_groups = load_groups()
         groups = {}
         for row in raw_groups:
@@ -236,6 +240,16 @@ def build_inventory():
                 "precision": "cno11_major_group_not_exact_occupation"},
         }
         summary['exact_occupational_wages']['stored_observations'] += bls_rows
+        summary['official_published_major_groups'] = official_groups
+        summary['ch_bfs_group_context'] = {
+            'stored_cells': len(swiss),
+            'accepted_cells': sum(r.get('quality_status') == 'accepted' for r in swiss),
+            'review_required_cells': sum(r.get('quality_status') == 'review_required' for r in swiss),
+            'suppressed_cells': sum(r.get('quality_status') == 'suppressed' for r in swiss),
+            'groups': len({r['ch_isco19_submajor_group'] for r in swiss}),
+            'periods': sorted({r['period'] for r in swiss}),
+            'geographies': len({r['geography'] for r in swiss}),
+            'precision': 'ch_isco19_submajor_group_not_exact_occupation'}
         summary['exact_occupational_wages']['by_source_observations']['BLS_OEWS'] = bls_rows
         summary['bls_oews'] = {'national_mapped_rows':bls_rows,
             'mapped_occupations':len(salaries['BLS_OEWS']),
@@ -392,6 +406,9 @@ def build_inventory():
                 "france_insee_pcs_ese": (ROOT / "data" / "fr_insee_wages.json").is_file(),
                 "netherlands_cbs_brc": (ROOT / "data" / "nl_cbs_wages.json").is_file(),
                 "spain_ine_eaes_groups": (ROOT / "data" / "es_ine_eaes_28186.json").is_file(),
+                "portugal_ine_group_context": (ROOT / "data" / "pt_ine_group_earnings.json").is_file(),
+                "pakistan_pbs_group_context": (ROOT / "data" / "pk_pbs_group_earnings.json").is_file(),
+                "switzerland_bfs_group_context": (ROOT / "data" / "ch_bfs_wages.json").is_file(),
                 "ilostat_major_groups":
                     (ROOT / "data" / "ilostat_group_salaries.json").is_file(),
             },

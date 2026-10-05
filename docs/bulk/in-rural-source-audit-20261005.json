@@ -1,0 +1,787 @@
+{
+  "schema_version": 1,
+  "country": "IN",
+  "publication_status": "private_staging_only",
+  "source_url": "https://www.labourbureau.gov.in/home/excel_download_ruralWage_data?state_id=1",
+  "source_sha256": "0dc50576aab61d4041619ba9b7eb3ad2e0db1415189c55ec6fd25365b171fc34",
+  "source_bytes": 10215153,
+  "source_rows": 117216,
+  "source_cells": 234432,
+  "unique_row_identities": 116712,
+  "duplicate_rows": 504,
+  "conflicting_identities": 92,
+  "source_cell_status_counts": {
+    "positive_numeric": 114313,
+    "fewer_than_five_quotes": 43110,
+    "operation_unavailable": 74258,
+    "missing": 2751
+  },
+  "survey_years": [
+    "1998-1999",
+    "1999-2000",
+    "2000-2001",
+    "2001-2002",
+    "2002-2003",
+    "2003-2004",
+    "2004-2005",
+    "2005-2006",
+    "2006-2007",
+    "2007-2008",
+    "2008-2009",
+    "2009-2010",
+    "2010-2011",
+    "2011-2012",
+    "2012-2013",
+    "2013-2014",
+    "2014-2015",
+    "2015-2016",
+    "2016-2017",
+    "2017-2018",
+    "2018-2019",
+    "2019-2020",
+    "2020-2021",
+    "2021-2022",
+    "2022-2023",
+    "2023-2024",
+    "2024-2025",
+    "2025-2026",
+    "2026-2027"
+  ],
+  "geographies": [
+    "ANDHRA PRADESH",
+    "ASSAM",
+    "All India",
+    "Andaman and Nicobar Islands",
+    "Arunachal Pradesh",
+    "BIHAR",
+    "Chhattisgarh",
+    "Daman and Diu, Dadra Nagar and Haveli",
+    "Delhi",
+    "GUJARAT",
+    "Goa",
+    "HARYANA",
+    "HIMACHAL PRADESH",
+    "JAMMU & KASHMIR",
+    "Jharkhand",
+    "KARNATAKA",
+    "KERALA",
+    "Lakshadweep",
+    "MADHYA PRADESH",
+    "MAHARASHTRA",
+    "MANIPUR",
+    "MEGHALAYA",
+    "Mizoram",
+    "Nagaland",
+    "ODISHA",
+    "PUNJAB",
+    "Puducerry",
+    "RAJASTHAN",
+    "Sikkim",
+    "TAMIL NADU",
+    "TRIPURA",
+    "Telangana",
+    "UTTAR PRADESH",
+    "Uttarakhand",
+    "WEST BENGAL"
+  ],
+  "original_occupation_labels": [
+    "Animal husbandry workers (including poultry workers, dairy workers & herdsman)",
+    "Bamboo, cane basket weavers",
+    "Beedi Makers",
+    "Blacksmith",
+    "Can crushing",
+    "Carpenter",
+    "Cobbler",
+    "Construction workers (for roads, dams, industrial and project construction work & well diggers)",
+    "Electrician",
+    "Fishermen-coastal/deep-sea",
+    "Fishermen-inland",
+    "General agricultural labourers (including watering/irrigation workers, etc.)",
+    "Handicraft workers",
+    "Harvesting",
+    "Harvesting/Winnowing/Threshing workers",
+    "Herdsman",
+    "Horticulture workers (including nursery growers)",
+    "LMV & Tractor drivers",
+    "Loggers and wood cutters",
+    "Mason",
+    "Non-agricultural labourers(including porters, loaders)",
+    "Packaging labourers, agriculture",
+    "Picking",
+    "Picking workers (including Tea, Cotton, Tobacco and other commercial crops)",
+    "Plant protection workers (applying pesticides, treating seeds, etc.",
+    "Ploughing",
+    "Ploughing/Tilling workers",
+    "Plumbers",
+    "Sowing",
+    "Sowing(including Planting/Transplanting/ Weeding) workers)",
+    "Sweeper",
+    "Sweeping/cleaning workers",
+    "Threshing",
+    "Tractor Driver",
+    "Transplanting",
+    "Unskilled Labourers",
+    "Weavers",
+    "Weeding",
+    "Well-digging",
+    "Winnowing"
+  ],
+  "unit": "INR per standardised 8-hour working day",
+  "scope": "rural wage-rate quotations; state and All India aggregates; sex-specific",
+  "methodology_url": "https://www.labourbureau.gov.in/uploads/pdf/Wage_Rates_Rural_India_A_Brief.pdf",
+  "series_break": "Sample expanded from 600 villages/20 States-UTs to 787 villages/34 States-UTs from July 2025. Comparisons require care.",
+  "reuse_blockers": [
+    "websitepolicy requires prior reproduction permission; termsandconditions permits free reproduction with attribution",
+    "92 conflicting identities in acquired export require source review"
+  ],
+  "reuse_urls": [
+    "https://www.labourbureau.gov.in/websitepolicy",
+    "https://www.labourbureau.gov.in/termsandconditions"
+  ],
+  "conflict_keys": [
+    {
+      "Year": "2022-2023",
+      "Month": "Mar",
+      "State": "MAHARASHTRA",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2022-2023",
+      "Month": "May",
+      "State": "MAHARASHTRA",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Sowing(including Planting/Transplanting/ Weeding) workers)"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Harvesting/Winnowing/Threshing workers"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Fishermen-inland"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "General agricultural labourers (including watering/irrigation workers, etc.)"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Plant protection workers (applying pesticides, treating seeds, etc."
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Blacksmith"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Mason"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Bamboo, cane basket weavers"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Plumbers"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Electrician"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Construction workers (for roads, dams, industrial and project construction work & well diggers)"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "LMV & Tractor drivers"
+    },
+    {
+      "Year": "2014-2015",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Non-agricultural labourers(including porters, loaders)"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Sowing(including Planting/Transplanting/ Weeding) workers)"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Harvesting/Winnowing/Threshing workers"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Horticulture workers (including nursery growers)"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Loggers and wood cutters"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Animal husbandry workers (including poultry workers, dairy workers & herdsman)"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Packaging labourers, agriculture"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "General agricultural labourers (including watering/irrigation workers, etc.)"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Plant protection workers (applying pesticides, treating seeds, etc."
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Carpenter"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Blacksmith"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Mason"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Beedi Makers"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Bamboo, cane basket weavers"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Plumbers"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Electrician"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Construction workers (for roads, dams, industrial and project construction work & well diggers)"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "LMV & Tractor drivers"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Non-agricultural labourers(including porters, loaders)"
+    },
+    {
+      "Year": "2013-2014",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Sweeping/cleaning workers"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Sowing(including Planting/Transplanting/ Weeding) workers)"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Harvesting/Winnowing/Threshing workers"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Horticulture workers (including nursery growers)"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Fishermen-inland"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Loggers and wood cutters"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Animal husbandry workers (including poultry workers, dairy workers & herdsman)"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "General agricultural labourers (including watering/irrigation workers, etc.)"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Plant protection workers (applying pesticides, treating seeds, etc."
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Carpenter"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Blacksmith"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Mason"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Beedi Makers"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Plumbers"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Electrician"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Construction workers (for roads, dams, industrial and project construction work & well diggers)"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "LMV & Tractor drivers"
+    },
+    {
+      "Year": "2015-2016",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Sweeping/cleaning workers"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Sowing(including Planting/Transplanting/ Weeding) workers)"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Harvesting/Winnowing/Threshing workers"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Loggers and wood cutters"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Animal husbandry workers (including poultry workers, dairy workers & herdsman)"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Packaging labourers, agriculture"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "General agricultural labourers (including watering/irrigation workers, etc.)"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Plant protection workers (applying pesticides, treating seeds, etc."
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Mason"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Beedi Makers"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Plumbers"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Electrician"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Construction workers (for roads, dams, industrial and project construction work & well diggers)"
+    },
+    {
+      "Year": "2016-2017",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "LMV & Tractor drivers"
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Sowing(including Planting/Transplanting/ Weeding) workers)"
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Animal husbandry workers (including poultry workers, dairy workers & herdsman)"
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Plant protection workers (applying pesticides, treating seeds, etc."
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Blacksmith"
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Mason"
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Plumbers"
+    },
+    {
+      "Year": "2017-2018",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Non-agricultural labourers(including porters, loaders)"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Harvesting/Winnowing/Threshing workers"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Horticulture workers (including nursery growers)"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Fishermen-inland"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Animal husbandry workers (including poultry workers, dairy workers & herdsman)"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "General agricultural labourers (including watering/irrigation workers, etc.)"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Blacksmith"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Mason"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Beedi Makers"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Bamboo, cane basket weavers"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Plumbers"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Electrician"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "LMV & Tractor drivers"
+    },
+    {
+      "Year": "2018-2019",
+      "Month": "May",
+      "State": "WEST BENGAL",
+      "Occupation": "Non-Agriculture",
+      "Item": "Non-agricultural labourers(including porters, loaders)"
+    },
+    {
+      "Year": "2022-2023",
+      "Month": "Jun",
+      "State": "MAHARASHTRA",
+      "Occupation": "Agriculture",
+      "Item": "Ploughing/Tilling workers"
+    },
+    {
+      "Year": "2023-2024",
+      "Month": "Jul",
+      "State": "WEST BENGAL",
+      "Occupation": "Agriculture",
+      "Item": "Blacksmith"
+    }
+  ]
+}

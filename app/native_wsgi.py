@@ -477,6 +477,17 @@ def dispatch(path, q):
         return {"version": VERSION, "country_a": side(a), "country_b": side(b),
                 "occupation": job,
                 "comparison_note": "National inflation is not city cost of living; no inferred net salary."}
+    if path in ("/v1/pt/earnings/groups", "/v1/pk/earnings/groups"):
+        from app.official_group_earnings import catalogue
+        return catalogue(path.split("/")[2].upper())
+    if (path.startswith(("/v1/pt/earnings/groups/", "/v1/pk/earnings/groups/"))
+            and len(path.split("/")) == 6):
+        from app.official_group_earnings import history
+        try:
+            return history(path.split("/")[2].upper(), path.rsplit("/", 1)[-1],
+                           one(q, "sex", "both"), one(q, "period", None))
+        except ValueError as exc:
+            raise ApiError(422, str(exc)) from exc
     if path == "/v1/es/earnings/groups":
         from app.es_eaes_groups import catalogue
         return catalogue()

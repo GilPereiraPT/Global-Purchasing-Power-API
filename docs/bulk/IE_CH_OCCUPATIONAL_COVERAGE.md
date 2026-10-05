@@ -1,3 +1,5 @@
+> Atualização de 2026-10-05: as conclusões de staging/licença CH abaixo são históricas. Consultar [revisão atual CH/IN/PK/PT/ES](CH_IN_PK_PT_ES_RELEASE_REVIEW_20261005.md) para a publicação preparada e validações novas. A cobertura IE permanece inalterada.
+
 # Irlanda e Suíça — cobertura e aquisição oficial
 
 Revisão de 4 de outubro de 2026; branch a partir de `main` `092bc2f` (inclui PR #41, sem retomar fiscalidade). Não existem AGENTS.md no checkout/ascendentes pesquisados. Ambiente Python 3.12 existente reutilizado. Relatório legível por máquina: [ie-ch-coverage-review.json](ie-ch-coverage-review.json).

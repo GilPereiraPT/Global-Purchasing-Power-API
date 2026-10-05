@@ -1,0 +1,1122 @@
+{
+  "schema_version": 1,
+  "country": "PK",
+  "currency": "PKR",
+  "unit": "reported monthly wages",
+  "salary_concept": "monthly_wages_as_reported",
+  "gross_net_basis": "not_specified_in_table",
+  "precision": "published_major_occupation_group",
+  "publication_status": "public_with_attribution",
+  "source": "Pakistan Bureau of Statistics, Labour Force Survey",
+  "source_url": "https://www.pbs.gov.pk/wp-content/uploads/2020/07/LFS-2024-25-Annual-Report.pdf",
+  "groups": {
+    "total": "Total",
+    "managers": "Mangers",
+    "professionals": "Professionals",
+    "technicians": "Technicians",
+    "clerical_support": "Clerical support workers",
+    "services_sales": "Services and Sale workers",
+    "skilled_agriculture_forestry": "Skilled Agri. & Forestry Workers",
+    "craft_trades": "Craft and related trade workers",
+    "plant_machinery": "Plant and Machinery Operators",
+    "elementary": "Elementary Occupation"
+  },
+  "periods": [
+    "2020-21",
+    "2024-25"
+  ],
+  "population": "LFS paid employees",
+  "observations": [
+    {
+      "period": "2020-21",
+      "group": "total",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 24028,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "total",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 24643,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "total",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 20117,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "total",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 18000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "total",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 18900,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "total",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 12000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "total",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 39042,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "total",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 39302,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "total",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 37347,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "total",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 33600,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "total",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 33600,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "total",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 30000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "managers",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 68214,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "managers",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 68935,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "managers",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 61112,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "managers",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 60000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "managers",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 60000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "managers",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 45000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "managers",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 103268,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "managers",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 105778,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "managers",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 85056,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "managers",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 90000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "managers",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 90000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "managers",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 88500,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "professionals",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 41815,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "professionals",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 47597,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "professionals",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 33236,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "professionals",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 35000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "professionals",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 38630,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "professionals",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 28000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "professionals",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 62822,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "professionals",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 71486,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "professionals",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 50660,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "professionals",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 60000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "professionals",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 63000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "professionals",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 53900,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "technicians",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 33553,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "technicians",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 34392,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "technicians",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 28362,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "technicians",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 30000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "technicians",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 30000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "technicians",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 24000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "technicians",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 57617,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "technicians",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 58466,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "technicians",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 54401,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "technicians",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 50000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "technicians",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 50000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "technicians",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 50000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "clerical_support",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 34259,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "clerical_support",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 34329,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "clerical_support",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 32721,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "clerical_support",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 32000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "clerical_support",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 32000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "clerical_support",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 32000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "clerical_support",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 58154,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "clerical_support",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 58855,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "clerical_support",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 49504,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "clerical_support",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 50833,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "clerical_support",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 52000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "clerical_support",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 45000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "services_sales",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 20770,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "services_sales",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 20871,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "services_sales",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 17650,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "services_sales",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 18000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "services_sales",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 18000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "services_sales",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 15000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "services_sales",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 41272,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "services_sales",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 41605,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "services_sales",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 29698,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "services_sales",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 38000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "services_sales",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 38000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "services_sales",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 30000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "skilled_agriculture_forestry",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 24917,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "skilled_agriculture_forestry",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 24948,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "skilled_agriculture_forestry",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 14036,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "skilled_agriculture_forestry",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 21000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "skilled_agriculture_forestry",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 21000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "skilled_agriculture_forestry",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 7560,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "skilled_agriculture_forestry",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 36730,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "skilled_agriculture_forestry",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 36781,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "skilled_agriculture_forestry",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 31844,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "skilled_agriculture_forestry",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 35000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "skilled_agriculture_forestry",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 35000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "skilled_agriculture_forestry",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 32000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "craft_trades",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 20091,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "craft_trades",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 21709,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "craft_trades",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 10554,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "craft_trades",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 18667,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "craft_trades",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 20000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "craft_trades",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 8400,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "craft_trades",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 31093,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "craft_trades",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 31624,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "craft_trades",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 21835,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "craft_trades",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 29400,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "craft_trades",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 30000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "craft_trades",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 20160,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "plant_machinery",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 21721,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "plant_machinery",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 21742,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "plant_machinery",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 19980,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "plant_machinery",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 19800,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "plant_machinery",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 20000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "plant_machinery",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 13000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "plant_machinery",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 35554,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "plant_machinery",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 35710,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "plant_machinery",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 24015,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "plant_machinery",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 35000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "plant_machinery",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 35000,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "plant_machinery",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 21000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "elementary",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 16238,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "elementary",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 17241,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "elementary",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 10170,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "elementary",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 15000,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "elementary",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 15120,
+      "status": "available"
+    },
+    {
+      "period": "2020-21",
+      "group": "elementary",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 8820,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "elementary",
+      "sex": "both",
+      "measure": "mean",
+      "geography": "national",
+      "value": 26786,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "elementary",
+      "sex": "men",
+      "measure": "mean",
+      "geography": "national",
+      "value": 27620,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "elementary",
+      "sex": "women",
+      "measure": "mean",
+      "geography": "national",
+      "value": 21687,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "elementary",
+      "sex": "both",
+      "measure": "median",
+      "geography": "national",
+      "value": 25200,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "elementary",
+      "sex": "men",
+      "measure": "median",
+      "geography": "national",
+      "value": 25200,
+      "status": "available"
+    },
+    {
+      "period": "2024-25",
+      "group": "elementary",
+      "sex": "women",
+      "measure": "median",
+      "geography": "national",
+      "value": 21000,
+      "status": "available"
+    }
+  ],
+  "provenance": {
+    "raw_sha256": "79950b81ce4d738d48ff64f5e192f7905b112724a71b5d3018f4ff5991a57d48",
+    "acquired_at": "2026-10-05",
+    "table": "5.4",
+    "printed_page": 74,
+    "extraction": "pdftotext -layout; original labels and all six columns verified",
+    "reuse_url": "https://www.pbs.gov.pk/data-dissemination/",
+    "reuse_basis": "Published PBS dissemination page permits aggregate Tier 1 reuse with attribution. Linked 2026 policy PDF is labelled consultation draft; no claim of enacted policy.",
+    "attribution": "Source: Pakistan Bureau of Statistics, Labour Force Survey 2024-25, table 5.4. Processed by EarnWage."
+  },
+  "classification": "Published PSCO2015 major occupational groups; textual API identifiers are internal"
+}

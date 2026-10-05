@@ -107,6 +107,7 @@ def context(occupation,path=DEFAULT, *, period=None, geography="national"):
             "unit":"standardised gross monthly wage","values":values,
             "preferred_measure":"median","value":values.get("median"),
             "source":SOURCE,"dataset":TABLE,"source_url":SOURCE_URL,
+            "attribution":"Source: Swiss Federal Statistical Office (FSO), Swiss Earnings Structure Survey (ESS), table px-x-0304010000_205. Processed by EarnWage.",
             "mapping_caution":CAUTION.get(occupation),
             "note":"Official CH-ISCO-19 2-digit group context, not an individual occupation wage. Full-time equivalent: 4 1/3 weeks at 40 hours; includes 1/12 of 13th salary and annual special payments."}
 
