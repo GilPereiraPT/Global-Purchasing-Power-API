@@ -785,7 +785,7 @@ def application(environ, start_response):
     except LookupError as exc:
         return reply(start_response, {"detail": str(exc)}, 404, method, origin)
     except ValueError as exc:
-        return reply(start_response, {"detail": str(exc)}, 422, method)
+        return reply(start_response, {"detail": str(exc)}, 422, method, origin)
     except UpstreamUnavailable:
         return reply(start_response, {"error": "upstream_unavailable"}, 503, method, origin)
     except Exception:
