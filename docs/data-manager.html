@@ -281,10 +281,10 @@ if(keys.includes(previousIndicator))$("indicator").value=previousIndicator;
 }
 async function diagnoseConnection(){
 const results=[];
-async function probe(label,path,method='GET'){
+async function probe(label,path,method='GET',testAdmin=false){
 const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
 try{
-const response=await fetch(API+path,{method,mode:'cors',cache:'no-store',signal:controller.signal});
+const response=await fetch(API+path,{method,mode:'cors',cache:'no-store',signal:controller.signal,...(testAdmin?{headers:{'Content-Type':'application/json','X-EarnWage-Admin-Token':'earnwage-diagnostic-invalid-token'},body:'{}'}:{})});
 let result=label+': HTTP '+response.status;
 if(path==='/v1/health'&&response.ok){const data=await response.json();result+=' · '+data.status+' · '+data.version+' · '+String(data.commit||'').slice(0,8)}
 results.push(result);log(result);
@@ -294,6 +294,7 @@ finally{clearTimeout(timer)}
 await probe('Leitura pública de saúde','/v1/health');
 await probe('Leitura pública de países','/v1/countries');
 await probe('OPTIONS administrativo sem chave','/v1/admin/data-manager/status','OPTIONS');
+await probe('POST de diagnóstico com chave fictícia (esperado: HTTP 401)','/v1/admin/data-manager/status','POST',true);
 report(results.join(' | '));
 }
 $("diagnoseConnection").onclick=()=>standalone(diagnoseConnection,"A diagnosticar a ligação, sem enviar a chave…");
