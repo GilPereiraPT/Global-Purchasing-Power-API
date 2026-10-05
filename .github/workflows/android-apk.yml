@@ -47,6 +47,7 @@ jobs:
           name: EarnWage-v0.8.0-optimized-test-APK
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+          retention-days: 14
 
       - uses: actions/upload-artifact@v4
         with:
