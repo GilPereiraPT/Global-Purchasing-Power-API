@@ -269,6 +269,18 @@ def dispatch(path, q):
                     "health": "/v1/health", "documentation": "See README.md in GitHub"}
     if path == "/v1/app-config":
         return configuration()
+    if path == "/v1/earnwage/equivalence/coverage":
+        from app.salary_equivalence import coverage
+        return coverage()
+    if path == "/v1/earnwage/equivalence":
+        from app.salary_equivalence import equivalent
+        try:
+            raw = one(q, "annual_gross")
+            amount = float(raw) if raw is not None else None
+            year = integer(q, "year", None)
+            return equivalent(one(q, "country_a"), one(q, "country_b"), amount, year)
+        except (ValueError, TypeError) as exc:
+            raise ApiError(422, str(exc)) from exc
     if path == "/v1/data-inventory":
         from app.data_inventory import build_inventory
         return build_inventory()

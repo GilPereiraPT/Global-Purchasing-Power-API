@@ -10,8 +10,8 @@ android {
         applicationId = "com.earnwage.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.8.0"
+        versionCode = 6
+        versionName = "0.9.0"
         buildConfigField("String", "API_BASE_URL", "\"https://earnwage-api.policlinicosdesantoandre.com\"")
     }
     buildTypes {
@@ -30,6 +30,7 @@ android {
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 dependencies {
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.compose.material3:material3")

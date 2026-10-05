@@ -5,7 +5,7 @@ import sqlite3
 import time
 from pathlib import Path
 
-DB_PATH = os.getenv("GPP_CACHE_DB", "/tmp/gpp_api_cache.sqlite3")
+DB_PATH = os.getenv("GPP_CACHE_DB", str(Path(__file__).resolve().parent.parent / "var" / "gpp_api_cache.sqlite3"))
 
 
 def connect():
