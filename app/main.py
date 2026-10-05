@@ -60,6 +60,23 @@ app = FastAPI(
 async def upstream_error(request, exc):
     return JSONResponse(status_code=503, content={"error": "upstream_unavailable", "detail": str(exc)})
 
+@app.get("/v1/earnwage/equivalence/coverage")
+def equivalence_coverage():
+    from app.salary_equivalence import coverage
+    return coverage()
+
+
+@app.get("/v1/earnwage/equivalence")
+def salary_equivalence(country_a: str, country_b: str,
+                       annual_gross: float = Query(..., gt=0, le=100000000),
+                       year: int | None = Query(default=None, ge=1960, le=2100)):
+    from app.salary_equivalence import equivalent
+    try:
+        return equivalent(country_a, country_b, annual_gross, year)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 @app.get("/v1/data-inventory")
 def data_inventory():
     from app.data_inventory import build_inventory

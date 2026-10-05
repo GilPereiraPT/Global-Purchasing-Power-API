@@ -39,7 +39,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
@@ -85,22 +84,11 @@ private fun salaryLabel(job:JSONObject,lang:String):String {
         "nl" to "Niet vermeld")
     return unreported[lang] ?: "Not disclosed"
 }
-private suspend fun api(path:String):JSONObject = withContext(Dispatchers.IO) {
-    val connection = URL(BuildConfig.API_BASE_URL + path).openConnection() as HttpURLConnection
-    try {
-        connection.connectTimeout=12000
-        connection.readTimeout=30000
-        connection.setRequestProperty("Accept","application/json")
-        val code=connection.responseCode
-        val raw=(if(code in 200..299) connection.inputStream else connection.errorStream)
-            ?.bufferedReader()?.use { it.readText() } ?: ""
-        if(code !in 200..299) throw IllegalStateException("HTTP " + code + ": " + raw.take(120))
-        JSONObject(raw)
-    } finally { connection.disconnect() }
-}
+private suspend fun api(path:String):JSONObject = ApiClient.get(path)
 class MainActivity:ComponentActivity() {
     override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState)
+        ApiClient.initialize(applicationContext)
         setContent { EarnWage() }
     }
 }
@@ -114,7 +102,7 @@ class MainActivity:ComponentActivity() {
     var currency by remember { mutableStateOf(prefs.getString("currency","EUR") ?: "EUR") }
     var appearance by remember { mutableStateOf(prefs.getString("theme","system") ?: "system") }
     var onboarded by remember { mutableStateOf(prefs.getBoolean("onboarded",false)) }
-    var page by remember { mutableStateOf("home") }
+    var page by remember { mutableStateOf(prefs.getString("last_page","home") ?: "home") }
     var occupation by remember { mutableStateOf("software_developer") }
     var countries by remember { mutableStateOf(fallbackCountries) }
     var professions by remember { mutableStateOf(emptyList<Profession>()) }
@@ -128,7 +116,8 @@ class MainActivity:ComponentActivity() {
     var salaryOnly by remember { mutableStateOf(false) }
     var age by remember { mutableIntStateOf(90) }
     var feed by remember { mutableStateOf("all") }
-    var annual by remember { mutableStateOf("") }
+    var annual by remember { mutableStateOf(prefs.getString("annual_gross","") ?: "") }
+    var pppCoverage by remember { mutableStateOf<JSONObject?>(null) }
     var amount by remember { mutableStateOf("1000") }
     var previous by remember { mutableStateOf("") }
     var current by remember { mutableStateOf("") }
@@ -156,7 +145,7 @@ class MainActivity:ComponentActivity() {
     var insightError by remember { mutableStateOf("") }
     var insightLoading by remember { mutableStateOf(false) }
     var requestPage by remember { mutableStateOf("") }
-    var response by remember { mutableStateOf<JSONObject?>(null) }
+    var response by remember { mutableStateOf<JSONObject?>(try { prefs.getString("last_response",null)?.let { JSONObject(it).put("_offline",true) } } catch (_:Exception) { null }) }
     var error by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     fun navigate(next:String) { page=next; request=""; requestId++; response=null; error=""; loading=false }
@@ -188,6 +177,11 @@ class MainActivity:ComponentActivity() {
                 .map { Profession(it.optString("id"),it.optString("label")) }
         } catch(e:Exception) { if(professions.isEmpty()) connectivity=e.message ?: "Network error" }
     }
+    LaunchedEffect(Unit) {
+        try { pppCoverage=api("/v1/earnwage/equivalence/coverage") }
+        catch(e:Exception) { if(e is CancellationException) throw e }
+    }
+    LaunchedEffect(annual) { prefs.edit().putString("annual_gross",annual).apply() }
     LaunchedEffect(country) {
         prefs.edit().putString("country",country).apply()
         region=""
@@ -211,7 +205,10 @@ class MainActivity:ComponentActivity() {
             loading=true
             try {
                 val data=api(requestPath)
-                if(page==target && request==requestPath) response=data
+                if(page==target && request==requestPath) {
+                    response=data
+                    prefs.edit().putString("last_page",target).putString("last_response",data.toString()).apply()
+                }
             } catch(e:Exception) {
                 if(e is CancellationException) throw e
                 if(page==target && request==requestPath) error=if(page=="inflation" || page=="power") "Dados de inflação indisponíveis para este período." else "Não foi possível atualizar. Tenta novamente."
@@ -344,7 +341,8 @@ class MainActivity:ComponentActivity() {
                                     modifier=Modifier.fillMaxWidth().height(164.dp),contentScale=ContentScale.Fit)
                             }
                             item { Heading(tr(lang,"welcome")) }
-                            item { Feature("⇄",tr(lang,"compare"),tr(lang,"salary")) {navigate("compare")} }
+                            item { Feature("⇄",if(lang=="pt") "A quanto equivale o meu salário?" else "What is my salary equivalent?",if(lang=="pt") "Comparar poder de compra aproximado entre países" else "Approximate purchasing power across countries") {navigate("equivalence")} }
+                            item { Feature("◈",tr(lang,"compare"),tr(lang,"salary")) {navigate("compare")} }
                             item { Feature("▥",if(lang=="pt") "Comparar países" else "Country insights",if(lang=="pt") "Gráficos e indicadores económicos" else "Economic charts and indicators") {navigate("insights")} }
                             item { Feature("▣",tr(lang,"jobs"),tr(lang,"jobnote")) {navigate("jobs")} }
                             item { Feature("◎",if(lang=="pt") "Salários pelo mundo" else "Global salaries",if(lang=="pt") "Pesquisa uma profissão nos 14 países" else "Search one occupation across 14 countries") {navigate("global")} }
@@ -373,6 +371,28 @@ class MainActivity:ComponentActivity() {
                                     GlobalSalaryCard(place,data,lang,currency,globalFx)
                                 }
                             }
+                        }
+                        "equivalence" -> {
+                            item { Heading(if(lang=="pt") "A quanto equivale o meu salário?" else "What is my salary equivalent?") }
+                            item { Caption(if(lang=="pt") "Introduz o bruto anual na moeda do país de origem. Estimativa nacional com PPP de consumo; não calcula o líquido nem preços regionais." else "Enter annual gross in the origin country's currency. National consumption PPP estimate; excludes taxes and regional prices.") }
+                            item { PlaceMenu(tr(lang,"country"),countries,country) {country=it} }
+                            item { PlaceMenu(tr(lang,"destination"),countries,dest) {dest=it} }
+                            item { NumberBox(tr(lang,"annual")+" · "+(countries.find {it.code==country}?.currency ?: ""),annual) {annual=it} }
+                            item {
+                                val rows=pppCoverage?.optJSONArray("countries") ?: JSONArray()
+                                fun years(code:String):Set<Int> {
+                                    val row=(0 until rows.length()).mapNotNull {rows.optJSONObject(it)}.find {it.optString("country")==code}
+                                    val years=row?.optJSONArray("years") ?: JSONArray()
+                                    return (0 until years.length()).map {years.optInt(it)}.toSet()
+                                }
+                                val common=years(country).intersect(years(dest))
+                                Caption(if(pppCoverage==null) {
+                                    if(lang=="pt") "Cobertura PPP por confirmar" else "PPP coverage not checked"
+                                } else if(common.isNotEmpty()) {
+                                    (if(lang=="pt") "Dados oficiais PPP: sim · ano comum " else "Official PPP data: yes · common year ")+common.maxOrNull()
+                                } else if(lang=="pt") "Dados oficiais: parcial · sem ano PPP comum" else "Official data: partial · no common PPP year")
+                            }
+                            item { Button(onClick={search("/v1/earnwage/equivalence?country_a="+country+"&country_b="+dest+"&annual_gross="+numeric(annual))},enabled=numeric(annual)?.let {it.isFinite() && it>0 && it<=100000000} ?: false,modifier=Modifier.fillMaxWidth()) { Text(tr(lang,"compare")) } }
                         }
                         "compare","salary" -> {
                             item { Heading(tr(lang,if(page=="compare") "compare" else "salary")) }
@@ -477,6 +497,21 @@ class MainActivity:ComponentActivity() {
                             item { ThemeMenu(lang,appearance) {appearance=it} }
                             item { Caption(tr(lang,"settingsnote")+"\n"+tr(lang,"countryhint")) }
                             item { Feature("ⓘ",tr(lang,"about"),tr(lang,"data")) {navigate("about")} }
+                            item { Feature("↗",if(lang=="pt") "Fontes e atribuições" else "Sources and attribution","World Bank · Eurostat · Canada Job Bank · Remotive") {navigate("sources")} }
+                        }
+                        "sources" -> {
+                            item { Heading(if(lang=="pt") "Fontes e atribuições" else "Sources and attribution") }
+                            item { Caption(if(lang=="pt") "Cada resultado conserva a fonte e o período. PPP nacional não representa o custo de vida numa região nem o salário líquido." else "Results retain source and reference period. National PPP is not regional cost of living or net pay.") }
+                            listOf("World Bank — World Development Indicators" to "https://data.worldbank.org/indicator/PA.NUS.PRVT.PP",
+                                "Eurostat" to "https://ec.europa.eu/eurostat/",
+                                "European Central Bank" to "https://data.ecb.europa.eu/",
+                                "ILOSTAT" to "https://ilostat.ilo.org/",
+                                "Canada Job Bank — Government of Canada" to "https://www.jobbank.gc.ca/trend-analysis/search-wages",
+                                "Remotive — remote jobs" to "https://remotive.com/",
+                                "US Bureau of Labor Statistics" to "https://www.bls.gov/oes/").forEach { (name,url) ->
+                                item { SourceLink(name,url) }
+                            }
+                            item { Caption(if(lang=="pt") "As vagas identificam também o fornecedor e ligam ao anúncio original. As fontes não patrocinam nem validam a EarnWage." else "Job listings also identify the provider and link to the original listing. Sources do not endorse EarnWage.") }
                         }
                         "about" -> {
                             item { Heading(tr(lang,"about")) }
@@ -494,6 +529,8 @@ class MainActivity:ComponentActivity() {
                         TextButton(onClick={requestId++}) {Text(if(lang=="pt") "Tentar novamente" else "Retry")}
                     }
                     response?.let { data ->
+                        if(data.optBoolean("_offline")) item { Caption((if(lang=="pt") "Resultado guardado — pode estar desatualizado: " else "Saved result — may be outdated: ")+java.text.DateFormat.getDateTimeInstance().format(java.util.Date(data.optLong("_saved_at")))) }
+                        if(page=="equivalence") item { EquivalenceResult(data,lang) }
                         if(page=="jobs") {
                             val arr=data.optJSONArray("jobs") ?: JSONArray()
                             val listings=(0 until arr.length()).mapNotNull {arr.optJSONObject(it)}
@@ -1074,4 +1111,26 @@ private fun convertedSalary(row:JSONObject?,preferred:String,fx:Map<String,JSONO
         (if(local!=preferred) "\n"+(if(lang=="pt") "Moeda local: " else "Local currency: ")+money(value,local)+suffix else ""))
     else Metric(countryFlag(code)+" "+name,money(value,local)+suffix,
         source+" · "+(if(lang=="pt") "Conversão indisponível" else "Conversion unavailable"))
+}
+
+@Composable private fun SourceLink(name:String,url:String) {
+    val uri=LocalUriHandler.current
+    TextButton(onClick={uri.openUri(url)}) { Text(name) }
+}
+@Composable private fun EquivalenceResult(data:JSONObject,lang:String) {
+    Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        val value=data.optDouble("equivalent_annual_gross",Double.NaN)
+        if(value.isFinite()) {
+            Metric(if(lang=="pt") "Bruto anual equivalente (estimativa)" else "Equivalent annual gross (estimate)",money(value,data.optString("currency_b")),"PPP · "+data.optInt("year")+" · World Bank")
+            Metric(if(lang=="pt") "Equivalente mensal / 12" else "Monthly equivalent / 12",money(data.optDouble("equivalent_monthly_12"),data.optString("currency_b")))
+        } else Caption(if(lang=="pt") "Cobertura parcial: não há PPP num ano comum para este par. Os indicadores disponíveis continuam abaixo." else "Partial coverage: no common PPP year for this pair. Available indicators remain below.")
+        Caption(if(lang=="pt") "Valores brutos aproximados à estrutura de preços do ano indicado. Não são salários líquidos, ofertas de emprego ou custos regionais." else "Approximate gross values at the indicated year's price structure. Not net pay, job offers or regional costs.")
+        val context=data.optJSONObject("context")
+        for(code in listOf(data.optString("country_a"),data.optString("country_b")).distinct()) {
+            val inflation=context?.optJSONObject(code)?.optJSONObject("inflation")
+            val rate=inflation?.optDouble("value",Double.NaN) ?: Double.NaN
+            if(rate.isFinite()) Metric(code+" · "+indicatorTitle("inflation_annual",lang),number(rate)+" %",inflation?.optString("year") ?: "")
+        }
+        SourceLink("World Bank — consumption PPP","https://data.worldbank.org/indicator/PA.NUS.PRVT.PP")
+    }
 }

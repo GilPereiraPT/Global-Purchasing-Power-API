@@ -1,6 +1,6 @@
 # EarnWage — Global Purchasing Power API
 
-Free-source international economic data backend for Android and web. **v0.5.3 is an integration-stage backend, not a complete net salary or purchasing-power calculator.**
+Free-source international economic data backend for Android and web. **API v0.5.20 · Android v0.9.0 (build 6, proposed).** National gross consumption-PPP equivalence is an approximation; personal net purchasing power remains incomplete. See [CHANGELOG](CHANGELOG.md).
 
 ## Current scope
 
@@ -429,3 +429,24 @@ O worker offline e os relatórios de cobertura estão documentados em
 [docs/bulk/README.md](docs/bulk/README.md). Os conectores WDI e Eurostat preservam
 histórico, proveniência e quarentena num staging separado. Não atualizam produção
 através dos pedidos da API.
+
+## User-entered salary equivalence
+
+`GET /v1/earnwage/equivalence?country_a=PT&country_b=US&annual_gross=30000`
+
+Uses locally imported World Bank **PA.NUS.PRVT.PP** (household consumption PPP, local currency per international dollar). Selects the latest year with positive observations in both countries; optional `year` requests an exact common year. Formula: `gross_a / PPP_a × PPP_b`. The amount is denominated in the destination currency at that year's national price structure. No live imports, interpolation, tax deduction or regional housing assumption. `partial_estimate` identifies a calculated gross estimate. `partial` preserves context when PPP is missing. Monthly display divides by 12 without assuming payroll frequency.
+
+`GET /v1/earnwage/equivalence/coverage` lists locally available years by country. Pairs require a common year. This feature does not depend on occupational salary coverage.
+
+### Remaining launch work
+
+- OECD net/brutto reference ratios: acquire and validate country/year/household/wage-level data and reuse terms before integrating. Use the **net personal average tax rate**, not the employer-inclusive tax wedge. Do not apply a mean-wage scenario as a personal tax calculation. Portugal already has an explicitly restricted 2025 benchmark (`TAX_ENGINE.md`).
+- Eurostat price-level comparisons as a separately identified methodology; no mixing incompatible PPP series.
+- Regional prices remain unconnected: national PPP must not be labelled regional purchasing power.
+- Remote HTTPS endpoint configuration/domain migration, durable last-good configuration and compatibility validation.
+- Production signing keystore and secrets, release attachments, public privacy policy reflecting cached salary inputs and actual source/network behaviour.
+- Static OpenAPI export for native WSGI, wider runtime parity tests, abuse limits suitable for Passenger workers and trusted proxy configuration.
+- Verified multilingual ISCO/ESCO titles: occupation titles must match the exact occupation, not just its group.
+- Complete source-by-source commercial reuse audit; Remotive and Canada Job Bank visible attribution is included but does not replace that audit. India remains pending.
+
+HTTP cache defaults to `var/gpp_api_cache.sqlite3`. On cPanel, set `GPP_CACHE_DB` to a writable persistent path outside deployments when needed. Existing `/tmp` cache is not migrated; it may be repopulated. No salary database is moved by this change.
