@@ -41,6 +41,9 @@ bases de produção.
 
 ## Inventário e relatórios
 
+- [Expansão salarial Europeia](../salary/EUROPE_SALARY_EXPANSION.md): auditoria
+  GB/DE/FR/NL, lacunas por profissão, fontes adquiridas e candidatos históricos.
+
 - [Preparação da primeira publicação — Phase 4E](PHASE4E.md): exportação pelo
   operador, pacote candidato, gates de autorização e procedimento Data Manager.
 - [Exportar inventário salarial no Data Manager — Phase 4F](PHASE4F.md): botão,

@@ -1,0 +1,813 @@
+{
+  "schema": "earnwage-europe-salary-investigation-v1",
+  "reviewed_on": "2026-10-04",
+  "base_commit": "d2e0fdbbd04f96b06e50e5432e815d059b0ae041",
+  "scope": "committed snapshots and newly acquired official source files; not production",
+  "production_compared": false,
+  "new_approved_country_occupation_pairs": 0,
+  "publication_packages": [],
+  "countries": [
+    {
+      "country": "GB",
+      "snapshot": "uk_ashe_wages.json",
+      "snapshot_sha256": "8e177c9ac12b4d69f65b800bae211cfab01c2249c3abd7db5b92eeb330192ba2",
+      "records": 52,
+      "covered_occupations": [
+        "accountant",
+        "architect",
+        "automotive_mechanic",
+        "bus_driver",
+        "civil_engineer",
+        "cleaner",
+        "cook",
+        "cybersecurity_specialist",
+        "data_analyst",
+        "electrician",
+        "financial_analyst",
+        "healthcare_assistant",
+        "mechanical_engineer",
+        "pharmacist",
+        "physiotherapist",
+        "plumber",
+        "preschool_teacher",
+        "receptionist",
+        "sales_assistant",
+        "secondary_teacher",
+        "security_guard",
+        "software_developer",
+        "truck_driver",
+        "waiter",
+        "warehouse_operator",
+        "welder"
+      ],
+      "missing_occupations": [
+        "administrative_assistant",
+        "agricultural_worker",
+        "auditor",
+        "construction_worker",
+        "dentist",
+        "doctor",
+        "industrial_operator",
+        "it_technician",
+        "lawyer",
+        "manager",
+        "nurse",
+        "psychologist",
+        "supermarket_worker",
+        "teacher"
+      ],
+      "covered_count": 26,
+      "missing_count": 14,
+      "periods": [
+        "2025"
+      ],
+      "salary_units": [
+        "GBP/year"
+      ],
+      "salary_concepts": [
+        "source_definition_in_adapter"
+      ],
+      "production_status": "not_verified"
+    },
+    {
+      "country": "DE",
+      "snapshot": "de_entgeltatlas_wages.json",
+      "snapshot_sha256": "9fc8959337664f66d571069a9990d5f39834fe61f3ce70c452a304b4eecd2764",
+      "records": 27,
+      "covered_occupations": [
+        "accountant",
+        "administrative_assistant",
+        "architect",
+        "automotive_mechanic",
+        "bus_driver",
+        "civil_engineer",
+        "cleaner",
+        "cook",
+        "cybersecurity_specialist",
+        "dentist",
+        "doctor",
+        "electrician",
+        "financial_analyst",
+        "healthcare_assistant",
+        "lawyer",
+        "mechanical_engineer",
+        "nurse",
+        "physiotherapist",
+        "plumber",
+        "preschool_teacher",
+        "sales_assistant",
+        "secondary_teacher",
+        "security_guard",
+        "software_developer",
+        "truck_driver",
+        "waiter",
+        "welder"
+      ],
+      "missing_occupations": [
+        "agricultural_worker",
+        "auditor",
+        "construction_worker",
+        "data_analyst",
+        "industrial_operator",
+        "it_technician",
+        "manager",
+        "pharmacist",
+        "psychologist",
+        "receptionist",
+        "supermarket_worker",
+        "teacher",
+        "warehouse_operator"
+      ],
+      "covered_count": 27,
+      "missing_count": 13,
+      "periods": [
+        "2025"
+      ],
+      "salary_units": [
+        "EUR/month"
+      ],
+      "salary_concepts": [
+        "source_definition_in_adapter"
+      ],
+      "production_status": "not_verified"
+    },
+    {
+      "country": "FR",
+      "snapshot": "fr_insee_wages.json",
+      "snapshot_sha256": "b819dde9ff596336c05d06fe85a338e98f07c7e204cc389063fba1b4de623735",
+      "records": 23,
+      "covered_occupations": [
+        "architect",
+        "automotive_mechanic",
+        "bus_driver",
+        "civil_engineer",
+        "cleaner",
+        "cook",
+        "dentist",
+        "doctor",
+        "electrician",
+        "healthcare_assistant",
+        "it_technician",
+        "lawyer",
+        "mechanical_engineer",
+        "nurse",
+        "pharmacist",
+        "physiotherapist",
+        "plumber",
+        "preschool_teacher",
+        "psychologist",
+        "security_guard",
+        "supermarket_worker",
+        "truck_driver",
+        "welder"
+      ],
+      "missing_occupations": [
+        "accountant",
+        "administrative_assistant",
+        "agricultural_worker",
+        "auditor",
+        "construction_worker",
+        "cybersecurity_specialist",
+        "data_analyst",
+        "financial_analyst",
+        "industrial_operator",
+        "manager",
+        "receptionist",
+        "sales_assistant",
+        "secondary_teacher",
+        "software_developer",
+        "teacher",
+        "waiter",
+        "warehouse_operator"
+      ],
+      "covered_count": 23,
+      "missing_count": 17,
+      "periods": [
+        "2024"
+      ],
+      "salary_units": [
+        "EUR/month"
+      ],
+      "salary_concepts": [
+        "net_monthly_mean_full_time_equivalent"
+      ],
+      "production_status": "not_verified"
+    },
+    {
+      "country": "NL",
+      "snapshot": "nl_cbs_wages.json",
+      "snapshot_sha256": "122b59f237f7acaf5aebc471d46cc1ff504a9c24f72f7fa51e4508219298153c",
+      "records": 21,
+      "covered_occupations": [
+        "accountant",
+        "administrative_assistant",
+        "architect",
+        "automotive_mechanic",
+        "cleaner",
+        "cook",
+        "cybersecurity_specialist",
+        "electrician",
+        "healthcare_assistant",
+        "industrial_operator",
+        "it_technician",
+        "physiotherapist",
+        "preschool_teacher",
+        "receptionist",
+        "sales_assistant",
+        "secondary_teacher",
+        "security_guard",
+        "software_developer",
+        "truck_driver",
+        "waiter",
+        "warehouse_operator"
+      ],
+      "missing_occupations": [
+        "agricultural_worker",
+        "auditor",
+        "bus_driver",
+        "civil_engineer",
+        "construction_worker",
+        "data_analyst",
+        "dentist",
+        "doctor",
+        "financial_analyst",
+        "lawyer",
+        "manager",
+        "mechanical_engineer",
+        "nurse",
+        "pharmacist",
+        "plumber",
+        "psychologist",
+        "supermarket_worker",
+        "teacher",
+        "welder"
+      ],
+      "covered_count": 21,
+      "missing_count": 19,
+      "periods": [
+        "2024",
+        "2025"
+      ],
+      "salary_units": [
+        "EUR/hour"
+      ],
+      "salary_concepts": [
+        "gross_hourly_median_excluding_special_pay_and_overtime"
+      ],
+      "production_status": "not_verified"
+    }
+  ],
+  "source_access": [
+    {
+      "country": "GB",
+      "kind": "dataset",
+      "url": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashetable14/2025provisional",
+      "attempted_at": "2026-10-04T13:38:10.999769+00:00",
+      "downloaded_bytes": 37456,
+      "sha256": "0e283ae01a7f8f01f70d405559ae4f105c8f047a94c16468bb0017c4c908cc94",
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "GB",
+      "kind": "download",
+      "url": "https://www.ons.gov.uk/file?uri=%2Femploymentandlabourmarket%2Fpeopleinwork%2Fearningsandworkinghours%2Fdatasets%2Foccupation4digitsoc2010ashetable14%2F2025provisional%2Fashetable142025provisional.zip",
+      "attempted_at": "2026-10-04T13:38:11.000283+00:00",
+      "downloaded_bytes": 0,
+      "sha256": null,
+      "http_status": 200,
+      "status": "size_limit_requires_controlled_download"
+    },
+    {
+      "country": "GB",
+      "kind": "classification",
+      "url": "https://www.ons.gov.uk/methodology/classificationsandstandards/standardoccupationalclassificationsoc/soc2020/soc2020volume1structureanddescriptionsofunitgroups",
+      "attempted_at": "2026-10-04T13:38:11.000595+00:00",
+      "downloaded_bytes": 151427,
+      "sha256": "af44e189789fa9589f0545b4993bfa8cf77a9ad98fc267b22d115ba8c4f5674b",
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "GB",
+      "kind": "licence",
+      "url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "attempted_at": "2026-10-04T13:38:11.001041+00:00",
+      "downloaded_bytes": 0,
+      "sha256": null,
+      "http_status": null,
+      "status": "blocked",
+      "error_type": "ProxyError"
+    },
+    {
+      "country": "DE",
+      "kind": "methodology",
+      "url": "https://www.arbeitsagentur.de/hilfe-entgeltatlas",
+      "attempted_at": "2026-10-04T13:38:11.001756+00:00",
+      "downloaded_bytes": 0,
+      "sha256": null,
+      "http_status": null,
+      "status": "blocked",
+      "error_type": "ProxyError"
+    },
+    {
+      "country": "DE",
+      "kind": "occupation_example",
+      "url": "https://web.arbeitsagentur.de/entgeltatlas/beruf/134894",
+      "attempted_at": "2026-10-04T13:38:11.046962+00:00",
+      "downloaded_bytes": 0,
+      "sha256": null,
+      "http_status": null,
+      "status": "blocked",
+      "error_type": "ProxyError"
+    },
+    {
+      "country": "FR",
+      "kind": "download",
+      "url": "https://api.insee.fr/melodi/file/DS_DERA_PRIVE_ANNUEL/DS_DERA_PRIVE_ANNUEL_2024_CSV_FR",
+      "attempted_at": "2026-10-04T13:38:11.059595+00:00",
+      "downloaded_bytes": 374565,
+      "sha256": "88bdb0ac545a82b26f11d32d9ac4bf5961d73180e55c56476d7f9588fcd98eb2",
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "FR",
+      "kind": "dataset_licence",
+      "url": "https://www.data.gouv.fr/datasets/salaires-dans-le-secteur-prive-par-categorie-socioprofessionnelle-detaillee",
+      "attempted_at": "2026-10-04T13:38:11.072044+00:00",
+      "downloaded_bytes": 0,
+      "sha256": null,
+      "http_status": null,
+      "status": "blocked",
+      "error_type": "ProxyError"
+    },
+    {
+      "country": "NL",
+      "kind": "dataset",
+      "url": "https://www.cbs.nl/nl-nl/cijfers/detail/86355NED",
+      "attempted_at": "2026-10-04T13:38:11.096020+00:00",
+      "downloaded_bytes": 0,
+      "sha256": null,
+      "http_status": null,
+      "status": "blocked",
+      "error_type": "ProxyError"
+    },
+    {
+      "country": "NL",
+      "kind": "metadata",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/$metadata",
+      "attempted_at": "2026-10-04T13:38:11.115924+00:00",
+      "downloaded_bytes": 0,
+      "sha256": null,
+      "http_status": 406,
+      "status": "http_error"
+    },
+    {
+      "country": "GB",
+      "kind": "classification_workbook",
+      "url": "https://www.ons.gov.uk/file?uri=/methodology/classificationsandstandards/standardoccupationalclassificationsoc/soc2020/soc2020volume1structureanddescriptionsofunitgroups/soc2020volume1structureanddescriptionofunitgroupsexcel20260827.xlsx",
+      "attempted_at": "2026-10-04T13:40:29.526986+00:00",
+      "http_status": 200,
+      "sha256": "b9e3e464b877418ef1258ab4cb9e3b0ffe43ee9fd418d872068c2749b2337de3",
+      "downloaded_bytes": 289135,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "NL",
+      "kind": "odata_json",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED",
+      "attempted_at": "2026-10-04T13:40:30.238765+00:00",
+      "http_status": 200,
+      "sha256": "c82c4e7396ebaba4018bfaa848acc378cbdc654529f03ef8a4d37b2926e72b7c",
+      "downloaded_bytes": 660,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "NL",
+      "kind": "metadata_xml",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/$metadata",
+      "attempted_at": "2026-10-04T13:40:31.274014+00:00",
+      "http_status": 200,
+      "sha256": "41ecaef31029d31853321b0a6a91dc9928261032aefe7e305bd83d530fe8a5a7",
+      "downloaded_bytes": 6948,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "FR",
+      "kind": "reuse_terms",
+      "url": "https://www.insee.fr/fr/information/2381863",
+      "attempted_at": "2026-10-04T13:40:31.775026+00:00",
+      "http_status": 404,
+      "sha256": null,
+      "downloaded_bytes": 0,
+      "status": "http_error"
+    },
+    {
+      "country": "NL",
+      "kind": "properties",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/Properties",
+      "attempted_at": "2026-10-04T13:41:45.795218+00:00",
+      "sha256": "fd21a86a3decc9f2943a4309d0cea2e33e5bf0b08a2e5a250158277a2e130b55",
+      "downloaded_bytes": 13200,
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "NL",
+      "kind": "occupation_codes",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/BeroepCodes",
+      "attempted_at": "2026-10-04T13:41:46.881516+00:00",
+      "sha256": "f8c5404dadcf35b5f2d41d3c1763335cb8ab8861c8e1ced359dcef8c214b724f",
+      "downloaded_bytes": 58059,
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "NL",
+      "kind": "period_codes",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/PeriodenCodes",
+      "attempted_at": "2026-10-04T13:41:47.732447+00:00",
+      "sha256": "9f36fe7c9f8075bb7e82bf5ae61285f1e66a9b2749a01935b88ce08099ff1a61",
+      "downloaded_bytes": 1608,
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "NL",
+      "kind": "measure_codes",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/MeasureCodes",
+      "attempted_at": "2026-10-04T13:41:47.929349+00:00",
+      "sha256": "8f4f7bf1299f18e92b9632a3d6b1fbafc4a5efa4ce7d632ecdad4c801307ba71",
+      "downloaded_bytes": 1509,
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "NL",
+      "kind": "observation_sample",
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/Observations?$top=1",
+      "attempted_at": "2026-10-04T13:41:48.275549+00:00",
+      "sha256": "2dfeac3ea35b28aec053a626114be191ecd5a2ce45f74fba41762cf00458fbbe",
+      "downloaded_bytes": 227,
+      "http_status": 200,
+      "status": "retrieved_not_methodologically_validated"
+    },
+    {
+      "country": "GB",
+      "kind": "reuse_terms",
+      "url": "https://www.ons.gov.uk/help/termsandconditions",
+      "attempted_at": "2026-10-04T13:41:48.488861+00:00",
+      "sha256": null,
+      "downloaded_bytes": 0,
+      "http_status": 308,
+      "status": "http_error"
+    },
+    {
+      "url": "https://www.ons.gov.uk/file?uri=%2Femploymentandlabourmarket%2Fpeopleinwork%2Fearningsandworkinghours%2Fdatasets%2Foccupation4digitsoc2010ashetable14%2F2025provisional%2Fashetable142025provisional.zip",
+      "acquired_at": "2026-10-04T13:40:16.616729+00:00",
+      "bytes": 11202737,
+      "sha256": "85888d690eecc71f062f82b6e75c243f29e2136279cb94dfa4b96d58d03c0d6d",
+      "records": 52,
+      "occupations": 26,
+      "rejected": [
+        {
+          "occupation": "dentist",
+          "soc2020": "2253",
+          "measure": "median",
+          "reason": "suppressed_or_cv_over_20"
+        },
+        {
+          "occupation": "dentist",
+          "soc2020": "2253",
+          "measure": "mean",
+          "reason": "suppressed_or_cv_over_20"
+        }
+      ],
+      "country": "GB",
+      "kind": "complete_archive",
+      "http_status": 200,
+      "status": "downloaded_and_existing_parser_validated",
+      "downloaded_bytes": 11202737
+    },
+    {
+      "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/Observations",
+      "acquired_at": "2026-10-04T13:43:35.954865+00:00",
+      "bytes": 962681,
+      "sha256": "097c2dbe156374aee00623f86570a0c5808e26a1329cff3566b7d2f30453053c",
+      "raw_observations": 7465,
+      "version": "202608180000",
+      "licence": "https://creativecommons.org/licenses/by/4.0/",
+      "selected": 265,
+      "missing": 0,
+      "equal_existing": 21,
+      "existing_overlaps": 21,
+      "historical_candidates": 244,
+      "by_year": {
+        "2013": 20,
+        "2014": 20,
+        "2015": 20,
+        "2016": 20,
+        "2017": 20,
+        "2018": 20,
+        "2019": 21,
+        "2020": 21,
+        "2021": 21,
+        "2022": 21,
+        "2023": 21,
+        "2024": 21,
+        "2025": 19
+      },
+      "new_country_occupation_pairs": 0,
+      "production_comparison": "not_performed",
+      "publication_eligible": false,
+      "country": "NL",
+      "kind": "complete_observations",
+      "http_status": 200,
+      "status": "complete_download_and_existing_scope_review",
+      "downloaded_bytes": 962681
+    }
+  ],
+  "ons_live": {
+    "url": "https://www.ons.gov.uk/file?uri=%2Femploymentandlabourmarket%2Fpeopleinwork%2Fearningsandworkinghours%2Fdatasets%2Foccupation4digitsoc2010ashetable14%2F2025provisional%2Fashetable142025provisional.zip",
+    "acquired_at": "2026-10-04T13:40:16.616729+00:00",
+    "bytes": 11202737,
+    "sha256": "85888d690eecc71f062f82b6e75c243f29e2136279cb94dfa4b96d58d03c0d6d",
+    "records": 52,
+    "occupations": 26,
+    "rejected": [
+      {
+        "occupation": "dentist",
+        "soc2020": "2253",
+        "measure": "median",
+        "reason": "suppressed_or_cv_over_20"
+      },
+      {
+        "occupation": "dentist",
+        "soc2020": "2253",
+        "measure": "mean",
+        "reason": "suppressed_or_cv_over_20"
+      }
+    ]
+  },
+  "insee_live": {
+    "raw_rows": 33486,
+    "full_scope_mean_rows": 366,
+    "members": [
+      {
+        "name": "DS_DERA_PRIVE_ANNUEL_2024_data.csv",
+        "bytes": 3421217,
+        "sha256": "0af9ef49350ee7b6fa0a9b5151b45d5bb8c77dfcfb4321c60cf2aa3f5a7ea422"
+      },
+      {
+        "name": "DS_DERA_PRIVE_ANNUEL_2024_metadata.csv",
+        "bytes": 72106,
+        "sha256": "a9dc3557241664b0dfe29c6f3584678fd43a5192584eb985d2371fa2eabcbe21"
+      }
+    ],
+    "existing_checks": [
+      {
+        "occupation": "doctor",
+        "classification": "344B",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "nurse",
+        "classification": "431F",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "pharmacist",
+        "classification": "344D",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "psychologist",
+        "classification": "311D",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "physiotherapist",
+        "classification": "432B",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "preschool_teacher",
+        "classification": "434G",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "it_technician",
+        "classification": "478C",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "civil_engineer",
+        "classification": "382A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "mechanical_engineer",
+        "classification": "384A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "architect",
+        "classification": "382B",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "supermarket_worker",
+        "classification": "551A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "truck_driver",
+        "classification": "641A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "bus_driver",
+        "classification": "641B",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "electrician",
+        "classification": "633A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "plumber",
+        "classification": "632F",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "cook",
+        "classification": "636D",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "cleaner",
+        "classification": "684A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "security_guard",
+        "classification": "534A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "lawyer",
+        "classification": "312A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "dentist",
+        "classification": "311C",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "healthcare_assistant",
+        "classification": "526A",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "welder",
+        "classification": "623E",
+        "salary_equal": true,
+        "fte_equal": true
+      },
+      {
+        "occupation": "automotive_mechanic",
+        "classification": "634C",
+        "salary_equal": true,
+        "fte_equal": true
+      }
+    ]
+  },
+  "cbs_live": {
+    "url": "https://datasets.cbs.nl/odata/v1/CBS/86355NED/Observations",
+    "acquired_at": "2026-10-04T13:43:35.954865+00:00",
+    "bytes": 962681,
+    "sha256": "097c2dbe156374aee00623f86570a0c5808e26a1329cff3566b7d2f30453053c",
+    "raw_observations": 7465,
+    "version": "202608180000",
+    "licence": "https://creativecommons.org/licenses/by/4.0/",
+    "selected": 265,
+    "missing": 0,
+    "equal_existing": 21,
+    "existing_overlaps": 21,
+    "historical_candidates": 244,
+    "by_year": {
+      "2013": 20,
+      "2014": 20,
+      "2015": 20,
+      "2016": 20,
+      "2017": 20,
+      "2018": 20,
+      "2019": 21,
+      "2020": 21,
+      "2021": 21,
+      "2022": 21,
+      "2023": 21,
+      "2024": 21,
+      "2025": 19
+    },
+    "new_country_occupation_pairs": 0,
+    "production_comparison": "not_performed",
+    "publication_eligible": false,
+    "absent_occupation_year_combinations": 8
+  },
+  "total_covered_pairs": 97,
+  "total_missing_pairs": 63,
+  "uk_scope_candidates": [
+    {
+      "occupation": "agricultural_worker",
+      "classification": "SOC2020:9111",
+      "source_title": "Farm workers",
+      "period": "2025",
+      "mean": "27324.00",
+      "mean_cv_percent": "15",
+      "median": null,
+      "median_source_marker": "x",
+      "median_cv_percent": "23",
+      "unit": "GBP/year",
+      "decision": "scope_review_required_elementary_farm_work_not_all_skilled_agriculture",
+      "approved": false
+    },
+    {
+      "occupation": "lawyer",
+      "classification": "SOC2020:2412",
+      "source_title": "Solicitors and lawyers",
+      "period": "2025",
+      "mean": "68462.00",
+      "mean_cv_percent": "4.8",
+      "median": "53314.00",
+      "median_cv_percent": "4.6",
+      "unit": "GBP/year",
+      "decision": "scope_review_required_not_all_legal_professions",
+      "approved": false
+    },
+    {
+      "occupation": "it_technician",
+      "classification": "SOC2020:3131",
+      "source_title": "IT operations technicians",
+      "period": "2025",
+      "mean": "38507.00",
+      "mean_cv_percent": "3.7",
+      "median": "34656.00",
+      "median_cv_percent": "4.6",
+      "unit": "GBP/year",
+      "classification_20260827_title": "IT technicians",
+      "decision": "scope_and_classification_revision_review_required",
+      "approved": false
+    },
+    {
+      "occupation": "administrative_assistant",
+      "classification": "SOC2020:4159",
+      "source_title": "Other administrative occupations n.e.c.",
+      "period": "2025",
+      "mean": "22906.00",
+      "mean_cv_percent": "0.9",
+      "median": "23385.00",
+      "median_cv_percent": "1.4",
+      "unit": "GBP/year",
+      "decision": "reject_residual_category_as_exclusive_administrative_assistant_wage",
+      "approved": false
+    },
+    {
+      "occupation": "auditor",
+      "classification": "SOC2020:2421",
+      "source_title": "Chartered and certified accountants",
+      "period": "2025",
+      "mean": "50563.00",
+      "mean_cv_percent": "3.3",
+      "median": "45538.00",
+      "median_cv_percent": "5.8",
+      "unit": "GBP/year",
+      "decision": "shared_category_review_required_not_exclusive_auditors",
+      "approved": false
+    }
+  ]
+}
