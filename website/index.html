@@ -51,7 +51,7 @@ footer{background:#0a1e29;color:#c0d6d7;padding:35px 0;font-size:.87rem}.footer-
 <script src="./site-shell.js"></script><script src="./i18n.js"></script><script src="./explore-i18n.js"></script>
 <script>
 "use strict";
-const API="https://earnwage-api.policlinicosdesantoandre.com";
+const API=window.EarnWageConfig.apiBase;
 const $=id=>document.getElementById(id);
 const locales=["en","pt","es","de","fr","it","nl"];
 const savedLocale=(()=>{try{return localStorage.getItem("earnwage_lang")}catch(_){return null}})();
