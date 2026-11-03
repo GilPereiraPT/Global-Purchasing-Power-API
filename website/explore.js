@@ -1,5 +1,5 @@
 "use strict";
-const EW_API="https://earnwage-api.policlinicosdesantoandre.com";
+const EW_API=window.EarnWageConfig.apiBase;
 const EW_LANGS=["en","pt","es","de","fr","it","nl"];
 const EW_TAGS={en:"en-GB",pt:"pt-PT",es:"es-ES",de:"de-DE",fr:"fr-FR",it:"it-IT",nl:"nl-NL"};
 const EW_FLAGS={en:"🇬🇧",pt:"🇵🇹",es:"🇪🇸",de:"🇩🇪",fr:"🇫🇷",it:"🇮🇹",nl:"🇳🇱"};
