@@ -7,7 +7,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 12
     steps:
       - name: Probe published GitHub Pages website and API
         shell: bash
@@ -40,3 +40,51 @@ jobs:
           with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
             for r in pool.map(check,urls):print(json.dumps(r,ensure_ascii=False),flush=True)
           PYCODE
+      - name: Inspect functional website flows in real browser
+        shell: bash
+        run: |
+          npm install --no-save --no-audit --no-fund playwright
+          npx playwright install chromium
+          node - <<'JSCODE'
+          const { chromium }=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+            const root='https://gilpereirapt.github.io/Global-Purchasing-Power-API/';
+            const routes=[
+              {path:'',button:'#compareBtn',result:'#comparisonContent'},
+              {path:'compare.html',button:'#submit',result:'#results'},
+              {path:'salaries.html',button:'#exploreForm button[type=submit]',result:'#results'},
+              {path:'countries.html',button:'#exploreForm button[type=submit]',result:'#results'},
+              {path:'country.html?country=PT',button:'#refresh',result:'#detailsResults'},
+              {path:'occupation.html?country=PT&occupation=accountant',button:'#refresh',result:'#detailsResults'},
+              {path:'coverage.html',button:'#load',result:'#results'},
+              {path:'history.html?country=PT',button:'#load',result:'#results'},
+              {path:'wage-groups.html?country=PK',button:'#load',result:'#results'},
+              {path:'source-directory.html',button:null,result:'#results'},
+              {path:'jobs.html',button:'#exploreForm button[type=submit]',result:'#results'}
+            ];
+            for(const item of routes){
+              const page=await browser.newPage({viewport:{width:1280,height:900}});
+              const issues=[],calls=[];
+              page.on('pageerror',e=>issues.push('PAGEERROR '+String(e.message).slice(0,220)));
+              page.on('console',m=>{if(m.type()==='error')issues.push('CONSOLE '+m.text().slice(0,180));});
+              page.on('response',r=>{if(r.url().includes('/v1/'))calls.push({status:r.status(),url:r.url().split('/v1/')[1]?.slice(0,120)})});
+              try{
+                await page.goto(root+item.path,{waitUntil:'domcontentloaded',timeout:25000});
+                await page.waitForTimeout(2100);
+                if(item.button&&await page.locator(item.button).count()){
+                  await page.locator(item.button).first().click({timeout:8000});
+                  await page.waitForTimeout(1900);
+                }
+                let data=await page.evaluate((id)=>{
+                  const n=document.querySelector(id);
+                  return {text:n?.innerText?.slice(0,900)||'',hidden:n?.hidden??null};
+                },item.result);
+                console.log(JSON.stringify({page:item.path||'HOME',title:await page.title(),data,apiCalls:calls,issues},null,0));
+              }catch(e){
+                console.log(JSON.stringify({page:item.path||'HOME',exception:String(e).slice(0,500),calls,issues}));
+              }finally{await page.close()}
+            }
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JSCODE
