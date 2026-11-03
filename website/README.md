@@ -33,6 +33,17 @@ This directory is a **separate public website**, not a replacement for the exist
 
 The static website and Pages Function use the same domain, so the form needs no cross-origin access. Cloudflare Pages' build output stays `website`, with the `functions/` directory at repository root.
 
+## Methodology, data sources and individual profile pages
+
+- `methodology.html`: explains statistical measures, matching-year private-consumption PPP, tax verification, estimated versus missing values, and corrections.
+- `sources.html`: retrieves inflation and private-consumption PPP for a selected country, retaining status, year, unit and original official source links.
+- `country.html?country=PT`: country profile with currency, capital and available economic observations. Includes links to Compare and the occupation profile.
+- `occupation.html?country=PT&occupation=accountant`: uses `/v1/earnwage/overview` to display exact occupation wages and annual presentation only when available, with broad group context explicitly separate.
+- Shared `details.js` and `details-i18n.js` use the same seven-language selector and API as existing pages; no fictitious data or local wage database.
+- `tests/test_website_details.py` checks page contracts, language completeness and missing-data policies.
+
+These pages are available in the website branch only. **They have not been reviewed in a real browser or deployed.** Historical charts and a richer source catalog remain future work.
+
 ## Current functionality
 
 - Responsive editorial landing page with six capability cards, methodology and FAQ.
