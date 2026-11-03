@@ -61,6 +61,17 @@ private data class Place(val code:String,val name:String,val currency:String)
 private data class Profession(val id:String,val name:String)
 private data class Region(val code:String,val name:String)
 
+private fun indeedSearchUrl(country:String, occupationLabel:String):String {
+    val domains=mapOf(
+        "PT" to "pt.indeed.com", "ES" to "es.indeed.com", "DE" to "de.indeed.com",
+        "FR" to "fr.indeed.com", "GB" to "uk.indeed.com", "IN" to "in.indeed.com",
+        "BR" to "br.indeed.com", "PK" to "pk.indeed.com", "NL" to "nl.indeed.com",
+        "CH" to "ch.indeed.com", "IT" to "it.indeed.com", "IE" to "ie.indeed.com",
+        "US" to "www.indeed.com", "CA" to "ca.indeed.com"
+    )
+    val domain=domains[country] ?: return ""
+    return "https://"+domain+"/jobs?q="+enc(occupationLabel)
+}
 private fun enc(s:String) = URLEncoder.encode(s,"UTF-8")
 private fun number(n:Double):String = String.format(Locale.getDefault(),"%,.2f",n)
 private fun money(n:Double,c:String):String = number(n)+" "+c
@@ -107,6 +118,7 @@ class MainActivity:ComponentActivity() {
 
 @Composable private fun EarnWage() {
     val context=LocalContext.current
+    val uriHandler=LocalUriHandler.current
     val prefs=remember { context.getSharedPreferences("earnwage_settings",Context.MODE_PRIVATE) }
     var lang by remember { mutableStateOf(prefs.getString("language",Locale.getDefault().language.takeIf { it in languageNames } ?: "en") ?: "en") }
     var country by remember { mutableStateOf(prefs.getString("country","PT") ?: "PT") }
@@ -411,6 +423,30 @@ class MainActivity:ComponentActivity() {
                             item { CheckRow(tr(lang,"disclosed"),salaryOnly) {salaryOnly=it} }
                             item { SelectMenu(tr(lang,"source"),feeds,feed) {feed=it} }
                             item { SelectMenu(tr(lang,"age"),listOf("30","90","180"),age.toString()) {age=it.toInt()} }
+                            item {
+                                val occupationLabel=professions.firstOrNull { it.id==occupation }?.name.orEmpty()
+                                val indeedUrl=indeedSearchUrl(country,occupationLabel)
+                                OutlinedButton(
+                                    onClick={uriHandler.openUri(indeedUrl)},
+                                    enabled=occupationLabel.isNotBlank() && indeedUrl.isNotBlank(),
+                                    modifier=Modifier.fillMaxWidth()
+                                ) {
+                                    Text(when(lang) {
+                                        "pt" -> "Pesquisar vagas na Indeed ↗"
+                                        "es" -> "Buscar empleos en Indeed ↗"
+                                        "fr" -> "Rechercher sur Indeed ↗"
+                                        "de" -> "Stellen auf Indeed suchen ↗"
+                                        "it" -> "Cerca offerte su Indeed ↗"
+                                        "nl" -> "Vacatures zoeken op Indeed ↗"
+                                        else -> "Search jobs on Indeed ↗"
+                                    })
+                                }
+                                Caption(when(lang) {
+                                    "pt" -> "Abre a Indeed no navegador. Os anúncios e salários não são importados para o EarnWage."
+                                    "es" -> "Abre Indeed en el navegador. No se importan anuncios ni salarios."
+                                    else -> "Opens Indeed in your browser. Job ads and salaries are not imported into EarnWage."
+                                })
+                            }
                             item {
                                 Button(onClick={
                                     search("/v1/jobs?country="+country+"&occupation="+enc(occupation)+
