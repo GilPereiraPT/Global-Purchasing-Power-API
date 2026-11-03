@@ -8,16 +8,34 @@ WORKFLOW = Path(__file__).resolve().parents[1] / '.github/workflows/deploy-produ
 
 def permitted(repository=dm.GITHUB_REPOSITORY, enabled="true", **changes):
     run = dict(event='push', status='completed', conclusion='success', head_branch='main',
-               head_repository=NS(full_name=dm.GITHUB_REPOSITORY))
+               head_repository=NS(full_name=dm.GITHUB_REPOSITORY),
+               head_commit=NS(message='Backend implementation update'))
     run.update(changes)
     github = NS(repository=repository, event=NS(workflow_run=NS(**run)))
     expression = WORKFLOW.read_text().split('${{', 1)[1].split('}}', 1)[0]
-    return eval(expression.replace('&&', ' and ').strip().replace('\n', ' '),
-                {'__builtins__': {}}, {'github': github, 'vars': NS(EARNWAGE_DEPLOY_ENABLED=enabled)})
+    # Keep the original security tests in sync with GitHub's contains() operator.
+    # These tests must explicitly exercise the website-only deployment exclusion.
+    parsed = expression.replace('&&', ' and ').replace('!contains(', 'not contains(')
+    return eval(parsed.strip().replace('\n', ' '),
+                {'__builtins__': {}},
+                {'github': github, 'vars': NS(EARNWAGE_DEPLOY_ENABLED=enabled),
+                 'contains': lambda text, substring: substring in (text or '')})
 
 
 def test_original_main_push_is_allowed():
     assert permitted()
+
+
+@pytest.mark.parametrize('message', [
+    '[website-only] Publish EarnWage static website on GitHub Pages',
+    'Docs update and [website-only] refresh',
+])
+def test_website_only_main_push_never_deploys_api(message):
+    assert not permitted(head_commit=NS(message=message))
+
+
+def test_unmarked_main_api_push_remains_allowed():
+    assert permitted(head_commit=NS(message='Update verified API runtime'))
 
 
 def test_deployment_condition_has_no_literal_suffix():
