@@ -59,13 +59,13 @@ def test_italian_initial_salary_range_without_midpoint():
 
 def test_us_canada_optional_regions_and_no_national_fallback():
     code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
-    assert '["US","CA"].includes(code)' in code
+    assert '["US","CA","DE","BR","IN"].includes(code)' in code
     assert 'params.set("region",region)' in code
     assert 'data.region?.ui?.visible' in code
     assert 'data.regional_occupation_wage' in code
     assert 'if(!observation)result.append(text("p",copy.regionMissing' in code
     assert 'copy.taxCaution' in code
-    assert 'if(region&&["US","CA"].includes(code))compareParams.set("region_a",region)' in code
+    assert 'if(region&&["US","CA","DE","BR"].includes(code))compareParams.set("region_a",region)' in code
 
 def test_us_state_and_canadian_province_statistic_units():
     code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
