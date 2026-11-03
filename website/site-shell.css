@@ -1,0 +1,40 @@
+/* Shared EarnWage website shell: consistent navigation, footer, responsive controls. */
+header .ew-nav{display:flex;align-items:center;gap:16px;max-width:1160px;margin:0 auto;min-height:74px}
+header .ew-nav .brand{flex-shrink:0;white-space:nowrap}
+header .ew-nav .links,header .ew-nav .navlinks{display:flex!important;align-items:center!important;gap:13px!important;min-width:0;flex:1;overflow-x:auto;flex-wrap:nowrap!important;scrollbar-width:thin;scrollbar-color:#638c8f transparent;padding:7px 2px}
+header .ew-nav .links>a,header .ew-nav .navlinks>a{display:inline-block!important;flex:0 0 auto;white-space:nowrap!important;font-size:.88rem;text-decoration:none;color:#d8ece9}
+header .ew-nav .links>a[aria-current="page"],header .ew-nav .navlinks>a[aria-current="page"]{color:#fff;border-bottom:2px solid #8ce8d0;padding-bottom:2px;font-weight:750}
+header .ew-nav .nav-actions,header .ew-nav .lang{flex:0 0 auto}
+header .ew-nav .lang select,header .ew-nav .nav-actions .lang-select{width:96px;min-height:42px;color:#fff;background:#1a414d;border:1px solid #597982;border-radius:10px;padding:8px}
+header .ew-nav .nav-actions .lang-control select{min-height:42px}
+header .ew-more{position:relative;flex:0 0 auto;color:#e8f4ef}
+header .ew-more>summary{list-style:none;cursor:pointer;color:#e8f4ef;border:1px solid #51727a;border-radius:9px;padding:7px 12px;font-weight:750;white-space:nowrap;min-height:40px;display:flex;align-items:center;gap:7px}
+header .ew-more>summary::-webkit-details-marker{display:none}
+header .ew-more>summary::after{content:"⌄";font-size:1.15em}
+header .ew-more[open]>summary,header .ew-more>summary.ew-selected{background:#244e58}
+header .ew-more-menu{position:absolute;right:0;top:calc(100% + 7px);background:#fff;color:#17323c;z-index:40;min-width:245px;border-radius:12px;padding:8px;box-shadow:0 12px 38px #061a2680;border:1px solid #d9e7e5;display:flex;flex-direction:column}
+header .ew-more:not([open]) .ew-more-menu{display:none}
+header .ew-more-menu a{color:#15353d!important;text-decoration:none;font-weight:600;font-size:.89rem;border-radius:7px;padding:8px 11px}
+header .ew-more-menu a[aria-current="page"],header .ew-more-menu a:hover{background:#e8f5f0;color:#065f55!important}
+header .ew-more a:focus-visible,header .ew-more summary:focus-visible{outline:3px solid #e7bd6b;outline-offset:2px}
+.ew-site-footer{background:#091e29!important;color:#c8dedc!important;padding:34px 20px!important}
+.ew-footer-layout{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:minmax(220px,1.7fr) repeat(2,minmax(150px,1fr));gap:30px}
+.ew-footer-layout p{font-size:.86rem;line-height:1.65}
+.ew-footer-brand{font-weight:850;font-size:1.4rem;color:#fff!important;text-decoration:none}
+.ew-footer-heading{margin:0 0 12px;font-size:.91rem;color:#9fe4d0;font-weight:800}
+.ew-footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.ew-footer-column a{font-size:.87rem;color:#c9e1de!important;text-decoration:none}
+.ew-footer-column a:hover{text-decoration:underline}
+.ew-footer-note{max-width:360px;color:#b5cbd0}
+@media(max-width:960px){
+ header .ew-nav{flex-wrap:wrap;gap:10px;padding-top:11px;padding-bottom:8px}
+ header .ew-nav .links,header .ew-nav .navlinks{order:4;flex:0 0 100%;width:100%;gap:15px!important;padding:8px 3px;overflow-x:auto}
+ header .ew-nav .ew-more{order:2;margin-left:auto}
+ header .ew-nav .nav-actions,header .ew-nav .lang{order:3}
+}
+@media(max-width:640px){
+ .ew-footer-layout{grid-template-columns:1fr 1fr;gap:22px}
+ .ew-footer-identity{grid-column:1/-1}
+ header .ew-nav .links>a,header .ew-nav .navlinks>a{font-size:.84rem!important}
+}
+@media(max-width:360px){header .ew-nav{gap:7px}header .ew-nav .brand{font-size:1.13rem}header .ew-more>summary{padding:7px 8px}}
