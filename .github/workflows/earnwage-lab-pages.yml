@@ -1,18 +1,23 @@
-name: EarnWage API Lab Pages
+name: EarnWage Website and API Lab - GitHub Pages
+
 on:
   push:
     branches: [main]
     paths:
+      - 'website/**'
       - 'docs/**'
       - '.github/workflows/earnwage-lab-pages.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
-  group: earnwage-lab-pages
+  group: earnwage-github-pages
   cancel-in-progress: true
+
 jobs:
   deploy:
     environment:
@@ -21,27 +26,66 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check API Lab JavaScript syntax
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify website and API Lab scripts
+        shell: bash
         run: |
+          set -euo pipefail
+          find website -maxdepth 1 -name '*.js' -print0 | xargs -0 -r -n1 node --check
           python - <<'PY'
           from pathlib import Path
           import re
           for filename in ("index", "india", "brazil", "germany", "portugal"):
-              text = Path(f"docs/{filename}.html").read_text(encoding="utf-8")
-              blocks = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", text)
-              assert blocks, f"No inline script in {filename}.html"
-              Path(f"/tmp/earnwage-{filename}.js").write_text("\n".join(blocks), encoding="utf-8")
+              source = Path(f"docs/{filename}.html").read_text(encoding="utf-8")
+              scripts = re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", source)
+              assert scripts, f"No inline API Lab JavaScript: {filename}"
+              Path(f"/tmp/earnwage-lab-{filename}.js").write_text("\\n".join(scripts), encoding="utf-8")
           PY
-          node --check /tmp/earnwage-index.js
-          node --check /tmp/earnwage-india.js
-          node --check /tmp/earnwage-brazil.js
-          node --check /tmp/earnwage-germany.js
-          node --check /tmp/earnwage-portugal.js
+          for file in /tmp/earnwage-lab-*.js; do node --check "$file"; done
+      - name: Assemble GitHub Pages website with separate API Lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/lab
+          cp -a website/. _site/
+          cp -a docs/. _site/lab/
+          rm -f _site/_headers
+          touch _site/.nojekyll
+          test -f _site/index.html
+          test -f _site/lab/index.html
+          test -f _site/country-guides.js
+          test -f _site/api-config.js
+          python - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          root = Path("_site")
+          class Assets(HTMLParser):
+              def __init__(self, filename):
+                  super().__init__()
+                  self.filename = filename
+              def handle_starttag(self, tag, attrs):
+                  props = dict(attrs)
+                  attr = "src" if tag == "script" else "href" if tag == "link" and props.get("rel") == "stylesheet" else None
+                  if not attr or not props.get(attr):
+                      return
+                  url = urlsplit(props[attr])
+                  if url.scheme or url.netloc or not url.path:
+                      return
+                  destination = (self.filename.parent / url.path).resolve()
+                  assert destination.is_file() and destination.is_relative_to(root.resolve()), (
+                      f"Missing local asset {props[attr]} in {self.filename}")
+          for filename in root.glob("*.html"):
+              parser = Assets(filename)
+              parser.feed(filename.read_text(encoding="utf-8"))
+          PY
       - uses: actions/configure-pages@v5
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
