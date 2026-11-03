@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
+from app.web_cors import allowed_public_origin
 from app import jobs as job_provider
 from app import north_america as na_wages
 from app import ca_province_wages
@@ -55,6 +56,20 @@ app = FastAPI(
     description="Free official economic data, normalized with provenance. No fabricated salaries or capital prices.",
     lifespan=lifespan,
 )
+
+@app.middleware("http")
+async def public_read_cors(request: Request, call_next):
+    """CORS for public GET/HEAD only, never for admin endpoints."""
+    response = await call_next(request)
+    origin = request.headers.get("origin")
+    if (request.method in ("GET", "HEAD") and
+            request.url.path.startswith("/v1/") and
+            not request.url.path.startswith("/v1/admin/") and
+            allowed_public_origin(origin)):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+    return response
+
 
 @app.exception_handler(UpstreamUnavailable)
 async def upstream_error(request, exc):
@@ -138,6 +153,19 @@ def economy_coverage():
                 for code in ISO3]
     return {"countries": rows, "count": len(rows),
             "note": "Annual CPI inflation and household consumption PPP are distinct measures; observation years may differ."}
+
+
+@app.get("/v1/economy/history/{country}")
+def economy_history(country: str, indicator: str = Query("inflation_annual")):
+    """Read-only, observed annual WDI series. No interpolation or API refresh."""
+    from app.country_insights_store import connect as insights_connect, read_indicator
+    code = country.upper()
+    if code not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    if indicator not in ("inflation_annual", "ppp_private_consumption"):
+        raise HTTPException(422, "Unsupported historical indicator")
+    with insights_connect() as db:
+        return read_indicator(db, code, indicator, history=True)
 
 
 @app.get("/v1/economy/compare")
