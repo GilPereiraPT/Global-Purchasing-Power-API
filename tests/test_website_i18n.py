@@ -9,8 +9,9 @@ LANGUAGES = ("en", "pt", "es", "de", "fr", "it", "nl")
 
 def catalog():
     content = (ROOT / "i18n.js").read_text(encoding="utf-8").strip()
-    assert content.startswith("window.EarnWageI18n = ")
-    return json.loads(content.removeprefix("window.EarnWageI18n = ").rstrip(";"))
+    marker = "window.EarnWageI18n = "
+    assert marker in content  # A leading explanatory JavaScript comment is allowed.
+    return json.loads(content.split(marker, 1)[1].rstrip(";"))
 
 
 def test_same_translation_keys_present_for_all_languages():
