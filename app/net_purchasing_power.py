@@ -12,6 +12,7 @@ def compare_net_ppp(origin_tax, destination_tax, gross_ppp, expected_currencies)
     """Compute net PPP equivalence only when both net tax outcomes are usable."""
     base = {
         "status": "unavailable",
+        "value": None,  # Legacy result field: null unless verified/benchmark PPP is calculable.
         "kind": "annual_net_ppp_comparison",
         "origin_net_income": None,
         "destination_net_income": None,
@@ -64,7 +65,7 @@ def compare_net_ppp(origin_tax, destination_tax, gross_ppp, expected_currencies)
         difference = None
     status = ("verified_models" if origin_tax["status"] == destination_tax["status"] == "verified"
               else "benchmark_estimate")
-    return {**base, "status": status,
+    return {**base, "status": status, "value": equivalent,
             "origin_net_income": net_a, "destination_net_income": net_b,
             "origin_net_equivalent_in_destination_currency": equivalent,
             "destination_net_difference_percent": difference,
