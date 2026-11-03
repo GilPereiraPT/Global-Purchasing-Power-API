@@ -29,6 +29,8 @@ from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
 from app.client_config import region_configuration
 from app.tax_components import components as tax_components
+from app.purchasing_power import compare as purchasing_power_compare
+from app.net_purchasing_power import compare_net_ppp
 from app.us_state_tax import state_wage_income_tax
 
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -325,15 +327,20 @@ def compare(country_a, country_b, occupation, region_a=None, region_b=None,
                  tax_scenario_a, tax_region_a, net_tax_year_a, eligible_household_expenses_a)
     b = overview(country_b, occupation, region_b, annual_gross_b, tax_year,
                  tax_scenario_b, tax_region_b, net_tax_year_b, eligible_household_expenses_b)
+    gross_ppp = purchasing_power_compare(
+        country_a.upper(), country_b.upper(), annual_gross_a, annual_gross_b)
+    net_ppp = compare_net_ppp(
+        a.get("tax_scenario"), b.get("tax_scenario"), gross_ppp,
+        (a["country"]["currency"], b["country"]["currency"]))
     return {
         "occupation": occupation, "country_a": a, "country_b": b,
         "wage_comparability": {
             "status": "not_normalized",
             "reason": "Units, statistical measures, reference years, NOC/SOC/ISCO scopes and currencies can differ",
         },
-        "net_purchasing_power": {"status": "unavailable", "value": None,
-            "reason": "Full region-aware income tax and verified living-cost baskets are pending"},
-        "display_policy": "Do not rank countries or subtract unvalidated deductions from source wages.",
+        "gross_purchasing_power_equivalence": gross_ppp,
+        "net_purchasing_power": net_ppp,
+        "display_policy": "PPP equivalence is gross-only. Do not rank net outcomes or infer tax residence from remote job eligibility.",
     }
 
 

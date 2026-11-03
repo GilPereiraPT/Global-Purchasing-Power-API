@@ -140,6 +140,19 @@ def economy_coverage():
             "note": "Annual CPI inflation and household consumption PPP are distinct measures; observation years may differ."}
 
 
+@app.get("/v1/economy/history/{country}")
+def economy_history(country: str, indicator: str = Query("inflation_annual")):
+    """Read-only, observed annual WDI series. No interpolation or API refresh."""
+    from app.country_insights_store import connect as insights_connect, read_indicator
+    code = country.upper()
+    if code not in COUNTRY_MAP:
+        raise HTTPException(404, "Unknown country")
+    if indicator not in ("inflation_annual", "ppp_private_consumption"):
+        raise HTTPException(422, "Unsupported historical indicator")
+    with insights_connect() as db:
+        return read_indicator(db, code, indicator, history=True)
+
+
 @app.get("/v1/economy/compare")
 def economy_compare(country_a: str, country_b: str):
     from app.country_insights_store import connect as insights_connect, read_indicator
