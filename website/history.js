@@ -17,6 +17,8 @@ function url(value){if(typeof value!=="string")return null;try{const u=new URL(v
 function status(message){$("results").replaceChildren(elem("div",message,"notice"))}
 function renderOptions(){const sel=$("country");if(!sel)return;const selected=sel.value||"PT";sel.replaceChildren(...catalog.map(code=>option(code,countryName(code))));if(catalog.includes(selected))sel.value=selected}
 function translate(){
+ document.querySelectorAll('[data-library="wages"]').forEach(x=>x.textContent=({en:"Wage groups",pt:"Grupos profissionais",es:"Grupos profesionales",de:"Berufsgruppen",fr:"Groupes professionnels",it:"Gruppi professionali",nl:"Beroepsgroepen"})[lang]);
+ document.querySelectorAll('[data-library="directory"]').forEach(x=>x.textContent=({en:"Source directory",pt:"Diretório de fontes",es:"Directorio de fuentes",de:"Quellenverzeichnis",fr:"Répertoire des sources",it:"Elenco delle fonti",nl:"Bronnenoverzicht"})[lang]);
  document.documentElement.lang=tags[lang];$("lang").value=lang;$("lang").setAttribute("aria-label",T("indicator"));
  document.querySelectorAll("[data-h]").forEach(n=>n.textContent=T(n.dataset.h));
  document.querySelectorAll("[data-nav]").forEach(n=>n.textContent=N(n.dataset.nav));
