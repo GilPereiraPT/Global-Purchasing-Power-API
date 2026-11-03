@@ -22,7 +22,7 @@ footer{background:#0a1e29;color:#c0d6d7;padding:35px 0;font-size:.87rem}.footer-
 </style>
 </head>
 <body>
-<header><nav class="container nav" aria-label="Main navigation"><a class="brand" href="#top"><span class="mark">E</span> EarnWage</a><div class="navlinks"><a href="#features">Explore</a><a href="#jobs">Find jobs</a><a href="#how">How it works</a><a href="#faq">FAQ</a><a class="navcta" href="#compare">Compare salaries</a></div><div class="nav-actions"><label class="lang-control"><span class="sr-only" id="languageLabel">Language</span><select id="languageSelector" class="lang-select" aria-labelledby="languageLabel"><option value="en">🇬🇧 EN</option><option value="pt">🇵🇹 PT</option><option value="es">🇪🇸 ES</option><option value="de">🇩🇪 DE</option><option value="fr">🇫🇷 FR</option><option value="it">🇮🇹 IT</option><option value="nl">🇳🇱 NL</option></select></label></div></nav></header>
+<header><nav class="container nav" aria-label="Main navigation"><a class="brand" href="#top"><span class="mark">E</span> EarnWage</a><div class="navlinks"><a href="./salaries.html">Salaries</a><a href="./countries.html">Countries</a><a href="./jobs.html">Jobs</a><a href="./insights.html">Insights</a><a class="navcta" href="#compare">Compare salaries</a></div><div class="nav-actions"><label class="lang-control"><span class="sr-only" id="languageLabel">Language</span><select id="languageSelector" class="lang-select" aria-labelledby="languageLabel"><option value="en">🇬🇧 EN</option><option value="pt">🇵🇹 PT</option><option value="es">🇪🇸 ES</option><option value="de">🇩🇪 DE</option><option value="fr">🇫🇷 FR</option><option value="it">🇮🇹 IT</option><option value="nl">🇳🇱 NL</option></select></label></div></nav></header>
 <main id="top">
 <div class="hero"><div class="container hero-grid">
 <div><div class="eyebrow">International salary intelligence</div><h1>Know what your salary is <em>really worth.</em></h1><p>Compare earnings and purchasing power across countries. Explore real job opportunities and make informed career decisions with transparent, attributed data.</p><div class="trust"><span>✓ Official economic data</span><span>✓ Transparent assumptions</span><span>✓ 14 country catalogue</span></div></div>
@@ -48,7 +48,7 @@ footer{background:#0a1e29;color:#c0d6d7;padding:35px 0;font-size:.87rem}.footer-
 </div></section>
 </main>
 <footer><div class="container footer-row"><div><a class="brand" href="#top"><span class="mark">E</span> EarnWage</a><p>Your salary. Your world.<br>Economic information for informed career choices.</p></div><div><p>Data availability differs by country, year and source.<br>Results are informational, not personal financial or tax advice.</p><a href="https://github.com/GilPereiraPT/Global-Purchasing-Power-API" rel="noopener noreferrer" target="_blank">Project & sources ↗</a></div></div></footer>
-<script src="./i18n.js"></script>
+<script src="./i18n.js"></script><script src="./explore-i18n.js"></script>
 <script>
 "use strict";
 const API="https://earnwage-api.policlinicosdesantoandre.com";
@@ -58,9 +58,9 @@ const savedLocale=(()=>{try{return localStorage.getItem("earnwage_lang")}catch(_
 let activeLocale=locales.includes(savedLocale)?savedLocale:
     (locales.includes((navigator.language||"en").slice(0,2).toLowerCase())?(navigator.language||"en").slice(0,2).toLowerCase():"en");
 const localeTags={en:"en-GB",pt:"pt-PT",es:"es-ES",de:"de-DE",fr:"fr-FR",it:"it-IT",nl:"nl-NL"};
-const ewT=(key)=>window.EarnWageI18n?.[activeLocale]?.[key]||window.EarnWageI18n?.en?.[key]||key;
+const ewT=(key)=>window.EarnWageExploreI18n?.[activeLocale]?.[key]||window.EarnWageI18n?.[activeLocale]?.[key]||window.EarnWageExploreI18n?.en?.[key]||window.EarnWageI18n?.en?.[key]||key;
 const localizedTargets=[
-[".navlinks a:nth-child(1)","explore"],[".navlinks a:nth-child(2)","jobs"],[".navlinks a:nth-child(3)","how"],[".navlinks a:nth-child(4)","faq"],[".navlinks a:nth-child(5)","compare"],
+[".navlinks a:nth-child(1)","salaries"],[".navlinks a:nth-child(2)","countries"],[".navlinks a:nth-child(3)","jobs"],[".navlinks a:nth-child(4)","insights"],[".navlinks a:nth-child(5)","compare"],
 [".hero .eyebrow","eyebrow"],[".hero h1 em","heroEm"],[".hero-grid>div:first-child>p","heroDesc"],
 [".trust span:nth-child(1)","trust1"],[".trust span:nth-child(2)","trust2"],[".trust span:nth-child(3)","trust3"],
 [".calculator h2","compareTitle"],[".calculator>p","compareDesc"],["label[for=salary]","salary"],["label[for=from]","origin"],["label[for=to]","destination"],["label[for=occupation]","occupation"],
