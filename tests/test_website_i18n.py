@@ -40,4 +40,7 @@ def test_all_used_translation_keys_exist():
     used = set(re.findall(r'ewT\("([A-Za-z0-9]+)"\)', html))
     block = html.split('const localizedTargets=[', 1)[1].split('];', 1)[0]
     used.update(re.findall(r',"([A-Za-z0-9]+)"\]', block))
-    assert used <= set(catalog()["en"])
+    extra = (ROOT / "explore-i18n.js").read_text(encoding="utf-8").strip()
+    assert extra.startswith("window.EarnWageExploreI18n=")
+    explorer = json.loads(extra.removeprefix("window.EarnWageExploreI18n=").rstrip(";"))
+    assert used <= set(catalog()["en"]) | set(explorer["en"])
