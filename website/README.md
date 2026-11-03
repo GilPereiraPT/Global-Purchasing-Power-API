@@ -31,13 +31,13 @@ The existing cPanel/Passenger Python API remains independent; do not move or red
 
 - The gross PPP function is implemented in the separate PR #47, and net-PPP gating in #48. Until those changes are approved and deployed to the API, the website may show PPP as unavailable.
 - The API currently requires an occupation for its comparison endpoint. Make salary-only comparison truly occupation-independent in a later backend PR.
-- The website currently starts in English. Locale content for `pt`, `es`, `de`, `fr`, `it`, `nl` requires an audited i18n pass.
+- The website includes 7 interface languages (`en`, `pt-PT`, `es`, `de`, `fr`, `it`, `nl`), selected at the top-right using flags and ISO language initials. Choice persists locally. Translations require a final native-speaker editorial review before public launch.
 - This foundation does not yet have full on-site job-feed cards, region-aware tax scenario controls, charts, source explorer, or a downloadable Android release.
 - No automated HTML/JavaScript browser tests or accessibility audit have been run in this session.
 
 ## Suggested next website work packages
 
-1. Add multilingual, accessible navigation and content; Portuguese is PT-PT.
+1. Complete native-speaker language proofing, responsive and accessibility checks for the seven-locale header selector.
 2. Make salary-only comparison independent from occupation in FastAPI and native WSGI.
 3. Add a dedicated results page with gross PPP, independently sourced FX, region-aware fiscal scenarios and explicit availability states.
 4. Build country/occupation discovery and salary history from existing sourced endpoints, respecting exact occupation versus major-group distinctions.
