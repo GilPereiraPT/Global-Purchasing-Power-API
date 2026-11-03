@@ -1,0 +1,42 @@
+name: EarnWage live API temporary diagnostic
+on:
+  push:
+    branches: [diagnostic/earnwage-live-api]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Probe published GitHub Pages website and API
+        shell: bash
+        run: |
+          python - <<'PYCODE'
+          import concurrent.futures, json, urllib.request, urllib.error
+          host='https://earnwage-api.policlinicosdesantoandre.com'
+          pages='https://gilpereirapt.github.io/Global-Purchasing-Power-API/'
+          origin='https://gilpereirapt.github.io'
+          paths=['/v1/health','/v1/countries','/v1/occupations?lang=pt',
+            '/v1/countries/PT','/v1/economy/compare?country_a=PT&country_b=PT',
+            '/v1/earnwage/overview?country=PT&occupation=accountant',
+            '/v1/earnwage/compare?country_a=PT&country_b=ES&occupation=accountant&annual_gross_a=30000',
+            '/v1/economy/coverage','/v1/economy/history/PT?indicator=inflation_annual',
+            '/v1/sources','/v1/tax/assumptions/PT','/v1/regions/US',
+            '/v1/jobs?country=PT&occupation=accountant&limit=1',
+            '/v1/pt/earnings/groups','/v1/in/plfs/earnings']
+          urls=[pages,pages+'country.html?country=PT',pages+'api-config.js']+[host+p for p in paths]
+          def check(url):
+            req=urllib.request.Request(url,headers={'Origin':origin,'Accept':'application/json' if url.startswith(host) else 'text/html'})
+            try:
+              with urllib.request.urlopen(req,timeout=18) as r:
+                body=r.read(1500).decode('utf-8','replace')
+                return {'url':url,'http':r.status,'content_type':r.headers.get('Content-Type'),
+                  'cors':r.headers.get('Access-Control-Allow-Origin'),'sample':body[:270]}
+            except urllib.error.HTTPError as e:
+              body=e.read(500).decode('utf-8','replace')
+              return {'url':url,'http':e.code,'cors':e.headers.get('Access-Control-Allow-Origin'),'sample':body[:270]}
+            except Exception as e:return {'url':url,'error':type(e).__name__+': '+str(e)[:250]}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            for r in pool.map(check,urls):print(json.dumps(r,ensure_ascii=False),flush=True)
+          PYCODE
