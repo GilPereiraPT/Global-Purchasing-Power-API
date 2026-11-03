@@ -15,6 +15,24 @@ This directory is a **separate public website**, not a replacement for the exist
 - `gross_purchasing_power_equivalence` and `net_purchasing_power` depend on the not-yet-merged backend PRs #47 and #48. The page displays missing data honestly until deployed.
 - **QA still needed:** real desktop/mobile browser tests, keyboard/screen-reader tests, tax-scenario edge cases, and live API/CORS validation. No rollout to production has been made.
 
+## About EarnWage and user feedback
+
+- `website/about.html` explains the mission, public statistical data sources, internal processing, missing-value policy and the important distinction between official statistics and third-party job listings.
+- The About page includes a seven-language feedback form for incorrect values, translations, broken sources and suggestions, with consent and a supporting-source URL.
+- `website/about.js` loads the consent-protected form and invokes `POST /api/report` on **Cloudflare Pages Functions**. The function lives at repository root `functions/api/report.js`; it is **not part of the Python API**.
+- This form intentionally **remains disabled** until spam protection and email delivery are configured; it must not claim success unless Resend accepts the message. A project support email has **not** been invented or published.
+
+### Configure the Cloudflare Pages reporting service
+
+1. Create/verify a sender domain and address in Resend (or adapt the function for the chosen email provider).
+2. Configure the following server-side environment variables for the Pages project: `REPORT_TO_EMAIL`, `REPORT_FROM_EMAIL`, `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` and `REPORT_ALLOWED_ORIGIN` (the **exact** website origin, e.g. `https://example.org`).
+3. Create a Cloudflare Turnstile widget for the public site's hostname. Put **only its public site key** in `website/report-config.js`; keep the secret key in Cloudflare Pages secrets.
+4. Add a Cloudflare WAF / rate-limit rule for `/api/report`; Turnstile and a honeypot are supplemental defences, not a rate limiter.
+5. Test valid delivery, invalid captcha, invalid origin, oversized payload, errors from the mail provider and a mobile-browser submission before publishing.
+6. Add a complete privacy notice explaining feedback retention and the mail service used. Do not request personal tax identifiers, documents, payslips or other sensitive information via this form.
+
+The static website and Pages Function use the same domain, so the form needs no cross-origin access. Cloudflare Pages' build output stays `website`, with the `functions/` directory at repository root.
+
 ## Current functionality
 
 - Responsive editorial landing page with six capability cards, methodology and FAQ.
