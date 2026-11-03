@@ -17,6 +17,7 @@ jobs:
     if: >-
       ${{
         vars.EARNWAGE_DEPLOY_ENABLED == 'true' &&
+        !contains(github.event.workflow_run.head_commit.message, '[website-only]') &&
         github.repository == 'GilPereiraPT/Global-Purchasing-Power-API' &&
         github.event.workflow_run.event == 'push' &&
         github.event.workflow_run.status == 'completed' &&
