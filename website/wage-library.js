@@ -92,6 +92,12 @@ function init(){
  $("lang").addEventListener("change",event=>{lang=event.target.value;try{localStorage.setItem("earnwage_lang",lang)}catch(_){}setLanguage()});
  $("queryForm").addEventListener("submit",event=>{event.preventDefault();load()});
  setLanguage();
- if(page==="wage-groups"){$("country").addEventListener("change",loadCatalogue);$("sex").addEventListener("change",load);loadCatalogue()}else load();
+ if(page==="wage-groups"){
+  const requested=new URLSearchParams(location.search).get("country");
+  if(["ES","PT","PK"].includes(requested))$("country").value=requested;
+  $("country").addEventListener("change",loadCatalogue);
+  $("sex").addEventListener("change",load);
+  loadCatalogue();
+ }else load();
 }
 init();

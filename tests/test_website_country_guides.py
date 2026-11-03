@@ -1,4 +1,4 @@
-"""Smoke checks for nine source-aware EarnWage country-guide integrations."""
+"""Smoke checks for fourteen source-aware EarnWage country-guide integrations."""
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]/"website"
 
@@ -16,7 +16,7 @@ def test_countries_page_has_links():
 
 def test_sources_and_source_categories_are_distinct():
     code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
-    for country in ('"ES"','"IE"','"GB"','"FR"','"NL"','"CH"','"IT"','"US"','"CA"'):
+    for country in ('"ES"','"IE"','"GB"','"FR"','"NL"','"CH"','"IT"','"US"','"CA"','"PT"','"DE"','"BR"','"IN"','"PK"'):
         assert country in code
     assert "es_ine_eaes" not in code  # no invented numeric series
     assert "ireland_public_sector_entry" in code
@@ -59,13 +59,13 @@ def test_italian_initial_salary_range_without_midpoint():
 
 def test_us_canada_optional_regions_and_no_national_fallback():
     code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
-    assert '["US","CA"].includes(code)' in code
+    assert '["US","CA","DE","BR","IN"].includes(code)' in code
     assert 'params.set("region",region)' in code
     assert 'data.region?.ui?.visible' in code
     assert 'data.regional_occupation_wage' in code
     assert 'if(!observation)result.append(text("p",copy.regionMissing' in code
     assert 'copy.taxCaution' in code
-    assert 'if(region&&["US","CA"].includes(code))compareParams.set("region_a",region)' in code
+    assert 'if(region&&["US","CA","DE","BR"].includes(code))compareParams.set("region_a",region)' in code
 
 def test_us_state_and_canadian_province_statistic_units():
     code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
@@ -75,3 +75,34 @@ def test_us_state_and_canadian_province_statistic_units():
         assert unit in code
     assert 'regionChooser.addEventListener("change"' in code
     assert "Federal" in code and "Québec" in code
+
+def test_portugal_market_vs_public_2026_separate():
+    code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
+    assert "data.portugal_public_sector_entry" in code
+    assert '"conditional_comparable_public_career"' in code
+    assert "copy.ptPublicConditional" in code and "copy.ptMean" in code
+    assert "Não se presumem 14 pagamentos" in code
+
+def test_germany_brazil_region_source_specific_no_fallback():
+    code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
+    assert '["US","CA","DE","BR","IN"].includes(code)' in code
+    assert "const obs=directRegional(regional)" in code
+    assert "if(!obs)result.append(text(\"p\",copy.regionMissing" in code
+    assert "copy.brComposite" in code
+    assert "data.brazil_public_sector_entry" in code
+
+def test_india_plfs_group_not_occupation():
+    code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
+    assert "india_plfs_employee_earnings_context" in code
+    assert "india_nco2015_professional_group_context" in code
+    assert "india_nco2015_regional_group_context" in code
+    assert "function indianGroup(record)" in code
+    assert "NÃO salários profissionais exatos" in code
+
+def test_pakistan_group_source_and_catalogue_link():
+    code=(ROOT/"country-guides.js").read_text(encoding="utf-8")
+    lib=(ROOT/"wage-library.js").read_text(encoding="utf-8")
+    assert 'copy.pkExact' in code and 'copy.pkGroupNote' in code
+    assert 'wage-groups.html?country=PK' in code
+    assert '["ES","PT","PK"].includes(requested)' in lib
+    assert 'const requested=new URLSearchParams(location.search).get("country")' in lib
