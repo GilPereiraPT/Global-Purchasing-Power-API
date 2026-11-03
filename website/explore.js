@@ -43,7 +43,7 @@ function renderSalaryOverview(data){
  const wage=data.national_occupation_wage||{},annual=data.annual_presentation||{},group=data.national_major_group_context||{};
  const wrapper=make("div",undefined,"cards");
  const label=data.occupation?.translations?.[language]||occupations.find(o=>o.id===data.occupation?.id)?.label||data.occupation?.label||"";
- if(wage.status==="available"){wrapper.append(card(label,wage.value!=null?format(wage.value)+" "+(wage.currency||data.country?.currency||""):T("official"),statusNote(wage)+" · "+(wage.unit||"")))}else{wrapper.append(card(label,T("unavailable"),wage.reason||T("missing")))}
+ if(wage.status==="available"){const amountValue=typeof wage.value==="number"&&Number.isFinite(wage.value)?format(wage.value)+" "+(wage.currency||data.country?.currency||""):T("official");wrapper.append(card(label,amountValue,statusNote(wage)+" · "+(wage.unit||"")))}else{wrapper.append(card(label,T("unavailable"),wage.reason||T("missing")))}
  if(annual.status==="available"){wrapper.append(card(T("annual"),money(Number(annual.value),annual.currency||data.country?.currency),statusNote(annual)))}else{wrapper.append(card(T("annual"),T("unavailable"),annual.reason||T("missing")))}
  wrapper.append(card(T("context"),group.status==="available"?T("official"):T("unavailable"),T("context")));
  out.append(wrapper);
