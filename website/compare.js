@@ -1,5 +1,5 @@
 "use strict";
-const API="https://earnwage-api.policlinicosdesantoandre.com";
+const API=window.EarnWageConfig.apiBase;
 const LANGS=["en","pt","es","de","fr","it","nl"];
 const TAGS={en:"en-GB",pt:"pt-PT",es:"es-ES",de:"de-DE",fr:"fr-FR",it:"it-IT",nl:"nl-NL"};
 const FALLBACK=[["PT","Portugal","EUR"],["ES","Spain","EUR"],["DE","Germany","EUR"],["FR","France","EUR"],["GB","United Kingdom","GBP"],["IN","India","INR"],["BR","Brazil","BRL"],["PK","Pakistan","PKR"],["NL","Netherlands","EUR"],["CH","Switzerland","CHF"],["IT","Italy","EUR"],["IE","Ireland","EUR"],["US","United States","USD"],["CA","Canada","CAD"]];
