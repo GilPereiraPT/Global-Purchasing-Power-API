@@ -25,7 +25,7 @@ This directory is a **separate public website**, not a replacement for the exist
 ### Configure the Cloudflare Pages reporting service
 
 1. Create/verify a sender domain and address in Resend (or adapt the function for the chosen email provider).
-2. Configure the following server-side environment variables for the Pages project: `REPORT_TO_EMAIL`, `REPORT_FROM_EMAIL`, `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` and `REPORT_ALLOWED_ORIGIN` (the **exact** website origin, e.g. `https://example.org`).
+2. Configure the following server-side environment variables for the Pages project: `REPORT_TO_EMAIL` (the private Gmail inbox selected by the project owner), `REPORT_FROM_EMAIL`, `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` and `REPORT_ALLOWED_ORIGIN` (the **exact** website origin, e.g. `https://example.org`). Do not commit the recipient email to this public repository. All feedback subjects follow `EarnWage: <category>` (Incorrect value / Translation issue / Source or broken link / Suggestion), with the visitor's email in Reply-To.
 3. Create a Cloudflare Turnstile widget for the public site's hostname. Put **only its public site key** in `website/report-config.js`; keep the secret key in Cloudflare Pages secrets.
 4. Add a Cloudflare WAF / rate-limit rule for `/api/report`; Turnstile and a honeypot are supplemental defences, not a rate limiter.
 5. Test valid delivery, invalid captcha, invalid origin, oversized payload, errors from the mail provider and a mobile-browser submission before publishing.
