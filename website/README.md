@@ -64,6 +64,17 @@ These pages are available in the website branch only. **They have not been revie
 - Shared `wage-library.js` and `wage-library-i18n.js` localize the pages in seven languages and use the live EarnWage API rather than duplicated site data. Static/regression tests are in `tests/test_website_wage_library.py`.
 - Pages are in the pull-request branch only. Test browser behavior and existing API CORS configuration before deployment.
 
+## Consolidação visual e pré-visualização
+
+- `site-shell.js` + `site-shell.css`: navegação superior unificada e rodapé partilhado em todas as **15 páginas HTML**, incluindo menu secundário `Mais`, página ativa, traduções EN/PT-PT/ES/DE/FR/IT/NL e navegação por teclado. O ecrã móvel mantém o seletor de idioma e os links acessíveis.
+- A preferência do idioma (`earnwage_lang`) é preservada; na primeira visita aplica-se o idioma do navegador se suportado, senão inglês.
+- `api-config.js` contém o **único endereço público da API** utilizado pelos módulos de dados; não contém credenciais.
+- `website/_headers` prepara respostas estáticas com `nosniff`, proteção de enquadramento e política de referenciação.
+- `tests/test_website_shell.py`, `tests/test_website_api_config.py` e `tests/test_website_public_cors.py` acrescentam verificações automáticas de navegação, configuração e acesso seguro.
+- **CORS:** a API da branch aceita origens adicionais configuradas em `EARNWAGE_PUBLIC_CORS_ORIGINS` (origens HTTPS completas, separadas por vírgulas) apenas em pedidos `GET/HEAD` públicos; rotas administrativas mantêm a autorização anterior. O novo código só produzirá efeitos quando for revisto e instalado no servidor.
+- Antes de configurar o Cloudflare Pages, seguir `website/PREVIEW_CHECKLIST.md` (branch da PR, raiz do repositório, diretório de saída `website`, funções na raiz `functions/`, verificação de CORS, privacidade e testes visuais).
+- **Ainda não há deployment, publicação do site, alterações DNS ou alteração à BD de produção.** Testes visuais em browsers reais ainda pendentes.
+
 ## Current functionality
 
 - Responsive editorial landing page with six capability cards, methodology and FAQ.
