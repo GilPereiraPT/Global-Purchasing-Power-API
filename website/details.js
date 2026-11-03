@@ -1,5 +1,5 @@
 "use strict";
-const API="https://earnwage-api.policlinicosdesantoandre.com";
+const API=window.EarnWageConfig.apiBase;
 const $=id=>document.getElementById(id);
 const page=document.body.dataset.page;
 const langs=["en","pt","es","de","fr","it","nl"];
