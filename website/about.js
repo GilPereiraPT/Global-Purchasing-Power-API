@@ -8,6 +8,8 @@ const T=k=>window.EarnWageAboutI18n?.[lang]?.[k]||window.EarnWageAboutI18n?.en?.
 const N=k=>window.EarnWageExploreI18n?.[lang]?.[k]||window.EarnWageExploreI18n?.en?.[k]||k;
 let captchaId=null;let submitting=false;
 function applyLanguage(){
+ document.querySelectorAll('[data-more="history"]').forEach(x=>x.textContent=({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[lang]);
+ document.querySelectorAll('[data-more="coverage"]').forEach(x=>x.textContent=({en:"Coverage",pt:"Cobertura",es:"Cobertura",de:"Datenstand",fr:"Couverture",it:"Copertura",nl:"Dekking"})[lang]);
  document.querySelectorAll("[data-method-link]").forEach(el=>el.textContent=({en:"Methodology",pt:"Metodologia",es:"Metodología",de:"Methodik",fr:"Méthodologie",it:"Metodologia",nl:"Methodologie"})[lang]);
  document.querySelectorAll("[data-sources-link]").forEach(el=>el.textContent=({en:"Data sources",pt:"Fontes de dados",es:"Fuentes de datos",de:"Datenquellen",fr:"Sources de données",it:"Fonti dei dati",nl:"Gegevensbronnen"})[lang]);
  document.documentElement.lang=loc[lang];$("lang").value=lang;$("lang").setAttribute("aria-label",T("language"));
