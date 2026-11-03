@@ -39,9 +39,9 @@ jobs:
           import re
           for filename in ("index", "india", "brazil", "germany", "portugal"):
               source = Path(f"docs/{filename}.html").read_text(encoding="utf-8")
-              scripts = re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", source)
+              scripts = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", source)
               assert scripts, f"No inline API Lab JavaScript: {filename}"
-              Path(f"/tmp/earnwage-lab-{filename}.js").write_text("\\n".join(scripts), encoding="utf-8")
+              Path(f"/tmp/earnwage-lab-{filename}.js").write_text("\n".join(scripts), encoding="utf-8")
           PY
           for file in /tmp/earnwage-lab-*.js; do node --check "$file"; done
       - name: Assemble GitHub Pages website with separate API Lab
