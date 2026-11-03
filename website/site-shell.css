@@ -38,3 +38,16 @@ header .ew-more a:focus-visible,header .ew-more summary:focus-visible{outline:3p
  header .ew-nav .links>a,header .ew-nav .navlinks>a{font-size:.84rem!important}
 }
 @media(max-width:360px){header .ew-nav{gap:7px}header .ew-nav .brand{font-size:1.13rem}header .ew-more>summary{padding:7px 8px}}
+
+/* Shared interaction and content polish. */
+.ew-skip-link{position:fixed;top:8px;left:12px;z-index:100;transform:translateY(-180%);background:#fff;color:#0c4f49;padding:11px 16px;border:3px solid #e5bd66;border-radius:9px;font-weight:750;box-shadow:0 6px 25px #102c3955}
+.ew-skip-link:focus{transform:translateY(0)}
+main{min-width:0}
+main .panel,main .card{box-shadow:0 7px 25px #0c2b3610}
+main .panel{border-color:#dce6e3}
+main .card{transition:border-color .15s ease,box-shadow .15s ease}
+main .card:hover{border-color:#bddbd3}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #e4bc68;outline-offset:3px}
+a,button,select,summary{touch-action:manipulation}
+main [id]{scroll-margin-top:120px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
