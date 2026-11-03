@@ -39,11 +39,24 @@ async function showCountryOrSources(){const id=++loadId,code=$("country").value,
  const row=economy?.countries?.[0];for(const [key,label] of [["inflation_annual",N("inflation")],["ppp_private_consumption",N("ppp")]])cards.append(indicatorCard(row?.indicators?.[key],label));
  target.append(cards);const related=elt("div",undefined,"actions");const history=link(({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[lang],"./history.html?country="+encodeURIComponent(code));history.className="secondary";related.append(history);target.append(related);target.append(elt("p",T("disclaimer"),"muted"));
  }catch(_){if(id===loadId)tip(target,T("unavailable"))}}
-function wageCard(label,record,unit){const available=record?.status==="available"&&typeof record.value==="number"&&Number.isFinite(record.value);return namedSection(label,available?number(record.value)+" "+(unit||record.currency||""):T("unavailable"),[record?.year,record?.unit,record?.source,record?.status].filter(Boolean).join(" · "))}
+function preferredOccupationWage(record){
+ if(record?.status!=="available")return null;
+ if(Number.isFinite(record.value)&&record.value>0)return record;
+ const rows=Array.isArray(record.observations)?record.observations.filter(x=>x&&Number.isFinite(x.value)&&x.value>0):[];
+ return rows.find(x=>x.measure==="median")||rows.find(x=>x.measure==="mean")||rows[0]||null;
+}
+function wageCard(label,record,unit){
+ const chosen=preferredOccupationWage(record),available=chosen&&Number.isFinite(chosen.value);
+ const displayed=available?number(chosen.value)+" "+(chosen.unit?.includes("/")?chosen.unit:(chosen.currency||unit||"")):T("unavailable");
+ return namedSection(label,displayed,[chosen?.reference_period||record?.reference_period||record?.period,chosen?.measure||record?.measure,chosen?.unit||record?.unit,chosen?.source||record?.source,record?.status].filter(Boolean).join(" · "));
+}
 async function showOccupation(){const id=++loadId,code=$("country").value,occupation=$("occupation").value,target=$("detailsResults");tip(target,T("refresh"));linkToProfiles(code,occupation);try{
  const q=new URLSearchParams({country:code,occupation});const d=await api("/v1/earnwage/overview?"+q);if(id!==loadId)return;target.replaceChildren();
- const cards=elt("div",undefined,"cards");cards.append(wageCard(T("occupationWage"),d.national_occupation_wage,d.country?.currency));const a=d.annual_presentation||{};cards.append(namedSection(T("annual"),a.status==="available"&&typeof a.value==="number"?money(a.value,a.currency||d.country?.currency):T("unavailable"),[a.note,a.year,a.unit].filter(Boolean).join(" · ")));cards.append(namedSection(T("groupContext"),d.national_major_group_context?.status==="available"?T("coverage"):T("unavailable"),T("groupWarning")));target.append(cards);
- const primary=d.national_occupation_wage;if(urlSource(primary?.source_url)){const l=link(T("viewSource"),primary.source_url);l.target="_blank";l.rel="noopener noreferrer";target.append(elt("div",undefined,"actions")).append(l)}
+ const cards=elt("div",undefined,"cards");cards.append(wageCard(T("occupationWage"),d.national_occupation_wage,d.country?.currency));const a=d.annual_presentation||{};cards.append(namedSection(T("annual"),a.status==="available"&&typeof a.value==="number"?money(a.value,a.currency||d.country?.currency):T("unavailable"),[a.note,a.year,a.unit].filter(Boolean).join(" · ")));const group=d.national_major_group_context||{},local=group.values?.local_currency;
+ const contextAmount=group.status==="available"&&local?.status==="available"&&Number.isFinite(local.value)&&local.value>0?
+   number(local.value)+" "+(local.currency||""):group.status==="available"?T("coverage"):T("unavailable");
+ cards.append(namedSection(T("groupContext"),contextAmount,[T("groupWarning"),group.precision,group.period,local?.unit||group.unit].filter(Boolean).join(" · ")));target.append(cards);
+ const primary=preferredOccupationWage(d.national_occupation_wage)||d.national_occupation_wage;if(urlSource(primary?.source_url)){const l=link(T("viewSource"),primary.source_url);l.target="_blank";l.rel="noopener noreferrer";target.append(elt("div",undefined,"actions")).append(l)}
  target.append(elt("p",T("disclaimer"),"muted"));if(Array.isArray(d.warnings)){for(const warning of d.warnings.slice(0,5))target.append(elt("p",warning,"muted"))}
  }catch(_){if(id===loadId)tip(target,T("unavailable"))}}
 function pick(){if(page==="occupation")showOccupation();else if(page==="country"||page==="sources")showCountryOrSources()}

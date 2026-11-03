@@ -71,12 +71,34 @@ function renderCoverage(raw){
  out.append(list,elem("p",T("coverageDisclaimer"),"muted"));
 }
 function render(raw){if(page==="history")renderHistory(raw);else renderCoverage(raw)}
+function renderLatestOnly(record){
+ const out=$("results");
+ out.replaceChildren(elem("div",T("latestOnly"),"notice"));
+ if(record?.status==="available"&&Number.isFinite(record.value)&&Number.isInteger(record.year)){
+  const grid=elem("div",undefined,"cards");
+  grid.append(summary(record,T(record.name==="ppp_private_consumption"?"ppp":"inflation")));
+  out.append(grid);
+ }else out.append(elem("p",T("noData"),"muted"));
+}
 async function load(){
  const id=++requestId;status(T("loading"));
  try{
   const path=page==="history"?"/v1/economy/history/"+encodeURIComponent($("country").value)+"?indicator="+encodeURIComponent($("indicator").value):"/v1/economy/coverage";
   const r=await fetchApi(path);if(id!==requestId)return;loaded=r;render(r);
- }catch(_){if(id!==requestId)return;loaded=null;status(T("error"))}
+ }catch(err){
+  if(id!==requestId)return;
+  if(page==="history"&&err?.message==="HTTP 404"){
+   try{
+    const code=$("country").value,key=$("indicator").value;
+    const query=new URLSearchParams({country_a:code,country_b:code});
+    const response=await fetchApi("/v1/economy/compare?"+query.toString());
+    if(id!==requestId)return;
+    const record=response?.countries?.find(row=>row.country===code)?.indicators?.[key];
+    loaded=null;renderLatestOnly(record);return;
+   }catch(_){if(id!==requestId)return}
+  }
+  loaded=null;status(T("error"));
+ }
 }
 async function init(){
  $("lang").addEventListener("change",event=>{lang=event.target.value;try{localStorage.setItem("earnwage_lang",lang)}catch(_){}translate()});
