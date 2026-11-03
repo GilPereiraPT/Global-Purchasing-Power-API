@@ -45,14 +45,27 @@ async function loadOccupations(){const revision=++occupationRevision;try{const d
 function currentCountry(code){return countryCatalogue.find(c=>c.code===code)}
 function money(value,currency){if(typeof value!=="number"||!Number.isFinite(value)||!currency)return "—";try{return new Intl.NumberFormat(EW_TAGS[language],{style:"currency",currency,maximumFractionDigits:2}).format(value)}catch(_){return format(value)+" "+currency}}
 function statusNote(row){const s=row?.source||row?.source_name||"";const y=row?.year||row?.period||row?.latest_period||"";return [s,y].filter(Boolean).join(" · ")||T("dataNote")}
+function preferredOccupationWage(record){
+ if(record?.status!=="available")return null;
+ if(Number.isFinite(record.value)&&record.value>0)return record;
+ const rows=Array.isArray(record.observations)?record.observations.filter(x=>x&&Number.isFinite(x.value)&&x.value>0):[];
+ return rows.find(x=>x.measure==="median")||rows.find(x=>x.measure==="mean")||rows[0]||null;
+}
 function renderSalaryOverview(data){
  const out=$("results");out.replaceChildren();
  const wage=data.national_occupation_wage||{},annual=data.annual_presentation||{},group=data.national_major_group_context||{};
  const wrapper=make("div",undefined,"cards");
  const label=data.occupation?.translations?.[language]||occupations.find(o=>o.id===data.occupation?.id)?.label||data.occupation?.label||"";
- if(wage.status==="available"){const amountValue=typeof wage.value==="number"&&Number.isFinite(wage.value)?format(wage.value)+" "+(wage.currency||data.country?.currency||""):T("official");wrapper.append(card(label,amountValue,statusNote(wage)+" · "+(wage.unit||"")))}else{wrapper.append(card(label,T("unavailable"),wage.reason||T("missing")))}
+ const selected=preferredOccupationWage(wage);
+ if(wage.status==="available"){
+  const amountValue=selected?format(selected.value)+" "+(selected.unit?.includes("/")?selected.unit:(selected.currency||wage.currency||data.country?.currency||"")):T("official");
+  wrapper.append(card(label,amountValue,statusNote(selected||wage)+" · "+[selected?.measure||wage.measure,selected?.unit||wage.unit].filter(Boolean).join(" · ")));
+ }else wrapper.append(card(label,T("unavailable"),wage.reason||T("missing")));
  if(annual.status==="available"){wrapper.append(card(T("annual"),money(Number(annual.value),annual.currency||data.country?.currency),statusNote(annual)))}else{wrapper.append(card(T("annual"),T("unavailable"),annual.reason||T("missing")))}
- wrapper.append(card(T("context"),group.status==="available"?T("official"):T("unavailable"),T("context")));
+ const groupLocal=group?.values?.local_currency;
+ const groupHasValue=group?.status==="available"&&groupLocal?.status==="available"&&Number.isFinite(groupLocal.value)&&groupLocal.value>0;
+ const contextValue=groupHasValue?format(groupLocal.value)+" "+groupLocal.currency:group.status==="available"?T("official"):T("unavailable");
+ wrapper.append(card(T("context"),contextValue,[T("context"),group?.precision,group?.period,groupHasValue?group.unit:""].filter(Boolean).join(" · ")));
  out.append(wrapper);
  const detailLink=make("a",T("details"),"secondary");detailLink.href="./occupation.html?country="+encodeURIComponent(data.country?.code||$("country").value)+"&occupation="+encodeURIComponent(data.occupation?.id||$("occupation").value);const links=make("div",undefined,"actions");links.append(detailLink);const a=make("a",T("compareAction"),"secondary");a.href="./compare.html?country_a="+encodeURIComponent(data.country?.code||$("country").value)+"&occupation="+encodeURIComponent(data.occupation?.id||$("occupation").value);links.append(a);out.append(links);
  const note=make("p",T("dataNote"),"muted");out.append(note);
