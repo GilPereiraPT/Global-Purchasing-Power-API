@@ -16,14 +16,14 @@
   const filename=(location.pathname.split("/").pop()||"index.html").toLowerCase();
   const active={ "country.html":"countries","occupation.html":"salaries","wage-groups.html":"groups","coverage.html":"coverage","history.html":"history","source-directory.html":"sources","sources.html":"sources","methodology.html":"methodology","about.html":"about" }[filename]||top.concat(secondary).find(([,f])=>f===filename)?.[0]||"";
   const activeExtra=filename==="sources.html"?"sources.html":null;
-  function locale(){
-    const select=document.querySelector("#languageSelector, #lang");
-    const selected=select?.value;
-    if(languages.includes(selected))return selected;
+  function locale(requested){
+    if(languages.includes(requested))return requested;
     let saved=null;try{saved=localStorage.getItem("earnwage_lang")}catch(_){}
     if(languages.includes(saved))return saved;
     const browser=(navigator.language||"en").slice(0,2).toLowerCase();
-    return languages.includes(browser)?browser:"en";
+    if(languages.includes(browser))return browser;
+    return languages.includes(document.querySelector("#languageSelector, #lang")?.value)
+      ?document.querySelector("#languageSelector, #lang").value:"en";
   }
   const make=(tag,css,text)=>{const n=document.createElement(tag);if(css)n.className=css;if(text!==undefined)n.textContent=text;return n;};
   function anchor(key,file,txt){
@@ -32,8 +32,8 @@
     if(filename===file||(filename==="country.html"&&key==="countries")||(filename==="occupation.html"&&key==="salaries"))a.setAttribute("aria-current","page");
     return a;
   }
-  function update(){
-    const l=copy[locale()]||copy.en;
+  function update(requested){
+    const l=copy[locale(requested)]||copy.en;
     const nav=document.querySelector("header nav");
     if(nav){
       nav.classList.add("ew-nav");
@@ -85,7 +85,7 @@
     }
   }
   const controls=document.querySelectorAll("#languageSelector,#lang");
-  for(const control of controls)control.addEventListener("change",()=>queueMicrotask(update));
+  for(const control of controls)control.addEventListener("change",()=>queueMicrotask(()=>update(control.value)));
   update();
   window.EarnWageShell={refresh:update};
 })();
