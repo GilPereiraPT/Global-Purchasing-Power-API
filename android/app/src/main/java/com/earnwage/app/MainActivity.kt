@@ -99,8 +99,8 @@ private fun annualOfferSalaryOptions(job:JSONObject):List<Pair<String,Double>> {
     if(min!=null && max!=null && min>max) return emptyList()
     return when {
         min!=null && max!=null && min!=max -> listOf("min" to min,"max" to max)
-        min!=null -> listOf("amount" to min)
-        max!=null -> listOf("amount" to max)
+        min!=null -> listOf("min" to min)
+        max!=null -> listOf("max" to max)
         else -> emptyList()
     }
 }
@@ -427,6 +427,8 @@ class MainActivity:ComponentActivity() {
                                         (if(lang=="pt") "Confirme a residência fiscal e a moeda; elegibilidade remota não prova localização fiscal."
                                          else "Confirm tax residence and currency; remote eligibility does not establish tax location."))
                                 }
+                                item { Caption(if(lang=="pt") "A comparação atual apresenta salários e cenários fiscais lado a lado; não calcula ainda uma equivalência por PPP."
+                                    else "The current comparison shows salary and tax scenarios side by side; purchasing-power equivalence is not yet calculated.") }
                                 if(offerSalaryCurrency.isNotBlank() &&
                                     countries.firstOrNull {it.code==dest}?.currency!=offerSalaryCurrency) item {
                                     Caption(if(lang=="pt") "A moeda da oferta não coincide com a moeda do destino. Escolha o país adequado ou introduza manualmente um valor na moeda do destino."
