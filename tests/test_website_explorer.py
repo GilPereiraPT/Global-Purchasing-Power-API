@@ -44,4 +44,4 @@ def test_live_api_and_missing_data_policy_are_explicit():
     assert "/v1/jobs?" in js
     assert "/v1/economy/compare?" in js
     assert 'status==="available"' in js
-    assert "rel=\"noopener noreferrer\"" in js
+    assert 'a.rel="noopener noreferrer"' in js
