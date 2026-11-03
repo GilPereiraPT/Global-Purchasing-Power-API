@@ -15,7 +15,8 @@
   return v;
  }
  async function ensure(original,countryA,countryB,grossA,grossB,request) {
-  if(original?.status==="available")return original;
+  // A deployed API result is authoritative, including an explicit unavailable status.
+  if(original&&typeof original.status==="string"&&original.status!=="not_implemented")return original;
   if(!/^[A-Z]{2}$/.test(countryA)||!/^[A-Z]{2}$/.test(countryB)||
      !Number.isFinite(grossA)||grossA<=0||grossA>100000000||
      typeof request!=="function")return original||{status:"unavailable"};

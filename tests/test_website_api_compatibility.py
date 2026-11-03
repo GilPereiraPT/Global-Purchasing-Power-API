@@ -8,6 +8,7 @@ def test_older_api_ppp_observations_only_same_year():
     assert 'source!=="World Bank World Development Indicators"' in script
     assert 'local_currency_units_per_international_dollar' in script
     assert 'a.year!==b.year' in script
+    assert 'original.status!=="not_implemented"' in script
     assert 'grossA*b.value/a.value' in script
     assert 'window.EarnWagePPP=Object.freeze({ensure})' in script
     for name in ("index.html","compare.html"):
