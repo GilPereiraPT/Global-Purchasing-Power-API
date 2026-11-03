@@ -88,6 +88,8 @@ const localizedTargets=[
 ["footer .footer-row>div:nth-child(2) a","sources"],["#languageLabel","langLabel"]
 ];
 function applyLocale(){
+ document.querySelectorAll('[data-library="wages"]').forEach(x=>x.textContent=({en:"Wage groups",pt:"Grupos profissionais",es:"Grupos profesionales",de:"Berufsgruppen",fr:"Groupes professionnels",it:"Gruppi professionali",nl:"Beroepsgroepen"})[activeLocale]);
+ document.querySelectorAll('[data-library="directory"]').forEach(x=>x.textContent=({en:"Source directory",pt:"Diretório de fontes",es:"Directorio de fuentes",de:"Quellenverzeichnis",fr:"Répertoire des sources",it:"Elenco delle fonti",nl:"Bronnenoverzicht"})[activeLocale]);
   document.documentElement.lang=localeTags[activeLocale];
   document.title="EarnWage — Your salary. Your world.";
   document.querySelector(".hero h1").firstChild.textContent=ewT("heroLead");
