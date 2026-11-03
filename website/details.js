@@ -35,7 +35,7 @@ async function showCountryOrSources(){const id=++loadId,code=$("country").value,
  target.replaceChildren();const cards=elt("div",undefined,"cards");
  if(page==="country"){cards.append(namedSection(T("countryTitle"),countryName(code),code));cards.append(namedSection(N("currency"),country.currency||"—"));cards.append(namedSection(N("capital"),country.capital||"—"))}
  const row=economy?.countries?.[0];for(const [key,label] of [["inflation_annual",N("inflation")],["ppp_private_consumption",N("ppp")]])cards.append(indicatorCard(row?.indicators?.[key],label));
- target.append(cards);target.append(elt("p",T("disclaimer"),"muted"));
+ target.append(cards);const related=elt("div",undefined,"actions");const history=link(({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[lang],"./history.html?country="+encodeURIComponent(code));history.className="secondary";related.append(history);target.append(related);target.append(elt("p",T("disclaimer"),"muted"));
  }catch(_){if(id===loadId)tip(target,T("unavailable"))}}
 function wageCard(label,record,unit){const available=record?.status==="available"&&typeof record.value==="number"&&Number.isFinite(record.value);return namedSection(label,available?number(record.value)+" "+(unit||record.currency||""):T("unavailable"),[record?.year,record?.unit,record?.source,record?.status].filter(Boolean).join(" · "))}
 async function showOccupation(){const id=++loadId,code=$("country").value,occupation=$("occupation").value,target=$("detailsResults");tip(target,T("refresh"));linkToProfiles(code,occupation);try{
