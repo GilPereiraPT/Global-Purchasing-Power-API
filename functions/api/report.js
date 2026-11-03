@@ -32,7 +32,8 @@ export async function onRequestPost({request,env}){
  try{const r=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:challenge});const result=await r.json();verified=r.ok&&result.success===true}catch(_){}
  if(!verified)return json(403,{error:"challenge_failed"});
  const body=["EarnWage feedback", "Type: "+type,"Name: "+name,"Email: "+email,"Page: "+(page||"Not provided"),"Source: "+(source||"Not provided"),"","Message:",message].join("\n");
- const payload={from:env.REPORT_FROM_EMAIL,to:[env.REPORT_TO_EMAIL],reply_to:email,subject:"EarnWage feedback · "+type,text:body};
+ const subjectKinds={value:"Incorrect value",translation:"Translation issue",source:"Source or broken link",other:"Suggestion"};
+ const payload={from:env.REPORT_FROM_EMAIL,to:[env.REPORT_TO_EMAIL],reply_to:email,subject:"EarnWage: "+subjectKinds[type],text:body};
  try{
   const r=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify(payload)});
   if(!r.ok)return json(502,{error:"delivery_failed"});
