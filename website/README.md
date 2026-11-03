@@ -2,6 +2,19 @@
 
 This directory is a **separate public website**, not a replacement for the existing technical `docs/index.html` API Lab.
 
+## Standalone comparison page (new)
+
+- `compare.html` is the dedicated comparison experience, linked from the homepage and the country/occupation explorers.
+- `compare.js` uses the existing API to populate the 14-country selector, occupation labels, available optional regions, and tax-model scenario metadata.
+- Accepts origin annual gross salary and an optional destination annual offer. Fields use country currencies and a clearly marked annual period.
+- A gross PPP equivalence is shown **only when** the API returns an available source-backed value. It does not convert or infer missing PPP.
+- Tax scenario controls are **explicit opt-in**; the interface distinguishes verified and benchmark net outcomes from partial or unavailable results. Supported tax years/regions are sourced from the adapter metadata.
+- Results use accessible tab buttons for purchasing power, tax outcomes and sources/methodology.
+- All comparison headings and messages have seven-language translations in `compare-i18n.js`, with the same saved-language convention as other pages.
+- The current backend API requires an occupation, even when the user supplies a salary. Changing that requirement remains a separate backend task.
+- `gross_purchasing_power_equivalence` and `net_purchasing_power` depend on the not-yet-merged backend PRs #47 and #48. The page displays missing data honestly until deployed.
+- **QA still needed:** real desktop/mobile browser tests, keyboard/screen-reader tests, tax-scenario edge cases, and live API/CORS validation. No rollout to production has been made.
+
 ## Current functionality
 
 - Responsive editorial landing page with six capability cards, methodology and FAQ.
