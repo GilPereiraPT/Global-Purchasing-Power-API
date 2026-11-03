@@ -95,6 +95,7 @@ function applyLocale(){
     const node=document.querySelector(selector);
     if(node)node.textContent=ewT(key);
   }
+  $("aboutLink").textContent=({en:"About EarnWage",pt:"Sobre o EarnWage",es:"Sobre EarnWage",de:"Über EarnWage",fr:"À propos d’EarnWage",it:"Informazioni su EarnWage",nl:"Over EarnWage"})[activeLocale];
   $("languageSelector").value=activeLocale;
   $("languageSelector").setAttribute("aria-label",ewT("langLabel"));
   for(const [id,defaultCode] of [["from","PT"],["to","CH"],["jobCountry","PT"]]){
