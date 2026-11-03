@@ -47,7 +47,7 @@ function renderSalaryOverview(data){
  if(annual.status==="available"){wrapper.append(card(T("annual"),money(Number(annual.value),annual.currency||data.country?.currency),statusNote(annual)))}else{wrapper.append(card(T("annual"),T("unavailable"),annual.reason||T("missing")))}
  wrapper.append(card(T("context"),group.status==="available"?T("official"):T("unavailable"),T("context")));
  out.append(wrapper);
- const links=make("div",undefined,"actions");const a=make("a",T("compareAction"),"secondary");a.href="./index.html?country_a="+encodeURIComponent(data.country?.code||$("country").value)+"&occupation="+encodeURIComponent(data.occupation?.id||$("occupation").value)+"#compare";links.append(a);out.append(links);
+ const links=make("div",undefined,"actions");const a=make("a",T("compareAction"),"secondary");a.href="./compare.html?country_a="+encodeURIComponent(data.country?.code||$("country").value)+"&occupation="+encodeURIComponent(data.occupation?.id||$("occupation").value);links.append(a);out.append(links);
  const note=make("p",T("dataNote"),"muted");out.append(note);
 }
 async function searchSalary(){const out=$("results"),code=$("country").value,occupation=$("occupation").value;if(!occupation){warning(out,T("choose"));return}warning(out,T("reload"));try{const p=new URLSearchParams({country:code,occupation});currentOverview=await api("/v1/earnwage/overview?"+p);renderSalaryOverview(currentOverview)}catch(e){warning(out,T("unavailable")+" ("+e.message+")")}}
@@ -58,7 +58,7 @@ function renderCountryDetail(row){
  grid.append(card(T("currency"),row.currency||c?.currency||"—",""));
  grid.append(card(T("capital"),row.capital||"—",""));
  out.append(grid);
- const link=make("a",T("compareAction"),"secondary");link.href="./index.html?country_a="+encodeURIComponent(row.code)+"#compare";
+ const link=make("a",T("compareAction"),"secondary");link.href="./compare.html?country_a="+encodeURIComponent(row.code);
  out.append(make("div",undefined,"actions")).append(link);
 }
 async function showCountry(){const code=$("country").value,out=$("results");warning(out,T("reload"));try{const [country,econ]=await Promise.all([api("/v1/countries/"+encodeURIComponent(code)),api("/v1/economy/compare?country_a="+encodeURIComponent(code)+"&country_b="+encodeURIComponent(code))]);renderCountryDetail(country);const row=(econ.countries||[])[0];if(row){const cards=make("div",undefined,"cards");for(const [key,label] of [["inflation_annual",T("inflation")],["ppp_private_consumption",T("ppp")]]){const v=row.indicators?.[key];cards.append(card(label,v?.status==="available"&&v?.value!=null?format(v.value)+(v.unit?" "+v.unit:""):T("missing"),statusNote(v)))}out.append(make("h2",T("insights")));out.append(cards)}}catch(e){warning(out,T("unavailable")+" ("+e.message+")")}}
