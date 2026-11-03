@@ -1,6 +1,6 @@
 "use strict";
 const $=id=>document.getElementById(id),page=document.body.dataset.page;
-const API="https://earnwage-api.policlinicosdesantoandre.com";
+const API=window.EarnWageConfig.apiBase;
 const tags={en:"en-GB",pt:"pt-PT",es:"es-ES",de:"de-DE",fr:"fr-FR",it:"it-IT",nl:"nl-NL"};
 const saved=(()=>{try{return localStorage.getItem("earnwage_lang")}catch(_){return null}})();
 let lang=Object.hasOwn(tags,saved)?saved:Object.hasOwn(tags,(navigator.language||"").slice(0,2).toLowerCase())?navigator.language.slice(0,2).toLowerCase():"en";
