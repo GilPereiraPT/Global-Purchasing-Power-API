@@ -26,6 +26,20 @@ def test_history_preserves_true_observation_years_and_missing_gaps(monkeypatch, 
     assert response["source_url"].startswith("https://")
 
 
+def test_fastapi_native_wsgi_history_parity(monkeypatch, tmp_path):
+    from app import native_wsgi
+    monkeypatch.setenv("EARNWAGE_INSIGHTS_DB", str(tmp_path / "history.db"))
+    with connect() as db:
+        save_result(db, "PT", "ppp_private_consumption",
+                    [{"year": 2022, "value": 0.7}, {"year": 2024, "value": 0.8}],
+                    "available")
+    fast = economy_history("PT", "ppp_private_consumption")
+    native = native_wsgi.dispatch("/v1/economy/history/PT",
+                                  {"indicator": ["ppp_private_consumption"]})
+    assert native == fast
+    assert len(native["history"]) == 2
+
+
 def test_history_rejects_unsupported_indicator_and_country():
     with pytest.raises(HTTPException) as err:
         economy_history("PT", "gdp_per_capita")
