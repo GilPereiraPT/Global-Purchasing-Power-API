@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from urllib.parse import parse_qs
 
 from app.catalog import COUNTRY_MAP, OCCUPATIONS, SUPPORTED_LANGUAGES
+from app.web_cors import allowed_public_origin, LEGACY_ORIGIN
 from app import earnwage_queries as ew
 from app import north_america as na
 from app import ca_province_wages
@@ -93,7 +94,7 @@ def reply(start_response, payload, code=200, method="GET", origin=None):
         ("X-Content-Type-Options", "nosniff"),
     ]
     headers.append(("Vary", "Origin"))
-    if origin == "https://gilpereirapt.github.io":
+    if allowed_public_origin(origin):
         headers.append(("Access-Control-Allow-Origin", origin))
     start_response(HTTP_STATUS[code], headers)
     return [] if method == "HEAD" else [body]
@@ -728,11 +729,16 @@ def admin_eurostat(environ, start_response, origin):
 def application(environ, start_response):
     """WSGI entry for Passenger; never display tracebacks or server paths."""
     method = environ.get("REQUEST_METHOD", "GET").upper()
-    origin = environ.get("HTTP_ORIGIN")
-    if origin != "https://gilpereirapt.github.io":
-        origin = None
+    supplied_origin = environ.get("HTTP_ORIGIN")
     path = environ.get("PATH_INFO", "/")
     normalized = path.rstrip("/")
+    origin = supplied_origin if supplied_origin == LEGACY_ORIGIN else None
+    # Only public read requests accept website preview origins.
+    # Admin POST/OPTIONS retain the existing restricted GitHub Pages origin.
+    if (method in ("GET", "HEAD") and
+            not normalized.startswith("/v1/admin/") and
+            allowed_public_origin(supplied_origin)):
+        origin = supplied_origin
     data_manager_actions = {
         "/v1/admin/data-manager/status": "status",
         "/v1/admin/data-manager/backup": "backup",
