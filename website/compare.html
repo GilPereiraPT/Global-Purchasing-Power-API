@@ -6,7 +6,7 @@
 <style>
 .compare-layout{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(275px,1fr);gap:22px}.side{background:#f2f7f4;padding:20px;border:1px solid #d8e6df;border-radius:14px}.side h2{margin:0 0 15px}.side .field{margin-bottom:13px}.two{display:grid;grid-template-columns:1fr 1fr;gap:15px}.tax-box{margin-top:17px;padding-top:16px;border-top:1px solid #dce8e4}.tax-box[hidden],.field[hidden],.panel[hidden],#results[hidden]{display:none}.note{font-size:.82rem;color:#58737a}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.tab{border-radius:10px;padding:10px 16px;border:1px solid #c4d9d3;background:#edf4f1;color:#164d46;cursor:pointer;font-weight:750}.tab[aria-selected=true]{background:#087f73;color:#fff;border-color:#087f73}.num{font-size:1.5rem;font-weight:850;letter-spacing:-.04em}.source-row{padding:15px;border:1px solid #dce8e4;border-radius:12px;margin-bottom:10px;overflow-wrap:anywhere}.source-row a{color:#076d62}.highlight{background:#e7f5f0;border:1px solid #bddfd2;border-radius:12px;padding:15px}.aside-note{background:#f0f6f4;border-radius:16px;padding:20px;color:#405e66}.aside-note h3{margin-top:0}.muted-strong{font-weight:750;color:#415f64}.val{font-weight:850;font-size:1.25rem}.compare-results .cards{margin-top:14px}.compare-results h2{margin-top:8px}.compare-results .panel{margin-bottom:14px}
 @media(max-width:980px){.compare-layout{grid-template-columns:1fr}}@media(max-width:620px){.two{grid-template-columns:1fr}}
-</style></head>
+</style><link rel="stylesheet" href="./site-shell.css"></head>
 <body data-page="compare">
 <header><nav class="wrap nav" aria-label="Main navigation"><a class="brand" href="./index.html"><span class="mark">E</span>EarnWage</a>
 <div class="links"><a data-t="home" href="./index.html">Home</a><a aria-current="page" data-t="compare" href="./compare.html">Compare</a><a data-t="salaries" href="./salaries.html">Salaries</a><a data-t="countries" href="./countries.html">Countries</a><a data-t="jobs" href="./jobs.html">Jobs</a><a data-t="insights" href="./insights.html">Insights</a><a href="./history.html" class="ew-new-nav" data-more="history">History</a><a href="./coverage.html" class="ew-new-nav" data-more="coverage">Coverage</a><a href="./about.html" data-about-link>About</a><a href="./methodology.html" data-method-link>Methodology</a><a href="./sources.html" data-sources-link>Data sources</a></div>
@@ -54,5 +54,5 @@
 <div id="paneSources" role="tabpanel" aria-labelledby="tabSources" hidden></div></div></section>
 </div></main>
 <footer class="foot"><div class="wrap"><strong>EarnWage</strong><p>Your salary. Your world.</p><p data-t="dataNote">Data may be unavailable or outdated. Read source and year.</p><a href="https://github.com/GilPereiraPT/Global-Purchasing-Power-API" target="_blank" rel="noopener noreferrer">API & sources</a></div></footer>
-<script src="./explore-i18n.js"></script><script src="./compare-i18n.js"></script><script defer src="./compare.js"></script>
+<script src="./site-shell.js"></script><script src="./explore-i18n.js"></script><script src="./compare-i18n.js"></script><script defer src="./compare.js"></script>
 </body></html>
