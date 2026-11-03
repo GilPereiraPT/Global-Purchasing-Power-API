@@ -129,6 +129,8 @@ async function compare(event){
   taxParams(q,"A",codeA);if(b!==null)taxParams(q,"B",codeB);
   else if($("taxScenarioB").value)throw Error(T("grossB"));
   const d=await request("/v1/earnwage/compare?"+q.toString());if(req!==pending)return;
+  d.gross_purchasing_power_equivalence=await window.EarnWagePPP.ensure(d.gross_purchasing_power_equivalence,codeA,codeB,a,b,request);
+  if(req!==pending)return;
   last=d;renderResults(d);output.scrollIntoView({behavior:"smooth",block:"start"});
  }catch(e){if(req!==pending)return;output.hidden=false;$("paneGross").replaceChildren();info($("paneGross"),T("requestFailed")+" "+e.message);switchTab("Gross")}
  finally{if(req===pending){button.disabled=false;button.textContent=T("calculate")}}
