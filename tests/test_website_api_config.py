@@ -25,13 +25,25 @@ def test_api_configuration_is_shared_and_loaded_before_other_scripts():
     assert "const API=window.EarnWageConfig.apiBase;" in index
 
 
-def test_preview_is_documented_without_auto_deploy():
+def test_github_pages_is_documented_without_auto_deploy():
     doc=(SITE/"PREVIEW_CHECKLIST.md").read_text(encoding="utf-8")
-    for key in ("EARNWAGE_PUBLIC_CORS_ORIGINS", "REPORT_TO_EMAIL",
-                "TURNSTILE_SECRET_KEY", "REPORT_ALLOWED_ORIGIN",
-                "website/api-config.js", "Cloudflare Pages"):
+    for key in ("GitHub Pages", "website/api-config.js",
+                "https://gilpereirapt.github.io", "/lab/",
+                "workflow_dispatch", "formulário"):
         assert key in doc
     assert "Não executar deploy nem merge sem autorização" in doc
+
+
+def test_github_pages_workflow_keeps_api_lab_separate():
+    yaml=(ROOT/".github/workflows/earnwage-lab-pages.yml").read_text(encoding="utf-8")
+    assert "branches: [main]" in yaml
+    assert "path: _site" in yaml
+    assert "cp -a website/. _site/" in yaml
+    assert "cp -a docs/. _site/lab/" in yaml
+    assert "touch _site/.nojekyll" in yaml
+    assert "actions/deploy-pages@v4" in yaml
+    assert "website/**" in yaml
+    assert "Cloudflare" not in yaml
 
 
 def test_static_security_headers_are_present():

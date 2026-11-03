@@ -11,8 +11,11 @@
     it:{home:"Home",compare:"Confronta",salaries:"Stipendi",countries:"Paesi",jobs:"Lavoro",insights:"Analisi",more:"Altro",history:"Storico",coverage:"Copertura dati",groups:"Gruppi professionali",dataSources:"Fonti dei dati economici",sources:"Elenco delle fonti",methodology:"Metodologia",about:"Informazioni",report:"Segnala un errore",project:"Progetto e fonti",tagline:"Il tuo stipendio. Il tuo mondo.",skip:"Vai al contenuto principale",disclaimer:"La copertura varia per paese e anno. Risultati informativi, non consulenza fiscale o finanziaria personale.",menu:"Altre informazioni"},
     nl:{home:"Home",compare:"Vergelijken",salaries:"Salarissen",countries:"Landen",jobs:"Vacatures",insights:"Inzichten",more:"Meer",history:"Historie",coverage:"Gegevensdekking",groups:"Beroepsgroepen",dataSources:"Economische gegevensbronnen",sources:"Bronnenoverzicht",methodology:"Methodologie",about:"Over ons",report:"Fout melden",project:"Project en bronnen",tagline:"Jouw salaris. Jouw wereld.",skip:"Ga naar de hoofdinhoud",disclaimer:"Gegevensdekking verschilt per land en jaar. Geen persoonlijk financieel of fiscaal advies.",menu:"Meer informatie"}
   };
+  // The technical API Lab is retained at /lab/ when GitHub Pages serves the site.
+  const labLabels={en:"API Lab",pt:"Laboratório da API",es:"Laboratorio de la API",de:"API-Labor",fr:"Laboratoire API",it:"Laboratorio API",nl:"API-lab"};
+  for(const language of languages)copy[language].apiLab=labLabels[language];
   const top=[["home","index.html"],["compare","compare.html"],["salaries","salaries.html"],["countries","countries.html"],["jobs","jobs.html"],["insights","insights.html"]];
-  const secondary=[["history","history.html"],["coverage","coverage.html"],["groups","wage-groups.html"],["dataSources","sources.html"],["sources","source-directory.html"],["methodology","methodology.html"],["about","about.html"]];
+  const secondary=[["history","history.html"],["coverage","coverage.html"],["groups","wage-groups.html"],["dataSources","sources.html"],["sources","source-directory.html"],["methodology","methodology.html"],["about","about.html"],["apiLab","lab/index.html"]];
   const filename=(location.pathname.split("/").pop()||"index.html").toLowerCase();
   const active={ "country.html":"countries","occupation.html":"salaries","wage-groups.html":"groups","coverage.html":"coverage","history.html":"history","source-directory.html":"sources","sources.html":"dataSources","methodology.html":"methodology","about.html":"about" }[filename]||top.concat(secondary).find(([,f])=>f===filename)?.[0]||"";
   function locale(requested){
@@ -83,6 +86,7 @@
       const information=make("div","ew-footer-column");
       information.append(make("h2","ew-footer-heading",l.sources));
       for(const [key,file] of [["dataSources","sources.html"],["sources","source-directory.html"],["methodology","methodology.html"],["about","about.html"]])information.append(anchor(key,file,l[key]));
+      information.append(anchor("apiLab","lab/index.html",l.apiLab));
       information.append(anchor("report","about.html#report",l.report));
       const git=make("a","ew-link",l.project);
       git.href="https://github.com/GilPereiraPT/Global-Purchasing-Power-API";

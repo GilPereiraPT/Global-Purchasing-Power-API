@@ -1,57 +1,43 @@
-# EarnWage — checklist de pré-visualização no Cloudflare Pages
+# EarnWage — GitHub Pages (publicação do website)
 
-> **Estado:** preparado em código; não foi criado nem publicado qualquer projeto Cloudflare, alterado DNS ou executado merge. Não publicar antes de concluir os pontos obrigatórios.
+> **Estado:** configuração preparada num ramo/PR. A mera abertura da PR não publica o novo website. Não executar deploy nem merge sem autorização.
 
-## Configuração da pré-visualização (não de produção)
+## Destino
 
-- Repositório: `GilPereiraPT/Global-Purchasing-Power-API`
-- Branch de desenvolvimento: `feature/earnwage-public-website` (PR #49)
-- Diretório raiz do projeto Cloudflare Pages: **raiz do repositório**
-- Comando de build: **nenhum** (site HTML/CSS/JS estático)
-- Diretório de saída: **`website`**
-- Diretório de Pages Functions: **`functions/`** na raiz do repositório
-- Primeiro verificar o endereço de pré-visualização `https://<preview-exato>.pages.dev`. Não substituir o domínio público nem configurar DNS de produção nesta etapa.
+- Repositório: `GilPereiraPT/Global-Purchasing-Power-API`.
+- GitHub Pages: `https://gilpereirapt.github.io/Global-Purchasing-Power-API/` (endereço previsto do repositório; confirmar em **Settings → Pages → Visit site**).
+- **Homepage**: os 15 ficheiros HTML do diretório `website/`, publicados na raiz do Pages.
+- **Laboratório técnico antigo**: todo o conteúdo de `docs/` é mantido em **`/lab/`**, com entrada em `/lab/index.html`.
+- Workflow único: `.github/workflows/earnwage-lab-pages.yml` no ramo `main`. Faz a montagem `website → _site/`, `docs → _site/lab/`, valida scripts e publica o artefacto com GitHub Actions.
+- Ativação: repositório → **Settings → Pages → Build and deployment → Source: GitHub Actions**. O repositório já contém um workflow de Pages; confirmar a configuração antes da publicação.
+- O workflow corre num `push` para `main` que afete o website, os docs ou o próprio workflow, e tem `workflow_dispatch` manual. Uma PR isolada não publica automaticamente.
+- Não configurar domínio personalizado, DNS, Cloudflare Pages ou Pages Functions nesta fase.
 
-## Ligação à API — configuração necessária antes dos testes
+## API existente
 
-- O frontend usa **`website/api-config.js`** com a API pública existente.
-- A API deve receber a variável **`EARNWAGE_PUBLIC_CORS_ORIGINS`** com o(s) endereço(s) HTTPS **exato(s)** de pré-visualização, separados por vírgulas; por exemplo, `https://earnwage-preview.pages.dev` (exemplo ilustrativo, não um endereço confirmado).
-- Esta autorização só será aplicada quando o código de CORS da PR for revisto e disponibilizado no servidor; adicionar uma variável de ambiente, por si só, não altera o servidor atual.
-- CORS permite exclusivamente origens HTTPS explícitas; não usar `*`, subdomínios genéricos ou `http://`.
-- A alteração apenas permite ler as rotas públicas por `GET/HEAD`; **não** autoriza operações administrativas nem atualizações de dados.
-- Confirmar pelo DevTools do navegador que `/v1/countries`, `/v1/occupations`, `/v1/earnwage/overview`, `/v1/economy/coverage` e a nova rota de histórico devolvem respostas válidas sem erros de CORS. Conferir disponibilidade de dados e diferenças entre a API publicada e a branch em desenvolvimento.
+- O endereço da API permanece em **`website/api-config.js`**:
+  `https://earnwage-api.policlinicosdesantoandre.com`.
+- A origem do browser GitHub Pages é **`https://gilpereirapt.github.io`** (sem o caminho do repositório).
+- O adaptador CORS em `app/web_cors.py` já inclui esta origem como `LEGACY_ORIGIN`. Verificar no browser que o **servidor efetivamente instalado** também permite esta origem. O GitHub Pages não instala alterações da API; a versão pública pode diferir da branch.
+- Confirmar os endpoints públicos `/v1/countries`, `/v1/occupations`, `/v1/earnwage/overview`, `/v1/economy/coverage` e os recursos históricos. Não ativar CORS administrativo nem usar o wildcard `*`.
+- Os cenários PPP da PR #47 e fiscais da #48 continuam pendentes no backend; o website deve identificar funções não disponíveis sem fabricar valores.
 
-## Formulário About (continua desativado até configuração)
+## Funcionalidades estáticas e limitações
 
-- Configurar `REPORT_TO_EMAIL` como o endereço de receção acordado, apenas nas variáveis privadas do Pages.
-- Configurar o remetente autorizado `REPORT_FROM_EMAIL`, `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` e `REPORT_ALLOWED_ORIGIN` (origem HTTPS exata da pré-visualização).
-- Adicionar apenas a chave **pública** de Turnstile ao ficheiro `website/report-config.js`.
-- Configurar um limite de pedidos no Cloudflare WAF para `/api/report`, verificar a entrega dos emails com assunto `EarnWage: ...` e o endereço Reply-To.
-- Confirmar a informação de privacidade, retenção dos dados e prestador de email antes de disponibilizar o formulário.
-- Até lá, o botão de envio permanece desativado; não alterar essa salvaguarda.
+- Homepage, comparação, salários, países, profissões, fontes, histórico e guias são HTML/JS/CSS estáticos; as consultas dinâmicas são feitas por HTTPS à API pública.
+- O **formulário** em `about.html` continua desativado. GitHub Pages **não executa `POST /api/report`**, nem as funções em `functions/`; não publicar mensagens de sucesso nem sugerir que recebe emails.
+- O ficheiro `website/_headers` pertence a outra plataforma e **não configura cabeçalhos HTTP no GitHub Pages**. É excluído do artefacto.
+- O ficheiro `.nojekyll` é colocado na raiz do artefacto para evitar processamento Jekyll inesperado.
+- São preservados o domínio da API, os dados importados, a BD de produção, os workflows de importação e a aplicação Android.
 
-## Testes funcionais obrigatórios
+## Checklist antes da publicação
 
-- [ ] Desktop (Chrome e Edge): menus, links, resultados, focus visível e legibilidade
-- [ ] Android e largura 360 px: menu `Mais`, barra de navegação, seletor de idioma e formulários sem cortes
-- [ ] Teclado: `Tab`, `Enter`, `Escape`, ligação `Saltar para o conteúdo` e foco em links
-- [ ] Primeira visita: idioma do navegador se suportado; caso contrário inglês
-- [ ] Mudança manual para todos os sete idiomas; preservar escolha após recarregar e entre páginas
-- [ ] Comparação: salário bruto anual, moeda, país, profissão, cobertura PPP, anos coincidentes e cenários fiscais não inventados
-- [ ] Países, salários e emprego: fontes e anos; sem valores estimados apresentados como observações
-- [ ] Históricos: anos sem observação não são interpolados; a falta de dados não é representada por zero
-- [ ] Grupos profissionais: não confundir estatísticas de grupos com salários individuais
-- [ ] Fontes: links externos HTTPS com `rel=noopener noreferrer` e sem URLs de origem duvidosa
-- [ ] Formulário: erro de captcha e falha de envio não indicam sucesso
-- [ ] Console: sem erros JavaScript, 404 de assets ou avisos de CORS
-- [ ] Verificar metadados SEO, títulos, acessibilidade e política de privacidade antes do lançamento
-
-## Critérios para aprovação
-
-1. Os testes automáticos da PR estão verdes.
-2. Todos os 15 ficheiros HTML carregam os estilos e scripts partilhados.
-3. A API responde corretamente no domínio de pré-visualização através de origens expressamente autorizadas.
-4. Falhas, cobertura parcial e limitação de fontes são comunicadas de forma clara.
-5. Aprovação explícita para merge, configuração do domínio e lançamento público.
-
-**Não executar deploy nem merge sem autorização.**
+- [ ] PRs #49, #50, #51, #52 e #53 aprovadas, integradas pela ordem das dependências; PR GitHub Pages integrada depois destas
+- [ ] CI verde e validação de HTML, JavaScript e recursos locais no workflow
+- [ ] Página inicial do EarnWage abre na raiz do GitHub Pages
+- [ ] Laboratório técnico abre em `/lab/`, sem substituir os seus ficheiros
+- [ ] Desktop e Android: navegação, pesquisa, menus, seletores, sete idiomas
+- [ ] API e CORS: confirmar resultados reais e estados de indisponibilidade sem erros na consola
+- [ ] Testar uma profissão com dados, outra sem dados, escolha estadual/provincial e uma comparação
+- [ ] Formulário de feedback permanece desativado, sem promessas de entrega
+- [ ] Links, acessibilidade, SEO e separação entre dados brutos, líquidos e médias de grupos validados

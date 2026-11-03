@@ -19,6 +19,8 @@ function applyLanguage(){
 }
 function status(key){$("reportStatus").textContent=T(key)}
 async function setupCaptcha(){
+ // GitHub Pages is static hosting: no /api/report server-side endpoint exists.
+ if(location.hostname.endsWith(".github.io")){status("configured");return}
  const siteKey=window.EarnWageReportConfig?.turnstileSiteKey||"";
  if(!/^[A-Za-z0-9_-]{12,128}$/.test(siteKey)){status("configured");return}
  $("captchaContainer").hidden=false;

@@ -1,5 +1,25 @@
 # EarnWage public website (first functional foundation)
 
+## Publicação atual: GitHub Pages
+
+**Opção escolhida:** GitHub Pages, sem Cloudflare Pages neste momento.
+O workflow `.github/workflows/earnwage-lab-pages.yml` prepara os ficheiros
+`website/` como **raiz** do site estático e preserva o antigo laboratório
+`docs/` na subpasta `/lab/`. A infraestrutura Python/cPanel da API não muda.
+
+O endereço previsto é
+`https://gilpereirapt.github.io/Global-Purchasing-Power-API/`;
+a publicação só ocorrerá depois do merge do workflow e dos perfis na
+branch `main` e de um deploy bem-sucedido, não pela abertura desta PR.
+
+O GitHub Pages não suporta o endpoint `POST /api/report` do formulário
+de feedback: esse formulário mantém-se desativado. Não há integração
+com Cloudflare Pages/Functions, nem alteração de DNS.
+
+Para os passos de verificação consulte
+`website/PREVIEW_CHECKLIST.md`.
+
+
 This directory is a **separate public website**, not a replacement for the existing technical `docs/index.html` API Lab.
 
 ## Standalone comparison page (new)
@@ -22,7 +42,7 @@ This directory is a **separate public website**, not a replacement for the exist
 - `website/about.js` loads the consent-protected form and invokes `POST /api/report` on **Cloudflare Pages Functions**. The function lives at repository root `functions/api/report.js`; it is **not part of the Python API**.
 - This form intentionally **remains disabled** until spam protection and email delivery are configured; it must not claim success unless Resend accepts the message. A project support email has **not** been invented or published.
 
-### Configure the Cloudflare Pages reporting service
+### Future option only: configure an external server-side reporting service
 
 1. Create/verify a sender domain and address in Resend (or adapt the function for the chosen email provider).
 2. Configure the following server-side environment variables for the Pages project: `REPORT_TO_EMAIL` (the private Gmail inbox selected by the project owner), `REPORT_FROM_EMAIL`, `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` and `REPORT_ALLOWED_ORIGIN` (the **exact** website origin, e.g. `https://example.org`). Do not commit the recipient email to this public repository. All feedback subjects follow `EarnWage: <category>` (Incorrect value / Translation issue / Source or broken link / Suggestion), with the visitor's email in Reply-To.
@@ -31,7 +51,7 @@ This directory is a **separate public website**, not a replacement for the exist
 5. Test valid delivery, invalid captcha, invalid origin, oversized payload, errors from the mail provider and a mobile-browser submission before publishing.
 6. Add a complete privacy notice explaining feedback retention and the mail service used. Do not request personal tax identifiers, documents, payslips or other sensitive information via this form.
 
-The static website and Pages Function use the same domain, so the form needs no cross-origin access. Cloudflare Pages' build output stays `website`, with the `functions/` directory at repository root.
+This optional server-side integration is **not used on GitHub Pages**. The form is disabled until a separate verified backend and privacy notice are provided.
 
 ## Methodology, data sources and individual profile pages
 
@@ -72,7 +92,7 @@ These pages are available in the website branch only. **They have not been revie
 - `website/_headers` prepara respostas estáticas com `nosniff`, proteção de enquadramento e política de referenciação.
 - `tests/test_website_shell.py`, `tests/test_website_api_config.py` e `tests/test_website_public_cors.py` acrescentam verificações automáticas de navegação, configuração e acesso seguro.
 - **CORS:** a API da branch aceita origens adicionais configuradas em `EARNWAGE_PUBLIC_CORS_ORIGINS` (origens HTTPS completas, separadas por vírgulas) apenas em pedidos `GET/HEAD` públicos; rotas administrativas mantêm a autorização anterior. O novo código só produzirá efeitos quando for revisto e instalado no servidor.
-- Antes de configurar o Cloudflare Pages, seguir `website/PREVIEW_CHECKLIST.md` (branch da PR, raiz do repositório, diretório de saída `website`, funções na raiz `functions/`, verificação de CORS, privacidade e testes visuais).
+- Antes de publicar no GitHub Pages, seguir `website/PREVIEW_CHECKLIST.md` (workflow de GitHub Actions, website na raiz, API Lab em `/lab/`, verificação de CORS e testes visuais).
 - **Ainda não há deployment, publicação do site, alterações DNS ou alteração à BD de produção.** Testes visuais em browsers reais ainda pendentes.
 
 ## Current functionality
@@ -86,17 +106,14 @@ These pages are available in the website branch only. **They have not been revie
 - Job search opens the selected Indeed national website in a separate tab. No Indeed scraping.
 - External Remotive link; no third-party listings copied into the website.
 
-## Deployment (proposed)
+## Deployment (proposed): GitHub Pages
 
-Cloudflare Pages can serve this directory as a static site:
-
-- GitHub repository: `GilPereiraPT/Global-Purchasing-Power-API`
-- Production branch: **only after an explicitly approved merge**
-- Framework preset: None
-- Build command: empty
-- Build output directory: `website`
-- Environment variables: none are required by this static version
-- Add the custom domain and DNS **only after choosing the actual domain** and reviewing access.
+- GitHub repository: `GilPereiraPT/Global-Purchasing-Power-API`.
+- Publish source: **GitHub Actions** on `main`, after explicit review/merge.
+- Workflow: `.github/workflows/earnwage-lab-pages.yml`.
+- Build output: `_site/`, assembled from `website/` at the root and `docs/` under `/lab/`.
+- Public hosting: `https://gilpereirapt.github.io/Global-Purchasing-Power-API/` (subject to successful deployment).
+- No external web host, custom domain, DNS or Cloudflare Pages configured now.
 
 The existing cPanel/Passenger Python API remains independent; do not move or redeploy it as part of the website work. The frontend currently calls `https://earnwage-api.policlinicosdesantoandre.com`; verify its CORS allow-list for the **chosen** public website origin before deployment. Do not use a wildcard CORS policy for authenticated administrative endpoints.
 
