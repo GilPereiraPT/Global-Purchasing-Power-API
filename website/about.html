@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Learn about EarnWage, official statistical sources, transparent data processing and how to report possible errors.">
+<title>About EarnWage — Independent salary and purchasing-power information</title><meta name="theme-color" content="#102c39"><link rel="stylesheet" href="./explore.css">
+<style>.about-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.about-grid .card{height:100%}.about-grid h2{font-size:1.15rem;margin-top:0}.about-grid p{margin:0;color:var(--muted)}.prose{max-width:810px}.prose p{line-height:1.75;color:#455d65}.formcols{display:grid;grid-template-columns:1fr 1fr;gap:15px}.formcols .wide{grid-column:1/-1}textarea{font:inherit;width:100%;min-height:140px;padding:12px;border:1px solid #b9cccf;border-radius:10px;resize:vertical}.status{margin-top:12px}.consent{display:flex;gap:11px;align-items:flex-start}.consent input{width:19px;min-height:19px;margin-top:4px}.hidden-check{position:absolute;left:-10000px;opacity:0}.captcha{margin-top:15px}.captcha[hidden]{display:none}.report-note{background:#eef5f1;padding:14px;border-radius:12px;color:#42605d}.section-spacer{margin-top:35px}.actions button{min-width:180px}@media(max-width:650px){.about-grid,.formcols{grid-template-columns:1fr}.formcols .wide{grid-column:auto}}</style>
+<link rel="stylesheet" href="./site-shell.css"></head><body>
+<header><nav class="wrap nav" aria-label="Main navigation"><a class="brand" href="./index.html"><span class="mark">E</span>EarnWage</a><div class="links"><a data-t="home" href="./index.html">Home</a><a data-t="compare" href="./compare.html">Compare</a><a data-t="salaries" href="./salaries.html">Salaries</a><a data-t="countries" href="./countries.html">Countries</a><a data-t="jobs" href="./jobs.html">Jobs</a><a data-t="insights" href="./insights.html">Insights</a><a href="./history.html" class="ew-new-nav" data-more="history">History</a><a href="./coverage.html" class="ew-new-nav" data-more="coverage">Coverage</a><a href="./methodology.html" data-method-link>Methodology</a><a href="./sources.html" data-sources-link>Data sources</a><a href="./about.html" data-a="about" aria-current="page">About</a></div><label class="lang"><span class="sr" data-a="language">Language</span><select id="lang" aria-label="Language"><option value="en">🇬🇧 EN</option><option value="pt">🇵🇹 PT</option><option value="es">🇪🇸 ES</option><option value="de">🇩🇪 DE</option><option value="fr">🇫🇷 FR</option><option value="it">🇮🇹 IT</option><option value="nl">🇳🇱 NL</option></select></label></nav></header>
+<main>
+<section class="banner"><div class="wrap"><div class="kicker" data-a="eyebrow">About EarnWage</div><h1 data-a="title">A clearer view of what a salary means around the world.</h1><p data-a="intro">Independent salary and purchasing-power information.</p></div></section>
+<div class="wrap content">
+<section class="panel prose"><h2 data-a="mission">Our purpose</h2><p data-a="missionText"></p></section>
+<div class="about-grid">
+<section class="card"><h2 data-a="sources">Official statistical sources</h2><p data-a="sourcesText"></p></section>
+<section class="card"><h2 data-a="processing">Our own data processing</h2><p data-a="processingText"></p></section>
+<section class="card"><h2 data-a="noInvent">No invented data</h2><p data-a="noInventText"></p></section>
+<section class="card"><h2 data-a="honesty">Transparency and independence</h2><p data-a="honestyText"></p></section>
+</div>
+<section class="panel prose section-spacer"><h2 data-a="jobs">Job offers are different</h2><p data-a="jobsText"></p></section>
+<section class="panel prose"><h2 data-a="limitations">Errors and updates</h2><p data-a="limitationsText"></p></section>
+<section class="panel section-spacer" id="report"><h2 data-a="reportTitle">Help us improve EarnWage</h2><p data-a="reportText" class="muted"></p>
+<form id="reportForm"><div class="formcols">
+<div class="field"><label for="reportName" data-a="name">Your name</label><input id="reportName" name="name" maxlength="100" required autocomplete="name"></div>
+<div class="field"><label for="reportEmail" data-a="email">Your email</label><input id="reportEmail" name="email" type="email" maxlength="254" required autocomplete="email"></div>
+<div class="field"><label for="reportType" data-a="type">Subject</label><select id="reportType" name="type" required><option value="value" data-a="typeValue">Incorrect value</option><option value="translation" data-a="typeTranslation">Translation issue</option><option value="source" data-a="typeSource">Source or broken link</option><option value="other" data-a="typeOther">Other suggestion</option></select></div>
+<div class="field"><label for="reportPage" data-a="page">Page URL</label><input id="reportPage" name="page" type="url" maxlength="500" placeholder="https://"></div>
+<div class="field wide"><label for="reportMessage" data-a="message">Describe the issue</label><textarea id="reportMessage" name="message" required minlength="15" maxlength="4000"></textarea></div>
+<div class="field wide"><label for="reportSource" data-a="sourceLink">Supporting source URL (optional)</label><input id="reportSource" name="source_url" type="url" maxlength="500" placeholder="https://"></div>
+</div>
+<div class="hidden-check" aria-hidden="true"><label for="reportWebsite">Website</label><input id="reportWebsite" name="website" tabindex="-1" autocomplete="off"></div>
+<label class="consent"><input id="consent" type="checkbox" required><span data-a="consent">I agree to use of this information solely to review and reply to my report.</span></label>
+<p class="muted" data-a="privacy">We use your details only for this report.</p>
+<div id="captchaContainer" class="captcha" hidden></div>
+<div class="actions"><button class="primary" type="submit" id="sendReport" disabled data-a="send">Send report</button></div>
+<p id="reportStatus" class="status muted" role="status" aria-live="polite"></p>
+</form></section>
+</div></main>
+<footer class="foot"><div class="wrap"><strong>EarnWage</strong><p data-a="footer"></p><a href="https://github.com/GilPereiraPT/Global-Purchasing-Power-API" target="_blank" rel="noopener noreferrer">Project & sources</a></div></footer>
+<script src="./api-config.js"></script><script src="./site-shell.js"></script><script src="./explore-i18n.js"></script><script src="./about-i18n.js"></script><script src="./report-config.js"></script><script defer src="./about.js"></script></body></html>
