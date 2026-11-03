@@ -29,6 +29,7 @@ from app.ilostat_groups import group_salary, group_history
 from app.earnwage_history import exact_history
 from app.client_config import region_configuration
 from app.tax_components import components as tax_components
+from app.purchasing_power import compare as purchasing_power_compare
 from app.us_state_tax import state_wage_income_tax
 
 JOBS = {job["id"]: job for job in OCCUPATIONS}
@@ -331,9 +332,11 @@ def compare(country_a, country_b, occupation, region_a=None, region_b=None,
             "status": "not_normalized",
             "reason": "Units, statistical measures, reference years, NOC/SOC/ISCO scopes and currencies can differ",
         },
+        "gross_purchasing_power_equivalence": purchasing_power_compare(
+            country_a.upper(), country_b.upper(), annual_gross_a, annual_gross_b),
         "net_purchasing_power": {"status": "unavailable", "value": None,
             "reason": "Full region-aware income tax and verified living-cost baskets are pending"},
-        "display_policy": "Do not rank countries or subtract unvalidated deductions from source wages.",
+        "display_policy": "PPP equivalence is gross-only. Do not rank net outcomes or infer tax residence from remote job eligibility.",
     }
 
 

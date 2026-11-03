@@ -427,8 +427,8 @@ class MainActivity:ComponentActivity() {
                                         (if(lang=="pt") "Confirme a residência fiscal e a moeda; elegibilidade remota não prova localização fiscal."
                                          else "Confirm tax residence and currency; remote eligibility does not establish tax location."))
                                 }
-                                item { Caption(if(lang=="pt") "A comparação atual apresenta salários e cenários fiscais lado a lado; não calcula ainda uma equivalência por PPP."
-                                    else "The current comparison shows salary and tax scenarios side by side; purchasing-power equivalence is not yet calculated.") }
+                                item { Caption(if(lang=="pt") "Com salário de origem, o EarnWage calcula a equivalência PPP bruta, se houver dados oficiais do mesmo ano. Não equivale a rendimento líquido."
+                                    else "With an origin salary, EarnWage calculates gross PPP equivalence when official same-year data exist. This is not net pay.") }
                                 if(offerSalaryCurrency.isNotBlank() &&
                                     countries.firstOrNull {it.code==dest}?.currency!=offerSalaryCurrency) item {
                                     Caption(if(lang=="pt") "A moeda da oferta não coincide com a moeda do destino. Escolha o país adequado ou introduza manualmente um valor na moeda do destino."
@@ -793,6 +793,32 @@ private fun parseRegions(data:JSONObject):List<Region> {
     when(page) {
         "salary" -> WageCard(data,lang,currency,fx)
         "compare" -> {
+            val power=data.optJSONObject("gross_purchasing_power_equivalence")
+            if(power!=null) {
+                if(power.optString("status")=="available") {
+                    val annual=power.optDouble("value",Double.NaN)
+                    val code=power.optString("currency")
+                    val year=power.optInt("reference_year")
+                    if(annual.isFinite()) {
+                        Metric(if(lang=="pt") "Salário bruto equivalente por PPP" else "Gross PPP-equivalent salary",
+                            money(annual,code),
+                            (if(lang=="pt") "Consumo privado nacional · Banco Mundial · " else
+                                "National private consumption · World Bank · ")+year)
+                    }
+                    val difference=power.optDouble("destination_offer_difference_percent",Double.NaN)
+                    if(difference.isFinite()) {
+                        Metric(if(lang=="pt") "Diferença da oferta face à equivalência PPP" else "Offer versus PPP equivalent",
+                            number(difference)+"%",
+                            if(lang=="pt") "Diferença entre montantes brutos; não é ganho líquido."
+                            else "Gross amount comparison; not a net-income gain.")
+                    }
+                    Caption(if(lang=="pt") "A PPP não representa câmbio de mercado, impostos pessoais nem preços de uma cidade."
+                        else "PPP is not a market exchange rate, personal tax calculation or city-level cost of living.")
+                } else {
+                    Caption((if(lang=="pt") "Equivalência PPP indisponível: " else "PPP equivalence unavailable: ")+
+                        power.optString("reason","No compatible data"))
+                }
+            }
             data.optJSONObject("country_a")?.let {WageCard(it,lang,currency,fx)}
             data.optJSONObject("country_b")?.let {WageCard(it,lang,currency,fx)}
         }
