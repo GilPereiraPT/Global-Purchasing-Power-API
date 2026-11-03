@@ -334,6 +334,17 @@ def dispatch(path, q):
         with insights_connect() as db:
             ensure_tables(db)
             return read(db, code, name)
+    if path.startswith("/v1/economy/history/"):
+        from app.country_insights_store import connect, read_indicator
+        parts = [part for part in path.split("/") if part]
+        if len(parts) != 4:
+            raise ApiError(404, "Unknown endpoint")
+        code = country(parts[3])
+        name = one(q, "indicator") or "inflation_annual"
+        if name not in ("inflation_annual", "ppp_private_consumption"):
+            raise ApiError(422, "Unsupported historical indicator")
+        with connect() as db:
+            return read_indicator(db, code, name, history=True)
     if path == "/v1/economy/coverage":
         from app.country_insights import ISO3
         from app.country_insights_store import connect, read_indicator
