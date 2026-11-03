@@ -44,6 +44,16 @@ The static website and Pages Function use the same domain, so the form needs no 
 
 These pages are available in the website branch only. **They have not been reviewed in a real browser or deployed.** Historical charts and a richer source catalog remain future work.
 
+## Historical indicators and data coverage
+
+- `history.html?country=PT&indicator=inflation_annual`: renders accessible SVG time series for official imported inflation or household-consumption PPP. Only actual dated observations are plotted; gaps are not interpolated. A sourced data table accompanies each chart.
+- `coverage.html`: shows indicator availability for the 14 configured countries with latest observation year, plus links to country details/history.
+- New read-only API `GET /v1/economy/history/{country}?indicator=inflation_annual|ppp_private_consumption`: uses existing `read_indicator(..., history=True)`, returns source/year/unit and stored history; performs no external fetch or production write.
+- `history-i18n.js` localizes the two pages for EN/PT-PT/ES/DE/FR/IT/NL, consistent with browser language and locally saved choice.
+- `tests/test_website_history.py` covers endpoint validation, preservation of missing historical years and page/i18n wiring.
+- **Deployment dependency:** until the API endpoint is reviewed and deployed, the charts will display an unavailable state. Stored historical data must exist for each country/indicator.
+- These are economic indicators only. Do not treat them as verified historical salary series or complete country coverage.
+
 ## Current functionality
 
 - Responsive editorial landing page with six capability cards, methodology and FAQ.
