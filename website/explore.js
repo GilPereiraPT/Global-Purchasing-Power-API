@@ -25,6 +25,8 @@ function renderOccupations(){
   document.querySelectorAll("select[data-occupation]").forEach(node=>{const value=node.value||node.dataset.default||"accountant";node.replaceChildren(...occupations.map(x=>option(x.id,x.label||x.id)));if(occupations.some(x=>x.id===value))node.value=value})
 }
 function applyLanguage(){
+ document.querySelectorAll("[data-method-link]").forEach(el=>el.textContent=({en:"Methodology",pt:"Metodologia",es:"Metodología",de:"Methodik",fr:"Méthodologie",it:"Metodologia",nl:"Methodologie"})[language]);
+ document.querySelectorAll("[data-sources-link]").forEach(el=>el.textContent=({en:"Data sources",pt:"Fontes de dados",es:"Fuentes de datos",de:"Datenquellen",fr:"Sources de données",it:"Fonti dei dati",nl:"Gegevensbronnen"})[language]);
  document.querySelectorAll("[data-about-link]").forEach(el=>el.textContent=({en:"About",pt:"Sobre",es:"Acerca de",de:"Über uns",fr:"À propos",it:"Informazioni",nl:"Over ons"})[language]);
   document.documentElement.lang=EW_TAGS[language];$("lang").value=language;$("lang").setAttribute("aria-label",T("language"));
   document.querySelectorAll("[data-t]").forEach(node=>node.textContent=T(node.dataset.t));
