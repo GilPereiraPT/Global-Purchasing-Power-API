@@ -819,6 +819,36 @@ private fun parseRegions(data:JSONObject):List<Region> {
                         power.optString("reason","No compatible data"))
                 }
             }
+            val net=data.optJSONObject("net_purchasing_power")
+            if(net!=null) {
+                val status=net.optString("status")
+                if(status=="verified_models" || status=="benchmark_estimate") {
+                    val target=net.optDouble("origin_net_equivalent_in_destination_currency",Double.NaN)
+                    val destinationNet=net.optDouble("destination_net_income",Double.NaN)
+                    val currencyCode=net.optString("currency")
+                    val fiscalYear=net.optInt("tax_year")
+                    if(target.isFinite() && destinationNet.isFinite()) {
+                        Heading(if(lang=="pt") "Comparação do rendimento líquido por PPP" else "Net-income PPP comparison",20)
+                        Metric(if(lang=="pt") "Líquido de origem equivalente no destino" else "Origin net equivalent at destination",
+                            money(target,currencyCode),
+                            (if(lang=="pt") "Ano fiscal " else "Tax year ")+fiscalYear+
+                                (if(status=="benchmark_estimate") " · benchmark estimate" else " · validated tax models"))
+                        Metric(if(lang=="pt") "Líquido estimado da oferta" else "Estimated destination net income",
+                            money(destinationNet,currencyCode),
+                            if(lang=="pt") "Modelo fiscal do país de destino" else "Destination tax model")
+                    }
+                    val pct=net.optDouble("destination_net_difference_percent",Double.NaN)
+                    if(pct.isFinite()) Metric(if(lang=="pt") "Diferença de poder de compra líquido" else "Net purchasing-power difference",
+                        number(pct)+"%",
+                        if(lang=="pt") "Estimativa nacional; não inclui diferenças de preços entre cidades."
+                        else "National estimate; does not capture city-to-city prices.")
+                    Caption(if(lang=="pt") "A estimativa fiscal não substitui uma simulação individual. Confirme residência, agregado e benefícios aplicáveis."
+                        else "Tax estimates are not individual tax advice. Check tax residency, household and applicable benefits.")
+                } else {
+                    Caption((if(lang=="pt") "Comparação líquida indisponível: " else "Net comparison unavailable: ")+
+                        net.optString("reason","Requires two complete tax scenarios and comparable PPP data."))
+                }
+            }
             data.optJSONObject("country_a")?.let {WageCard(it,lang,currency,fx)}
             data.optJSONObject("country_b")?.let {WageCard(it,lang,currency,fx)}
         }
