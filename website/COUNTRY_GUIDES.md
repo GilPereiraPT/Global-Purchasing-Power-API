@@ -1,4 +1,4 @@
-# EarnWage country guides · ES, IE, GB, FR, NL, CH, IT, US, CA
+# EarnWage country guides · all 14 countries (PT, ES, DE, FR, GB, IE, NL, CH, IT, US, CA, BR, IN, PK)
 
 The website shares **one** country profile route, `website/country.html?country=XX`.
 Sourced country detail is in `website/country-guides.js`; the country listing
@@ -17,6 +17,11 @@ guide notes and measure labels.
 | IT | Excelsior 2025 (INPS 2023); ISTAT SES 2022 | **Initial gross annual** RAL for selected professions; broad-group **gross hourly means by sex** separately | Ranges show min and max without invented midpoint; group means are not profession salaries |
 | US | BLS OEWS May 2025 | National and validated state-wide occupation observations with source hourly/annual units | Region optional; no city substitution, no assumed net income, missing states unavailable |
 | CA | Job Bank 2025 / NOC 2021 | National and validated provincial occupation observations with original hourly/annual units | Observation years vary, no annualisation of hourly wages, no complete federal/provincial income-tax model |
+| PT | INE/GEP CPP-2010, verified occupation observations; DGAEP 2026 | Mean monthly occupation gain, **separate** from monthly public-service entry pay | Conditional general-career matches are explicitly labelled, no assumed 14th pay |
+| DE | Bundesagentur für Arbeit Entgeltatlas 2025 | Gross monthly occupation medians, national or validated federal-state Berufsgattung | No broad Berufsgruppe fallback; missing state values stay unavailable |
+| BR | MTE RAIS 2025 through published 99K CBO aggregates; federal public scales 2026 | December monthly median or clearly derived composite, separate state values and public entry | Formal employment only, no silent regional fallback or fabricated net pay |
+| IN | MoSPI PLFS 2025, disclosed NCO-2015 group derivative | Monthly all-salaried employee mean and separate three-digit **occupational-group** mean, national/state | No group amount shown as exact profession wage; gross/net not inferred |
+| PK | Pakistan Bureau of Statistics Labour Force Survey 2020–21 / 2024–25 | Broad occupational-group observations via Wage Groups page, independent exact wage only if present | No group mean or median passed off as occupation salary |
 
 Source links are embedded in the country metadata. The **Switzerland** reference snapshot
 is currently kept in private staging pending licensing/reuse and quality review. This
@@ -49,3 +54,34 @@ be deployed or merged into production without review.
 - The three profiles and all measure descriptions exist in EN/PT/ES/DE/FR/IT/NL.
 - No API/backend mutation, imports, database access, DNS change or production
   deployment. CI and real-browser review remain required.
+
+## Final country integration — PT, DE, BR, IN, PK (PR following #52)
+
+The previously implemented legacy pages in `docs/` were not copied into
+`website/`. The unified site **reuses the existing API datasets**, separates
+source measures and provides country-specific notes, as those legacy HTML
+files use separate deployment paths and assumptions.
+
+- PT: `national_occupation_wage` from INE/GEP CPP-2010 and
+  `portugal_public_sector_entry` from DGAEP 2026. A conditional public
+  career comparator has an explicit warning; no 14-month annual income assumed.
+- DE: national 2025 verified KldB Berufsgattung median; optional federal
+  state from the API's region options, only displaying genuinely validated
+  regional statistics. Missing state observations remain unavailable.
+- BR: RAIS monthly median vs employment-weighted composite measure is
+  distinguished, with optional state median and separate public-sector
+  federal starting benchmark.
+- IN: regular-wage employee mean **across occupations** appears separately
+  from three-digit PLFS/NCO group observations, including optional states.
+  Verified NCO group data may use a third-party harmonisation of official
+  microdata; it is not a profession's exact remuneration.
+- PK: broad LFS occupation-group statistics stay on the existing
+  Wage Groups interface; country guide links directly to that source
+  catalogue and only shows independently validated exact wages, if any.
+- Added `country` query-string support on `wage-groups.html` for
+  deep links to Portuguese, Spanish and Pakistani source groups.
+- All five country descriptions and new labels translated into the
+  seven supported website languages. Complete country catalogue now
+  has 14 detailed guides.
+- No changes to API wage data, tax engines, imported snapshots, national
+  values, domain/DNS, production database or deployment.
