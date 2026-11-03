@@ -88,3 +88,13 @@ jobs:
             await browser.close();
           })().catch(e=>{console.error(e);process.exitCode=1});
           JSCODE
+      - name: Inspect safe deployment enablement flag
+        shell: bash
+        env:
+          DEPLOY_ENABLED: ${{ vars.EARNWAGE_DEPLOY_ENABLED }}
+        run: |
+          if [ "$DEPLOY_ENABLED" = "true" ]; then
+            echo "EARNWAGE_PRODUCTION_DEPLOY=ENABLED"
+          else
+            echo "EARNWAGE_PRODUCTION_DEPLOY=DISABLED"
+          fi
