@@ -25,6 +25,8 @@ function renderOccupations(){
   document.querySelectorAll("select[data-occupation]").forEach(node=>{const value=node.value||node.dataset.default||"accountant";node.replaceChildren(...occupations.map(x=>option(x.id,x.label||x.id)));if(occupations.some(x=>x.id===value))node.value=value})
 }
 function applyLanguage(){
+ document.querySelectorAll('[data-more="history"]').forEach(x=>x.textContent=({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[language]);
+ document.querySelectorAll('[data-more="coverage"]').forEach(x=>x.textContent=({en:"Coverage",pt:"Cobertura",es:"Cobertura",de:"Datenstand",fr:"Couverture",it:"Copertura",nl:"Dekking"})[language]);
  document.querySelectorAll("[data-method-link]").forEach(el=>el.textContent=({en:"Methodology",pt:"Metodologia",es:"Metodología",de:"Methodik",fr:"Méthodologie",it:"Metodologia",nl:"Methodologie"})[language]);
  document.querySelectorAll("[data-sources-link]").forEach(el=>el.textContent=({en:"Data sources",pt:"Fontes de dados",es:"Fuentes de datos",de:"Datenquellen",fr:"Sources de données",it:"Fonti dei dati",nl:"Gegevensbronnen"})[language]);
  document.querySelectorAll("[data-about-link]").forEach(el=>el.textContent=({en:"About",pt:"Sobre",es:"Acerca de",de:"Über uns",fr:"À propos",it:"Informazioni",nl:"Over ons"})[language]);
