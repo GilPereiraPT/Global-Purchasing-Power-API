@@ -20,7 +20,7 @@ footer{background:#0a1e29;color:#c0d6d7;padding:35px 0;font-size:.87rem}.footer-
 @media(max-width:850px){.hero-grid,.jobs-layout{grid-template-columns:1fr;gap:34px}.cards,.steps{grid-template-columns:1fr 1fr}.hero{padding:55px 0}.navlinks{gap:12px}.navlinks a{font-size:.84rem}}
 @media(max-width:580px){.container{width:min(100% - 28px,1160px)}.nav{min-height:65px}.nav{flex-wrap:wrap;padding:11px 0}.navlinks{order:3;width:100%;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:15px;padding-bottom:8px}.navlinks a:not(.navcta){display:inline-block}.navlinks a{white-space:nowrap;flex-shrink:0}.nav-actions{gap:8px}.navcta{padding:10px!important}.lang-select{width:90px;padding:8px 5px}.hero h1{font-size:2.7rem}.calculator{padding:21px}.fields,.cards,.steps,.result-grid{grid-template-columns:1fr}.hero{padding:42px 0 50px}.light,.jobs{padding:55px 0!important}.section-title{font-size:2rem!important}}
 </style>
-</head>
+<link rel="stylesheet" href="./site-shell.css"></head>
 <body>
 <header><nav class="container nav" aria-label="Main navigation"><a class="brand" href="#top"><span class="mark">E</span> EarnWage</a><div class="navlinks"><a href="./salaries.html">Salaries</a><a href="./countries.html">Countries</a><a href="./jobs.html">Jobs</a><a href="./insights.html">Insights</a><a href="./history.html" class="ew-new-nav" data-more="history">History</a><a href="./coverage.html" class="ew-new-nav" data-more="coverage">Coverage</a><a href="./wage-groups.html" data-library="wages">Wage groups</a><a href="./source-directory.html" data-library="directory">Sources</a><a class="navcta" href="./compare.html">Compare salaries</a></div><div class="nav-actions"><label class="lang-control"><span class="sr-only" id="languageLabel">Language</span><select id="languageSelector" class="lang-select" aria-labelledby="languageLabel"><option value="en">🇬🇧 EN</option><option value="pt">🇵🇹 PT</option><option value="es">🇪🇸 ES</option><option value="de">🇩🇪 DE</option><option value="fr">🇫🇷 FR</option><option value="it">🇮🇹 IT</option><option value="nl">🇳🇱 NL</option></select></label></div></nav></header>
 <main id="top">
@@ -48,7 +48,7 @@ footer{background:#0a1e29;color:#c0d6d7;padding:35px 0;font-size:.87rem}.footer-
 </div></section>
 </main>
 <footer><div class="container footer-row"><div><a class="brand" href="#top"><span class="mark">E</span> EarnWage</a><p>Your salary. Your world.<br>Economic information for informed career choices.</p></div><div><p>Data availability differs by country, year and source.<br>Results are informational, not personal financial or tax advice.</p><a href="./methodology.html" id="methodologyLink">Methodology</a> · <a href="./sources.html" id="sourcesLink">Data sources</a> · <a href="./about.html" id="aboutLink">About EarnWage</a> · <a href="https://github.com/GilPereiraPT/Global-Purchasing-Power-API" rel="noopener noreferrer" target="_blank">Project & sources ↗</a></div></div></footer>
-<script src="./i18n.js"></script><script src="./explore-i18n.js"></script>
+<script src="./site-shell.js"></script><script src="./i18n.js"></script><script src="./explore-i18n.js"></script>
 <script>
 "use strict";
 const API="https://earnwage-api.policlinicosdesantoandre.com";
@@ -60,7 +60,7 @@ let activeLocale=locales.includes(savedLocale)?savedLocale:
 const localeTags={en:"en-GB",pt:"pt-PT",es:"es-ES",de:"de-DE",fr:"fr-FR",it:"it-IT",nl:"nl-NL"};
 const ewT=(key)=>window.EarnWageExploreI18n?.[activeLocale]?.[key]||window.EarnWageI18n?.[activeLocale]?.[key]||window.EarnWageExploreI18n?.en?.[key]||window.EarnWageI18n?.en?.[key]||key;
 const localizedTargets=[
-[".navlinks a:nth-child(1)","salaries"],[".navlinks a:nth-child(2)","countries"],[".navlinks a:nth-child(3)","jobs"],[".navlinks a:nth-child(4)","insights"],[".navlinks a:nth-child(5)","compare"],
+
 [".hero .eyebrow","eyebrow"],[".hero h1 em","heroEm"],[".hero-grid>div:first-child>p","heroDesc"],
 [".trust span:nth-child(1)","trust1"],[".trust span:nth-child(2)","trust2"],[".trust span:nth-child(3)","trust3"],
 [".calculator h2","compareTitle"],[".calculator>p","compareDesc"],["label[for=salary]","salary"],["label[for=from]","origin"],["label[for=to]","destination"],["label[for=occupation]","occupation"],
@@ -85,7 +85,7 @@ const localizedTargets=[
 ["#faq details:nth-of-type(3) summary","faq3"],["#faq details:nth-of-type(3) p","faq3Desc"],
 ["#faq details:nth-of-type(4) summary","faq4"],["#faq details:nth-of-type(4) p","faq4Desc"],
 ["footer .footer-row>div:nth-child(1) p","footerDesc"],["footer .footer-row>div:nth-child(2) p","footerNotice"],
-["footer .footer-row>div:nth-child(2) a","sources"],["#languageLabel","langLabel"]
+["#languageLabel","langLabel"]
 ];
 function applyLocale(){
  document.querySelectorAll('[data-library="wages"]').forEach(x=>x.textContent=({en:"Wage groups",pt:"Grupos profissionais",es:"Grupos profesionales",de:"Berufsgruppen",fr:"Groupes professionnels",it:"Gruppi professionali",nl:"Beroepsgroepen"})[activeLocale]);
@@ -97,11 +97,8 @@ function applyLocale(){
     const node=document.querySelector(selector);
     if(node)node.textContent=ewT(key);
   }
-  $("aboutLink").textContent=({en:"About EarnWage",pt:"Sobre o EarnWage",es:"Sobre EarnWage",de:"Über EarnWage",fr:"À propos d’EarnWage",it:"Informazioni su EarnWage",nl:"Over EarnWage"})[activeLocale];
   document.querySelectorAll('[data-more="history"]').forEach(x=>x.textContent=({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[activeLocale]);
   document.querySelectorAll('[data-more="coverage"]').forEach(x=>x.textContent=({en:"Coverage",pt:"Cobertura",es:"Cobertura",de:"Datenstand",fr:"Couverture",it:"Copertura",nl:"Dekking"})[activeLocale]);
-  $("methodologyLink").textContent=({en:"Methodology",pt:"Metodologia",es:"Metodología",de:"Methodik",fr:"Méthodologie",it:"Metodologia",nl:"Methodologie"})[activeLocale];
-  $("sourcesLink").textContent=({en:"Data sources",pt:"Fontes de dados",es:"Fuentes de datos",de:"Datenquellen",fr:"Sources de données",it:"Fonti dei dati",nl:"Gegevensbronnen"})[activeLocale];
   $("languageSelector").value=activeLocale;
   $("languageSelector").setAttribute("aria-label",ewT("langLabel"));
   for(const [id,defaultCode] of [["from","PT"],["to","CH"],["jobCountry","PT"]]){
