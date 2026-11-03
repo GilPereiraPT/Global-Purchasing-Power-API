@@ -54,6 +54,16 @@ These pages are available in the website branch only. **They have not been revie
 - **Deployment dependency:** until the API endpoint is reviewed and deployed, the charts will display an unavailable state. Stored historical data must exist for each country/indicator.
 - These are economic indicators only. Do not treat them as verified historical salary series or complete country coverage.
 
+## Occupational-group earnings and source directory
+
+- `wage-groups.html` — official published earnings by **broad occupational group**, using existing API routes for Portugal (INE/GEP Quadros de Pessoal), Spain (INE Encuesta Anual de Estructura Salarial) and Pakistan (Pakistan Bureau of Statistics Labour Force Survey). Group averages must not be substituted for any one profession's salary.
+- Spain's EAES annual observations are charted **only when** at least two real annual years exist. Suppressed observations are shown as missing; short-sample quality flags are preserved in the table.
+- Portugal's current official-group snapshot contains **2024 only**, so the page expressly says there is insufficient history for a trend. Pakistan periods **2020–21** and **2024–25** are published interval labels, not single calendar years; their original monthly observations are displayed without falsely connecting them in an annual chart.
+- All country/source monetary units, periods, sex breakdowns, original source URLs and data limitations are retained. No invented salary interpolation, tax treatment or annualization.
+- `source-directory.html` lists `/v1/sources` entries and their **actual published implementation status**. It explicitly separates official salary/statistics providers from independent third-party job listings and planned sources, without calling all records official.
+- Shared `wage-library.js` and `wage-library-i18n.js` localize the pages in seven languages and use the live EarnWage API rather than duplicated site data. Static/regression tests are in `tests/test_website_wage_library.py`.
+- Pages are in the pull-request branch only. Test browser behavior and existing API CORS configuration before deployment.
+
 ## Current functionality
 
 - Responsive editorial landing page with six capability cards, methodology and FAQ.
