@@ -88,6 +88,22 @@ private fun indicatorTitle(code:String,lang:String):String {
         "internet_use" to "Internet usage")
     return (if(lang=="pt") pt else en)[code] ?: code
 }
+private fun annualOfferSalaryOptions(job:JSONObject):List<Pair<String,Double>> {
+    val salary=job.optJSONObject("salary_structured") ?: return emptyList()
+    val currency=salary.optString("currency").uppercase(Locale.ROOT)
+    if(!Regex("[A-Z]{3}").matches(currency)) return emptyList()
+    val period=salary.optString("period").trim().lowercase(Locale.ROOT)
+    if(period !in setOf("annual","annually","year","yearly","per_year","yr")) return emptyList()
+    val min=salary.optDouble("min",Double.NaN).takeIf { it.isFinite() && it>0.0 }
+    val max=salary.optDouble("max",Double.NaN).takeIf { it.isFinite() && it>0.0 }
+    if(min!=null && max!=null && min>max) return emptyList()
+    return when {
+        min!=null && max!=null && min!=max -> listOf("min" to min,"max" to max)
+        min!=null -> listOf("amount" to min)
+        max!=null -> listOf("amount" to max)
+        else -> emptyList()
+    }
+}
 private fun salaryLabel(job:JSONObject,lang:String):String {
     val explicit = job.optString("salary_text","").trim()
     if (explicit.isNotEmpty() && explicit != "null") return explicit
@@ -141,6 +157,10 @@ class MainActivity:ComponentActivity() {
     var age by remember { mutableIntStateOf(90) }
     var feed by remember { mutableStateOf("all") }
     var annual by remember { mutableStateOf("") }
+    var compareAnnualA by remember { mutableStateOf("") }
+    var compareAnnualB by remember { mutableStateOf("") }
+    var offerSalaryCurrency by remember { mutableStateOf("") }
+    var offerSalaryTitle by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("1000") }
     var previous by remember { mutableStateOf("") }
     var current by remember { mutableStateOf("") }
@@ -396,6 +416,23 @@ class MainActivity:ComponentActivity() {
                             }
                             item { ProfessionMenu(tr(lang,"profession"),professions,occupation,lang) {occupation=it} }
                             if(page=="salary") item { NumberBox(tr(lang,"annual"),annual) {annual=it} }
+                            if(page=="compare") {
+                                item { NumberBox(if(lang=="pt") "Salário bruto anual no país de origem" else "Annual gross salary in origin",compareAnnualA) {compareAnnualA=it} }
+                                item { NumberBox(if(lang=="pt") "Salário bruto anual no país de destino" else "Annual gross salary in destination",compareAnnualB) {
+                                    compareAnnualB=it;offerSalaryCurrency="";offerSalaryTitle=""
+                                } }
+                                if(offerSalaryTitle.isNotBlank()) item {
+                                    Caption((if(lang=="pt") "Valor de oferta: " else "Job offer value: ")+offerSalaryTitle+
+                                        " · "+offerSalaryCurrency+". "+
+                                        (if(lang=="pt") "Confirme a residência fiscal e a moeda; elegibilidade remota não prova localização fiscal."
+                                         else "Confirm tax residence and currency; remote eligibility does not establish tax location."))
+                                }
+                                if(offerSalaryCurrency.isNotBlank() &&
+                                    countries.firstOrNull {it.code==dest}?.currency!=offerSalaryCurrency) item {
+                                    Caption(if(lang=="pt") "A moeda da oferta não coincide com a moeda do destino. Escolha o país adequado ou introduza manualmente um valor na moeda do destino."
+                                        else "Offer currency does not match the destination currency. Select an appropriate destination or enter a value in its currency.")
+                                }
+                            }
                             item {
                                 Button(onClick={
                                     val selected=enc(occupation)
@@ -406,13 +443,18 @@ class MainActivity:ComponentActivity() {
                                     else "/v1/earnwage/compare?country_a="+country+"&country_b="+dest+
                                         "&occupation="+selected+
                                         (if(region.isNotBlank()) "&region_a="+region else "")+
-                                        (if(regionB.isNotBlank()) "&region_b="+regionB else "")
+                                        (if(regionB.isNotBlank()) "&region_b="+regionB else "")+
+                                        (numeric(compareAnnualA)?.takeIf { it.isFinite() && it>0.0 }?.let {"&annual_gross_a="+it} ?: "")+
+                                        (numeric(compareAnnualB)?.takeIf { it.isFinite() && it>0.0 }?.let {"&annual_gross_b="+it} ?: "")
                                     search(path)
-                                },enabled=professions.isNotEmpty(),modifier=Modifier.fillMaxWidth()) {
+                                },enabled=professions.isNotEmpty() &&
+                                    (page!="compare" || offerSalaryCurrency.isBlank() ||
+                                        countries.firstOrNull { it.code==dest }?.currency==offerSalaryCurrency),
+                                    modifier=Modifier.fillMaxWidth()) {
                                     Text(tr(lang,"search"))
                                 }
                             }
-                            
+
                         }
                         "jobs" -> {
                             item { Heading(tr(lang,"jobs")) }
@@ -537,7 +579,14 @@ class MainActivity:ComponentActivity() {
                             item { Metric(tr(lang,"results"),listings.size.toString(),
                                 tr(lang,"source")+": "+feed+" · "+tr(lang,"age")+": "+age+" "+tr(lang,"days")) }
                             if(listings.isEmpty()) item { Caption(tr(lang,"noresults")) }
-                            items(listings,key={it.optString("id")}) { JobCard(it,lang) }
+                            items(listings,key={it.optString("id")}) { job ->
+                                JobCard(job,lang) { amount,jobCurrency,jobTitle ->
+                                    compareAnnualB=amount.toString()
+                                    offerSalaryCurrency=jobCurrency
+                                    offerSalaryTitle=jobTitle
+                                    navigate("compare")
+                                }
+                            }
                             if(data.optInt("count")>arr.length()) item {
                                 Caption("Showing first "+arr.length()+" results; refine filters to narrow the search.")
                             }
@@ -702,7 +751,7 @@ private fun parseRegions(data:JSONObject):List<Region> {
 @Composable private fun ThemeMenu(lang:String,value:String,change:(String)->Unit) =
     SelectMenu(tr(lang,"theme"),listOf("system","light","dark"),value,change)
 
-@Composable private fun JobCard(job:JSONObject,lang:String) {
+@Composable private fun JobCard(job:JSONObject,lang:String,onCompareAnnual:(Double,String,String)->Unit) {
     val uri=LocalUriHandler.current
     val rawLink=job.optString("apply_url",job.optString("source_url",""))
     val link=rawLink.takeIf {url->
@@ -720,6 +769,17 @@ private fun parseRegions(data:JSONObject):List<Region> {
                 (if(job.optBoolean("remote",false)) " · Remote" else ""))
             Text(salaryLabel(job,lang),fontWeight=FontWeight.Bold,fontSize=16.sp)
             Caption(job.optString("source")+" · "+job.optString("published_at").take(10))
+            val salaryOptions=annualOfferSalaryOptions(job)
+            val offerCurrency=job.optJSONObject("salary_structured")?.optString("currency").orEmpty().uppercase(Locale.ROOT)
+            salaryOptions.forEach { (bound, value) ->
+                OutlinedButton(onClick={onCompareAnnual(value,offerCurrency,
+                    job.optString("title")+" · "+job.optString("source")+
+                    (if(bound=="min") " (minimum)" else if(bound=="max") " (maximum)" else ""))},
+                    modifier=Modifier.fillMaxWidth()) {
+                    Text((if(lang=="pt") "Usar na comparação: " else "Compare advertised salary: ")+money(value,offerCurrency)+
+                        (if(bound=="min") " (min)" else if(bound=="max") " (max)" else ""))
+                }
+            }
             if(link!=null) Button(onClick={uri.openUri(link)},modifier=Modifier.fillMaxWidth()) {
                 Text(tr(lang,"apply"))
             }
