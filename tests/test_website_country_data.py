@@ -11,7 +11,7 @@ def test_country_dashboard_uses_existing_public_country_indicators_endpoint():
     script = (SITE / "country-data.js").read_text(encoding="utf-8")
     assert '"/v1/countries/"+encodeURIComponent(code)+"/indicators"' in script
     assert '"/v1/countries/"+encodeURIComponent(code)+"/indicators/"+encodeURIComponent(key)+"?history=true"' in script
-    assert 'b.year!==a.year+1' in script
+    assert 'data[i+1].year!==data[i].year+1' in script
     assert 'Number.isFinite(r.value)' in script
     assert 'source_url' in script
     assert 'ci-unavailable' in script
