@@ -24,6 +24,7 @@ jobs:
           python -m http.server 8796 --bind 127.0.0.1 --directory website >/tmp/ew-http.log 2>&1 &
           node - <<'JS'
           const {chromium}=require('playwright');
+          const {execFileSync}=require('node:child_process');
           const assert=require('node:assert/strict');
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           (async()=>{
@@ -41,14 +42,21 @@ jobs:
               await page.route(remote+'/**',async route=>{
                 const url=route.request().url();
                 try{
-                  const response=await fetch(url,{headers:{
-                    'Origin':'https://gilpereirapt.github.io',
-                    'Accept':'application/json'},signal:AbortSignal.timeout(24000)});
-                  const body=await response.text();
-                  await route.fulfill({status:response.status,headers:{
+                  const probe=[
+                    "import json,sys,urllib.request,urllib.error",
+                    "req=urllib.request.Request(sys.argv[1],headers={'Origin':'https://gilpereirapt.github.io','Accept':'application/json'})",
+                    "try:",
+                    " r=urllib.request.urlopen(req,timeout=20)",
+                    "except urllib.error.HTTPError as error:",
+                    " r=error",
+                    "body=r.read(1500000).decode('utf-8','replace')",
+                    "print(json.dumps({'status':r.status,'body':body}))"
+                  ].join("\n");
+                  const result=JSON.parse(execFileSync('python3',['-c',probe,url],{timeout:25000}).toString('utf8'));
+                  await route.fulfill({status:result.status,headers:{
                     'content-type':'application/json',
                     'access-control-allow-origin':'*',
-                    'cache-control':'no-store'},body});
+                    'cache-control':'no-store'},body:result.body});
                 }catch(e){
                   apiErrors.push(path+': proxy '+url+': '+String(e).slice(0,170));
                   await route.abort();
