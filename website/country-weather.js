@@ -22,6 +22,9 @@ function load(code, cityIndex, container, lang){
  if(cityIndex!==0){container.append(el("p","",t.other),el("p","ct-weather-meta",t.climate));return}
  const status=el("p","",t.loading);container.append(status);
  const source=el("a","ct-weather-source",t.source);source.href="https://api.met.no/";source.rel="noopener noreferrer";source.target="_blank";
+ const license=el("a","ct-weather-source","CC BY 4.0");
+ license.href="https://creativecommons.org/licenses/by/4.0/";
+ license.rel="noopener noreferrer";license.target="_blank";
  const path="/v1/weather/"+encodeURIComponent(code)+"/0";
  fetch(window.EarnWageConfig.apiBase+path,{headers:{Accept:"application/json"}})
  .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()})
@@ -53,7 +56,7 @@ function load(code, cityIndex, container, lang){
      container.append(list);
    }
    if(d.stale)container.append(el("p","ct-weather-meta",t.stale));
-   container.append(el("p","ct-weather-meta",t.note),el("p","ct-weather-meta",t.climate),source);
+   container.append(el("p","ct-weather-meta",t.note),el("p","ct-weather-meta",t.climate),source,el("span","ct-weather-meta"," · "),license);
  })
  .catch(()=>{if(current===requestCounter&&container.isConnected){status.textContent=t.failed;container.append(el("p","ct-weather-meta",t.climate))}});
 }
