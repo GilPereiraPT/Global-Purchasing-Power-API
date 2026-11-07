@@ -5,6 +5,8 @@
 (() => {
  "use strict";
  const GROUPS=[
+  {key:"demography",symbol:"👥",items:["population_total","population_growth","urban_population","population_ages_0_14","population_ages_65_plus","fertility_rate","birth_rate","death_rate"]},
+  {key:"geography",symbol:"🌍",items:["surface_area","land_area","population_density"]},
   {key:"economy",symbol:"📈",items:["gdp_per_capita","inflation_annual","ppp_private_consumption","gini"]},
   {key:"employment",symbol:"💼",items:["unemployment","youth_unemployment","employment_population_ratio","advanced_education_unemployment"]},
   {key:"health",symbol:"🩺",items:["life_expectancy","health_coverage","physicians","hospital_beds","out_of_pocket_health_expenditure"]},
@@ -39,6 +41,11 @@
  function formatValue(r,lang) {
    if(!validRecord(r))return msg(lang,"missing");
    const value=new Intl.NumberFormat(localeTags[lang]||"en-GB",{maximumFractionDigits:2}).format(r.value);
+   if(r.unit==="persons")return value;
+   if(r.unit==="square_km")return value+" km²";
+   if(r.unit==="people_per_square_km_land")return value+" / km²";
+   if(r.unit==="births_per_woman")return value+" "+(lang==="pt"?"nascimentos/mulher":"births/woman");
+   if(r.unit==="births_per_1000_people"||r.unit==="deaths_per_1000_people")return value+" / 1 000";
    if(r.unit==="USD_current_per_person")return value+" USD";
    if(r.unit==="years")return value+" "+(lang==="pt"?"anos":"years");
    if(r.unit==="micrograms_per_cubic_meter")return value+" µg/m³";

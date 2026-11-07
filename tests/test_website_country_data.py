@@ -19,18 +19,18 @@ def test_country_dashboard_uses_existing_public_country_indicators_endpoint():
     assert 'load on demand' in script
 
 
-def test_all_29_country_indicators_and_7_locales_are_accounted_for():
+def test_all_40_country_indicators_and_7_locales_are_accounted_for():
     raw=(SITE/"country-data-i18n.js").read_text(encoding="utf-8").strip()
     prefix="window.EarnWageCountryDataLocale="
     assert raw.startswith(prefix)
     content=json.loads(raw[len(prefix):].rstrip(";"))
     assert tuple(content) == LANGS
     for language in LANGS:
-        assert len(content[language]["metric"]) == 29
+        assert len(content[language]["metric"]) == 40
         assert content[language]["countryNote"].strip()
         assert all(label.strip() for label in content[language]["metric"].values())
         assert all(content[language][key] for key in (
-            "economy", "employment", "health", "living", "education", "safety", "governance",
+            "economy", "employment", "health", "living", "education", "safety", "governance", "demography", "geography",
             "history", "historyMissing", "countryNote", "missing"))
 
 
@@ -43,9 +43,9 @@ def test_all_country_flags_and_groups_are_valid_in_node():
     eval(fs.readFileSync('website/country-data.js','utf8'));
     const data=window.EarnWageCountryData;
     const codes=['PT','ES','DE','FR','GB','IN','BR','PK','NL','CH','IT','IE','US','CA'];
-    assert.equal(data.ALL.length,29);
-    assert.equal(new Set(data.ALL).size,29);
-    assert.equal(data.GROUPS.length,7);
+    assert.equal(data.ALL.length,40);
+    assert.equal(new Set(data.ALL).size,40);
+    assert.equal(data.GROUPS.length,9);
     for(const code of codes){
       assert.equal([...data.flag(code)].length,2);
       assert.equal(data.flag(code),String.fromCodePoint(

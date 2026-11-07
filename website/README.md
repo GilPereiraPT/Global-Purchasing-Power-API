@@ -3,7 +3,7 @@
 ## Country indicators and flags (November 2026)
 
 The public country profile, Country explorer, Insights, and History now expose the
-**29 independently sourced national economic and social series** from the live
+**40 independently sourced national economic, demographic, geographic and social series** from the live
 `/v1/countries/{code}/indicators` API (14 countries). Clicking a metric loads
 `/v1/countries/{code}/indicators/{key}?history=true` and plots observed years
 only, with line breaks for missing years; no synthetic values or composite rank.

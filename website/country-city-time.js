@@ -57,8 +57,9 @@ function render(){
      clock.dateTime="";
    }catch(_){clock.textContent=t.timeError}
  }
- select.addEventListener("change",tick);
- active=code;tick();
+ const updateWeather=()=>window.EarnWageWeather?.load(code,Number(select.value),right,lang);
+ select.addEventListener("change",()=>{tick();updateWeather()});
+ active=code;tick();updateWeather();
  interval=setInterval(tick,1000);
 }
 function init(){

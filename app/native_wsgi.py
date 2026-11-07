@@ -248,7 +248,25 @@ def sources():
     }
 
 
+def _weather_country_route(path, params):
+    from app.weather_metno import CAPITALS, forecast
+    segments = path.strip("/").split("/")
+    if len(segments) != 4 or segments[:2] != ["v1", "weather"]:
+        raise ApiError(404, "Unknown weather route")
+    code = segments[2].upper()
+    if code not in CAPITALS:
+        raise ApiError(404, "Unknown country")
+    if not segments[3].isdigit():
+        raise ApiError(422, "Invalid city index")
+    city_id = int(segments[3])
+    if city_id > 20:
+        raise ApiError(422, "Invalid city index")
+    return forecast(code, city_id)
+
+
 def dispatch(path, q):
+    if path.startswith("/v1/weather/"):
+        return _weather_country_route(path, params)
     if path.startswith("/v1/tax/"):
         from app import tax_engine
         if path == "/v1/tax/countries":

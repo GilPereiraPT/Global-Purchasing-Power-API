@@ -51,8 +51,13 @@ hour if necessary.
 Monday PT ES; Tuesday DE FR; Wednesday GB IE; Thursday NL CH;
 Friday IT US; Saturday CA BR; Sunday IN PK.
 
-Each of the 13 World Bank indicators is requested **sequentially** with a one-second
-pause, for at most 26 requests per day (two countries). A timeout or an empty series never
+Each of the 40 configured country indicators is requested **sequentially** with a one-second
+pause, for at most 80 indicator requests per day (two countries), except for the
+WHO primary health-coverage fetch (which may use a World Bank fallback).
+The additional geography and population series are sourced from World Bank WDI.
+They are **not available** on the public site until the importer runs against the
+existing persistent SQLite database. Preserve the production database path,
+run a verified backup and a one-country `--dry-run --missing-only` first. A timeout or an empty series never
 deletes an older valid observation. The log records each indicator outcome.
 A failed run exits with code 1 for monitoring; it does not retry immediately
 and will be retried on the next scheduled cycle.
@@ -73,3 +78,23 @@ only Portugal. Do not invoke importer via a public endpoint.
 - `health_coverage` is still mapped to `SH.UHC.SRVS.CV.XD` pending a
   verified replacement. Do not silently switch to a non-equivalent series.
 - The SQLite file is operational data; back it up separately from GitHub.
+
+## Geography and demography extension (November 2026)
+
+The country catalogue adds 11 indicators (40 total): total population, growth,
+land-area population density, urban population share, fertility, births and
+deaths per 1,000 residents, surface area, land area, and population age shares
+(0–14, 65+). The frontend renders them in dedicated sections with source links,
+units and reference years. `surface_area` and `land_area` are **different**
+indicators; population density uses **land area**. Age shares do not provide
+median age. No city-level observation or political-system data is implied.
+
+Pilot commands (do not run here against production):
+
+```bash
+python -m scripts.update_country_insights --country PT --dry-run --missing-only
+python -m scripts.update_country_insights --country PT --indicator population_total --indicator surface_area --indicator population_density --missing-only
+```
+
+Do not overwrite existing observations on upstream failure, and validate the
+source metadata, units and period before expanding to the two-country rotation.

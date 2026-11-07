@@ -44,6 +44,18 @@ jobs:
               Path(f"/tmp/earnwage-lab-{filename}.js").write_text("\n".join(scripts), encoding="utf-8")
           PY
           for file in /tmp/earnwage-lab-*.js; do node --check "$file"; done
+      - name: Validate country profiles and meteorology before publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'pytest>=8,<10'
+          python -m pytest -q \
+            tests/test_website_city_time.py \
+            tests/test_website_country_politics.py \
+            tests/test_website_city_time_compare.py \
+            tests/test_website_weather.py \
+            tests/test_country_demographics_geography.py \
+            tests/test_weather_metno.py
       - name: Assemble GitHub Pages website with separate API Lab
         shell: bash
         run: |
