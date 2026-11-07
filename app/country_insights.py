@@ -17,6 +17,17 @@ ISO3 = {
     "IN": "IND", "PK": "PAK",
 }
 INDICATORS = {
+    "population_total": ("SP.POP.TOTL", "persons"),
+    "population_growth": ("SP.POP.GROW", "annual_percent"),
+    "population_density": ("EN.POP.DNST", "people_per_square_km_land"),
+    "urban_population": ("SP.URB.TOTL.IN.ZS", "percent_of_population"),
+    "fertility_rate": ("SP.DYN.TFRT.IN", "births_per_woman"),
+    "birth_rate": ("SP.DYN.CBRT.IN", "births_per_1000_people"),
+    "death_rate": ("SP.DYN.CDRT.IN", "deaths_per_1000_people"),
+    "surface_area": ("AG.SRF.TOTL.K2", "square_km"),
+    "land_area": ("AG.LND.TOTL.K2", "square_km"),
+    "population_ages_0_14": ("SP.POP.0014.TO.ZS", "percent_of_population"),
+    "population_ages_65_plus": ("SP.POP.65UP.TO.ZS", "percent_of_population"),
     "life_expectancy": ("SP.DYN.LE00.IN", "years"),
     "unemployment": ("SL.UEM.TOTL.ZS", "percent_of_labor_force"),
     "gdp_per_capita": ("NY.GDP.PCAP.CD", "USD_current_per_person"),
