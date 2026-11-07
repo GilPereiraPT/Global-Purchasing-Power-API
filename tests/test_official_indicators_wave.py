@@ -7,7 +7,7 @@ from scripts.update_country_insights import run
 
 
 def test_wave_catalogue_unique_and_correct():
-    assert len(INDICATORS) == 29
+    assert len(INDICATORS) == 40
     assert len(INDICATOR_METADATA) == 16
     assert len({code for code, _ in INDICATORS.values()}) == 29
     assert INDICATORS["intentional_homicides"] == (
