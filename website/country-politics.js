@@ -6,20 +6,20 @@
 (() => {
  "use strict";
  const PROFILES=Object.freeze({
-    PT: {form:"republic",system:"semi_presidential",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/portugal_en",reference:"2026"}},
-    ES: {form:"monarchy",system:"parliamentary",territory:"autonomous_unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/spain_en",reference:"2026"}},
-    DE: {form:"republic",system:"parliamentary",territory:"federal",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/germany_en",reference:"2026"}},
-    FR: {form:"republic",system:"semi_presidential",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/france_en",reference:"2026"}},
-    GB: {form:"monarchy",system:"parliamentary",territory:"devolved_unitary",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}},
-    IE: {form:"republic",system:"parliamentary",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/ireland_en",reference:"2026"}},
-    NL: {form:"monarchy",system:"parliamentary",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/netherlands_en",reference:"2026"}},
-    CH: {form:"republic",system:"collegial",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}},
-    IT: {form:"republic",system:"parliamentary",territory:"regionalised_unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/italy_en",reference:"2026"}},
-    US: {form:"republic",system:"presidential",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}},
-    CA: {form:"monarchy",system:"parliamentary",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}},
-    BR: {form:"republic",system:"presidential",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}},
-    IN: {form:"republic",system:"parliamentary",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}},
-    PK: {form:"republic",system:"parliamentary",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}}
+    PT: {form:"republic",system:"semi_presidential",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/portugal_en",reference:"2026"},
+    ES: {form:"monarchy",system:"parliamentary",territory:"autonomous_unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/spain_en",reference:"2026"},
+    DE: {form:"republic",system:"parliamentary",territory:"federal",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/germany_en",reference:"2026"},
+    FR: {form:"republic",system:"semi_presidential",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/france_en",reference:"2026"},
+    GB: {form:"monarchy",system:"parliamentary",territory:"devolved_unitary",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"},
+    IE: {form:"republic",system:"parliamentary",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/ireland_en",reference:"2026"},
+    NL: {form:"monarchy",system:"parliamentary",territory:"unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/netherlands_en",reference:"2026"},
+    CH: {form:"republic",system:"collegial",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"},
+    IT: {form:"republic",system:"parliamentary",territory:"regionalised_unitary",source:"https://european-union.europa.eu/principles-countries-history/eu-countries/italy_en",reference:"2026"},
+    US: {form:"republic",system:"presidential",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"},
+    CA: {form:"monarchy",system:"parliamentary",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"},
+    BR: {form:"republic",system:"presidential",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"},
+    IN: {form:"republic",system:"parliamentary",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"},
+    PK: {form:"republic",system:"parliamentary",territory:"federal",source:"https://www.thefactbook.org/fields/government-type",reference:"2025"}
  });
  const labels={
  en:{title:"Government and territorial organisation",form:"Form of state",system:"Government system",territory:"Territorial organisation",source:"Reference",asof:"Reference edition/year",notice:"Categorical country descriptions, not scores of democracy, safety or political stability. Archived 2025 references may require review for recent legal changes.",republic:"Republic",monarchy:"Constitutional monarchy",semi_presidential:"Semi-presidential",parliamentary:"Parliamentary",presidential:"Presidential",collegial:"Collegial executive / directorial",unitary:"Unitary",federal:"Federal",autonomous_unitary:"Unitary with autonomous communities",devolved_unitary:"Unitary with devolved administrations",regionalised_unitary:"Unitary with autonomous regions"},
