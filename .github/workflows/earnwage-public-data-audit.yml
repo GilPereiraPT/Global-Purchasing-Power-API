@@ -1,0 +1,87 @@
+name: EarnWage read-only public data audit
+on:
+  push:
+    branches: [audit/earnwage-inventory-20261107]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Inspect existing public API without importing or changing data
+        shell: bash
+        run: |
+          python - <<'PY'
+          import concurrent.futures, json, urllib.request, urllib.error
+          base="https://earnwage-api.policlinicosdesantoandre.com"
+          origin="https://gilpereirapt.github.io"
+          paths={
+           "health":"/v1/health",
+           "inventory":"/v1/data-inventory",
+           "indicators":"/v1/indicators",
+           "coverage":"/v1/earnwage/coverage",
+           "wage_matrix":"/v1/salaries/availability/matrix",
+           "economy":"/v1/economy/coverage",
+           "pt_salary":"/v1/earnwage/overview?country=PT&occupation=accountant",
+           "us_salary":"/v1/earnwage/overview?country=US&occupation=nurse",
+           "de_salary":"/v1/earnwage/overview?country=DE&occupation=nurse",
+           "br_salary":"/v1/earnwage/overview?country=BR&occupation=accountant",
+           "swiss_salary":"/v1/earnwage/overview?country=CH&occupation=nurse",
+           "history":"/v1/economy/history/PT?indicator=inflation_annual",
+           "job":"/v1/jobs?country=PT&occupation=accountant&limit=1"}
+          def get(pair):
+           k,path=pair
+           req=urllib.request.Request(base+path,headers={"Origin":origin,"Accept":"application/json","User-Agent":"EarnWage-Audit/1.0"})
+           try:
+            with urllib.request.urlopen(req,timeout=28) as r:
+             if int(r.headers.get("Content-Length","0") or 0)>8_000_000:return k,{"http":r.status,"error":"too_large"}
+             raw=r.read(8_000_000)
+             return k,{"http":r.status,"cors":r.headers.get("Access-Control-Allow-Origin"),"data":json.loads(raw)}
+           except urllib.error.HTTPError as e:return k,{"http":e.code,"error":e.read(250).decode("utf8","replace")}
+           except Exception as e:return k,{"error":type(e).__name__+": "+str(e)[:120]}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+           records=dict(pool.map(get,paths.items()))
+          for k,res in records.items():
+           raw=res.get("data")
+           meta={x:res[x] for x in ("http","cors","error") if x in res}
+           if k=="health":meta["data"]=raw
+           elif k=="inventory" and isinstance(raw,dict):
+            meta["generated_at"]=raw.get("generated_at")
+            meta["countries"]=raw.get("country_count")
+            meta["summary"]=raw.get("summary")
+            if isinstance(raw.get("countries"),list):
+             for code in ["PT","DE","BR","IN","US","CA","PK"]:
+              rows=[r for r in raw["countries"] if r.get("code",r.get("country"))==code]
+              if rows:meta.setdefault("examples",{})[code]={"keys":list(rows[0]),"indicator_counts":{x:len(v) for x,v in rows[0].items() if isinstance(v,dict)}}
+           elif k=="indicators" and isinstance(raw,dict):
+            indicators=raw.get("indicators",[])
+            meta["indicator_count"]=len(indicators)
+            meta["indicators"]=[v.get("name",v.get("id",v)) if isinstance(v,dict) else v for v in indicators]
+           elif k=="coverage" and isinstance(raw,dict):
+            meta["keys"]=list(raw)
+            for key in ("possible_pairs","observed_pairs","countries","by_country","group_context_occupations","observed_occupations"):
+             if key in raw:
+              val=raw[key]
+              meta[key]=[{x:y for x,y in row.items() if x in ("code","country","observed_occupations","group_context_occupations","public_sector_entry_occupations")} for row in val] if isinstance(val,list) else val
+           elif k=="wage_matrix" and isinstance(raw,dict):
+            cells=raw.get("cells",[])
+            meta["keys"]=list(raw)
+            meta["cells"]=len(cells)
+            meta["statuses"]={status:sum(1 for x in cells if x.get("status")==status) for status in set(x.get("status") for x in cells)}
+            meta["available_per_country"]={code:sum(1 for x in cells if x.get("country")==code and x.get("status")=="available") for code in ("PT","ES","DE","FR","GB","IE","NL","CH","IT","US","CA","BR","IN","PK")}
+           elif k=="economy" and isinstance(raw,dict):
+            rows=raw.get("countries",[])
+            meta["countries"]=len(rows)
+            meta["indicators"]={name:sum(1 for row in rows if row.get("indicators",{}).get(name,{}).get("status")=="available") for name in ("inflation_annual","ppp_private_consumption")}
+           elif k.endswith("_salary") and isinstance(raw,dict):
+            meta["country"]=raw.get("country",{}).get("code")
+            for name in ("national_occupation_wage","national_major_group_context","regional_occupation_wage","portugal_public_sector_entry","brazil_public_sector_entry","india_plfs_employee_earnings_context","annual_presentation"):
+             item=raw.get(name)
+             if item:
+              meta[name]={"status":item.get("status"),"value":item.get("value"),"unit":item.get("unit"),"measure":item.get("measure"),"observations_count":len(item.get("observations",[])) if isinstance(item.get("observations"),list) else None}
+            meta["available_keys"]=[name for name,v in raw.items() if isinstance(v,dict) and v.get("status")=="available"]
+           elif k=="job" and isinstance(raw,dict):
+            meta["status"]=raw.get("status");meta["count"]=raw.get("count");meta["providers"]=raw.get("providers")
+           print("AUDIT "+k+" "+json.dumps(meta,ensure_ascii=False,default=str)[:12500],flush=True)
+          PY
