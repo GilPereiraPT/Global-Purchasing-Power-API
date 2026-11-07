@@ -29,6 +29,10 @@ jobs:
            "br_salary":"/v1/earnwage/overview?country=BR&occupation=accountant",
            "swiss_salary":"/v1/earnwage/overview?country=CH&occupation=nurse",
            "history":"/v1/economy/history/PT?indicator=inflation_annual",
+           "legacy_history":"/v1/countries/PT/indicators/life_expectancy?history=true",
+           "legacy_ppp_history":"/v1/countries/PT/indicators/ppp_private_consumption?history=true",
+           "country_indicators":"/v1/countries/PT/indicators",
+           "compare_indicators":"/v1/compare/indicators?countries=PT,DE",
            "job":"/v1/jobs?country=PT&occupation=accountant&limit=1"}
           def get(pair):
            k,path=pair
@@ -81,6 +85,20 @@ jobs:
              if item:
               meta[name]={"status":item.get("status"),"value":item.get("value"),"unit":item.get("unit"),"measure":item.get("measure"),"observations_count":len(item.get("observations",[])) if isinstance(item.get("observations"),list) else None}
             meta["available_keys"]=[name for name,v in raw.items() if isinstance(v,dict) and v.get("status")=="available"]
+           elif k in ("legacy_history","legacy_ppp_history") and isinstance(raw,dict):
+            meta["status"]=raw.get("status")
+            meta["indicator"]=raw.get("name")
+            meta["rows"]=len(raw.get("history",[]))
+            meta["range"]=[raw["history"][0].get("year"),raw["history"][-1].get("year")] if raw.get("history") else []
+            meta["latest_year"]=raw.get("year")
+           elif k=="country_indicators" and isinstance(raw,dict):
+            indicators=raw.get("indicators",{})
+            meta["indicators"]=len(indicators)
+            meta["available"]=sum(1 for v in indicators.values() if isinstance(v,dict) and v.get("status")=="available")
+            meta["families"]=[x for x in indicators if x in ("life_expectancy","gini","hospital_beds","pm25_air_pollution")]
+           elif k=="compare_indicators" and isinstance(raw,dict):
+            meta["countries"]=len(raw.get("countries",[]))
+            meta["indicators_per_country"]=[len(row.get("indicators",{})) for row in raw.get("countries",[])]
            elif k=="job" and isinstance(raw,dict):
             meta["status"]=raw.get("status");meta["count"]=raw.get("count");meta["providers"]=raw.get("providers")
            print("AUDIT "+k+" "+json.dumps(meta,ensure_ascii=False,default=str)[:12500],flush=True)
