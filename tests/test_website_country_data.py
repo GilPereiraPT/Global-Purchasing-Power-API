@@ -14,7 +14,7 @@ def test_country_dashboard_uses_existing_public_country_indicators_endpoint():
     assert 'b.year!==a.year+1' in script
     assert 'Number.isFinite(r.value)' in script
     assert 'source_url' in script
-    assert 'if(!validRecord(record))' in script
+    assert 'ci-unavailable' in script
     assert 'container._ciGeneration!==generation' in script
     assert 'load on demand' in script
 
