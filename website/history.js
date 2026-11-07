@@ -54,7 +54,7 @@ function plot(points){
  const distinctYears=[xmin,Math.round((xmin+xmax)/2),xmax].filter((v,i,a)=>a.indexOf(v)===i);
  for(const year of distinctYears){const text=svgEl("text",{x:x(year),y:286,"text-anchor":"middle"});text.textContent=String(year)}
  for(let i=0;i<valid.length-1;i++){const a=valid[i],b=valid[i+1];if(b.year!==a.year+1)continue;svgEl("line",{x1:x(a.year),y1:y(a.value),x2:x(b.year),y2:y(b.value),stroke:"#087f73","stroke-width":3,"stroke-linecap":"round"})}
- for(const p of valid){const circle=svgEl("circle",{cx:x(p.year),cy:y(p.value),r:4,fill:"#087f73"});circle.append(document.createElementNS("http://www.w3.org/2000/svg","title")).textContent=String(p.year)+": "+num(p.value)}
+ for(const p of valid){const circle=svgEl("circle",{cx:x(p.year),cy:y(p.value),r:4,fill:"#087f73"});const tooltip=document.createElementNS("http://www.w3.org/2000/svg","title");tooltip.textContent=String(p.year)+": "+num(p.value);circle.append(tooltip)}
  return root;
 }
 function renderHistory(raw){

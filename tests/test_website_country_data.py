@@ -75,6 +75,8 @@ def test_primary_country_and_insights_pages_use_complete_dashboard():
     assert '"/v1/countries/"+encodeURIComponent($("country").value)+"/indicators/"' in history
     assert 'history=true' in history
     assert 'if(b.year!==a.year+1)continue' in history
+    assert 'circle.append(tooltip)' in history
+    assert 'circle.append(document.createElementNS' not in history
 
 
 def test_flag_helper_used_in_main_country_selectors_and_no_external_flag_images():
