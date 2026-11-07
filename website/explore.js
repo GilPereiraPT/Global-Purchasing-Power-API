@@ -19,7 +19,14 @@ function option(v,label){const e=document.createElement("option");e.value=v;e.te
 function safeExternal(url){try{const p=new URL(url);return p.protocol==="https:"?p.href:null}catch(_){return null}}
 function countryLabel(code){try{return new Intl.DisplayNames([EW_TAGS[language]],{type:"region"}).of(code)||EW_COUNTRIES[code]?.[0]||code}catch(_){return EW_COUNTRIES[code]?.[0]||code}}
 function renderCountries(){
-  document.querySelectorAll("select[data-country]").forEach(node=>{const value=node.value||node.dataset.default||"PT";node.replaceChildren(...countryCatalogue.map(x=>option(x.code,countryLabel(x.code))));if(countryCatalogue.some(x=>x.code===value))node.value=value})
+ document.querySelectorAll("select[data-country]").forEach(node=>{
+   const value=node.value||node.dataset.default||"PT";
+   node.replaceChildren(...countryCatalogue.map(x=>option(x.code,window.EarnWageFlags.label(x.code,countryLabel(x.code)))));
+   if(countryCatalogue.some(x=>x.code===value))node.value=value;
+ });
+ const grid=$("countryTiles");
+ if(grid&&window.EarnWageCountryData)
+   window.EarnWageCountryData.flagsGrid({container:grid,countries:countryCatalogue,language,selected:$("country")?.value||"PT"});
 }
 function renderOccupations(){
   document.querySelectorAll("select[data-occupation]").forEach(node=>{const value=node.value||node.dataset.default||"accountant";node.replaceChildren(...occupations.map(x=>option(x.id,x.label||x.id)));if(occupations.some(x=>x.id===value))node.value=value})
@@ -74,7 +81,7 @@ async function searchSalary(){const out=$("results"),code=$("country").value,occ
 function renderCountryDetail(row){
  const out=$("results");out.replaceChildren();
  const c=currentCountry(row.code);const grid=make("div",undefined,"cards");
- grid.append(card(T("countryProfile"),countryLabel(row.code),row.code));
+ grid.append(card(T("countryProfile"),window.EarnWageFlags.label(row.code,countryLabel(row.code)),row.code));
  grid.append(card(T("currency"),row.currency||c?.currency||"—",""));
  grid.append(card(T("capital"),row.capital||"—",""));
  out.append(grid);

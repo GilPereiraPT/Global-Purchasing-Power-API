@@ -21,7 +21,7 @@ async function api(path){const r=await fetch(API+path,{headers:{Accept:"applicat
 function link(text,href){const a=elt("a",text);a.href=href;return a}
 function namedSection(title,value,note){const c=elt("div",undefined,"card");c.append(elt("h3",title));c.append(elt("div",value,"metric"));if(note)c.append(elt("p",note));return c}
 function tip(container,message){container.replaceChildren(elt("div",message,"notice"))}
-function renderCountryOptions(){const e=$("country");if(!e)return;const selected=e.value||"PT";e.replaceChildren(...countries.map(x=>opts(x.code,countryName(x.code))));if(countries.some(x=>x.code===selected))e.value=selected}
+function renderCountryOptions(){const e=$("country");if(!e)return;const selected=e.value||"PT";e.replaceChildren(...countries.map(x=>opts(x.code,window.EarnWageFlags.label(x.code,countryName(x.code)))));if(countries.some(x=>x.code===selected))e.value=selected}
 function renderOccupations(){const e=$("occupation");if(!e)return;const selected=e.value||"accountant";e.replaceChildren(...occupations.map(x=>opts(x.id,x.label)));if(occupations.some(x=>x.id===selected))e.value=selected}
 function applyLanguage(){
  document.querySelectorAll('[data-library="wages"]').forEach(x=>x.textContent=({en:"Wage groups",pt:"Grupos profissionais",es:"Grupos profesionales",de:"Berufsgruppen",fr:"Groupes professionnels",it:"Gruppi professionali",nl:"Beroepsgroepen"})[lang]);
@@ -32,7 +32,13 @@ async function loadCountries(){try{const d=await api("/v1/countries");if(Array.i
 async function loadOccupations(){const id=++revision;try{const d=await api("/v1/occupations?lang="+lang);if(id!==revision)return;if(Array.isArray(d.occupations)&&d.occupations.length)occupations=d.occupations}catch(_){}renderOccupations()}
 function indicatorCard(indicator,label){const available=indicator?.status==="available"&&typeof indicator.value==="number"&&Number.isFinite(indicator.value);const note=[indicator?.year,indicator?.unit,indicator?.source,indicator?.status].filter(x=>x!==null&&x!==undefined&&x!=="").join(" · ");const c=namedSection(label,available?number(indicator.value):T("unavailable"),note);const u=urlSource(indicator?.source_url);if(u){const a=link(T("viewSource"),u);a.target="_blank";a.rel="noopener noreferrer";c.append(a)}return c}
 function linkToProfiles(code,occupation){if($("compareLink"))$("compareLink").href="./compare.html?country_a="+encodeURIComponent(code)+(occupation?"&occupation="+encodeURIComponent(occupation):"");if($("salaryLink"))$("salaryLink").href="./occupation.html?country="+encodeURIComponent(code)}
-async function showCountryOrSources(){const id=++loadId,code=$("country").value,target=$("detailsResults");tip(target,T("refresh"));linkToProfiles(code);if(page==="country")window.EarnWageCountryGuides?.render({code,language:lang,occupations,api,container:$("countryGuide")});try{
+async function showCountryOrSources(){const id=++loadId,code=$("country").value,target=$("detailsResults");tip(target,T("refresh"));linkToProfiles(code);if(page==="country")window.EarnWageCountryGuides?.render({code,language:lang,occupations,api,container:$("countryGuide")});
+if(page==="country"&&window.EarnWageCountryData){
+ const country=countries.find(c=>c.code===code);
+ await window.EarnWageCountryData.showCountry({code,language:lang,container:target,request:api,country});
+ return;
+}
+try{
  const [country,economy]=await Promise.all([api("/v1/countries/"+code),api("/v1/economy/compare?country_a="+code+"&country_b="+code)]);if(id!==loadId)return;
  target.replaceChildren();const cards=elt("div",undefined,"cards");
  if(page==="country"){cards.append(namedSection(T("countryTitle"),countryName(code),code));cards.append(namedSection(N("currency"),country.currency||"—"));cards.append(namedSection(N("capital"),country.capital||"—"))}

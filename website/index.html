@@ -125,7 +125,7 @@ const fallbackCountries=[["PT","Portugal","EUR"],["ES","Spain","EUR"],["DE","Ger
 let countries=fallbackCountries.map(([code,name,currency])=>({code,name,currency}));
 const indeedDomains={PT:"pt.indeed.com",ES:"es.indeed.com",DE:"de.indeed.com",FR:"fr.indeed.com",GB:"uk.indeed.com",IN:"in.indeed.com",BR:"br.indeed.com",PK:"pk.indeed.com",NL:"nl.indeed.com",CH:"ch.indeed.com",IT:"it.indeed.com",IE:"ie.indeed.com",US:"www.indeed.com",CA:"ca.indeed.com"};
 function option(value,label){const el=document.createElement("option");el.value=value;el.textContent=label;return el}
-function countryOptions(id,selected){let names;try{names=new Intl.DisplayNames([localeTags[activeLocale]],{type:"region"})}catch(_){names=null}$(id).replaceChildren(...countries.map(x=>option(x.code,names?.of(x.code)||x.name)));if(countries.some(x=>x.code===selected))$(id).value=selected}
+function countryOptions(id,selected){let names;try{names=new Intl.DisplayNames([localeTags[activeLocale]],{type:"region"})}catch(_){names=null}$(id).replaceChildren(...countries.map(x=>option(x.code,window.EarnWageFlags.label(x.code,names?.of(x.code)||x.name))));if(countries.some(x=>x.code===selected))$(id).value=selected}
 function currency(code){return countries.find(x=>x.code===code)?.currency||""}
 function amount(value,code){return new Intl.NumberFormat(localeTags[activeLocale],{style:"currency",currency:code,maximumFractionDigits:2}).format(value)}
 function el(tag,css,text){const element=document.createElement(tag);if(css)element.className=css;if(text!=null)element.textContent=text;return element}

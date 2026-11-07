@@ -19,7 +19,7 @@ function currency(code){return countries.find(c=>c.code===code)?.currency||""}
 function money(value,code){if(typeof value!=="number"||!Number.isFinite(value))return "—";try{return new Intl.NumberFormat(TAGS[lang],{style:"currency",currency:code,maximumFractionDigits:2}).format(value)}catch(_){return value.toLocaleString(TAGS[lang])+" "+code}}
 function percent(value){return typeof value==="number"&&Number.isFinite(value)?new Intl.NumberFormat(TAGS[lang],{maximumFractionDigits:1,signDisplay:"always"}).format(value)+"%":"—"}
 async function request(path){const resp=await fetch(API+path,{headers:{Accept:"application/json"}});if(!resp.ok)throw Error("HTTP "+resp.status);return resp.json()}
-function setCountries(){for(const side of ["A","B"]){const sel=$("country"+side),v=sel.value|| (side==="A"?"PT":"CH");sel.replaceChildren(...countries.map(c=>option(c.code,countryName(c.code))));if(countries.some(c=>c.code===v))sel.value=v;$("currency"+side).textContent=currency(sel.value)}}
+function setCountries(){for(const side of ["A","B"]){const sel=$("country"+side),v=sel.value|| (side==="A"?"PT":"CH");sel.replaceChildren(...countries.map(c=>option(c.code,window.EarnWageFlags.label(c.code,countryName(c.code)))));if(countries.some(c=>c.code===v))sel.value=v;$("currency"+side).textContent=currency(sel.value)}}
 function setOccupations(){const select=$("occupation"),current=select.value;select.replaceChildren(...jobs.map(o=>option(o.id,o.label)));if(jobs.some(o=>o.id===current))select.value=current}
 function applyLang(){
  document.querySelectorAll('[data-more="history"]').forEach(x=>x.textContent=({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[lang]);
