@@ -1,0 +1,110 @@
+name: Read-only country dashboard browser smoke test
+
+on:
+  push:
+    branches: [diagnostic/country-dashboard-browser-20261107]
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-audit --no-fund playwright
+      - run: npx playwright install chromium
+      - name: Open branch website in Chromium against real public API (read-only)
+        shell: bash
+        run: |
+          python -m http.server 8796 --bind 127.0.0.1 --directory website >/tmp/ew-http.log 2>&1 &
+          node - <<'JS'
+          const {chromium}=require('playwright');
+          const assert=require('node:assert/strict');
+          const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+          (async()=>{
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+            const root='http://127.0.0.1:8796/';
+            const remote='https://earnwage-api.policlinicosdesantoandre.com';
+            const apiErrors=[];
+            async function open(path){
+              const page=await browser.newPage({viewport:{width:1365,height:900}});
+              page.on('pageerror',e=>apiErrors.push(path+': JS '+String(e)));
+              page.on('console',m=>{
+                if(m.type()==='error'&&!m.text().includes('Failed to load resource'))
+                  apiErrors.push(path+': console '+m.text())
+              });
+              await page.route(remote+'/**',async route=>{
+                const url=route.request().url();
+                try{
+                  const response=await fetch(url,{headers:{
+                    'Origin':'https://gilpereirapt.github.io',
+                    'Accept':'application/json'},signal:AbortSignal.timeout(24000)});
+                  const body=await response.text();
+                  await route.fulfill({status:response.status,headers:{
+                    'content-type':'application/json',
+                    'access-control-allow-origin':'*',
+                    'cache-control':'no-store'},body});
+                }catch(e){
+                  apiErrors.push(path+': proxy '+url+': '+String(e).slice(0,170));
+                  await route.abort();
+                }
+              });
+              await page.goto(root+path,{waitUntil:'domcontentloaded',timeout:20000});
+              return page;
+            }
+            let page=await open('country.html?country=PT');
+            await page.locator('#detailsResults .ci-metric').first().waitFor({timeout:35000});
+            let count=await page.locator('#detailsResults .ci-metric').count();
+            assert.equal(count,29,'Country profile must show 29 indicator cards');
+            assert.equal(await page.locator('#detailsResults .ci-group').count(),7);
+            let options=await page.locator('#country option').allTextContents();
+            assert.equal(options.length,14);assert.ok(options.some(s=>s.includes('🇵🇹')));
+            let hero=await page.locator('.ci-country-hero').innerText();
+            assert.ok(hero.includes('Portugal'));
+            console.log('BROWSER COUNTRY_COUNTS '+JSON.stringify({metrics:count,groups:7,options:options.length,hero:hero.slice(0,190)}));
+            await page.locator('.ci-metric .ci-action').first().click();
+            await page.locator('#ciHistoryPanel .ci-chart-zone svg').waitFor({timeout:30000});
+            const yearRows=await page.locator('#ciHistoryPanel .ci-table tbody tr').count();
+            assert.ok(yearRows>5,'Expected real observed time series');
+            console.log('BROWSER CHART '+JSON.stringify({observations:yearRows,title:await page.locator('#ciHistoryPanel h3').innerText()}));
+            await page.locator('#lang').selectOption('pt');
+            await page.locator('.ci-group-label strong').first().waitFor();
+            console.log('BROWSER PT_LOCALE '+await page.locator('.ci-group-label strong').first().innerText());
+            await page.close();
+            page=await open('countries.html');
+            await page.locator('.ci-country-choice').first().waitFor({timeout:16000});
+            assert.equal(await page.locator('.ci-country-choice').count(),14);
+            console.log('BROWSER FLAG_GRID '+JSON.stringify({countries:14,first:await page.locator('.ci-country-choice').first().innerText()}));
+            await page.close();
+            page=await open('history.html?country=PT&indicator=life_expectancy');
+            await page.locator('#results .history-plot svg').waitFor({timeout:30000});
+            const selectorCount=await page.locator('#indicator option').count();
+            const records=await page.locator('#results tbody tr').count();
+            assert.equal(selectorCount,29);
+            assert.ok(records>20);
+            console.log('BROWSER FULL_HISTORY '+JSON.stringify({selectors:selectorCount,records}));
+            await page.close();
+            page=await open('insights.html?country=DE');
+            await page.locator('#exploreForm button[type=submit]').click();
+            await page.locator('#results .ci-metric').first().waitFor({timeout:30000});
+            assert.equal(await page.locator('#results .ci-metric').count(),29);
+            console.log('BROWSER INSIGHTS '+JSON.stringify({indicators:29,hero:await page.locator('.ci-country-hero').innerText()}));
+            await page.close();
+            page=await open('compare.html');
+            await page.locator('#countryA option').first().waitFor({timeout:20000});
+            const pt=await page.locator('#countryA option[value=PT]').innerText();
+            assert.ok(pt.includes('🇵🇹'));
+            console.log('BROWSER COMPARISON_FLAGS '+pt);
+            await page.close();
+            await browser.close();
+            if(apiErrors.length){
+              console.error('BROWSER ERRORS '+JSON.stringify(apiErrors));
+              process.exitCode=1;
+            } else console.log('BROWSER TESTS PASS');
+          })().catch(error=>{console.error('BROWSER TEST FAILURE',error);process.exitCode=1;});
+          JS
