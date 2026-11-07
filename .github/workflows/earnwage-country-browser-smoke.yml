@@ -114,5 +114,5 @@ jobs:
               console.error('BROWSER ERRORS '+JSON.stringify(apiErrors));
               process.exitCode=1;
             } else console.log('BROWSER TESTS PASS');
-          })().catch(error=>{console.error('BROWSER TEST FAILURE',error);process.exitCode=1;});
+          })().catch(error=>{console.error('BROWSER TEST FAILURE',error);process.exit(1);});
           JS
