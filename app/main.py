@@ -97,6 +97,18 @@ def country(code: str):
         raise HTTPException(404, "Unknown country")
     return item
 
+@app.get("/v1/weather/{country_code}/{city_id}")
+def city_weather(country_code: str, city_id: int):
+    """Source-attributed model forecast for the capital city (city index zero)."""
+    from app.weather_metno import forecast, CAPITALS
+    country_code = country_code.upper()
+    if country_code not in CAPITALS:
+        raise HTTPException(404, "Unknown country")
+    if city_id < 0 or city_id > 20:
+        raise HTTPException(422, "Invalid city index")
+    return forecast(country_code, city_id)
+
+
 @app.get("/v1/languages")
 def languages():
     return {"languages": [{"code": k, "label": v} for k, v in SUPPORTED_LANGUAGES.items()],
