@@ -53,6 +53,7 @@ jobs:
                     "print(json.dumps({'status':r.status,'body':body}))"
                   ].join("\n");
                   const result=JSON.parse(execFileSync('python3',['-c',probe,url],{timeout:25000}).toString('utf8'));
+                  console.log('API_ROUTE '+path+' '+url.replace(remote,'')+' -> '+result.status);
                   await route.fulfill({status:result.status,headers:{
                     'content-type':'application/json',
                     'access-control-allow-origin':'*',
@@ -90,6 +91,13 @@ jobs:
             console.log('BROWSER FLAG_GRID '+JSON.stringify({countries:14,first:await page.locator('.ci-country-choice').first().innerText()}));
             await page.close();
             page=await open('history.html?country=PT&indicator=life_expectancy');
+            await page.waitForTimeout(3500);
+            console.log('HISTORY_DIAG '+JSON.stringify({
+              selected:await page.locator('#indicator').inputValue(),
+              available:await page.locator('#indicator option').count(),
+              text:(await page.locator('#results').innerText()).slice(0,520),
+              errors:apiErrors
+            }));
             await page.locator('#results .history-plot svg').waitFor({timeout:30000});
             const selectorCount=await page.locator('#indicator option').count();
             const records=await page.locator('#results tbody tr').count();
