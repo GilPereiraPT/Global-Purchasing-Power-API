@@ -1,5 +1,25 @@
 # EarnWage public website (first functional foundation)
 
+## Country indicators and flags (November 2026)
+
+The public country profile, Country explorer, Insights, and History now expose the
+**29 independently sourced national economic and social series** from the live
+`/v1/countries/{code}/indicators` API (14 countries). Clicking a metric loads
+`/v1/countries/{code}/indicators/{key}?history=true` and plots observed years
+only, with line breaks for missing years; no synthetic values or composite rank.
+All original sources, reference years and units remain visible.
+
+The 14 country flags use browser-native Unicode characters, with explicit country
+names as text and no third-party images or picture downloads. Editorial photos
+and destination imagery are deferred until a separate approved phase.
+
+The original country salary guide remains available below the indicator dashboard.
+All seven interface languages are supported (including pt-PT). The static website
+remains on GitHub Pages, using the existing HTTPS API; no DB or API redeploy is
+required to display these existing indicators.
+
+
+
 ## Publicação atual: GitHub Pages
 
 **Opção escolhida:** GitHub Pages, sem Cloudflare Pages neste momento.

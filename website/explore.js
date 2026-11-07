@@ -19,7 +19,14 @@ function option(v,label){const e=document.createElement("option");e.value=v;e.te
 function safeExternal(url){try{const p=new URL(url);return p.protocol==="https:"?p.href:null}catch(_){return null}}
 function countryLabel(code){try{return new Intl.DisplayNames([EW_TAGS[language]],{type:"region"}).of(code)||EW_COUNTRIES[code]?.[0]||code}catch(_){return EW_COUNTRIES[code]?.[0]||code}}
 function renderCountries(){
-  document.querySelectorAll("select[data-country]").forEach(node=>{const value=node.value||node.dataset.default||"PT";node.replaceChildren(...countryCatalogue.map(x=>option(x.code,countryLabel(x.code))));if(countryCatalogue.some(x=>x.code===value))node.value=value})
+ document.querySelectorAll("select[data-country]").forEach(node=>{
+   const value=node.value||node.dataset.default||"PT";
+   node.replaceChildren(...countryCatalogue.map(x=>option(x.code,window.EarnWageFlags.label(x.code,countryLabel(x.code)))));
+   if(countryCatalogue.some(x=>x.code===value))node.value=value;
+ });
+ const grid=$("countryTiles");
+ if(grid&&window.EarnWageCountryData)
+   window.EarnWageCountryData.flagsGrid({container:grid,countries:countryCatalogue,language,selected:$("country")?.value||"PT"});
 }
 function renderOccupations(){
   document.querySelectorAll("select[data-occupation]").forEach(node=>{const value=node.value||node.dataset.default||"accountant";node.replaceChildren(...occupations.map(x=>option(x.id,x.label||x.id)));if(occupations.some(x=>x.id===value))node.value=value})
@@ -74,7 +81,7 @@ async function searchSalary(){const out=$("results"),code=$("country").value,occ
 function renderCountryDetail(row){
  const out=$("results");out.replaceChildren();
  const c=currentCountry(row.code);const grid=make("div",undefined,"cards");
- grid.append(card(T("countryProfile"),countryLabel(row.code),row.code));
+ grid.append(card(T("countryProfile"),window.EarnWageFlags.label(row.code,countryLabel(row.code)),row.code));
  grid.append(card(T("currency"),row.currency||c?.currency||"—",""));
  grid.append(card(T("capital"),row.capital||"—",""));
  out.append(grid);
@@ -82,13 +89,26 @@ function renderCountryDetail(row){
  const actions=make("div",undefined,"actions");actions.append(link);const profile=make("a",T("details"),"secondary");profile.href="./country.html?country="+encodeURIComponent(row.code);actions.append(profile);const history=make("a",({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[language],"secondary");history.href="./history.html?country="+encodeURIComponent(row.code);actions.append(history);out.append(actions);
 }
 async function showCountry(){const code=$("country").value,out=$("results");warning(out,T("reload"));try{const [country,econ]=await Promise.all([api("/v1/countries/"+encodeURIComponent(code)),api("/v1/economy/compare?country_a="+encodeURIComponent(code)+"&country_b="+encodeURIComponent(code))]);renderCountryDetail(country);const row=(econ.countries||[])[0];if(row){const cards=make("div",undefined,"cards");for(const [key,label] of [["inflation_annual",T("inflation")],["ppp_private_consumption",T("ppp")]]){const v=row.indicators?.[key];cards.append(card(label,v?.status==="available"&&v?.value!=null?format(v.value)+(v.unit?" "+v.unit:""):T("missing"),statusNote(v)))}out.append(make("h2",T("insights")));out.append(cards)}}catch(e){warning(out,T("unavailable")+" ("+e.message+")")}}
-async function showInsights(){const out=$("results"),country=$("country").value;warning(out,T("reload"));try{const data=await api("/v1/economy/compare?country_a="+country+"&country_b="+country);const row=data.countries?.[0];if(!row)throw Error("No data");out.replaceChildren();const cards=make("div",undefined,"cards");for(const [key,title] of [["inflation_annual",T("inflation")],["ppp_private_consumption",T("ppp")]]){const metric=row.indicators?.[key];const val=metric?.status==="available"&&Number.isFinite(metric.value)?format(metric.value)+(metric.unit?" "+metric.unit:""):T("missing");cards.append(card(title,val,statusNote(metric)));if(metric?.source_url){const link=make("a",T("sourceLink"));link.href=metric.source_url;link.target="_blank";link.rel="noopener noreferrer";const child=cards.lastElementChild;child.append(make("p")).append(link)}}out.append(cards);const history=make("a",({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[language],"secondary");history.href="./history.html?country="+encodeURIComponent(country);out.append(make("div",undefined,"actions")).append(history);out.append(make("p",T("dataNote"),"muted"))}catch(e){warning(out,T("unavailable")+" ("+e.message+")")}}
+async function showInsights(){
+ const out=$("results"),country=$("country").value;
+ if(window.EarnWageCountryData){
+  await window.EarnWageCountryData.showCountry({
+   code:country,language,container:out,request:api,country:currentCountry(country)
+  });
+  return;
+ }
+ warning(out,T("reload"));try{const data=await api("/v1/economy/compare?country_a="+country+"&country_b="+country);const row=data.countries?.[0];if(!row)throw Error("No data");out.replaceChildren();const cards=make("div",undefined,"cards");for(const [key,title] of [["inflation_annual",T("inflation")],["ppp_private_consumption",T("ppp")]]){const metric=row.indicators?.[key];const val=metric?.status==="available"&&Number.isFinite(metric.value)?format(metric.value)+(metric.unit?" "+metric.unit:""):T("missing");cards.append(card(title,val,statusNote(metric)));if(metric?.source_url){const link=make("a",T("sourceLink"));link.href=metric.source_url;link.target="_blank";link.rel="noopener noreferrer";const child=cards.lastElementChild;child.append(make("p")).append(link)}}out.append(cards);const history=make("a",({en:"History",pt:"Histórico",es:"Histórico",de:"Verlauf",fr:"Historique",it:"Storico",nl:"Historie"})[language],"secondary");history.href="./history.html?country="+encodeURIComponent(country);out.append(make("div",undefined,"actions")).append(history);out.append(make("p",T("dataNote"),"muted"))}catch(e){warning(out,T("unavailable")+" ("+e.message+")")}}
 async function searchJobs(){
  const out=$("results"),country=$("country").value,occupation=$("occupation").value;if(!occupation){warning(out,T("choose"));return}warning(out,T("reload"));
  try{const params=new URLSearchParams({country,occupation,limit:"30",salary_published:$("salaryOnly").checked?"true":"false"});const d=await api("/v1/jobs?"+params);out.replaceChildren();const rows=Array.isArray(d.jobs)?d.jobs:[];if(!rows.length){warning(out,T("noJobs"));return}
  const stack=make("div",undefined,"stack");for(const j of rows){const rec=make("article",undefined,"record"),left=make("div");appendText(left,"div",j.title||"—","name");appendText(left,"p",[j.company,j.candidate_required_location,j.salary_text||j.salary_structured&&[j.salary_structured.min,j.salary_structured.max,j.salary_structured.currency,j.salary_structured.period].filter(x=>x!==null&&x!==undefined).join(" ")].filter(Boolean).join(" · "));appendText(left,"p",[j.source,j.published_at?.slice(0,10)].filter(Boolean).join(" · "));rec.append(left);const url=safeExternal(j.apply_url||j.source_url);if(url){const a=make("a",T("apply"));a.href=url;a.target="_blank";a.rel="noopener noreferrer";rec.append(a)}stack.append(rec)}out.append(stack);out.append(make("p",T("remoteDisclaimer"),"muted"))}catch(e){warning(out,T("unavailable")+" ("+e.message+")")}
 }
 const routes={salaries:searchSalary,countries:showCountry,jobs:searchJobs,insights:showInsights};
-function bind(){const form=$("exploreForm");form?.addEventListener("submit",e=>{e.preventDefault();routes[page]?.()});$("lang")?.addEventListener("change",async e=>{language=e.target.value;try{localStorage.setItem("earnwage_lang",language)}catch(_){}applyLanguage();await loadOccupations();if($("results")?.children.length)routes[page]?.()})}
-async function init(){bind();applyLanguage();await Promise.all([loadCountries(),loadOccupations()]);const params=new URLSearchParams(location.search);const code=params.get("country");if(code&&countryCatalogue.some(x=>x.code===code))$("country").value=code;const occupation=params.get("occupation");if(occupation&&occupations.some(x=>x.id===occupation)&&$("occupation"))$("occupation").value=occupation;}
+function bind(){const form=$("exploreForm");form?.addEventListener("submit",e=>{e.preventDefault();routes[page]?.()});
+ $("country")?.addEventListener("change",()=>{
+  if(page==="countries"&&window.EarnWageCountryData)
+   window.EarnWageCountryData.flagsGrid({container:$("countryTiles"),countries:countryCatalogue,language,selected:$("country").value});
+ });
+ $("lang")?.addEventListener("change",async e=>{language=e.target.value;try{localStorage.setItem("earnwage_lang",language)}catch(_){}applyLanguage();await loadOccupations();if($("results")?.children.length)routes[page]?.()})}
+async function init(){bind();applyLanguage();await Promise.all([loadCountries(),loadOccupations()]);const params=new URLSearchParams(location.search);const code=params.get("country");if(code&&countryCatalogue.some(x=>x.code===code))$("country").value=code;const occupation=params.get("occupation");if(occupation&&occupations.some(x=>x.id===occupation)&&$("occupation"))$("occupation").value=occupation;if(page==="countries")renderCountries();}
 init();

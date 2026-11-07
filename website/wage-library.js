@@ -6,6 +6,7 @@ const saved=(()=>{try{return localStorage.getItem("earnwage_lang")}catch(_){retu
 let lang=Object.hasOwn(tags,saved)?saved:Object.hasOwn(tags,(navigator.language||"").slice(0,2).toLowerCase())?navigator.language.slice(0,2).toLowerCase():"en";
 let catalogue=null,shown=null,sequence=0;
 const T=k=>window.EarnWageLibraryI18n?.[lang]?.[k]||window.EarnWageLibraryI18n?.en?.[k]||k;
+function decorateCountrySelector(){const e=$("country");if(!e)return;for(const opt of e.options){const code=opt.value;if(window.EarnWageFlags.flag(code)&&!opt.textContent.startsWith(window.EarnWageFlags.flag(code)))opt.textContent=window.EarnWageFlags.label(code,opt.textContent)}}
 const N=k=>window.EarnWageExploreI18n?.[lang]?.[k]||window.EarnWageExploreI18n?.en?.[k]||k;
 function el(tag,text,cls){const x=document.createElement(tag);if(text!==undefined)x.textContent=String(text);if(cls)x.className=cls;return x}
 function opt(value,label){const x=el("option",label);x.value=value;return x}
@@ -23,6 +24,7 @@ function setLanguage(){
  document.querySelectorAll('[data-new="coverage"]').forEach(n=>n.textContent=({en:"Coverage",pt:"Cobertura",es:"Cobertura",de:"Datenstand",fr:"Couverture",it:"Copertura",nl:"Dekking"})[lang]);
  document.querySelectorAll('[data-new="wages"]').forEach(n=>n.textContent=T("wagesTitle"));
  document.querySelectorAll('[data-new="directory"]').forEach(n=>n.textContent=T("directoryTitle"));
+ decorateCountrySelector();
  if(shown)render(shown);
 }
 function groupEntries(){

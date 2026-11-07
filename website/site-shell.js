@@ -2,6 +2,12 @@
 (() => {
   "use strict";
   const languages=["en","pt","es","de","fr","it","nl"];
+  // Native Unicode flags: no external images or cross-origin asset dependency.
+  const countryCodes=new Set(["PT","ES","DE","FR","GB","IE","NL","CH","IT","US","CA","BR","IN","PK"]);
+  const flag=code=>countryCodes.has(code)?
+    String.fromCodePoint(...[...code].map(char=>127397+char.charCodeAt(0))):"";
+  const countryLabel=(code,name)=>(flag(code)?flag(code)+" ":"")+(name||code);
+  window.EarnWageFlags=Object.freeze({flag,label:countryLabel});
   const copy={
     en:{home:"Home",compare:"Compare",salaries:"Salaries",countries:"Countries",jobs:"Jobs",insights:"Insights",more:"More",history:"History",coverage:"Data coverage",groups:"Wage groups",dataSources:"Economic data sources",sources:"Source directory",methodology:"Methodology",about:"About",report:"Report an error",project:"Project & sources",tagline:"Your salary. Your world.",skip:"Skip to main content",disclaimer:"Data coverage varies by country and year. Results are informational, not individual tax or financial advice.",menu:"More information"},
     pt:{home:"Início",compare:"Comparar",salaries:"Salários",countries:"Países",jobs:"Empregos",insights:"Análises",more:"Mais",history:"Histórico",coverage:"Cobertura de dados",groups:"Grupos profissionais",dataSources:"Fontes de dados económicos",sources:"Diretório de fontes",methodology:"Metodologia",about:"Sobre",report:"Comunicar um erro",project:"Projeto e fontes",tagline:"O seu salário. O seu mundo.",skip:"Saltar para o conteúdo principal",disclaimer:"A cobertura varia conforme o país e o ano. Os resultados são informativos, não constituindo aconselhamento fiscal ou financeiro individual.",menu:"Mais informações"},
