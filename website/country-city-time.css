@@ -1,0 +1,11 @@
+/* Country-city local clocks: responsive, aligned with EarnWage design tokens. */
+.ct-grid{display:grid;grid-template-columns:minmax(230px,1fr) minmax(250px,1fr);gap:18px;align-items:stretch}
+.ct-left,.ct-weather{background:#f6faf9;border:1px solid #d8e8e4;border-radius:14px;padding:18px}
+.ct-left label{display:block;font-size:.9rem;font-weight:750;margin-bottom:7px}
+.ct-left select{width:100%;max-width:480px}
+.ct-clock{display:block;font-size:clamp(1.5rem,3vw,2.2rem);font-variant-numeric:tabular-nums;font-weight:800;margin-top:15px;color:#115d56;overflow-wrap:anywhere}
+.ct-zone{color:#566e74;font-size:.85rem;margin:6px 0 0}
+.ct-weather h3{font-size:1.02rem;margin:0 0 10px}
+.ct-weather p{font-size:.9rem;color:#546a72;margin:0}
+.ct-note{font-size:.82rem;color:#61767a;margin:13px 0 0}
+@media(max-width:700px){.ct-grid{grid-template-columns:1fr}.ct-left,.ct-weather{padding:14px}}
