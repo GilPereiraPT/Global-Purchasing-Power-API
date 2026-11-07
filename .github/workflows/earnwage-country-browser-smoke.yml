@@ -112,8 +112,8 @@ jobs:
             console.log('BROWSER INSIGHTS '+JSON.stringify({indicators:29,hero:await page.locator('.ci-country-hero').innerText()}));
             await page.close();
             page=await open('compare.html');
-            await page.locator('#countryA option').first().waitFor({timeout:20000});
-            const pt=await page.locator('#countryA option[value=PT]').innerText();
+            await page.waitForFunction(()=>document.querySelector('#countryA')?.options.length>=14,{timeout:20000});
+            const pt=await page.locator('#countryA option[value=PT]').textContent();
             assert.ok(pt.includes('🇵🇹'));
             console.log('BROWSER COMPARISON_FLAGS '+pt);
             await page.close();
